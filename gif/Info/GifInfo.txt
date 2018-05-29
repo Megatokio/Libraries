@@ -1,0 +1,246 @@
+
+
+Gif vs. Gif
+===========
+
+kio 2007-05-23
+
+
+
+Unisys' LZW Patent 
+
+The LZW patent expired at midnight US Eastern Standard Time on June 19, 2003 for the US patent, and 
+midnight local time on June 18 and 19, 2004 for the European and Japanese counterparts, respectively.
+
+
+
+General Layout of a GIF file
+
+A version 87a gif file contains one image, which is made out of any number of sub images with up to 256 
+indexed colors each. The sub images are to be drawn in one go, supplying one final image.
+
+Version 98a adds control blocks for delays, thus allowing one-pass animations. And it adds transparency 
+to the local color maps, comment blocks, text rendering blocks (rarely used) and application blocks.
+
+Netscape added an application block to define looping of the animation and for a transparent color index 
+in the global color map, which became de facto standard.
+
+
+
+Block structure of GIF file:
+
+1x	6 bytes				GIF signature			indicates a gif file and version
+1x	7 bytes				Screen descriptor		defines the overall dimensions
+1x	6 to 768 bytes		Global color map		supplies a default colormap for all images (optional)
+
+1x	19 bytes			Netscape's application extension	(optional) (GIF98a only)
+
+	var. size			Comment block			may be inserted at any position
+
+0…N times:
+	8 bytes				Graphic control block	delay and transparency (optional) (GIF89a only)
+	10 bytes			Image descriptor		starts a sub image of the overall image
+	6 to 768 bytes		Local color map			(optional)
+	1 byte				LZW minimum code		
+	0..n sub blocks		Raster data				LZW compressed pixels
+
+1x	1 byte				GIF terminator
+	
+	
+
+Definition of blocks
+
+
+GIF signature
+Indicates a gif file and it's version.
+
+		defm	"GIF"		; signature
+		defm	"87a"		; version: "87a", "89a" or "89b"
+	
+
+Logical screen descriptor	
+Defines the overall dimensions.
+Note: 2-byte values store low byte first (Z80/Intel)
+
+		defw	width		; overall image width	(("logical screen width"))
+		defw	height		; overall image height
+		defb	flags
+		defb	bgcolor		; background color index, if a global cmap is supplied
+		defb	aspect		; pixel aspect ratio				(GIF89a only)
+		
+flags:	bit 7:		1 => global color table follows
+		bit 4-6:	color richness of the entire image:			2^(nnn+1) colors
+		bit 3:		1 => colors are sorted by importance		(GIF89a only)
+		bit 0-2:	size of the global color table, if any:		2^(nnn+1) colors
+
+aspect:	0x00 defines square pixels								(GIF87a)
+		pixel ratio w/h = (aspect+15) / 64						(GIF89a)
+
+
+Global color map
+Supplies a default colormap for all images.
+The global cmap follows if bit 7 of flags in the logical screen descriptor was set.
+It contains 2^((flags&7)+1) == 2<<(flags&7) colors.
+Each color is defined as a 3-byte triplet of red, green and blue intensity.
+One color index, as defined in the bgcolor above, is used to fill any not covered 
+background of the image.
+
+		defb	red_0, green_0, glue_0		; color for color index 0
+		defb	red_1, green_1, glue_1		; color for color index 1
+		...
+		
+
+Netscape's Application Extension
+(optional) (GIF98a only)
+Defines a loop count for looping animation
+
+		defb	0x21		; extension tag
+		defb	0xff		; application extension tag
+		defb	11			; block size
+		
+		defm	"NETSCAPE2.0"
+		
+		defb	3			; sub block size
+		defb	1			; (flag that loop_count follows?)
+		defw	loop_count	; loop count. 0 = for ever.
+		
+		defb	0			; zero-size sub block => end of sub block list
+		
+There is the theory that Netscape 2.0 looked at the first Graphic Control Block, 
+which had to be the very next block after this Application Extension Block, and if it
+defines a transparent color, then the image background was not filled with the bgcolor 
+but left transparent instead. 
+
+
+Comment Block
+(optional) (GIF89a only)
+May contain comments about the sub images or the creator. 
+Can be inserted anywhere but should not apear befor the Netscape block or 
+between Graphic control block and the subsequent Image descriptor block.
+
+		defb	0x21		; extension tag
+		defb	0xfe		; comment extension tag
+
+; any number of sub blocks:
+		defb	len			; 1 byte: block length
+		defs	len			; block data
+
+		defb	0			; zero length => end of sub blocks
+
+
+Graphic Control Block	
+(optional) (GIF89a only)
+Specifies a delay and transparency. Applies to the very next Image descriptor block only.
+
+		defb	0x21		; extension tag
+		defb	0xf9		; graphic control extension tag
+		defb	4			; block size
+		
+		defb	flags
+		defw	delay		; 1/100 sec
+		defb	transp_idx
+
+flags:	bit 5-7:	reserved (set to 0)
+		bit 2-4:	disposal method
+		bit 1:		user input
+		bit 0:		transparency
+		
+Disposal method:
+After display of the following image block and waiting the delay specified in the 
+next Graphic control block do the following with the graphic pixels:
+		%000		do as you please
+		%001		keep new pixels 
+		%010		restore pixels to background color
+		%011		restore previous pixels
+		%1xx		undefined, reserved
+
+User input: 
+Wait for user reaction, e.g. a key press. Should be combined with a 
+delay for timeout. Rarely used in images...
+
+Transparency:
+If bit 0 of the flags is set, then the transparent color index transp_idx is valid and 
+pixels with this color in the following Image block are not drawn, thus remain transparent.
+
+
+Image Descriptor
+Now actually a drawable image follows.
+But first there is some information about it:
+
+	defb	0x2c		; image tag
+	defw	x_pos		; left border inside logical screen
+	defw	y_pos		; top border 
+	defw	width		; image width
+	defw	height		; and height. All in pixels.
+	defb	flags
+	
+flags:	bit 7:		a local color table follows
+		bit 6:		the rows of the image are stored in an interlaced order
+		bit 5:		the colors are sorted by importance			(GIF89a only)
+		bit 3-4:	reserved (set to 0)
+		bit 0-2:	size of the local color table, if any:		2^(nnn+1) colors
+
+Interlaced:
+The image is stored in 4 passes. 
+	Pass 1:		rows 0 + 8*n
+	Pass 2:		rows 4 + 8*n
+	Pass 3:		rows 2 + 4*n
+	Pass 4:		rows 1 + 2*n
+
+
+Local color map
+If bit 7 of the flag was set, then a local color map follows. This is identical to 
+the global color map, but it replaces the color map for this image only.
+
+It contains 2^((flags&7)+1) == 2<<(flags&7) colors.
+
+Each color is defined as a 3-byte triplet of red, green and blue intensity.
+One color index, as defined in the transp_idx in the preceeding Graphic control block (if any), 
+defines the index for transparent pixels.
+
+		defb	red_0, green_0, glue_0		; color for color index 0
+		defb	red_1, green_1, glue_1		; color for color index 1
+		...
+		
+
+Raster Data
+The actual pixels, LZW comressed and split into sub blocks of up to 255 bytes each.
+
+		defb	255			; sub block length, most, except the last, of max. size
+		defs	255			; LZW data
+		...
+		defb	n			; last block size
+		defs	n
+		
+		defb	0			; a zero-size block ends the sub block list
+
+The sequence of optional Graphic Control Block, Image Descriptor, optional Local Color Table and 
+Raster Data may occur any number in the file. If the Graphic Control Blocks define delays, then
+the image is animated. If a Netscape Application Extension Block is present, the animation probably
+loops and the overall background may be transparent.
+		
+
+Plain Text Extension
+(GIF89a only)
+Instead of raster pixel data there may be also a text data block, which defines text to be printed.
+This is rarely used.
+
+		defb	0x21		; Extensio tag
+		defb	0x01		; Plain text extension tag
+		defb	len			; block size
+		defs	len			; block data
+		
+		...					; sub block list
+		defb	0			; zero-size block ends the sub block list
+
+
+GIF Trailer
+
+		defb	0x3B		; end of file tag
+		
+		
+		
+
+
+
+
