@@ -1,4 +1,4 @@
-/*	Copyright  (c)	Günter Woigk 2013 - 2013
+/*	Copyright  (c)	Günter Woigk 2013 - 2018
                     mailto:kio@little-bat.de
 
     This file is free software
@@ -31,17 +31,17 @@
 
 
 
-#ifndef _md5_tools_h_
-#define _md5_tools_h_
+#ifndef MD5_TOOLS_H
+#define MD5_TOOLS_H
 
 #include "md5.h"
 #include "kio/kio.h"
 #include "unix/FD.h"
 
 
-extern void calc_md5  (FD& fd, uint64 start, uint64 count, uint8 md5[16]) throw(file_error);
+extern void calc_md5  (FD& fd, uint64 start, uint64 count, uint8 md5[16]) throws;
 extern void calc_md5  (const uint8 data[], uint32 count, uint8 md5[16]);
-extern void check_md5 (const uint8 data[], uint32 count, const uint8 md5[16], cstr msg) throw(data_error);
+extern void check_md5 (const uint8 data[], uint32 count, const uint8 md5[16], cstr msg) throws;
 
 
 #endif

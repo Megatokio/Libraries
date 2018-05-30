@@ -1,4 +1,4 @@
-/*	Copyright  (c)	Günter Woigk 2013 - 2013
+/*	Copyright  (c)	Günter Woigk 2013 - 2018
                     mailto:kio@little-bat.de
 
     This file is free software
@@ -30,8 +30,8 @@
 */
 
 
-#ifndef _Crypt_h_
-#define _Crypt_h_
+#ifndef CRYPT_H
+#define CRYPT_H
 
 
 #include "kio/kio.h"
@@ -41,8 +41,8 @@
 class Crypt : public MersenneTwister64
 {
 
-    str 	encrypt_path(str path);
-    str 	decrypt_path(str path);
+    str 	encrypt_path(cstr path);
+    str 	decrypt_path(cstr path);
     void	crypt(uint8 bu[], uint sz);
     Crypt*	spread_key2();
 
@@ -72,7 +72,7 @@ public:
 
     // Copy Creator und Zuweisungs-Operator:
     Crypt(const Crypt& q)							:MersenneTwister64(q){}
-    Crypt& operator= (const Crypt& q)				{ return (Crypt&) MersenneTwister64::operator=(q); }
+    Crypt& operator= (const Crypt& q)				{ MersenneTwister64::operator=(q); return *this; }
 
     // Initialisierungserweiterung mit einem weiteren Key:
     Crypt*	apply_key2(uint64);
@@ -80,15 +80,15 @@ public:
     Crypt*	apply_key2(uint16);
     Crypt*	apply_key2(uint64[],uint32 count);
     Crypt*	apply_key2(cstr);
-    Crypt*	apply_path(cstr s)						{ (void)encrypt_path((str)s); return this; }
+    Crypt*	apply_path(cstr s)						{ (void)encrypt_path(s); return this; }
 
     // Encrypt & decrypt:
     void	encrypt(uint8 bu[], uint sz)			{ crypt(bu,sz); }
     void	decrypt(uint8 bu[], uint sz)			{ crypt(bu,sz); }
     str		encrypt(cstr) const;					// encrypt and encode base85
     str		decrypt(cstr) const;					// decode base85 and decrypt
-    str 	encryptPath(cstr path) const			{ return Crypt(*this).encrypt_path((str)path); }
-    str 	decryptPath(cstr path) const			{ return Crypt(*this).decrypt_path((str)path); }
+    str 	encryptPath(cstr path) const			{ return Crypt(*this).encrypt_path(path); }
+    str 	decryptPath(cstr path) const			{ return Crypt(*this).decrypt_path(path); }
 };
 
 

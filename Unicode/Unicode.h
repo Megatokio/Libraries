@@ -188,7 +188,7 @@ extern cstr const U_PropertyValue_sc_LongNames[U_sc_propertyvalues];
 extern cstr const U_PropertyValue_sb_LongNames[U_sb_propertyvalues];
 extern cstr const U_PropertyValue_wb_LongNames[U_wb_propertyvalues];
 
-inline cstr		U_PropertyValue_DefaultShortName( int v )		{ return numstr(v); }
+inline cstr		U_PropertyValue_DefaultShortName( int v )		{ return tostr(v); }
 inline cstr		U_PropertyValue_DefaultLongName	( int v )		{ return usingstr("Property ID %i",v); }
 inline cstr		U_PropertyValue_DefaultLongName	( int p,int v )	{ return usingstr("%s ID %i",U_Property_LongName(p),v); }
 

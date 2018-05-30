@@ -31,10 +31,10 @@
 
 #include "md5_tools.h"
 #include "md5.h"
-#include "../unix/FD.h"
+#include "unix/FD.h"
 
 
-void calc_md5(FD& fd, uint64 start, uint64 count, uint8 md5[16]) throw(file_error)
+void calc_md5(FD& fd, uint64 start, uint64 count, uint8 md5[16]) throws
 {
 	MD5Context md5_context;
 	MD5Init(&md5_context);
@@ -64,7 +64,7 @@ void calc_md5(const uint8 data[], uint32 count, uint8 md5[16])
 }
 
 
-void check_md5(const uint8 data[], uint32 count, const uint8 md5[16], cstr msg) throw(data_error)
+void check_md5(const uint8 data[], uint32 count, const uint8 md5[16], cstr msg) throws
 {
 	uint8 mymd5[16];
 	calc_md5(data,count,mymd5);

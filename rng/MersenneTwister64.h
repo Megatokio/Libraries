@@ -58,8 +58,8 @@
     thread-safe encapulation in C++ class by kio@little-bat.de
 */
 
-#ifndef _MersenneTwister64_h_
-#define _MersenneTwister64_h_
+#ifndef MERSENNETWISTER64_H
+#define MERSENNETWISTER64_H
 
 
 #include "kio/kio.h"
@@ -160,8 +160,8 @@ inline uint64 MersenneTwister64::random64()
     return x;
 }
 
-inline uint32 	MersenneTwister64::random32()		{ return  (uint32)random64(); }
-inline int32  	MersenneTwister64::random31()		{ return  (int32)random64();  }
+inline uint32 	MersenneTwister64::random32()		{ return  uint32(random64()); }
+inline int32  	MersenneTwister64::random31()		{ return  int32(random64());  }
 inline int64  	MersenneTwister64::random63()		{ return  (random64() >> 1 ); }
 inline double 	MersenneTwister64::randomReal1()	{ return  (random64() >> 11)        * (1.0/9007199254740991.0); }
 inline double 	MersenneTwister64::randomReal2()	{ return  (random64() >> 11)        * (1.0/9007199254740992.0); }

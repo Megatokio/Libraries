@@ -84,7 +84,7 @@ void MersenneTwister64::init( uint64 seed[], uint seed_length )
 
     uint64 i = 1;
     uint64 j = 0;
-    uint64 k = min((uint)NN,seed_length);
+    uint64 k = min(uint(NN),seed_length);
 
     for(; k; k--)
     {
@@ -111,9 +111,9 @@ void MersenneTwister64::init( uint64 seed[], uint seed_length )
 */
 void MersenneTwister64::init(cstr qstr)
 {
-    if(qstr==NULL||*qstr==0) { init((uint64)0); return; }
+    if(qstr==NULL||*qstr==0) { init(uint64(0)); return; }
 
-    uint qlen = (uint)strlen(qstr);
+    uint qlen = uint(strlen(qstr));
     uint zlen = (qlen+7)/8;
 
     uint64 z[zlen]; z[zlen-1] = 0;
@@ -127,7 +127,7 @@ void MersenneTwister64::init(cstr qstr)
 */
 void MersenneTwister64::init( uint32 seed )
 {
-    init( seed ? (uint64)~seed<<32 | (uint64)seed : 0UL );
+    init( seed ? uint64(~seed)<<32 | uint64(seed) : 0UL );
 }
 
 
@@ -156,17 +156,17 @@ void MersenneTwister64::next_table()
     for(i=0;i<NN-MM;i++)
     {
         x = (mt[i]&UM) | (mt[i+1]&LM);
-        mt[i] = mt[i+MM] ^ (x>>1) ^ mag01[(int)x&1];
+        mt[i] = mt[i+MM] ^ (x>>1) ^ mag01[int(x)&1];
     }
 
     for(;i<NN-1;i++)
     {
         x = (mt[i]&UM) | (mt[i+1]&LM);
-        mt[i] = mt[i+(MM-NN)] ^ (x>>1) ^ mag01[(int)x&1];
+        mt[i] = mt[i+(MM-NN)] ^ (x>>1) ^ mag01[int(x)&1];
     }
 
     x = (mt[NN-1]&UM) | (mt[0]&LM);
-    mt[NN-1] = mt[MM-1] ^ (x>>1) ^ mag01[(int)x&1];
+    mt[NN-1] = mt[MM-1] ^ (x>>1) ^ mag01[int(x)&1];
 
     mti = mti0;
 }

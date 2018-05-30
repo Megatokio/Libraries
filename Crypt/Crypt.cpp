@@ -195,16 +195,14 @@ str	Crypt::decrypt(cstr q) const
     Der MT wird dabei so verändert, dass danach der nächste Pfadabschnitt,
     oder z.B. ein Directory-Eintrag, damit verschlüsselt werden kann.
 */
-str Crypt::encrypt_path(char* qpath)
+str Crypt::encrypt_path(cstr qpath)
 {
     mti = 0;
-    ptr p = strchr(qpath,'/');
-    if(p==NULL) return encrypt(qpath);
+    cptr p = strchr(qpath,'/');
+    if(p==nullptr) return encrypt(qpath);
 
-    *p=0;
-    char* zpath = encrypt(qpath);
+    char* zpath = encrypt(substr(qpath,p));
     apply_key2(qpath);
-    *p='/';
 
     return *(p+1) ? catstr(zpath,"/",encrypt_path(p+1)) : catstr(zpath,"/");
 }
@@ -217,16 +215,14 @@ str Crypt::encrypt_path(char* qpath)
     oder z.B. ein Directory-Eintrag, damit verschlüsselt werden kann.
     Diese Status-Veränderung ist dabei die gleiche wie beim Verschlüsseln.
 */
-str Crypt::decrypt_path(char* qpath)
+str Crypt::decrypt_path(cstr qpath)
 {
     mti = 0;
-    ptr p = strchr(qpath,'/');
-    if(p==NULL) return decrypt(qpath);
+    cptr p = strchr(qpath,'/');
+    if(p==nullptr) return decrypt(qpath);
 
-    *p=0;
-    char* zpath = decrypt(qpath);
+    char* zpath = decrypt(substr(qpath,p));
     apply_key2(zpath);
-    *p='/';
 
     return *(p+1) ? catstr(zpath,"/",decrypt_path(p+1)) : catstr(zpath,"/");
 }
