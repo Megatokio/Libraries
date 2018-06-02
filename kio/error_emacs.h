@@ -54,6 +54,8 @@
 	EMAC( customerror=EBAS, "custom error"				),	// kio/errors.h: custom error message
 	EMAC( notanumber,		"not a number"				),	// cstrings/cstrings.h:	0.0/0.0 or string is not a number
 	EMAC( unexpectedfup,	"utf-8 char started with fup"),	// cstrings/cstrings.h
+	EMAC( truncatedchar,	"utf-8 char truncated"		),	// cstrings/cstrings.h
+	EMAC( notindestcharset,	"character not in destination charset" ), // utf-8, cstrings/utf8
 	EMAC( endoffile,		"end of file"				),	// unix/FD.h
 #define   outofmemory		ENOMEM							// kio/errors.h: macro OMEM(), <=> std::bad_alloc : exception
 	EMAC( internalerror,	"internal error"			),	// kio/errors.h: macro NIMP(),  class internal_error

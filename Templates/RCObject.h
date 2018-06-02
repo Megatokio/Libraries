@@ -48,7 +48,7 @@
 
 	notes:
 
-	if RCPtr<T>::readFromFile(FD&) is used,
+	if RCPtr<T>::deserialize(FD&) is used,
 	then class T (or a base class) must provide a static factory method T* restore(FD&).
 
 	if App uses threads, then

@@ -25,8 +25,8 @@
 */
 
 #include "Libraries/kio/kio.h"
+#include "Libraries/unix/tempmem.h"
 #include "utf8.h"
-#include "../unix/tempmem.h"
 
 
 static cptr str_comp(cstr a, cstr b) noexcept
@@ -37,27 +37,352 @@ static cptr str_comp(cstr a, cstr b) noexcept
 }
 
 
-inline ptr ucs4char_to_utf8 (uint32 n, ptr z)
+namespace utf8 {
+
+//	0fup: c < %10000000		c <= %01111111		c = %0xxxxxxx	ucs < 0x80
+//	fup:  c < %11000000		c <= %10111111		c = %10xxxxxx
+//	1fup: c < %11100000		c <= %11011111		c = %110xxxxx	ucs < 0x800
+//	2fup: c < %11110000		c <= %11101111		c = %1110xxxx	ucs < 0x10000
+//	3fup: c < %11111000		c <= %11110111		c = %11110xxx
+//	4fup: c < %11111100		c <= %11111011		c = %111110xx
+//	5fup:										c = %111111xx
+
+uint charcount (cstr q) noexcept
 {
-	if (n<(1<<7))  { *z++ = char(n); return z; }										// 1 byte code
-	if (n<(1<<11)) { *z++ = char(0xC0+(n>>6)); *z++ = char(0x80+(n&0x3f)); return z; }	// 2 byte code
-	// 3…6 byte codes
-	int i = 15; for (uint m = n>>16; m; m>>=5) { i+=5; } i = i/6;	// i = num fups; num bits stored in fups = i*6
-	*z++ = char(0x80>>i) + char(n>>(i*6));							// starter (non_fup)
-	while (i--) { *z++ = char(0x80 + ((n>>(i*6))&0x3f)); }			// fups
+	// count characters in utf-8 string
+	// the "Golden Rule": every non-fup makes a char
+
+	uint rval = 0;
+	if(q) while (char c = *q++)
+	{
+		if (no_fup(c)) rval++;
+	}
+	return rval;
+}
+uint max_csz (cstr q) noexcept
+{
+	// calculate required character size (ucs1, ucs2 or ucs4) to store utf-8 string
+
+	if(q) while (char c = *q++)
+	{
+		if (uchar(c) <= 0xC3) continue;
+		if (uchar(c) >= 0xF0) return 4;
+		while ((c = *q++))
+		{
+			if (uchar(c) >= 0xF0) return 4;
+		}
+		return 2;
+	}
+	return 1;
+}
+bool fits_ucs1 (cstr q) noexcept
+{
+	// test whether utf-8 string q can be encoded to ucs1
+	// note: if q contains broken characters then these will be replaced with '?' not $FFFD
+	//       and thus will not break the result of this function
+
+	if(q) while (char c = *q++)
+	{
+		if (uchar(c) > 0xC3) return no;
+	}
+	return yes;
+}
+bool fits_ucs2 (cstr q) noexcept
+{
+	// test whether utf-8 string q can be encoded to ucs2
+
+	if(q) while (char c = *q++)
+	{
+		if (uchar(c) >= 0xF0) return no;
+	}
+	return yes;
+}
+
+uint utf8len (ucs1char const* q, uint cnt) noexcept
+{
+	// calculate required size for an utf-8 string to store ucs1 string
+
+	uint rval = cnt;
+	while(cnt--)
+	{
+		if(*q++ >= 0x80) rval++;
+	}
+	return rval;
+}
+uint utf8len (ucs2char const* q, uint cnt) noexcept
+{
+	// calculate required size for an utf-8 string to store ucs2 string
+
+	uint rval = cnt;
+	while(cnt--)
+	{
+		uint16 c = *q++;
+		if(c < 0x80) continue;
+		rval += c<0x800 ? 1 : 2;
+	}
+	return rval;
+}
+uint utf8len (ucs4char const* q, uint cnt) noexcept
+{
+	// calculate required size for an utf-8 string to store ucs4 string
+
+	uint rval = cnt;
+	while(cnt--)
+	{
+		uint32 c = *q++;
+		if(c < 0x80) continue;
+		rval += c<0x800 ? 1 : c<0x10000 ? 2 : c<0x200000 ? 3 : c<0x4000000 ? 4 : 5;
+	}
+	return rval;
+
+}
+
+char* ucs1_to_utf8 (ucs1char const* q, uint qcnt, char* z) noexcept
+{
+	// encode ucs1 text to utf-8
+	// this can encode any 1-byte data to utf-8
+	// if $00 is part of the source data it will be encoded as 2 non-zero bytes
+	// return: ptr behind z[]
+
+	while (qcnt--)
+	{
+		uint c = *q++;
+		if (c && c < 0x80) { *z++ = char(c); continue; }
+
+		*z++ = 0xC0 + char(c>>6);
+		*z++ = char(0x80 + (c & 0x3F));
+	}
+	*z = 0;
+	return z;
+}
+char* ucs2_to_utf8 (ucs2char const* q, uint qcnt, char* z) noexcept
+{
+	// encode ucs2 text to utf-8
+	// this can encode any 2-byte data to utf-8
+	// if $00 is part of the source data it will be encoded as 2 non-zero bytes
+	// return: ptr -> chr0 at end of utf8 text
+
+	while(qcnt--)
+	{
+		uint c = *q++;
+		if (c && c <  0x80) { *z++ = char(c); continue; }
+
+		if (c < 0x800) { *z++ = 0xC0 + char(c>>6);  goto f1; }
+		else		   { *z++ = 0xE0 + char(c>>12); goto f2; }
+
+		f2:	*z++ = char(0x80 + ((c>>6)  & 0x3F));
+		f1:	*z++ = char(0x80 + ((c)     & 0x3F));
+	}
+	*z = 0;
+	return z;
+}
+char* ucs4_to_utf8 (ucs4char const* q, uint qcnt, char* z) noexcept
+{
+	// encode ucs4 text to utf-8
+	// this can encode any 4-byte data to utf-8
+	// if $00 is part of the source data it will be encoded as 2 non-zero bytes
+	// return: ptr -> chr0 at end of utf8 text
+
+	while(qcnt--)
+	{
+		uint32 c = *q++;
+		if (c && c <  0x80) { *z++ = char(c); continue; }
+
+		if (c <      0x800) { *z++ = 0xC0 + char(c>>6);  goto f1; }
+		if (c <    0x10000) { *z++ = 0xE0 + char(c>>12); goto f2; }
+		if (c <   0x200000) { *z++ = 0xF0 + char(c>>18); goto f3; }
+		if (c <  0x4000000) { *z++ = 0xF8 + char(c>>24); goto f4; }
+		else				{ *z++ = 0xFC + char(c>>30); goto f5; }		// full 32 bit encoded
+
+		f5:	*z++ = char(0x80 + ((c>>24) & 0x3F));
+		f4:	*z++ = char(0x80 + ((c>>18) & 0x3F));
+		f3:	*z++ = char(0x80 + ((c>>12) & 0x3F));
+		f2:	*z++ = char(0x80 + ((c>>6)  & 0x3F));
+		f1:	*z++ = char(0x80 + ((c)     & 0x3F));
+	}
+	*z = 0;
 	return z;
 }
 
+ucs4char* utf8_to_ucs4 (cptr q, ucs4char* z) noexcept
+{
+	// decode utf-8 string into ucs4 buffer
+	// the buffer must be large enough to hold the decoded text
+	// • sets errno for broken characters: unexpectedfup and truncatedchar
+	// • illegal overlong encodings are not trapped
+	// • combining characters etc. are not handled
+	//
+	// possible approach:
+	// • precalculate required size of buffer[] with char_count()
+	// • provide buffer[strlen(q)] and truncate at size returned by this function
 
-namespace utf8 {
+	if(q) while (uint32 c = *cuptr(q++))
+	{
+		uint n;
+		if (c < 0x80) { *z++ = c; continue; }
+		if (c < 0xC0) { errno = unexpectedfup; continue; }
 
-// statt UTF-8.h:
-inline bool is_starter (char c) { return uint8(c) >= 0xc0; }
-inline bool is_7bit (char c)	{ return int8(c) >= 0; }
-inline bool	no_7bit (char c)	{ return int8(c) < 0;  }
-inline bool is_fup	(char c)	{ return int8(c) < int8(0xc0); }
-inline bool no_fup	(char c)	{ return int8(c) >= int8(0xc0); }
+		if (c < 0xE0) { c &= 0x1F; n = 1; } else
+		if (c < 0xF0) { c &= 0x0F; n = 2; } else
+		if (c < 0xF8) { c &= 0x07; n = 3; } else
+		if (c < 0xFC) { c &= 0x03; n = 4; } else
+					  {            n = 5; }			// full 32 bit decoded
+		do
+		{
+			if (is_fup(*q))
+			{
+				c = (c<<6) + (*cuptr(q++) & 0x3F);
+				continue;
+			}
+			else
+			{
+				c = replacementchar;
+				errno = truncatedchar;
+				break;
+			}
+		}
+		while(--n);
 
+		*z++ = c;
+	}
+
+	return z;
+}
+ucs2char* utf8_to_ucs2 (cptr q, ucs2char* z) noexcept
+{
+	// decode utf-8 string into ucs2 buffer
+	// the buffer must be large enough to hold the decoded text
+	// • sets errno for broken characters: unexpectedfup, truncatedchar etc.
+	// • illegal overlong encodings are not trapped
+	// • combining characters etc. are not handled
+
+	if(q) while (uint c = *cuptr(q++))
+	{
+		uint n;
+		if (c < 0x80) { *z++ = c; continue; }
+		if (c < 0xC0) { errno = unexpectedfup; continue; }
+
+		if (c < 0xE0) { c &= 0x1F; n = 1; } else
+		if (c < 0xF0) { c &= 0x0F; n = 2; }
+		else
+		{
+			errno = notindestcharset;
+			*z++ = replacementchar;
+			n = c <= 0xF7 ? 3 : c <= 0xFB ? 4 : 5;
+			while (n-- && is_fup(*q)) { q++; }
+			continue;
+		}
+
+		while(n--)
+		{
+			if (is_fup(*q))
+			{
+				c = (c<<6) + (*cuptr(q++) & 0x3F);
+				continue;
+			}
+			else
+			{
+				errno = truncatedchar;
+				c = replacementchar;
+				break;
+			}
+		}
+
+		*z++ = c;
+	}
+
+	return z;
+}
+ucs1char* utf8_to_ucs1 (cptr q, ucs1char* z) noexcept
+{
+	// decode utf-8 string into ucs1 buffer
+	// the buffer must be large enough to hold the decoded text
+
+	if(q) while (uint c = *cuptr(q++))
+	{
+		if (c <= 0x7F) { *z++ = c; continue; }
+		if (c <= 0xBF) { errno = unexpectedfup; continue; }
+
+		if (c <= 0xc3)	// %110000xx + %10xxxxxx
+		{
+			if (is_fup(*q))
+			{
+				*z++ = (c<<6) + (*cuptr(q++) & 0x3F);
+			}
+			else
+			{
+				errno = truncatedchar;
+				*z++ = replacementchar;
+			}
+			continue;
+		}
+
+		errno = notindestcharset;
+		*z++ = replacementchar;
+
+		uint n = c < 0xE0 ? 1 : c < 0xF0 ? 2 : c < 0xF8 ? 3 : c < 0xFC ? 4 : 5;
+		while (n-- && is_fup(*q)) { q++; }
+	}
+
+	return z;
+}
+
+str to_utf8(ucs1char const* q, uint qcnt) throws
+{
+	str s = tempstr(utf8len(q,qcnt));
+	ucs1_to_utf8(q,qcnt,s);
+	return s;
+}
+str to_utf8(ucs2char const* q, uint qcnt) throws
+{
+	str s = tempstr(utf8len(q,qcnt));
+	ucs2_to_utf8(q,qcnt,s);
+	return s;
+}
+str to_utf8(ucs4char const* q, uint qcnt) throws
+{
+	str s = tempstr(utf8len(q,qcnt));
+	ucs4_to_utf8(q,qcnt,s);
+	return s;
+}
+
+str to_utf8 (ucs1char const* q)
+{
+	return to_utf8(q,charcount(q));
+}
+str to_utf8 (ucs2char const* q)
+{
+	return to_utf8(q,charcount(q));
+}
+str to_utf8 (ucs4char const* q)
+{
+	return to_utf8(q,charcount(q));
+}
+
+ucs1char* to_ucs1(cstr q) throws
+{
+	uint cnt = charcount(q);
+	uint8* z = reinterpret_cast<ucs1char*>(tempmem(cnt+1));
+	utf8_to_ucs1(q,z);
+	z[cnt] = 0;
+	return z;
+}
+ucs2char* to_ucs2(cstr q) throws
+{
+	uint cnt = charcount(q);
+	uint16* z = reinterpret_cast<ucs2char*>(tempmem(cnt*2+2));
+	utf8_to_ucs2(q,z);
+	z[cnt] = 0;
+	return z;
+}
+ucs4char* to_ucs4(cstr q) throws
+{
+	uint cnt = charcount(q);
+	uint32* z = reinterpret_cast<ucs4char*>(tempmem(cnt*4+4));
+	utf8_to_ucs4(q,z);
+	z[cnt] = 0;
+	return z;
+}
 
 cstr fromhtmlstr (cstr s0) throws
 {
@@ -106,7 +431,7 @@ cstr fromhtmlstr (cstr s0) throws
 			if (*p == ';')
 			{
 				q = p+1;
-				z = ucs4char_to_utf8(n,z);
+				z = ucs4_to_utf8(&n,1,z);
 				continue;
 			}
 		}
@@ -169,18 +494,25 @@ str whitestr (cstr q, char c) throws
 	// replace all printable characters with space
 	// usecase: to place an error indicator exactly beneath an error
 
-    str s = dupstr(q);
-    for (ptr p = s; *p; p++)
+    str rval = dupstr(q);
+    for (ptr p = rval; *p; p++)
     {
-		if (*uptr(p) > ' ') *p = c;
-		else if(is_starter(*p))
+		if(*p >= 0)
 		{
-			*p = c;
-			ptr e = p+1; while (is_fup(*e)) { e++; }
-			strcpy(p+1,e);
+			if (*p > ' ') *p = c;
+			continue;
 		}
+
+		ptr z; for(z=p; *p; p++)
+	    {
+			if (no_fup(*p))
+			{
+				*z++ = *p > ' ' ? c : *p;
+			}
+	    }
+		*z = 0;
 	}
-    return s;
+    return rval;
 }
 
 }; // namespace

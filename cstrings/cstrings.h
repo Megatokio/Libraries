@@ -93,17 +93,17 @@ extern	bool islowerstr	(cstr)				noexcept;
 
 
 // ----	allocate with new[] ----
-extern	str  newstr		(int n)				throws;		// allocate memory with new[]
-extern	str	 newcopy	(cstr)				throws;		// allocate memory with new[] and copy text
+extern	str  newstr		(int n)				throws;	// allocate memory with new[]
+extern	str	 newcopy	(cstr)				throws;	// allocate memory with new[] and copy text
 
 
 // ---- allocate in TempMemPool ----
-extern	str	 tempstr	(int n)				throws;		// tempmem.h
+extern	str	 tempstr	(int n)				throws;	// tempmem.h
 inline	str	 tempstr	(uint size)			throws { return tempstr(int(size)); }
 inline	str	 tempstr	(long size)			throws { return tempstr(int(size)); }
 inline	str	 tempstr	(ulong size)		throws { return tempstr(int(size)); }
-extern	str	 xtempstr	(int n)				throws;		// tempmem.h
-inline	str	 xtempstr	(uint n)			throws;		// tempmem.h
+extern	str	 xtempstr	(int n)				throws;	// tempmem.h
+inline	str	 xtempstr	(uint n)			throws;	// tempmem.h
 extern	str	 spacestr	(int n, char c=' ')	throws;
 extern	cstr spaces		(uint n)			throws;
 extern	str	 whitestr	(cstr, char c=' ')	throws; // also in utf8
@@ -135,11 +135,8 @@ extern	cstr fromhtmlstr(cstr)				throws; // also in utf8
 extern	str	 toutf8str	(cstr)				throws;
 extern	cstr fromutf8str(cstr)				throws;	// ucs1 only. may set errno. may return original string
 extern	str  unhexstr	(cstr)				throws;
-//		str uuencodedstr(cstr)				throws;
-//		str uudecodedstr(cstr)				throws;
 extern	str	 base64str	(cstr)				throws;
 extern	str	 unbase64str(cstr)				throws;
-//extern str croppedstr	(str)				noexcept; // reuses and evtl. modifies argument string! Uh uhh...
 extern	cstr croppedstr	(cstr)				throws;
 extern	cstr detabstr	(cstr, uint tabwidth) throws; // also in utf8. may return original string
 
@@ -227,21 +224,6 @@ inline cptr findStr	 (cstr target, cstr search) noexcept {return find(target,sea
 
 inline cptr rFindStr (cstr target, cstr search) noexcept __attribute__((deprecated));	// use rfind()
 inline cptr rFindStr (cstr target, cstr search) noexcept {return rfind(target,search);}
-
-
-#ifdef INCLUDE_DEPRECATED
-
-	#define	CompileDate()	(__DATE__" at "__TIME__)
-
-	enum strconvtype { str_noconv,str_html,str_escaped,str_printable=str_escaped,str_quoted };
-
-	str		ConvertedTo	( cstr, strconvtype );
-	str		ConvertedFrom(cstr, strconvtype );
-
-//	str 	NewReadStr 	( FILE* ) throws;		// moved to unix/FILE.cpp
-	char	NextChar	( cptr& p );
-
-#endif
 
 #endif
 

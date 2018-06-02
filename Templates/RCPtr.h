@@ -57,8 +57,8 @@
 		operator[]
 		operator == != > >= < <=
 		print(FD&, uint indent) const				// formatted output for debugger, logfile etc.
-		writeToFile(FD&, void*) const throws		// serialize
-		readFromFile(FD&, void*) throws				// deserialize
+		serialize(FD&, void*) const throws		// serialize
+		deserialize(FD&, void*) throws				// deserialize
 		static T* restore(FD&, void*) throws;	// deserialize
 
 	RCArray:

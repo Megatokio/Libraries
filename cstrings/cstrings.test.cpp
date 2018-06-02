@@ -36,6 +36,7 @@
 #include "utf8.h"
 #include "unix/tempmem.h"
 #include "Libraries/Templates/Array.h"
+#include "Libraries/kio/util/defines.h"
 
 
 #define TRY num_tests++; try{
@@ -534,6 +535,125 @@ void test_cstrings(uint& num_tests, uint& num_errors)
 	END
 
 	TRY
+		errno=0;
+		for(int i=0; i<=255; i++)
+		{
+			assert(utf8::is_fup(char(i)) == (i>=0x80 && i<0xC0));
+			assert(utf8::no_fup(char(i)) != (i>=0x80 && i<0xC0));
+		}
+		assert(utf8::charcount("\t1hGfr&%<'")==10);
+		assert(utf8::charcount("ß1≥€•@∆º¶§")==10);
+		assert(utf8::max_csz("\t1hGfr&%<'")==1);
+		assert(utf8::max_csz("ß2≥€•@∆º¶§")==2);
+
+		ucs4char c1 = 0x09999;
+		ucs4char c2 = 0x10000;
+		assert(utf8::max_csz(catstr("\t1hGf∆º¶§",utf8::to_utf8(&c1,1),"x")) == 2);
+		assert(utf8::max_csz(catstr("\t1hGf∆º¶§",utf8::to_utf8(&c2,1),"x")) == 4);
+
+		assert(utf8::fits_ucs1("\t1hGfr&%<'"));
+		assert(!utf8::fits_ucs1("ß≤4€•@∆º¶§"));
+		assert(utf8::fits_ucs2("ß3≥€•@∆º¶§"));
+		assert(!utf8::fits_ucs2(catstr("\t1hGfr&%<'",utf8::to_utf8(&c2,1))));
+		assert(errno==0);
+	END
+
+	TRY
+		static const char s1[] = "\t1hGfr&%<'";
+		static const char s2[] = "ß≤5€•@∆º¶§";
+
+		errno=0;
+		uint8 bu1[20], *e1 = utf8::utf8_to_ucs1(s1,bu1);
+		assert(utf8::utf8len(bu1,uint(e1-bu1)) == NELEM(s1)-1);
+		assert(errno==0);
+		uint16 bu2[20], *e2 = utf8::utf8_to_ucs2(s2,bu2);
+		assert(utf8::utf8len(bu2,uint(e2-bu2)) == NELEM(s2)-1);
+		assert(errno==0);
+		uint32 bu3[20], *e3 = utf8::utf8_to_ucs4(s2,bu3);
+		assert(utf8::utf8len(bu3,uint(e3-bu3)) == NELEM(s2)-1);
+		assert(errno==0);
+	END
+
+	TRY
+		errno=0;
+		uint32 bu[10],bu2[10];
+		for(uint i=0;i<NELEM(bu);i++) { bu[i] = random()+random()*0x10000u; }
+		uint n = utf8::utf8len(bu,10);
+		str s = tempstr(n);
+		ptr e = utf8::ucs4_to_utf8(bu,10,s);
+		assert(*e==0);
+		assert(e-s==n);
+		assert(utf8::charcount(s)==10);
+		n = utf8::utf8_to_ucs4(s,bu2) - bu2;
+		assert(n==10);
+		assert(memcmp(bu,bu2,sizeof(bu))==0);
+		assert(errno==0);
+	END
+
+	TRY	// ucs4_to_utf8(), utf8_to_ucs4()
+		char bu[20];
+		errno = 0;
+		for (int nbits=0; nbits<=32; nbits++)				// max num of bits
+		{
+			for( int i=0; i<200; i++ )
+			{
+				uint32 n[2], m[2];
+				n[0] = (random()+random()*0x10000); if(nbits<32) n[0] &= RMASK(nbits);
+				n[1] = (random()+random()*0x10000); if(nbits<32) n[1] &= RMASK(nbits);
+
+				ptr e = utf8::ucs4_to_utf8(n,2,bu);
+				assert(*e==0);
+				assert(utf8::charcount(bu) == 2);
+				assert(utf8::utf8_to_ucs4(bu,m) == m+2);
+				assert(memcmp(n,m,sizeof(n)) == 0);
+			}
+		}
+		assert(errno==0);
+	END
+
+	TRY	// ucs2_to_utf8(), utf8_to_ucs2()
+		char bu[20];
+		errno = 0;
+		for (int nbits=0; nbits<=16; nbits++)				// max num of bits
+		{
+			for( int i=0; i<100; i++ )
+			{
+				uint16 n[2], m[2];
+				n[0] = random() & RMASK(nbits);
+				n[1] = random() & RMASK(nbits);
+
+				ptr e = utf8::ucs2_to_utf8(n,2,bu);
+				assert(*e==0);
+				assert(utf8::charcount(bu) == 2);
+				assert(utf8::utf8_to_ucs2(bu,m) == m+2);
+				assert(memcmp(n,m,sizeof(n)) == 0);
+			}
+		}
+		assert(errno==0);
+	END
+
+	TRY	// ucs1_to_utf8(), utf8_to_ucs1()
+		char bu[20];
+		errno = 0;
+		for (int nbits=0; nbits<=8; nbits++)				// max num of bits
+		{
+			for( int i=0; i<100; i++ )
+			{
+				uint8 n[2], m[2];
+				n[0] = random() & RMASK(nbits);
+				n[1] = random() & RMASK(nbits);
+
+				ptr e = utf8::ucs1_to_utf8(n,2,bu);
+				assert(*e==0);
+				assert(utf8::charcount(bu) == 2);
+				assert(utf8::utf8_to_ucs1(bu,m) == m+2);
+				assert(memcmp(n,m,sizeof(n)) == 0);
+			}
+		}
+		assert(errno==0);
+	END
+
+	TRY
 		assert(eq(utf8::fromhtmlstr("a&lt;int&amp;&gt;<br>"),"a<int&>\n"));
 		assert(eq(utf8::fromhtmlstr("foo<br>a&lt;int&amp;&gt;<br>"),"foo\na<int&>\n"));
 	END
@@ -542,6 +662,23 @@ void test_cstrings(uint& num_tests, uint& num_errors)
 		assert(eq(utf8::detabstr(" \thällö\t\n",4),"    hällö   \n"));
 	END
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
