@@ -15,24 +15,32 @@ INCLUDEPATH +=  \
 
 SOURCES += \
     Source/main.cpp \
+    Libraries/kio/kio.cpp \
+    Libraries/kio/exceptions.cpp \
+    Libraries/cstrings/cstrings.cpp \
+    Libraries/cstrings/cstrings.test.cpp \
+    Libraries/cstrings/utf8.cpp \
+    Libraries/cstrings/ucs1.cpp \
+    Libraries/unix/FD.cpp \
+    Libraries/unix/tempmem.cpp \
+    Libraries/unix/tempmem.test.cpp \
+    \
     Libraries/Templates/Array.test.cpp \
     Libraries/Templates/StrArray.test.cpp \
     Libraries/Templates/HashMap.test.cpp \
     Libraries/Templates/Sort.test.cpp \
-    Libraries/unix/FD.cpp \
-    Libraries/unix/tempmem.cpp \
-    Libraries/cstrings/cstrings.cpp \
-    Libraries/kio/exceptions.cpp \
-    Libraries/kio/kio.cpp \
-    Libraries/unix/tempmem.test.cpp \
-    Libraries/cstrings/cstrings.test.cpp \
-    Libraries/cstrings/utf8.cpp \
-    Libraries/cstrings/ucs1.cpp \
-    Libraries/Templates/RCArray.test.cpp
+    Libraries/Templates/RCArray.test.cpp \
+    \
+    Libraries/VString/String_test_suite.cpp \
+    Libraries/VString/String.cpp \
+    Libraries/Unicode/Unicode.cpp \
+    Libraries/Unicode/UnicodeLegacyCharsets.cpp \
+    Libraries/Unicode/UTF-8.cpp
 
 HEADERS += \
     config.h \
     Source/settings.h \
+    Source/custom_errors.h \
     Libraries/unix/FD.h \
     Libraries/unix/tempmem.h \
     Libraries/cstrings/cstrings.h \
@@ -55,7 +63,9 @@ HEADERS += \
     Libraries/cstrings/utf8.h \
     Libraries/cstrings/ucs1.h \
     Libraries/kio/peekpoke.h \
-    Libraries/Templates/template_helpers.h
+    Libraries/Templates/template_helpers.h \
+    Libraries/VString/String_errors.h \
+    Libraries/VString/String.h \
 
 
 

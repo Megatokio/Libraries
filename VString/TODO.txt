@@ -1,0 +1,5 @@
+
+
+			BUG: s.replace(a,b)		sehr langsam, bes. bei langen Texten / vielen Ersetzungen
+			NEW: s.rightstr()		optional kein Parameter -> default = 1
+			

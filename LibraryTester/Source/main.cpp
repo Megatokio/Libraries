@@ -43,6 +43,7 @@ extern void test_Array(uint& num_tests, uint& num_errors);
 extern void test_hashmap(uint& num_tests, uint& num_errors);
 extern void test_StrArray(uint& num_tests, uint& num_errors);
 extern void test_RCArray(uint& num_tests, uint& num_errors);
+extern void TestStringClass(uint& num_tests, uint& num_errors);
 
 
 int main(int, const char**)
@@ -57,6 +58,7 @@ int main(int, const char**)
 	test_RCArray(num_tests, num_errors);
 	test_hashmap(num_tests, num_errors);
 	test_sort(num_tests, num_errors);
+	TestStringClass(num_tests, num_errors);
 
 	std::cout << "\n" << num_tests << " tests run, " << num_errors << " errors.\n";
 
