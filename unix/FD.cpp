@@ -68,7 +68,7 @@ FD FD::stderr(2,"STDERR");
 
 // --- HELPER ---------------------------
 
-#define THROW_FILE_ERROR(WHERE) 	throw file_error(fpath, fd, errno, WHERE)
+#define THROW_FILE_ERROR(WHERE) 	throw file_error(fpath, errno, WHERE)
 
 
 
@@ -489,9 +489,9 @@ a:		uint32 n = read_bytes(bu,100,no), i;
 
                 s[n++] = c;
             }
-            if(n==0) throw file_error(fpath,fd,endoffile,"fd483");	// cannot happen
-            if(errno==EINTR) continue;								// read from slow device interrupted TODO: wait
-            if(errno==EAGAIN) { usleep(5000); continue; }			// non-blocking dev only
+            if(n==0) throw file_error(fpath,endoffile,"fd483");	// cannot happen
+            if(errno==EINTR) continue;							// read from slow device interrupted TODO: wait
+            if(errno==EAGAIN) { usleep(5000); continue; }		// non-blocking dev only
             THROW_FILE_ERROR("fd924");
         }
         s[n] = 0;		// string delimiter
@@ -553,7 +553,7 @@ str FD::read_new_nstr() THF
 void FD::read_file(Array<str>& a, uint32 maxsize) THF
 {
     off_t sz = file_remaining();
-    if(sz>maxsize) throw file_error(fpath,fd,limiterror,"fd547");
+    if(sz>maxsize) throw file_error(fpath,limiterror,"fd547");
     uint32 n = uint32(sz);
     str s = tempstr(n);
     read_bytes(s,n);
@@ -575,7 +575,7 @@ void FD::read_file(StrArray& a, uint32 maxsize) THF
     catch(file_error& e)
     {
         e.text = xdupstr(e.text);
-        throw e;
+        throw std::move(e);
     }
 }
 
@@ -1018,8 +1018,8 @@ int FD::set_terminal_size( int rows, int cols ) noexcept
     struct winsize data;
     if(ioctl(fd, TIOCGWINSZ, &data)) return errno;
 
-    data.ws_xpixel = data.ws_xpixel/data.ws_col*ushort(cols);		// superfluxous
-    data.ws_ypixel = data.ws_ypixel/data.ws_row*ushort(rows);		// superfluxous
+    data.ws_xpixel = data.ws_xpixel/data.ws_col*ushort(cols);		// superfluous
+    data.ws_ypixel = data.ws_ypixel/data.ws_row*ushort(rows);		// superfluous
     data.ws_row    = ushort(rows);
     data.ws_col    = ushort(cols);
     if(ioctl(fd, TIOCSWINSZ, &data)) return errno;

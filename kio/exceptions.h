@@ -36,7 +36,7 @@
 
 #include <new>
 #include "kio/kio.h"
-extern str usingstr( cstr, ... );		// #include "cstrings/cstrings.h"
+extern str usingstr( cstr, ... ) noexcept;		// #include "cstrings/cstrings.h"
 
 #ifndef __cplusplus
 	#error	C und nicht C++  !!
@@ -101,14 +101,21 @@ class any_error : public std::exception
 {
 public:
 	int		error;		// errno
-	cstr	text;		// custom error message: const, temp or NULL
+	cstr	text;		// const or temp
 
 public:
-	any_error (cstr msg, ...)			noexcept __printflike(2,3);
-	any_error (cstr msg, va_list va)	noexcept __printflike(2,0) :error(customerror), text(usingstr(msg,va)){}
-	any_error (int error)				noexcept :error(error), text(NULL){}
-	any_error (int error, cstr msg)		noexcept :error(error), text(msg){}
-	cstr what () const					noexcept override;
+	any_error (cstr msg, ...)				noexcept __printflike(2,3);
+	any_error (cstr msg, va_list va)		noexcept __printflike(2,0);
+	any_error (int error)					noexcept :error(error), text(nullptr){}
+	any_error (int error, cstr msg)			noexcept;
+	~any_error ()							noexcept;
+
+	cstr what () const						noexcept override;
+
+	any_error(any_error const&)				noexcept;
+	any_error(any_error&&)					noexcept;
+	any_error& operator= (any_error const&) = delete;
+	any_error& operator= (any_error&&)		= delete;
 };
 
 
@@ -120,13 +127,14 @@ public:
 class internal_error : public any_error
 {
 public:
-	cstr file;			// source line: const or temp
-	uint line;			// source line number
+	cstr file;			// source file: const or temp;  assumed: __FILE__
+	uint line;			// source line number;			assumed: __LINE__
 
 public:
 	internal_error (cstr file, uint line)			 noexcept :any_error(internalerror),file(file),line(line){}
 	internal_error (cstr file, uint line, int err)	 noexcept :any_error(err),file(file),line(line){}
 	internal_error (cstr file, uint line, cstr msg)	 noexcept :any_error(internalerror,msg),file(file),line(line){}
+
 	cstr what () const								 noexcept override;
 };
 
@@ -138,17 +146,14 @@ public:
 
 class limit_error : public any_error
 {
-	uint sz,max;
-
 public:
-	limit_error (cstr msg, uint sz, uint max)	noexcept :any_error(limiterror,msg),sz(sz),max(max){}
-	cstr what () const							noexcept override;
+	limit_error (cstr where, ulong sz, ulong max)	noexcept;
 };
 
 
 
 // ---------------------------------------------
-//			data_error								--> md5, backup_daemon.client
+//			data_error
 // ---------------------------------------------
 
 class data_error : public any_error
@@ -170,14 +175,18 @@ class file_error : public any_error
 {
 public:
 	cstr filepath;
-	int	 fd;
 
 public:
-	file_error(class FD&, int error)					noexcept;
-	file_error(class FD&, int error, cstr msg)			noexcept;
-	file_error(cstr path, int fd, int error)			noexcept :any_error(error),filepath(path),fd(fd){}
-	file_error(cstr path, int fd, int error, cstr msg)	noexcept :any_error(error,msg),filepath(path),fd(fd){}
-	cstr what() const									noexcept override;
+	file_error(cstr path, int error)			noexcept;
+	file_error(cstr path, int error, cstr msg)	noexcept;
+	~file_error ()								noexcept;
+
+	cstr what() const							noexcept override;
+
+	file_error(file_error const&)				noexcept;
+	file_error(file_error&&)					noexcept;
+	file_error& operator= (file_error const&)	= delete;
+	file_error& operator= (file_error&&)		= delete;
 };
 
 

@@ -39,152 +39,140 @@ note:
 */
 
 #include "config.h"
-#include "kio/kio.h"
-#include "unix/s_type.h"
-
-
-
-#if 0
-char custom_errmsg[256];
-int	 custom_error = 0;
-
-
-cstr ETEXT[] =
-{
-#define		EMAC(a,b)	b
-#include	"error_emacs.h"
-};
-
-
-/* ===================================================
-        Get Error Text:
-        does not allocate memory
-   =================================================== */
-
-cstr ErrorStr(int err, bool custom)
-{
-    if(err==0)						return "no error";
-    if(err==-1)						return "unknown error (-1)";
-    if(custom && err==custom_error)	return custom_errmsg;
-    if(uint(err-EBAS)<NELEM(ETEXT)) return ETEXT[err-EBAS];
-    else							return strerror(err);
-}
-
-
-/* ===================================================
-        Set Error:
-   =================================================== */
-
-// unconditional:
-//
-void ForceError( int err, cstr msg )
-{
-    strncpy(custom_errmsg,msg,255);
-    errno = custom_error = err;
-}
-
-// conditional:
-//
-void SetError( int err, cstr msg )
-{
-    if(!errno) ForceError(err,msg);
-}
-#endif
-
-
-
-/* ===================================================
-        Exception Messages:
-   =================================================== */
-
-#include "../unix/FD.h"
-
-file_error::file_error(class FD& fd, int error) noexcept
-: any_error(error),filepath(fd.filepath()),fd(fd.file_id())
-{}
-
-//file_error::file_error(class FD& fd, cstr msg) noexcept
-//: any_error(errno?errno:customerror,msg),filepath(fd.filepath()),fd(fd.file_id())
-//{}
-
-file_error::file_error(class FD& fd, int error, cstr msg) noexcept
-: any_error(error,msg),filepath(fd.filepath()),fd(fd.file_id())
-{}
+#include "Libraries/kio/kio.h"
+#include "Libraries/unix/s_type.h"
+#include "Libraries/unix/FD.h"
 
 
 // helper
-static
-cstr filename(cstr file) noexcept
+static cstr filename(cstr file) noexcept
 {
     cstr p = strrchr(file,'/');
     return p ? p+1 : file;
 }
 
-//virtual
+
+// ---------------------------------------------
+//			any_error
+// ---------------------------------------------
+
+any_error::any_error(cstr format, ...) noexcept
+: error(customerror)
+{
+	va_list va;
+	va_start(va,format);
+	text = newcopy(usingstr(format,va));
+	va_end(va);
+}
+
+any_error::any_error (cstr msg, va_list va)	noexcept
+: error(customerror),
+  text(newcopy(usingstr(msg,va)))
+{}
+
+any_error::any_error (int error, cstr msg) noexcept
+: error(error),
+  text(newcopy(msg))
+{}
+
+any_error::any_error (any_error&& q) noexcept
+: std::exception(q),
+  error(q.error),
+  text(q.text)
+{
+	q.text=nullptr;
+}
+
+any_error::any_error(any_error const& q) noexcept
+: std::exception(q),
+  error(q.error),
+  text(newcopy(q.text))
+{}
+
+any_error::~any_error () noexcept
+{
+	delete[] text;
+}
+
+cstr any_error::what() const noexcept
+{
+	return text ? text : errorstr(error);
+}
+
+
+// ---------------------------------------------
+//			internal_error
+// ---------------------------------------------
+
 cstr internal_error::what() const noexcept
 {
     return usingstr( "%s line %u: %s",
         filename(file), line, text ? text : errorstr(error) );
 }
 
-//virtual
-cstr limit_error::what() const noexcept
+
+// ---------------------------------------------
+//			limit_error
+// ---------------------------------------------
+
+limit_error::limit_error (cstr where, ulong sz, ulong max) noexcept
+: any_error(limiterror)
 {
-    return usingstr( "%s: size %u exceeds maximum of %u", text, sz, max );
+	text = newcopy(usingstr( "%s: size %lu exceeds maximum of %lu", where, sz, max ));
 }
 
-//ctor with format string:
-any_error::any_error(cstr format, ...) noexcept
-:
-	error(customerror)
-{
-    va_list va;
-    va_start(va,format);
-    text = usingstr(format,va);
-    va_end(va);
-}
 
-//virtual
-//	error 	-> errorstr
-//	text	-> text
-// 	beides	-> errorstr (text)
-//
-// 			wenn error und text angegeben sind, wird angenommen,
-//			dass der text zusätzlicher ein hinweis ist
-//
-cstr any_error::what() const noexcept
-{
-    return text
-        ? error==customerror || error==-1
-            ? text
-            : usingstr("%s (%s)",errorstr(error),text)
-        : errorstr(error);
-}
-
-//virtual
-// text==0	-> errorstr: file="filepath"
-// text!=0	-> errorstr: file="filepath" (text)
-//
-// 			wenn auch ein text angegeben ist, wird angenommen,
-//			dass dieser zusätzlicher ein hinweis ist
-//
-cstr file_error::what() const noexcept
-{
-    return usingstr( text ? "%s: file = \"%s\" (%s)"
-                          : "%s: file = \"%s\"",
-        errorstr(error), filepath, text);
-}
-
+// ---------------------------------------------
+//			data_error
+// ---------------------------------------------
 
 data_error::data_error (cstr msg, ...) noexcept
-:
-	any_error(dataerror)
+: any_error(dataerror)
 {
     va_list va;
     va_start(va,msg);
-    text = usingstr(msg,va);
+    text = newcopy(usingstr(msg,va));
     va_end(va);
 }
+
+
+// ---------------------------------------------
+//			file_error
+// ---------------------------------------------
+
+file_error::file_error (cstr path, int error) noexcept
+: any_error(error),
+  filepath(newcopy(path))
+{}
+
+file_error::file_error (cstr path, int error, cstr msg) noexcept
+: any_error(error,msg),
+  filepath(newcopy(path))
+{}
+
+file_error::file_error(file_error const& q) noexcept
+: any_error(q),
+  filepath(newcopy(q.filepath))
+{}
+
+file_error::file_error(file_error&& q) noexcept
+: any_error(q),
+  filepath(q.filepath)
+{
+	q.filepath = nullptr;
+}
+
+file_error::~file_error () noexcept
+{
+	delete[] filepath;
+}
+
+cstr file_error::what() const noexcept
+{
+	if(text) return usingstr("%s in file \"%s\" (%s)",errorstr(error),filepath,text);
+	else	 return usingstr("%s in file \"%s\"",     errorstr(error),filepath);
+}
+
 
 
 

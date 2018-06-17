@@ -822,7 +822,7 @@ void create_dir( cstr path, int mode, bool autocreatedirs ) THF
         if(mkdir(path,mode)==0) return;	// create dir or
     }
 
-    throw file_error(path,-1,errno, "create dir");
+    throw file_error(path,errno, "create dir");
 }
 
 
@@ -842,7 +842,7 @@ void create_pipe( cstr path, int mode ) THF
         if(mkfifo(path,mode)==0) return; // ok
     }
 
-    throw file_error(path,-1,errno,"create pipe");
+    throw file_error(path,errno,"create pipe");
 }
 
 
@@ -866,7 +866,7 @@ void create_link( cstr path, cstr dest ) THF
     if(symlink(dest,path)==0)	// may fail if node still exists (e.g. dir or file)
         return;	// ok
 
-x:	throw file_error(path,-1,errno, "create symlink");
+x:	throw file_error(path,errno, "create symlink");
 }
 
 
@@ -882,7 +882,7 @@ void create_hardlink( cstr zpath, cstr qpath ) THF
     if(errno==ok) errno = EEXIST;						// node exists?
     if(errno==ENOENT && link(qpath,zpath)==0) return;	// ok
 
-    throw file_error(zpath,-1,errno,"create hardlink");
+    throw file_error(zpath,errno,"create hardlink");
 }
 
 
@@ -920,7 +920,7 @@ void create_hardlinked_copy(char const* zpath, char const* qpath) THF
     catch(file_error& e)
     {
         logline("create_hardlinked_copy dir size = %u, dir = %s", dir.count(),qpath);
-        throw e;
+        throw std::move(e);
     }
 }
 
@@ -940,7 +940,7 @@ void delete_node( cstr path, bool follow_symlink, s_type typ ) THF
     }
     if(remove(path)==0) return;
 
-x:	throw file_error(path,-1,errno,"delete node");
+x:	throw file_error(path,errno,"delete node");
 }
 
 
@@ -988,7 +988,7 @@ void delete_dir( cstr path, bool fulltree ) THF
 
     if(rmdir(path)==0 || (errno==ENOTEMPTY && fulltree && remove_tree(path)==0) ) return; // ok
 
-x:	throw file_error(path,-1,errno,"delete dir");
+x:	throw file_error(path,errno,"delete dir");
 }
 
 
@@ -1011,7 +1011,7 @@ void rename_node( cstr oldpath, cstr newpath, bool overwrite ) THF
     if(errno==ok || errno==ENOENT)
         if(rename(oldpath,newpath)==0) return;			// renames files, dirs and symlinks!
 
-x:	throw file_error(oldpath,-1,errno,usingstr("rename to \"%s\"",newpath));
+x:	throw file_error(oldpath,errno,usingstr("rename to \"%s\"",newpath));
 }
 
 
@@ -1030,7 +1030,7 @@ void swap_files( cstr path1, cstr path2 ) THF
         return; // ok
     }
 
-x:	throw file_error(path1,-1,errno, usingstr("swap with file \"%s\"",path2));
+x:	throw file_error(path1,errno, usingstr("swap with file \"%s\"",path2));
 }
 
 
@@ -1046,7 +1046,7 @@ void read_dir( cstr path, MyFileInfoArray& v, bool resolve_symlinks ) THF
     path = fullpath(path,yes);
     if(errno && errno!=ENOENT)
     {
-        x: throw file_error(path,-1,errno, "read dir");
+        x: throw file_error(path,errno, "read dir");
     }
 
     cstr pattern = NULL;
