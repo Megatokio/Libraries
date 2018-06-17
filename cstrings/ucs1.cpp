@@ -39,7 +39,7 @@ namespace ucs1
 	#define N16(C)	N8(C),N8(C+8)
 	#define N32(C)	N16(C),N16(C+16)
 
-char const toupper_table[0x100] =
+char const uc_table[0x100] =
 {
 	N32(0), N32(0x20), N32(0x40),
 	0x60, N7(0x41), N8(0x48),
@@ -48,7 +48,7 @@ char const toupper_table[0x100] =
 	N16(0xc0), N7(0xd0), char(0xf7), N7(0xd8), 'Y' 	// uc(ÿ) = Y	da: Ÿ = ucs2
 };
 
-char const tolower_table[0x100] =
+char const lc_table[0x100] =
 {
 	N32(0), N32(0x20),
 	0x40, N7(0x61), N8(0x68),

@@ -204,6 +204,39 @@ char* ucs4_to_utf8 (ucs4char const* q, uint qcnt, char* z) noexcept
 	return z;
 }
 
+ucs4char utf8_to_ucs4char (cptr q) noexcept
+{
+	if(!q) return 0;
+
+	uint32 c = *cuptr(q++);
+	if (c < 0x80) { return c; }
+	if (c < 0xC0) { errno = unexpectedfup; return 0; }
+
+	uint n;
+	if (c < 0xE0) { c &= 0x1F; n = 1; } else
+	if (c < 0xF0) { c &= 0x0F; n = 2; } else
+	if (c < 0xF8) { c &= 0x07; n = 3; } else
+	if (c < 0xFC) { c &= 0x03; n = 4; } else
+				  {            n = 5; }			// full 32 bit decoded
+	do
+	{
+		if (is_fup(*q))
+		{
+			c = (c<<6) + (*cuptr(q++) & 0x3F);
+			continue;
+		}
+		else
+		{
+			c = replacementchar;
+			errno = truncatedchar;
+			break;
+		}
+	}
+	while(--n);
+
+	return c;
+}
+
 ucs4char* utf8_to_ucs4 (cptr q, ucs4char* z) noexcept
 {
 	// decode utf-8 string into ucs4 buffer
@@ -211,6 +244,8 @@ ucs4char* utf8_to_ucs4 (cptr q, ucs4char* z) noexcept
 	// • sets errno for broken characters: unexpectedfup and truncatedchar
 	// • illegal overlong encodings are not trapped
 	// • combining characters etc. are not handled
+	// return:	ptr -> behind dest
+	//			no null-char written
 	//
 	// possible approach:
 	// • precalculate required size of buffer[] with char_count()
@@ -259,7 +294,7 @@ ucs2char* utf8_to_ucs2 (cptr q, ucs2char* z) noexcept
 	if(q) while (uint c = *cuptr(q++))
 	{
 		uint n;
-		if (c < 0x80) { *z++ = c; continue; }
+		if (c < 0x80) { *z++ = ucs2char(c); continue; }
 		if (c < 0xC0) { errno = unexpectedfup; continue; }
 
 		if (c < 0xE0) { c &= 0x1F; n = 1; } else
@@ -288,7 +323,7 @@ ucs2char* utf8_to_ucs2 (cptr q, ucs2char* z) noexcept
 			}
 		}
 
-		*z++ = c;
+		*z++ = ucs2char(c);
 	}
 
 	return z;
@@ -300,14 +335,14 @@ ucs1char* utf8_to_ucs1 (cptr q, ucs1char* z) noexcept
 
 	if(q) while (uint c = *cuptr(q++))
 	{
-		if (c <= 0x7F) { *z++ = c; continue; }
+		if (c <= 0x7F) { *z++ = ucs1char(c); continue; }
 		if (c <= 0xBF) { errno = unexpectedfup; continue; }
 
 		if (c <= 0xc3)	// %110000xx + %10xxxxxx
 		{
 			if (is_fup(*q))
 			{
-				*z++ = (c<<6) + (*cuptr(q++) & 0x3F);
+				*z++ = ucs1char((c<<6) + (*cuptr(q++) & 0x3F));
 			}
 			else
 			{
@@ -422,11 +457,11 @@ cstr fromhtmlstr (cstr s0) throws
 			if(*p == 'x')
 			{
 				p++;
-				while (p<q+6 && *p && *p!=';' && is_hex_digit(*p)) { n = (n<<4) + digit_value(*p++); }
+				while (p<q+6 && *p && *p!=';' && ::is_hex_digit(*p)) { n = (n<<4) + ::digit_value(*p++); }
 			}
 			else
 			{
-				while (p<q+6 && *p && *p!=';' && is_dec_digit(*p)) { n = (n<<4) + digit_val(*p++); }
+				while (p<q+6 && *p && *p!=';' && ::is_dec_digit(*p)) { n = (n<<4) + ::digit_val(*p++); }
 			}
 			if (*p == ';')
 			{
@@ -440,12 +475,12 @@ cstr fromhtmlstr (cstr s0) throws
     }
 }
 
-cstr detabstr (cstr s, uint tabstops)
+cstr detabstr (cstr s, uint tabs) noexcept
 {
 	// expand tabs to spaces
 	// returns the original string if there were no tabs found
 
-	assert( tabstops>=1 && tabstops<=99 );
+	assert( tabs>=1 && tabs<=99 );
 	if (s==nullptr) return nullptr;
 	if (strchr(s,'\t') == nullptr) return s;
 
@@ -458,7 +493,7 @@ cstr detabstr (cstr s, uint tabstops)
 	// utf8 FUPs are not counted as characters.
 
 	uint qlen = uint(strlen(s));
-	uint zlen = qlen+tabstops*4;
+	uint zlen = qlen+tabs*4;
 	str  zstr = tempstr(zlen);
 
 	cptr q  = s;
@@ -473,10 +508,10 @@ cstr detabstr (cstr s, uint tabstops)
 		if (c==13 || c==10) { *z++ = c; z0 = z; continue; }
 		if (c != '\t')		{ *z++ = c; continue; }
 
-		uint n = tabstops - (z-z0)%tabstops;
+		uint n = tabs - (z-z0)%tabs;
 		if(qe-q > zstr+zlen-(z+n))
 		{
-			zlen += tabstops*4;
+			zlen += tabs*4;
 			cstr zalt = zstr;
 			zstr = tempstr(zlen); strcpy(zstr,zalt);
 			z0 += zstr-zalt; z += zstr-zalt;
@@ -488,7 +523,7 @@ cstr detabstr (cstr s, uint tabstops)
 	return zstr;
 }
 
-str whitestr (cstr q, char c) throws
+str whitestr (cstr q, char c) noexcept
 {
 	// create blanked-out copy of string
 	// replace all printable characters with space
@@ -513,6 +548,95 @@ str whitestr (cstr q, char c) throws
 		*z = 0;
 	}
     return rval;
+}
+
+str unescapedstr (cstr s0) noexcept  // sets errno
+{
+	// preserves escaped char(0) as unicode 0xC0 + 0x80
+
+	if (!s0 || !*s0) return emptystr;
+
+	char c, *q, *z;
+	str s = dupstr(s0);
+
+	q = z = strchr(s,'\\');
+
+	if(q) for(;;)
+	{
+		while ((c=*q++)!='\\')
+		{
+			*z++ = c;
+			if (!c) return s;
+		}
+
+		c = *q++;					// c = next char after '\'
+
+		if (::is_oct_digit(c))
+		{
+			// \ooo => octal value for next byte. 9th bit discarded
+			// \oo     allowed but not recommended.
+			// \o	   allowed but not recommended. typically used for chr(0)
+
+			uint d;
+			c = char(::digit_val(c));
+			d = digit_val(q); if (d<8) { q++; c = char(c<<3)+char(d); }
+			d = digit_val(q); if (d<8) { q++; c = char(c<<3)+char(d); }
+			if (c==0) { *z++ = char(0xC0); c = char(0x80); }
+		}
+
+		else if (c=='x' && is_hex_digit(q))
+		{
+			// \xHH => hex coded value for next byte
+			// \xH     allowed but not recommended.
+			// \x      'x' masked for unknown reason => stores 'x'
+
+			c = char(::digit_value(*q++));
+			if (is_hex_digit(q)) c = char(c<<4) + char(::digit_value(*q++));
+			if (c==0) { *z++ = char(0xC0); c = char(0x80); }
+		}
+
+		else if ((c|0x20) == 'u' && is_hex_digit(q))
+		{
+			// 'u' -> ucs2 character (4 hex digits)
+			// 'U' -> ucs4 character (8 hex digits)
+
+			ucs4char d = 0;
+			uint n = c=='U' ? 8 : 4;
+			do { d = (d<<4) + digit_value(q++); } while (--n && is_hex_digit(q));
+			z = ucs4_to_utf8(&d,1,z);
+			continue;
+		}
+
+		else if (!c)
+		{
+			// remove '\' at end of string:
+
+			errno = brokenescapecode;
+			continue;
+		}
+
+		else if (c=='\n' || c=='\r')
+		{
+			// '\n' => store '\n' and skip white space
+
+			while (*q && *q<=' ') q++;
+			continue;	// don't store the '\n'
+		}
+
+		else
+		{
+			// standard escape codes or s.th. escaped for unknown reason:
+
+			static const char ec[] = "\\\"'?abfnrtv";			// escape character
+			static const char cc[] = "\\\"'\?\a\b\f\n\r\t\v";	// result
+			cptr p = strchr(ec,c);
+			if (p) c = cc[p-ec];				// valid escaped sequence
+			else errno = brokenescapecode;		// else self-escaped char
+		}
+
+		*z++ = c;
+	}
+	return s;
 }
 
 }; // namespace

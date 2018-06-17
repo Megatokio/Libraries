@@ -28,6 +28,7 @@
 #define UTF8_H
 #include "Libraries/kio/kio.h"
 #include "Libraries/cstrings/cstrings.h"
+#include "ucs4.h"
 
 
 typedef uint8  ucs1char;
@@ -40,10 +41,13 @@ typedef uint32 ucs4char;
 
 namespace utf8
 {
-const char replacementchar = '?';	// offiziell $FFFD -> ucs2, utf8 = 3 bytes
+static const char replacementchar = '?';	// offiziell $FFFD -> ucs2, utf8 = 3 bytes
 
 inline bool is_fup (char c)			noexcept { return int8(c) < int8(0xc0); }
 inline bool	no_fup (char c)			noexcept { return int8(c) >= int8(0xc0); }
+
+inline cptr nextchar  (cptr p)		{ while (is_fup(*++p) ) {} return p; }
+inline ptr  nextchar  (ptr p)		{ while (is_fup(*++p) ) {} return p; }
 
 extern uint charcount (cstr)		noexcept; // count characters in utf-8 string
 extern uint max_csz	  (cstr)		noexcept; // required ucs* character size to store utf-8 string
@@ -86,16 +90,54 @@ extern ucs4char* to_ucs4 (cstr q);					// set errno
 
 
 extern	cstr fromhtmlstr (cstr s)			throws;
-extern	cstr detabstr	(cstr, uint tabwidth) throws;
-extern	str	 whitestr	(cstr, char c=' ')	throws;
+extern	cstr detabstr	(cstr, uint tabs)	noexcept;
+extern	str	 whitestr	(cstr, char c=' ')	noexcept;
+extern	str	 unescapedstr(cstr)				noexcept; // sets errno
 
 extern	bool isupperstr	(cstr)				noexcept; // TODO
 extern	bool islowerstr	(cstr)				noexcept; // TODO
 
-inline	void toupper	(str)				throws; // TODO	{ if(s) for( ;*s;s++ ) *s = to_upper(*s); }
-inline	void tolower	(str)				throws; // TODO	{ if(s) for( ;*s;s++ ) *s = to_lower(*s); }
-extern	str	 upperstr	(cstr)				throws; // TODO
-extern	str	 lowerstr	(cstr)				throws; // TODO
+extern	void toupper	(str)				noexcept; // TODO	{ if(s) for( ;*s;s++ ) *s = to_upper(*s); }
+extern	void tolower	(str)				noexcept; // TODO	{ if(s) for( ;*s;s++ ) *s = to_lower(*s); }
+extern	str	 upperstr	(cstr)				noexcept; // TODO
+extern	str	 lowerstr	(cstr)				noexcept; // TODO
+
+
+extern	ucs4char utf8_to_ucs4char	(cptr s) noexcept;
+
+inline ucs4::Enum blockProperty		(cptr p)	{ return ucs4::blockProperty(utf8_to_ucs4char(p) ); }
+inline ucs4::Enum scriptProperty	(cptr p)	{ return ucs4::scriptProperty(utf8_to_ucs4char(p) ); }
+inline ucs4::Enum cccProperty		(cptr p)	{ return ucs4::cccProperty(utf8_to_ucs4char(p) ); }
+inline ucs4::Enum generalCategory	(cptr p)	{ return ucs4::generalCategory(utf8_to_ucs4char(p) ); }
+//inline cstr	  characterName		(cptr p)	{ return *p>=0 ? ucs1::characterName(*p)
+//					 											: ucs4::characterName(UCS4CharFromUTF8(p)); }
+inline ucs4::Enum eaWidthProperty	(cptr p)	{ return ucs4::eaWidthProperty(utf8_to_ucs4char(p)); }
+inline uint		  printWidth		(cptr p)	{ return ucs4::printWidth(utf8_to_ucs4char(p)); } // 0, 1, or 2
+
+
+inline	bool is_printable (cptr p) { return *p>=0 ? is_in_range(0x20,*p,0x7e) : ucs4::is_printable(utf8_to_ucs4char(p)); }
+inline	bool is_control	  (cptr p) { return *p>=0 ? not_in_range(0x20,*p,0x7e) : generalCategory(p) == ucs4::U_gc_control; }
+inline	bool is_letter	  (cptr p) { return *p>=0 ? ::is_letter(*p) : is_in_range(ucs4::U_gc_letter, generalCategory(p), ucs4::U_gc_lu); }
+
+inline	bool is_dec_digit (cptr p)	{ return *p>=0 ? ::is_dec_digit(*p) : generalCategory(p) == ucs4::U_gc_digit; }
+inline	bool is_oct_digit (cptr p)	{ return ::is_oct_digit(*p);  }	// '0'..'7'
+inline	bool is_bin_digit (cptr p)	{ return ::is_bin_digit(*p);  }	// '0'..'1'
+inline	bool is_hex_digit (cptr p)	{ return ::is_hex_digit(*p);  }	// 0-9,a-f,A-F
+inline	uint digit_val	  (cptr p)	{ return ::digit_val(*p);     }	// 0..9;  NaN>9
+inline	uint digit_value  (cptr p)	{ return ::digit_value(*p);   }	// 0..36; NaN>36
+
+// decimal digits, roman numbers
+inline	bool is_number_letter (cptr p)
+					{ return *p>=0 ? is_in_range('0',*p,'9')
+							: is_in_range(ucs4::U_gc_digit, generalCategory(p), ucs4::U_gc_letter_number); }
+inline	bool has_numeric_value (cptr p)
+					{ return *p>=0 ? ::is_dec_digit(*p)
+							: is_in_range(ucs4::U_gc_number, generalCategory(p), ucs4::U_gc_other_number); }
+
+// Get Digit, Number & Decorated Number value.
+// some fractionals. one negative. two NaNs.
+inline	float		numeric_value (cptr p)
+					{ return is_in_range('0',*p,'9') ? ::digit_val(*p) : ucs4::_numeric_value(utf8_to_ucs4char(p)); }
 };
 
 

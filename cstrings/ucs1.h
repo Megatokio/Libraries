@@ -29,14 +29,17 @@
 #include "Libraries/kio/kio.h"
 #include "Libraries/cstrings/cstrings.h"
 
+
 /*
 	namespace ucs1 enhances some functions in cstrings.cpp
+	the functions in this namespace work with 'char' not 'ucs1char'
+	for easier use in normal string handling.
 */
 
 namespace ucs1
 {
-extern	char const toupper_table[0x100];
-extern	char const tolower_table[0x100];
+extern char const uc_table[0x100];	// simple uppercase table
+extern char const lc_table[0x100];	// simple lowercase table
 
 // is_uppercase() is true for all letters which have a different lowercase letter inside ucs1.
 // is_uppercase() is true for 'A' … 'Z', and 'À' … 'Þ' except '×'.
@@ -46,12 +49,12 @@ extern	char const tolower_table[0x100];
 //
 // is_letter() is true for all letters which have a different uppercase and lowercase version and for 'ß'.
 
-inline	bool is_uppercase (char c)	noexcept { return c != tolower_table[uchar(c)]; }
-inline	bool is_lowercase (char c)	noexcept { return c != toupper_table[uchar(c)] || c==char(0xdf)/*ß*/; }
+inline	bool is_uppercase (char c)	noexcept { return c != lc_table[uchar(c)]; }
+inline	bool is_lowercase (char c)	noexcept { return c != uc_table[uchar(c)] || c==char(0xdf)/*ß*/; }
 inline	bool is_letter (char c)		noexcept { return to_upper(c) != to_lower(c) || c==char(0xdf)/*ß*/; }
 
-inline	char to_lower (char c)		noexcept { return tolower_table[uchar(c)]; }
-inline	char to_upper (char c)		noexcept { return toupper_table[uchar(c)]; }
+inline	char to_lower (char c)		noexcept { return lc_table[uchar(c)]; }
+inline	char to_upper (char c)		noexcept { return uc_table[uchar(c)]; }
 
 extern	bool isupperstr	(cstr)		noexcept;
 extern	bool islowerstr	(cstr)		noexcept;
