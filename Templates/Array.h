@@ -80,7 +80,7 @@ protected:
 	void deallocate (T* data)				noexcept { delete[] reinterpret_cast<char*>(data); }
 
 public:
-	static const uint maxCount = ArrayMAX/sizeof(T);
+	static constexpr uint maxCount = ArrayMAX/sizeof(T);
 
 	// see https://stackoverflow.com/questions/11562/how-to-overload-stdswap
 	static void swap (Array& a, Array& b)	noexcept {std::swap(a.cnt,b.cnt);std::swap(a.max,b.max);std::swap(a.data,b.data);}
@@ -100,15 +100,19 @@ public:
 	uint	count   	() const			noexcept { return cnt; }
 	T const* getData	() const			noexcept { return data; }
 	T*		 getData	()					noexcept { return data; }
-	T const& operator[]	(uint i) const		asserts  { assert(i<cnt); return data[i]; }
-	T&		 operator[]	(uint i)			asserts  { assert(i<cnt); return data[i]; }
-	T const& first		() const			asserts  { assert(cnt); return data[0]; }
-	T&		 first		()					asserts  { assert(cnt); return data[0]; }
-	T const& last		() const			asserts  { assert(cnt); return data[cnt-1]; }
-	T&		 last		()					asserts  { assert(cnt); return data[cnt-1]; }
+	T const& operator[]	(uint i) const		noexcept { assert(i<cnt); return data[i]; }
+	T&		 operator[]	(uint i)			noexcept { assert(i<cnt); return data[i]; }
+	T const& first		() const			noexcept { assert(cnt); return data[0]; }
+	T&		 first		()					noexcept { assert(cnt); return data[0]; }
+	T const& last		() const			noexcept { assert(cnt); return data[cnt-1]; }
+	T&		 last		()					noexcept { assert(cnt); return data[cnt-1]; }
 
-	bool operator==	(Array const& q) const noexcept;	// uses ne()
-	bool operator!=	(Array const& q) const noexcept;	// uses ne()
+	bool operator==	(Array const& q) const	noexcept;	// uses ne()
+	bool operator!=	(Array const& q) const	noexcept;	// uses ne()
+	bool operator<	(Array const& q) const	noexcept;	// uses eq() and lt()
+	bool operator>	(Array const& q) const	noexcept;	// uses eq() and gt()
+	bool operator>=	(Array const& q) const	noexcept { return !operator<(q); }
+	bool operator<=	(Array const& q) const	noexcept { return !operator>(q); }
 	bool	contains	(REForVALUE(T) item) const	noexcept;	// uses eq()
 	uint	indexof		(REForVALUE(T) item) const	noexcept;	// uses eq()
 
@@ -119,16 +123,16 @@ public:
 	void	grow		(uint newcnt)		throws;
 	void	shrink		(uint newcnt)		noexcept;
 	void	resize		(uint newcnt)		throws	 { grow(newcnt); shrink(newcnt); }
-	void	drop		()					asserts  { assert(cnt); data[--cnt].~T(); }
-	T		pop			()					asserts  { assert(cnt); return std::move(data[--cnt]); }
+	void	drop		()					noexcept { assert(cnt); data[--cnt].~T(); }
+	T		pop			()					noexcept { assert(cnt); return std::move(data[--cnt]); }
 	void	purge		()					noexcept { for(uint i=0;i<cnt;i++) data[i].~T(); deallocate(data); max=cnt=0; data=nullptr; }
 	void	append		(T q)				throws	 { growmax(cnt+1); new(&data[cnt++])T(std::move(q)); }
 	void	appendifnew	(T q)				throws	 { if(!contains(q)) append(std::move(q)); }	// uses eq()
 	Array&	operator<<	(T q)				throws	 { append(std::move(q)); return *this; }
 	void	append		(T const* q, uint n) throws	 { growmax(cnt+n); for(uint i=0;i<n;i++) new(&data[cnt+i])T(*q++); cnt += n; }
-	void	append		(Array const& q)	asserts  { assert(this!=&q); append(q.data, q.cnt); }
+	void	append		(Array const& q)	throws   { assert(this!=&q); append(q.data, q.cnt); }
 
-	void	remove		(uint idx, bool fast=0)	asserts;
+	void	remove		(uint idx, bool fast=0)	noexcept;
 	void	removerange	(uint a, uint e)	noexcept;
 	void	removeitem	(REForVALUE(T) item, bool fast=0) noexcept;	// uses eq()
 
@@ -171,7 +175,7 @@ template<typename T>
 T* Array<T>::allocate (uint n) throws
 {
 	if(n <= maxCount) return n ? reinterpret_cast<T*>(new char[n*sizeof(T)]) : nullptr;
-	throw limit_error("Array<T>: max. array size exceeded: %u (max: %u)", n, maxCount);
+	throw limit_error("Array<T>", n, maxCount);
 }
 
 template<typename T>
@@ -229,6 +233,30 @@ bool Array<T>::operator!= (Array<T> const& q) const noexcept
 		if(ne(data[i],q.data[i])) return true;
 	}
 	return false;
+}
+
+template<typename T>
+bool Array<T>::operator< (Array const& q) const noexcept	// uses eq() and lt()
+{
+	static int f=0; if(!f) logline("TODO: TEST Array<T>::operator< (Array const& q)"); f=1;
+
+	uint end = min(cnt,q.cnt);
+	uint i = 0;
+	while (i<end && eq(data[i],q.data[i])) { i++; }
+	if (i<end) return lt(data[i],q.data[i]);
+	else return cnt < q.cnt;
+}
+
+template<typename T>
+bool Array<T>::operator> (Array const& q) const noexcept	// uses eq() and gt()
+{
+	static int f=0; if(!f) logline("TODO: TEST Array<T>::operator> (Array const& q)"); f=1;
+
+	uint end = min(cnt,q.cnt);
+	uint i = 0;
+	while (i<end && eq(data[i],q.data[i])) { i++; }
+	if (i<end) return gt(data[i],q.data[i]);
+	else return cnt > q.cnt;
 }
 
 template<typename T>
@@ -366,7 +394,7 @@ void Array<T>::removeitem (REForVALUE(T) item, bool fast) noexcept
 }
 
 template<typename T>
-void Array<T>::remove (uint idx, bool fast) asserts
+void Array<T>::remove (uint idx, bool fast) noexcept
 {
 	// remove item at index
 	// idx < cnt

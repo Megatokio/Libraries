@@ -101,22 +101,20 @@
 
 #ifndef TEMPMEM_H
 #define	TEMPMEM_H
-
 #include "../kio/kio.h"
-#define throws noexcept(false)			// bad_alloc
 
 
-extern	char*	tempmem (int size)		throws;
-extern	char*	tempstr (int size)		throws;
-inline	char*	tempmem (uint size)		throws { return tempmem(int(size)); }
-//inline	char*	tempstr (uint size)		throws { return tempstr(int(size)); }
+extern	char*	tempmem (uint size)		noexcept;
+extern	char*	tempstr (uint size)		noexcept;
+inline	char*	tempmem (int size)		noexcept { assert(size>=0); return tempmem(uint(size)); }
+//inline char*	tempstr (int size)		noexcept { assert(size>=0); return tempstr(uint(size)); }
 
-extern	char*	xtempmem (int size)		throws;
-extern	char*	xtempstr (int size)		throws;
-inline	char*	xtempmem (uint size)	throws { return xtempmem(int(size)); }
-inline	char*	xtempstr (uint size)	throws { return xtempstr(int(size)); }
+extern	char*	xtempmem (uint size)	noexcept;
+extern	char*	xtempstr (uint size)	noexcept;
+inline	char*	xtempmem (int size)		noexcept { assert(size>=0); return xtempmem(uint(size)); }
+inline	char*	xtempstr (int size)		noexcept { assert(size>=0); return xtempstr(uint(size)); }
 
-extern	void	purgeTempMem ();
+extern	void	purgeTempMem ()			noexcept;
 
 
 
@@ -132,24 +130,24 @@ struct TempMemData
 
 class TempMemPool
 {
-	int				size;
+	uint			size;
 	TempMemData*	data;
 	TempMemPool*	prev;
 
-					TempMemPool		(TempMemPool const&);			// prohibit
-	void			operator=		(TempMemPool const&);			// prohibit
+					TempMemPool		(TempMemPool const&) = delete;
+	void			operator=		(TempMemPool const&) = delete;
 
 public:
-					TempMemPool		();
-					~TempMemPool	();
+					TempMemPool		()			noexcept;
+					~TempMemPool	()			noexcept;
 
-	void			purge			();
-	char*			alloc			(int size)	throws;
-	char*			allocStr		(int len)	throws;	// 0-terminated
-	char*			allocMem		(int size)	throws;	// aligned to _MAX_ALIGNMENT
+	void			purge			()			noexcept;
+	char*			alloc			(uint size)	noexcept;
+	char*			allocStr		(uint len)	noexcept;	// 0-terminated
+	char*			allocMem		(uint size)	noexcept;	// aligned to _MAX_ALIGNMENT
 
-static TempMemPool*	getPool			()			throws;
-static TempMemPool*	getXPool		()			throws;
+static TempMemPool*	getPool			()			noexcept;
+static TempMemPool*	getXPool		()			noexcept;
 };
 
 
@@ -158,7 +156,7 @@ static TempMemPool*	getXPool		()			throws;
 */
 
 inline
-char* TempMemPool::allocStr (int len) throws
+char* TempMemPool::allocStr (uint len) noexcept
 {
 	char* p = alloc(len+1);
 	p[len] = 0;

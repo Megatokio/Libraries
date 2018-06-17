@@ -56,6 +56,7 @@
 	EMAC( unexpectedfup,	"utf-8 char started with fup"),	// cstrings/cstrings.h
 	EMAC( truncatedchar,	"utf-8 char truncated"		),	// cstrings/cstrings.h
 	EMAC( notindestcharset,	"character not in destination charset" ), // utf-8, cstrings/utf8
+	EMAC( brokenescapecode,	"broken escape code in string"),// cstrings/utf8.cpp
 	EMAC( endoffile,		"end of file"				),	// unix/FD.h
 #define   outofmemory		ENOMEM							// kio/errors.h: macro OMEM(), <=> std::bad_alloc : exception
 	EMAC( internalerror,	"internal error"			),	// kio/errors.h: macro NIMP(),  class internal_error

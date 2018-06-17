@@ -55,7 +55,7 @@ public:
 
 	virtual	~StrArray ()					 noexcept { release_all(); }
 	StrArray ()								 noexcept :SUPER(){}
-	StrArray (StrArray&& q)					 asserts  :SUPER(std::move(q)){ assert(q.data==nullptr); }
+	StrArray (StrArray&& q)					 noexcept :SUPER(std::move(q)){ assert(q.data==nullptr); }
 	explicit StrArray (StrArray const& q)	 throws   :SUPER(q){ retain_all(); }
 	explicit StrArray (Array<str> const& q)	 throws   :SUPER(q){ retain_all(); }
 	explicit StrArray (Array<cstr> const& q) throws   :StrArray(reinterpret_cast<Array<str> const&>(q)){}
@@ -103,8 +103,8 @@ public:
 	//void	grow		(uint cnt, uint max) throws;
 	void	shrink		(uint newcnt)		noexcept { release(newcnt,cnt); SUPER::shrink(newcnt); }
 	void	resize		(uint newcnt)		throws	 { shrink(newcnt); grow(newcnt); }
-	void	drop		()					asserts  { assert(cnt); release(--cnt); }
-	str 	pop			()					asserts  { assert(cnt); return data[--cnt]; }	// returns ownership
+	void	drop		()					noexcept { assert(cnt); release(--cnt); }
+	str 	pop			()					noexcept { assert(cnt); return data[--cnt]; }	// returns ownership
 	void	purge		()					noexcept { release_all(); SUPER::purge(); }
 	void	append		(cstr q)			throws	 { grow() = newcopy(q); }
 	void	appendifnew	(cstr q)			throws	 { if(!contains(q)) append(q); }		// uses eq()
@@ -115,7 +115,7 @@ public:
 	void	append		(StrArray&& q)		throws	 { SUPER::append(q); q.cnt=0; }
 	void	append		(StrArray const& q)	throws	 { append(StrArray(q)); }
 
-	void	remove		(uint i, bool fast=0) asserts  { assert(i<cnt); release(i); SUPER::remove(i,fast); }
+	void	remove		(uint i, bool fast=0) noexcept { assert(i<cnt); release(i); SUPER::remove(i,fast); }
 	void	removerange	(uint a, uint e)	  noexcept;
 	void	removeitem	(cstr s, bool fast=0) noexcept { uint i=indexof(s); if(i!=~0u) remove(i,fast); } // uses eq()
 

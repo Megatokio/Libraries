@@ -86,7 +86,7 @@ public:
 	RCObject ()								noexcept :cnt(0){}
 	explicit RCObject (RCObject const&)		noexcept :cnt(0){}
 	RCObject (RCObject&&)					noexcept :cnt(0){}
-	virtual	~RCObject ()					asserts  { assert(cnt==0); }
+	virtual	~RCObject ()					noexcept { assert(cnt==0); }
 
 	RCObject& operator= (RCObject const&)	noexcept { return *this; }
 	RCObject& operator= (RCObject&&)		noexcept { return *this; }

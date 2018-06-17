@@ -64,8 +64,8 @@ public:
 
 	void	purge ()					noexcept;
 	char*	alloc (size_t size)			throws;
-	char*	allocStr (size_t len )		throws;		// 0-terminated
-	char*	allocMem (size_t size)		throws;		// aligned to _MAX_ALIGNMENT
+	char*	allocstr (size_t len )		throws;		// 0-terminated
+	char*	allocmem (size_t size)		throws;		// aligned to _MAX_ALIGNMENT
 	char*	dupstr (cstr)				throws;
 
 	static void test();

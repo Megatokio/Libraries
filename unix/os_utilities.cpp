@@ -90,13 +90,13 @@ extern char **environ;					// was required by: Mac OSX (pre 10.5 ?)
 cstr getUser()
 {
     struct passwd* p = getpwuid(getuid());
-    return p ? p->pw_name : NULL;
+    return p ? p->pw_name : nullptr;
 }
 
 cstr getEffUser()
 {
     struct passwd* p = getpwuid(geteuid());
-    return p ? p->pw_name : NULL;
+    return p ? p->pw_name : nullptr;
 }
 
 
@@ -114,7 +114,7 @@ cstr hostName()
     char s[MAXHOSTNAMELEN];
     size_t size = MAXHOSTNAMELEN;
     int mib[4] = { CTL_KERN, KERN_HOSTNAME };
-    sysctl( mib, 2, s, &size, NULL, 0);
+    sysctl( mib, 2, s, &size, nullptr, 0);
     return dupstr(s);
 
 #else
@@ -239,7 +239,7 @@ time_t bootTime ( )
     int mib[4] = { CTL_KERN, KERN_BOOTTIME };
     struct timeval data;
     size_t size = sizeof(data);
-    sysctl ( mib, 2, &data, &size, NULL, 0 );
+    sysctl ( mib, 2, &data, &size, nullptr, 0 );
 
     return data.tv_sec;
 
@@ -362,11 +362,11 @@ str execCmd ( str const argv[], str const envv[] )
     if ( pipe(pipout) != 0 )
     {
         assert(errno!=ok);
-        return NULL;
+        return nullptr;
     }
 
 // preset result to "nothing"
-    char* result = NULL;
+    char* result = nullptr;
 
 // it seems, that the child can mess up the stdin stream settings
 // (and maybe stderr too) especially if execve() fails
@@ -490,7 +490,7 @@ str execCmd ( cstr cmd, ... )
 {
     cstr* argv = new cstr[100];
     argv[0] = cmd;
-    int argc = 1;
+    uint argc = 1;
 
     va_list va;
     va_start(va,cmd);

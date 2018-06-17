@@ -109,9 +109,9 @@ public:
 	T*		operator-> () const			noexcept { return p; }
 	T&		operator* () const			noexcept { return *p; }
 	T*		ptr () const				noexcept { return p; }
-	T&		ref () const				asserts  { assert(p!=nullptr); return *p; }
+	T&		ref () const				noexcept { assert(p!=nullptr); return *p; }
 
-	operator T& () const				asserts  { assert(p!=nullptr); return *p; }
+	operator T& () const				noexcept { assert(p!=nullptr); return *p; }
 	operator T* () const				noexcept { return p; }
 
 	uint	refcnt () const				noexcept { return p ? p->refcnt() : 0; }

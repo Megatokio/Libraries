@@ -105,7 +105,7 @@ ptr MemPool::alloc(size_t bytes) throws
 	return newdata;
 }
 
-ptr MemPool::allocMem(size_t bytes) throws
+ptr MemPool::allocmem(size_t bytes) throws
 {
 	ptr p = alloc(bytes);
 	size_t n = freesize & ALIGNMENT_MASK;
@@ -113,7 +113,7 @@ ptr MemPool::allocMem(size_t bytes) throws
 	return p-n;
 }
 
-str MemPool::allocStr(size_t len) throws
+str MemPool::allocstr(size_t len) throws
 {
 	ptr p = alloc(len+1);
 	p[len] = 0;

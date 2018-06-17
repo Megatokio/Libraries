@@ -118,10 +118,10 @@ private:
 	int*		map;			// hash -> index conversion array
 	uint		mask;			// map size -1; map size must be 1<<N
 
-	static const int BIT31 = INT_MIN;	// 0x80000000 mask for 'end-of-thread' marker bit
-	static const int FREE  = -1;		// 			  value for free slots in map[] (BIT31 set)
-	static const uint16 MAGIC = 0x9C0A;
-	static const uint16 BYTESWAPPED_MAGIC = 0x0A9C;
+	static constexpr int BIT31 = INT_MIN;	// 0x80000000 mask for 'end-of-thread' marker bit
+	static constexpr int FREE  = -1;		// 			  value for free slots in map[] (BIT31 set)
+	static constexpr uint16 MAGIC = 0x9C0A;
+	static constexpr uint16 BYTESWAPPED_MAGIC = 0x0A9C;
 
 private:
 	void	clearmap  ()					noexcept { memset(&map[0],-1,(mask+1)*sizeof(map[0])); }
@@ -129,7 +129,9 @@ private:
 	void	resizemap (uint)				throws;
 
 public:
-	static const uint maxCount = Array<ITEM>::maxCount;
+	static constexpr uint maxCount1 = Array<ITEM>::maxCount;
+	static constexpr uint maxCount2 = Array<KEY>::maxCount;
+	static constexpr uint maxCount  = maxCount1<maxCount2?maxCount1:maxCount2;
 
 	// see https://stackoverflow.com/questions/11562/how-to-overload-stdswap
 	static void swap (HashMap& a, HashMap& b) noexcept;
@@ -150,13 +152,13 @@ public:
 	Array<ITEM> const& getItems	() const	noexcept { return items; }
 
 // get items:
-	uint		count		() const			noexcept { return items.count(); }
-	bool		contains	(KEY key) const		noexcept { return indexof(key) != -1; }	// uses KEY::eq()
+	uint		count		() const		noexcept { return items.count(); }
+	bool		contains	(KEY key) const	noexcept { return indexof(key) != -1; }	// uses KEY::eq()
 	ITEM		get			(KEY key, ITEM dflt) const noexcept;						// uses KEY::eq()
-	ITEM&		get			(KEY key)			asserts { return items[indexof(key)]; } // uses KEY::eq()
-	ITEM const&	get			(KEY key) const		asserts { return items[indexof(key)]; } // uses KEY::eq()
-	ITEM&		operator[]	(KEY key)			asserts { return items[indexof(key)]; } // uses KEY::eq()
-	ITEM const&	operator[]	(KEY key) const		asserts { return items[indexof(key)]; } // uses KEY::eq()
+	ITEM&		get			(KEY key)		noexcept { int i=indexof(key); assert(i!=-1); return items[i]; } // uses KEY::eq()
+	ITEM const&	get			(KEY key) const	noexcept { int i=indexof(key); assert(i!=-1); return items[i]; } // uses KEY::eq()
+	ITEM&		operator[]	(KEY key)		noexcept { int i=indexof(key); assert(i!=-1); return items[i]; } // uses KEY::eq()
+	ITEM const&	operator[]	(KEY key) const	noexcept { int i=indexof(key); assert(i!=-1); return items[i]; } // uses KEY::eq()
 
 // add / remove items:
 	void		purge		()				noexcept;

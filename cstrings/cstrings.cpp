@@ -71,7 +71,7 @@ inline bool utf8_is_fup	 (char c)	{ return int8(c) < int8(0xc0); }
 inline bool utf8_no_fup	 (char c)	{ return int8(c) >= int8(0xc0); }
 
 
-str newstr (int n) throws
+str newstr (int n) noexcept
 {
 	// allocate char[]
 	// deallocate with delete[]
@@ -82,7 +82,7 @@ str newstr (int n) throws
     return c;
 }
 
-str newcopy (cstr s) throws
+str newcopy (cstr s) noexcept
 {
 	// allocate char[]
 	// deallocate with delete[]
@@ -97,7 +97,7 @@ str newcopy (cstr s) throws
     return c;
 }
 
-str dupstr (cstr s) throws
+str dupstr (cstr s) noexcept
 {
 	// Create copy of string in tempmem
 
@@ -108,7 +108,7 @@ str dupstr (cstr s) throws
     return c;
 }
 
-str xdupstr (cstr s) throws
+str xdupstr (cstr s) noexcept
 {
 	// Create copy of string in the outer tempmem pool
 
@@ -159,7 +159,7 @@ cptr rfind (cstr target, cstr search) noexcept
     return nullptr;	// not found
 }
 
-str spacestr (int n, char c) throws
+str spacestr (int n, char c) noexcept
 {
 	// Create and clear a string
 
@@ -169,7 +169,7 @@ str spacestr (int n, char c) throws
     return s;
 }
 
-cstr spaces (uint n) throws
+cstr spaces (uint n) noexcept
 {
 	// return a const space string
 	// returned string is const if ≤ 40 char
@@ -181,7 +181,7 @@ cstr spaces (uint n) throws
 	return n>maxlen ? spacestr(int(n)) : _spaces + maxlen - n;
 }
 
-str whitestr (cstr q, char c) throws
+str whitestr (cstr q, char c) noexcept
 {
 	// create blanked-out copy of string
 	// replace all printable characters with space
@@ -196,20 +196,20 @@ str whitestr (cstr q, char c) throws
 }
 
 // create string from char:
-str charstr (char c) throws
+str charstr (char c) noexcept
 {
     str s = tempstr(1);
     *s = c;
     return s;
 }
-str charstr (char c1, char c2) throws
+str charstr (char c1, char c2) noexcept
 {
     str s = tempstr(2);
     s[0] = c1;
     s[1] = c2;
     return s;
 }
-str charstr (char c1, char c2, char c3) throws
+str charstr (char c1, char c2, char c3) noexcept
 {
     str s = tempstr(3);
     s[0] = c1;
@@ -217,7 +217,7 @@ str charstr (char c1, char c2, char c3) throws
     s[2] = c3;
     return s;
 }
-str charstr (char c1, char c2, char c3, char c4) throws
+str charstr (char c1, char c2, char c3, char c4) noexcept
 {
     str s = tempstr(4);
     s[0] = c1;
@@ -226,7 +226,7 @@ str charstr (char c1, char c2, char c3, char c4) throws
     s[3] = c4;
     return s;
 }
-str charstr (char c1, char c2, char c3, char c4, char c5) throws
+str charstr (char c1, char c2, char c3, char c4, char c5) noexcept
 {
     str s = tempstr(5);
     s[0] = c1;
@@ -237,7 +237,7 @@ str charstr (char c1, char c2, char c3, char c4, char c5) throws
     return s;
 }
 
-str replacedstr (cstr s, char old, char nju) throws
+str replacedstr (cstr s, char old, char nju) noexcept
 {
 	// Replace any occurance of a character by another
 
@@ -246,7 +246,7 @@ str replacedstr (cstr s, char old, char nju) throws
     return t;
 }
 
-str lowerstr (cstr s) throws
+str lowerstr (cstr s) noexcept
 {
 	// Convert a string to all lower case
 
@@ -255,7 +255,7 @@ str lowerstr (cstr s) throws
     return t;
 }
 
-str upperstr (cstr s) throws
+str upperstr (cstr s) noexcept
 {
 	// Convert a string to all upper case
 
@@ -280,14 +280,15 @@ bool islowerstr	(cstr s) noexcept
     return yes;
 }
 
-str mulstr (cstr q, uint n) throws
+str mulstr (cstr q, uint n) throws // limit_error
 {
 	// Repeate string n times
 
-    if (q==nullptr || *q==0 || n<=0) return emptystr;
+    if (!q || !*q || !n) return emptystr;
 
     size_t len = strlen(q);
-    str s = tempstr(int(len*n));
+    if(len*n > 0xFFFFFFu) throw limit_error("mulstr()",len*n,0xFFFFFFu);	// 16 MB
+    str s = tempstr(uint(len*n));
     ptr z = s;
 
     while (n--) { memcpy(z,q,len); z += len; }
@@ -295,7 +296,7 @@ str mulstr (cstr q, uint n) throws
     return s;
 }
 
-str catstr (cstr s1, cstr s2) throws
+str catstr (cstr s1, cstr s2) noexcept
 {
 	// Concatenate 2 strings
 
@@ -306,7 +307,7 @@ str catstr (cstr s1, cstr s2) throws
     return s;
 }
 
-str catstr (cstr s1, cstr s2, cstr s3, cstr s4, cstr s5, cstr s6) throws
+str catstr (cstr s1, cstr s2, cstr s3, cstr s4, cstr s5, cstr s6) noexcept
 {
 	// Concatenate up to 6 strings
 
@@ -321,7 +322,7 @@ str catstr (cstr s1, cstr s2, cstr s3, cstr s4, cstr s5, cstr s6) throws
     return s;
 }
 
-str hexstr (uint32 n, uint digits) throws
+str hexstr (uint32 n, uint digits) noexcept
 {
 	// Convert number to hexadecimal string
 
@@ -336,7 +337,7 @@ str hexstr (uint32 n, uint digits) throws
     return c;
 }
 
-str hexstr (uint64 n, uint digits) throws
+str hexstr (uint64 n, uint digits) noexcept
 {
 	// Convert number to hexadecimal string
 
@@ -351,7 +352,7 @@ str hexstr (uint64 n, uint digits) throws
     return c;
 }
 
-str binstr (uint value, cstr b0, cstr b1) throws
+str binstr (uint value, cstr b0, cstr b1) noexcept
 {
 	// Convert number to binary string
 
@@ -369,7 +370,7 @@ str binstr (uint value, cstr b0, cstr b1) throws
 	return s;
 }
 
-str substr (cstr a, cstr e) throws
+str substr (cstr a, cstr e) noexcept
 {
 	// create string [a ... [e
 	// does not check for 0-characters between a and e
@@ -382,7 +383,7 @@ str substr (cstr a, cstr e) throws
     return c;
 }
 
-str leftstr (cstr s, int n) throws
+str leftstr (cstr s, int n) noexcept
 {
 	// create left substring
 	// splits n bytes from the left
@@ -400,7 +401,7 @@ str leftstr (cstr s, int n) throws
 	return c;
 }
 
-str rightstr (cstr s, int n) throws
+str rightstr (cstr s, int n) noexcept
 {
 	// create right substring
 	// splits n bytes from the right
@@ -413,7 +414,7 @@ str rightstr (cstr s, int n) throws
     return c;
 }
 
-str midstr (cstr s, int a, int n) throws
+str midstr (cstr s, int a, int n) noexcept
 {
 	// create mid substring
 	// skip a bytes from the left then split n bytes
@@ -425,7 +426,7 @@ str midstr (cstr s, int a, int n) throws
     return substr(s+a,s+a+n);
 }
 
-str midstr (cstr s, int a) throws
+str midstr (cstr s, int a) noexcept
 {
 	// create mid-to-end substring
 
@@ -434,7 +435,7 @@ str midstr (cstr s, int a) throws
     return substr(s+a,strchr(s,0));
 }
 
-str usingstr (cstr format, ...) throws
+str usingstr (cstr format, ...) noexcept
 {
 	// create formatted string
 
@@ -445,7 +446,7 @@ str usingstr (cstr format, ...) throws
     return s;
 }
 
-str usingstr (cstr format, va_list va) throws
+str usingstr (cstr format, va_list va) noexcept
 {
 	// note: caller must call va_start() prior and va_end() afterwards.
 
@@ -499,7 +500,7 @@ static cptr str_comp(cstr a, cstr b) noexcept
     return a;
 }
 
-str tohtmlstr (cstr s0) throws
+str tohtmlstr (cstr s0) noexcept
 {
 	str  s;
 	char c;
@@ -526,7 +527,7 @@ str tohtmlstr (cstr s0) throws
 	return s!=s0 ? s : dupstr(s0);
 }
 
-str	escapedstr (cstr s0) throws
+str	escapedstr (cstr s0) noexcept
 {
 	str  s;
 	cptr q;
@@ -562,89 +563,87 @@ str	escapedstr (cstr s0) throws
 	return s!=s0 ? s : dupstr(s0);
 }
 
-str quotedstr( cstr s ) throws
+str quotedstr( cstr s ) noexcept
 {
     return catstr( "\"", escapedstr(s), "\"" );
 }
 
-str	unescapedstr (cstr s0) throws
+str	unescapedstr (cstr s0) noexcept  // sets errno
 {
-    char c, *q, *z;
+	char c, *q, *z;
 
-    if(!s0||!*s0) return emptystr;
-    str s = dupstr(s0);
+	if(!s0||!*s0) return emptystr;
+	str s = dupstr(s0);
 
-    q = z = strchr(s,'\\');
+	q = z = strchr(s,'\\');
 
-    if(q) for(;;)
-    {
-        while((c=*q++)!='\\')
-        {
-            *z++ = c;
-            if(!c) return s;
-        }
+	if(q) for(;;)
+	{
+		while((c=*q++)!='\\')
+		{
+			*z++ = c;
+			if(!c) return s;
+		}
 
-        c = *q++;					// c = next char after '\'
+		c = *q++;					// c = next char after '\'
 
-	    // \ooo => octal value for next byte. 9th bit discarded
-		// \oo     allowed but not recommended.
-		// \o	   allowed but not recommended.
-        if (is_oct_digit(c))
-        {
-            uint d;
-            c = char(digit_val(c));
-            d = digit_val(*q); if (d<8) { q++; c = char(c<<3)+char(d); }
-            d = digit_val(*q); if (d<8) { q++; c = char(c<<3)+char(d); }
-            // c &= 0xFF;
-        }
+		if (is_oct_digit(c))
+		{
+			// \ooo => octal value for next byte. 9th bit discarded
+			// \oo     allowed but not recommended.
+			// \o	   allowed but not recommended.
 
-	    // \xHH => hex coded value for next byte
-		// \xH     allowed but not recommended.
-		// \x      'x' masked for unknown reason => stores 'x'
-        else if (c=='x')
-        {
-            uint d;
-            d = digit_value(*q); if (d<16) { q++; c = char(d);        }
-            d = digit_value(*q); if (d<16) { q++; c = char(c<<4)+char(d); }
-        }
+			uint d;
+			c = char(digit_val(c));
+			d = digit_val(*q); if (d<8) { q++; c = char(c<<3)+char(d); }
+			d = digit_val(*q); if (d<8) { q++; c = char(c<<3)+char(d); }
+			if (c==0) errno = brokenescapecode;
+		}
 
-	    // \cX => control code value for next byte
-		// \c     (at eof) => stores 'c'
-        else if (c=='c')
-        {
-            if (*q) c = *q++ & 0x1f;
-        }
+		else if (c=='x' && is_hex_digit(*q))
+		{
+			// \xHH => hex coded value for next byte
+			// \xH     allowed but not recommended.
+			// \x      'x' masked for unknown reason => stores 'x'
 
-	    // '\' at end of string => store '\':
-        else if (!c)
-        {
-            c = '\\';
-            q--;
-        }
+			c = char(digit_value(*q++));
+			if (is_hex_digit(*q)) c = char(c<<4) + char(digit_value(*q++));
+			if (c==0) errno = brokenescapecode;
+		}
 
-		// '\n' => store '\n' and skip following white space
-        else if (c=='\n' || c=='\r')
-        {
-            while (*q && *q<=' ') q++;
-            continue;	// don't store the '\n'
-        }
+		else if (!c)
+		{
+			// remove '\' at end of string:
 
-	    // "well known abreviations" or '"' or '\' or s.th. escaped for unknown reason:
-        else
-        {
-            static const char ec[] = "abfnrtv";			// escape character
-            static const char cc[] = "\a\b\f\n\r\t\v";	// control code
-            cptr p = strchr(ec,c);
-            if(p) c = cc[p-ec]; 			// control code found
-                                            // else self-escaped char
-        }
+			errno = brokenescapecode;
+			continue;
+		}
 
-        *z++ = c;
-    }
-    return s;
+		else if (c=='\n' || c=='\r')
+		{
+			// '\n' => store '\n' and skip white space
+
+			while (*q && *q<=' ') q++;
+			continue;	// don't store the '\n'
+		}
+
+		else
+		{
+			// standard escape codes or s.th. escaped for unknown reason:
+
+			static const char ec[] = "\\\"'?abfnrtv";			// escape character
+			static const char cc[] = "\\\"'\?\a\b\f\n\r\t\v";	// result
+			cptr p = strchr(ec,c);
+			if (p) c = cc[p-ec];				// valid escaped sequence
+			else errno = brokenescapecode;  	// else self-escaped char
+		}
+
+		*z++ = c;
+	}
+	return s;
 }
 
-str	unquotedstr (cstr s0) throws
+str	unquotedstr (cstr s0) noexcept // sets errno
 {
     char c;
     str  s;
@@ -659,7 +658,7 @@ str	unquotedstr (cstr s0) throws
     if( n>=2 && (c=='"'||c=='\'') && s[n-1]==c )
     {
 		// wir ignorieren, dass das schließende Zeichen fehlerhafterweise escaped sein könnte.
-		// unescapedstr() wird dann das letzte '\' erhalten.
+		// unescapedstr() will set errno.
 		s[n-1] = 0;
 		s++;
     }
@@ -667,7 +666,7 @@ str	unquotedstr (cstr s0) throws
     return unescapedstr(s);
 }
 
-cstr fromhtmlstr (cstr s0) throws
+cstr fromhtmlstr (cstr s0) noexcept
 {
 	// decode &lt; &rt; &amp; &quot; and <br>
 	// more versatile decoder in utf8.cpp
@@ -676,8 +675,9 @@ cstr fromhtmlstr (cstr s0) throws
 
     cptr q = strchr(s0,'&');
     cptr q2 = find(s0,"<br>");
-    if(q2 && (q==nullptr || q2<q) ) q = q2;
-    if (q==nullptr) return s0;
+    if (q2 && (q == nullptr || q2 < q) ) q = q2;
+    if (q == nullptr) return s0;
+
     str  s = dupstr(s0);
     ptr  z = s + (q-s0);
 
@@ -698,9 +698,9 @@ cstr fromhtmlstr (cstr s0) throws
     }
 }
 
-cstr fromutf8str (cstr qstr) throws
+str fromutf8str (cstr qstr) noexcept // sets errno
 {
-    if (qstr==nullptr || *qstr==0) return qstr;
+    if (!qstr || *qstr==0) return emptystr;
 
     if (*qstr == char(0xef) && *(qstr+1) == char(0xbb) && *(qstr+2) == char(0xbf)) qstr += 3;	// skip BOM
 
@@ -714,15 +714,16 @@ cstr fromutf8str (cstr qstr) throws
 
     while (*q)
     {
-        if (utf8_is_7bit(c1=*q++))					{ *z++ = c1; continue; }
-        if (utf8_is_fup(c1))						{ errno = unexpectedfup; continue; }
-        if (*q==0 || utf8_no_fup(c2=*q) || uint8(c1)>=0xc4)	{ *z++ = '?'/*c1*/; errno = EOVERFLOW; continue; }
+        if (utf8_is_7bit(c1=*q++))			{ *z++ = c1; continue; }
+        if (utf8_is_fup(c1))				{ errno = unexpectedfup; continue; }
+        if (uint8(c1) >= 0xc4)				{ *z++ = '?'; errno = notindestcharset; continue; }
+        if (*q==0 || utf8_no_fup(c2=*q))	{ *z++ = '?'; errno = truncatedchar; continue; }
         q++; *z++ = char((c1<<6) + (c2&0x3f));
     }
     return zstr;
 }
 
-str toutf8str (cstr qstr) throws
+str toutf8str (cstr qstr) noexcept
 {
     if (qstr==nullptr || *qstr==0) return nullptr;
 
@@ -789,20 +790,20 @@ time_t dateval (cstr datestr) noexcept
 	//return timegm(&d);	// UTC
 }
 
-str datetimestr (time_t secs) throws
+str datetimestr (time_t secs) noexcept
 {
 	tm d; localtime_r(&secs,&d);
 	return usingstr( "%04u-%02u-%02u %02u:%02u:%02u",
 				d.tm_year+1900, d.tm_mon+1, d.tm_mday, d.tm_hour, d.tm_min, d.tm_sec );
 }
 
-str datestr (time_t secs) throws
+str datestr (time_t secs) noexcept
 {
     tm d; localtime_r(&secs,&d);
     return usingstr( "%04u-%02u-%02u", d.tm_year+1900, d.tm_mon+1, d.tm_mday );
 }
 
-str timestr (time_t secs) throws
+str timestr (time_t secs) noexcept
 {
     tm d; localtime_r(&secs,&d);
     return usingstr( "%02u:%02u:%02u", d.tm_hour, d.tm_min, d.tm_sec );
@@ -811,7 +812,7 @@ str timestr (time_t secs) throws
 ON_INIT(tzset);	// because localtime_r() is not guaranteed to call tzset()
 
 
-str durationstr (time_t secs) throws
+str durationstr (time_t secs) noexcept
 {
 	uint s = uint(secs);	 if (s<300) return usingstr("%u sec.",          s);
 	uint m = s/60; s = s%60; if (m<60)	return usingstr("%um:%02us",        m,s);
@@ -819,7 +820,7 @@ str durationstr (time_t secs) throws
 	uint d = h/24; h = h%24;			return usingstr("%ud:%02uh:%02um",d,h,m  );
 }
 
-str durationstr (double secs) throws
+str durationstr (double secs) noexcept
 {
     return secs >= 300 ? durationstr( time_t(secs) ) : usingstr( "%.3f sec.",secs );
 }
@@ -883,7 +884,7 @@ bool ne (cptr s, cptr t) noexcept
     }
 }
 
-str hexstr (cptr s, uint n) throws
+str hexstr (cptr s, uint n) noexcept
 {
 	assert(s!=nullptr || n==0);
 
@@ -893,7 +894,7 @@ str hexstr (cptr s, uint n) throws
 	return z;
 }
 
-str unhexstr (cstr s) throws
+str unhexstr (cstr s) noexcept
 {
 	// returns nullptr on any error
 
@@ -923,7 +924,7 @@ static const uint8 unbase64[128] =
     x,26,27,28,29,30,31,32, 33,34,35,36,37,38,39,40, 41,42,43,44,45,46,47,48, 49,50,51,x,x,x,x,x };
 #undef x
 
-str base64str (cstr s0) throws
+str base64str (cstr s0) noexcept
 {
 	// base64 encode a string
     // base64 encoding uses only 3 special characters: '+'  and  '/'  and  '='
@@ -966,7 +967,7 @@ str base64str (cstr s0) throws
     return z-zlen;
 }
 
-str unbase64str (cstr s0) throws
+str unbase64str (cstr s0) noexcept
 {
 	// returns nullptr on any error
 
@@ -1187,7 +1188,7 @@ str join (Array<cstr> const& q, char c, bool final) throws
 #endif
 }
 
-cstr croppedstr (cstr s) throws
+cstr croppedstr (cstr s) noexcept
 {
 	// remove white spaces at start and end of string
 	// may return original string
@@ -1235,7 +1236,7 @@ uint strcat (ptr z, cptr q, uint sz) noexcept
     return uint(z-za + strcpy(z,q,uint(ze-z)));
 }
 
-cstr detabstr (cstr s, uint tabstops)
+cstr detabstr (cstr s, uint tabstops) noexcept
 {
 	// expand tabs to spaces
 	// returns the original string if there were no tabs found

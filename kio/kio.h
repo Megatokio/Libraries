@@ -624,7 +624,6 @@ struct LogIndent { LogIndent(cstr fmt, ...) __printflike(2,3); ~LogIndent(); };
   #define debugstr(...)	((void)0)
   #undef  assert
   #define assert(X) ((void)0)
-  #define asserts noexcept
 #else
   #undef  NDEBUG
   #define IFDEBUG(X)	X
@@ -633,7 +632,6 @@ struct LogIndent { LogIndent(cstr fmt, ...) __printflike(2,3); ~LogIndent(); };
   #define debugstr(FMT,...)	vfprintf(stderr,FMT,__VA_ARGS__)
   #undef  assert
   #define assert(X)		((void) ((X) ? ((void)0) : abort("%s:%u: assert failed: %s\n",__FILE__, __LINE__, #X)))
-  #define asserts noexcept(false)
 #endif
 
 #define XSAFE  (SAFETY>=1)

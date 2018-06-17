@@ -50,11 +50,13 @@ extern	str  emptystr;				// non-const version of ""
 
 
 inline	bool is_space (char c)		noexcept { return uchar(c)<=' ' && c!=0; }
+inline	bool is_letter (char c)		noexcept { return uchar((c|0x20)-'a')<='z'-'a'; }
+inline	bool is_control	(char c)	noexcept { return uchar(c)<0x20 || uchar(c)==0x7f; }
+inline	bool is_printable (char c)	noexcept { return uchar(c)>=0x20 && uchar(c)!=0x7f; }
 inline	bool is_uppercase (char c)	noexcept { return uchar(c-'A')<='Z'-'A'; }
-inline	char to_lower (char c)		noexcept { return uchar(c-'A')<='Z'-'A' ? c|0x20 : c; }
 inline	bool is_lowercase (char c)	noexcept { return uchar(c-'a')<='z'-'a'; }
 inline	char to_upper (char c)		noexcept { return uchar(c-'a')<='z'-'a' ? c&~0x20 : c; }
-inline	bool is_letter (char c)		noexcept { return uchar((c|0x20)-'a')<='z'-'a'; }
+inline	char to_lower (char c)		noexcept { return uchar(c-'A')<='Z'-'A' ? c|0x20 : c; }
 
 inline	bool is_bin_digit (char c)	noexcept { return uchar(c-'0')<='1'-'0'; }	// { return (c|1)=='1'; }
 inline	bool is_oct_digit (char c)	noexcept { return uchar(c-'0')<='7'-'0'; }	// { return (c|7)=='7'; }
@@ -93,99 +95,99 @@ extern	bool islowerstr	(cstr)				noexcept;
 
 
 // ----	allocate with new[] ----
-extern	str  newstr		(int n)				throws;	// allocate memory with new[]
-extern	str	 newcopy	(cstr)				throws;	// allocate memory with new[] and copy text
+extern	str  newstr		(int n)				noexcept; // allocate memory with new[]
+extern	str	 newcopy	(cstr)				noexcept; // allocate memory with new[] and copy text
 
 
 // ---- allocate in TempMemPool ----
-extern	str	 tempstr	(int n)				throws;	// tempmem.h
-inline	str	 tempstr	(uint size)			throws { return tempstr(int(size)); }
-inline	str	 tempstr	(long size)			throws { return tempstr(int(size)); }
-inline	str	 tempstr	(ulong size)		throws { return tempstr(int(size)); }
-extern	str	 xtempstr	(int n)				throws;	// tempmem.h
-inline	str	 xtempstr	(uint n)			throws;	// tempmem.h
-extern	str	 spacestr	(int n, char c=' ')	throws;
-extern	cstr spaces		(uint n)			throws;
-extern	str	 whitestr	(cstr, char c=' ')	throws; // also in utf8
-extern	str	 dupstr		(cstr)				throws;
-extern	str	 xdupstr    (cstr)				throws;
+extern	str	 tempstr	(uint n)			noexcept; // tempmem.h
+inline	str	 tempstr	(int size)			noexcept { assert(size>=0); return tempstr(uint(size)); }
+inline	str	 tempstr	(ulong size)		noexcept { assert(size==uint(size)); return tempstr(uint(size)); }
+inline	str	 tempstr	(long size)			noexcept { assert(size>=0); return tempstr(ulong(size)); }
+inline	str	 xtempstr	(int n)				noexcept; // tempmem.h
+extern	str	 xtempstr	(uint n)			noexcept; // tempmem.h
+extern	str	 spacestr	(int n, char c=' ')	noexcept;
+extern	cstr spaces		(uint n)			noexcept;
+extern	str	 whitestr	(cstr, char c=' ')	noexcept; // also in utf8
+extern	str	 dupstr		(cstr)				noexcept;
+extern	str	 xdupstr    (cstr)				noexcept;
 
-extern	str	 substr		(cptr a, cptr e)	throws;
-inline	str	 substr		(cuptr a, cuptr e)	throws	{ return substr(cptr(a),cptr(e)); }	// convenience method
-extern	str  mulstr 	(cstr, uint n)		throws;
-extern	str  catstr 	(cstr, cstr)		throws;
-extern	str  catstr 	(cstr, cstr, cstr, cstr=0, cstr=0, cstr=0) throws;
-extern	str  midstr 	(cstr, int a, int n) throws;
-extern	str  midstr 	(cstr, int a)		throws;
-extern	str  leftstr 	(cstr, int n)		throws;
-extern	str  rightstr 	(cstr, int n)		throws;
-inline char	 lastchar	(cstr s)			throws	{ return s&&*s ? s[strlen(s)-1] : 0; }
+extern	str	 substr		(cptr a, cptr e)	noexcept;
+inline	str	 substr		(cuptr a, cuptr e)	noexcept { return substr(cptr(a),cptr(e)); }	// convenience method
+extern	str  mulstr 	(cstr, uint n)		throws;	  // limit_error
+extern	str  catstr 	(cstr, cstr)		noexcept;
+extern	str  catstr 	(cstr, cstr, cstr, cstr=0, cstr=0, cstr=0) noexcept;
+extern	str  midstr 	(cstr, int a, int n) noexcept;
+extern	str  midstr 	(cstr, int a)		noexcept;
+extern	str  leftstr 	(cstr, int n)		noexcept;
+extern	str  rightstr 	(cstr, int n)		noexcept;
+inline char	 lastchar	(cstr s)			noexcept { return s&&*s ? s[strlen(s)-1] : 0; }
 
-inline	void toupper	(str s)				throws	{ if(s) for( ;*s;s++ ) *s = to_upper(*s); }
-inline	void tolower	(str s)				throws	{ if(s) for( ;*s;s++ ) *s = to_lower(*s); }
-extern	str	 upperstr	(cstr)				throws;
-extern	str	 lowerstr	(cstr)				throws;
-extern	str	 replacedstr(cstr, char oldchar, char newchar) throws;
-extern	str	 quotedstr	(cstr)				throws;
-extern	str	 unquotedstr(cstr)				throws;
-extern	str	 escapedstr	(cstr)				throws;
-extern	str	 unescapedstr(cstr)				throws;
-extern	str	 tohtmlstr	(cstr)				throws;
-extern	cstr fromhtmlstr(cstr)				throws; // also in utf8
-extern	str	 toutf8str	(cstr)				throws;
-extern	cstr fromutf8str(cstr)				throws;	// ucs1 only. may set errno. may return original string
-extern	str  unhexstr	(cstr)				throws;
-extern	str	 base64str	(cstr)				throws;
-extern	str	 unbase64str(cstr)				throws;
-extern	cstr croppedstr	(cstr)				throws;
-extern	cstr detabstr	(cstr, uint tabwidth) throws; // also in utf8. may return original string
+inline	void toupper	(str s)				noexcept { if(s) for( ;*s;s++ ) *s = to_upper(*s); }
+inline	void tolower	(str s)				noexcept { if(s) for( ;*s;s++ ) *s = to_lower(*s); }
+extern	str	 upperstr	(cstr)				noexcept;
+extern	str	 lowerstr	(cstr)				noexcept;
+extern	str	 replacedstr(cstr, char oldchar, char newchar) noexcept;
+extern	str	 quotedstr	(cstr)				noexcept;
+extern	str	 unquotedstr(cstr)				noexcept; // sets errno
+extern	str	 escapedstr	(cstr)				noexcept;
+extern	str	 unescapedstr(cstr)				noexcept; // sets errno
+extern	str	 tohtmlstr	(cstr)				noexcept;
+extern	cstr fromhtmlstr(cstr)				noexcept; // may return original string
+extern	str	 toutf8str	(cstr)				noexcept;
+extern	str  fromutf8str(cstr)				noexcept; // ucs1, sets errno
+extern	str  unhexstr	(cstr)				noexcept; // may return nullptr
+extern	str	 base64str	(cstr)				noexcept;
+extern	str	 unbase64str(cstr)				noexcept; // may return nullptr
+extern	cstr croppedstr	(cstr)				noexcept; // may return (substring of) original string
+extern	cstr detabstr	(cstr, uint tabs)	noexcept; // may return original string
 
-extern	str	 usingstr	(cstr fmt, va_list)	throws __printflike(1,0);
-extern	str	 usingstr	(cstr fmt, ...)		throws __printflike(1,2);
+extern	str	 usingstr	(cstr fmt, va_list)	noexcept __printflike(1,0);
+extern	str	 usingstr	(cstr fmt, ...)		noexcept __printflike(1,2);
 
-inline	str	 tostr		(float n)			throws { return usingstr("%.10g", double(n)); }
-inline	str	 tostr		(double n)			throws { return usingstr("%.14g", n); }
-inline	str	 tostr		(long double n)		throws { return usingstr("%.22Lg",n); }
-inline	str	 tostr		(int n)				throws { return usingstr("%i", n); }
-inline	str	 tostr		(unsigned int n)	throws { return usingstr("%u", n); }
-inline	str  tostr		(long n)			throws { return usingstr("%li", n); }
-inline	str	 tostr		(unsigned long n)	throws { return usingstr("%lu", n); }
-inline	str	 tostr		(long long n)		throws { return usingstr("%lli", n); }
-inline	str  tostr		(unsigned long long n)	throws { return usingstr("%llu", n); }
-inline	cstr tostr		(cstr s)			throws { return s ? quotedstr(s) : "nullptr"; }
+inline	str	 tostr		(float n)			noexcept { return usingstr("%.10g", double(n)); }
+inline	str	 tostr		(double n)			noexcept { return usingstr("%.14g", n); }
+inline	str	 tostr		(long double n)		noexcept { return usingstr("%.22Lg",n); }
+inline	str	 tostr		(int n)				noexcept { return usingstr("%i", n); }
+inline	str	 tostr		(unsigned int n)	noexcept { return usingstr("%u", n); }
+inline	str  tostr		(long n)			noexcept { return usingstr("%li", n); }
+inline	str	 tostr		(unsigned long n)	noexcept { return usingstr("%lu", n); }
+inline	str	 tostr		(long long n)		noexcept { return usingstr("%lli", n); }
+inline	str  tostr		(unsigned long long n)	noexcept { return usingstr("%llu", n); }
+inline	cstr tostr		(cstr s)			noexcept { return s ? quotedstr(s) : "nullptr"; }
 
-extern	str	 binstr		(uint n, cstr b0="00000000", cstr b1="11111111");
-extern	str	 hexstr 	(uint32 n, uint len) throws;
-inline	str  hexstr		(int32 n, uint len)  throws { return hexstr(uint32(n),len); }
-extern	str	 hexstr 	(uint64 n, uint len) throws;
-inline	str	 hexstr		(int64 n, uint len)	throws { return hexstr(uint64(n),len); }
+extern	str	 binstr		(uint n, cstr b0="00000000", cstr b1="11111111") noexcept;
+extern	str	 hexstr 	(uint32 n, uint len) noexcept;
+inline	str  hexstr		(int32 n, uint len)  noexcept { return hexstr(uint32(n),len); }
+extern	str	 hexstr 	(uint64 n, uint len) noexcept;
+inline	str	 hexstr		(int64 n, uint len)	noexcept { return hexstr(uint64(n),len); }
 #ifndef _LINUX
-inline	str	 hexstr		(long n, uint len)  throws { return hexstr(uint64(n),len); }
-inline	str	 hexstr		(ulong n, uint len) throws { return hexstr(uint64(n),len); }
+inline	str	 hexstr		(long n, uint len)  noexcept { return hexstr(uint64(n),len); }
+inline	str	 hexstr		(ulong n, uint len) noexcept { return hexstr(uint64(n),len); }
 #endif
-extern	str  hexstr		(cptr, uint len)	throws;
-inline	str  hexstr		(cstr s)			throws { return hexstr(s,strLen(s)); }	// must not contain nullbyte
+extern	str  hexstr		(cptr, uint len)	noexcept;
+inline	str  hexstr		(cstr s)			noexcept { return hexstr(s,strLen(s)); }	// must not contain nullbyte
 
 //template<class T> str hexstr (T* p, uint cnt) throws AMBIGUITY: reinterpret vs. static cast!
 //template<class T> str hexstr (T n, uint len)  throws AMBIGUITY: reinterpret vs. static cast!
 
-extern	str	 charstr	(char)				throws;
-extern	str	 charstr	(char,char)			throws;
-extern	str	 charstr	(char,char,char)	throws;
-extern	str	 charstr	(char,char,char,char) throws;
-extern	str	 charstr	(char,char,char,char,char) throws;
+extern	str	 charstr	(char)				noexcept;
+extern	str	 charstr	(char,char)			noexcept;
+extern	str	 charstr	(char,char,char)	noexcept;
+extern	str	 charstr	(char,char,char,char) noexcept;
+extern	str	 charstr	(char,char,char,char,char) noexcept;
 
-extern	str	 datestr	(time_t secs)		throws;	// returned string is in local time
-extern	str	 timestr	(time_t secs)		throws;	// returned string is in local time
-extern	str	 datetimestr (time_t secs)		throws;	// returned string is in local time
+extern	str	 datestr	(time_t secs)		noexcept; // returned string is in local time
+extern	str	 timestr	(time_t secs)		noexcept; // returned string is in local time
+extern	str	 datetimestr (time_t secs)		noexcept; // returned string is in local time
 extern	time_t dateval	 (cstr localtimestr) noexcept;
-extern	str	 durationstr (time_t secs)		throws;
-inline	str	 durationstr (int secs)			throws	{ return durationstr(time_t(secs)); }
+extern	str	 durationstr (time_t secs)		noexcept;
+inline	str	 durationstr (int secs)			noexcept { return durationstr(time_t(secs)); }
 #ifndef _LINUX
-inline	str	 durationstr (int64 secs)		throws	{ return durationstr(time_t(secs)); }
+inline	str	 durationstr (int64 secs)		noexcept { return durationstr(time_t(secs)); }
 #endif
-extern	str	 durationstr (float64 secs)		throws;
-inline	str	 durationstr (float32 secs)		throws	{ return durationstr(float64(secs)); }
+extern	str	 durationstr (float64 secs)		noexcept;
+inline	str	 durationstr (float32 secs)		noexcept { return durationstr(float64(secs)); }
 
 // NOTE: split() reuses the source buffer and overwrites line delimiters with 0, evtl. overwriting char at ptr e!
 extern	void _split (Array<str>& z, ptr a, ptr e)			throws; // split at line breaks
