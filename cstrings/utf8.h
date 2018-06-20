@@ -46,8 +46,8 @@ static const char replacementchar = '?';	// offiziell $FFFD -> ucs2, utf8 = 3 by
 inline bool is_fup (char c)			noexcept { return int8(c) < int8(0xc0); }
 inline bool	no_fup (char c)			noexcept { return int8(c) >= int8(0xc0); }
 
-inline cptr nextchar  (cptr p)		{ while (is_fup(*++p) ) {} return p; }
-inline ptr  nextchar  (ptr p)		{ while (is_fup(*++p) ) {} return p; }
+inline cptr nextchar  (cptr p)		noexcept { while (is_fup(*++p) ) {} return p; }
+inline ptr  nextchar  (ptr p)		noexcept { while (is_fup(*++p) ) {} return p; }
 
 extern uint charcount (cstr)		noexcept; // count characters in utf-8 string
 extern uint max_csz	  (cstr)		noexcept; // required ucs* character size to store utf-8 string

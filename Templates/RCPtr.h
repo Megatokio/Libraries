@@ -56,9 +56,9 @@
 		refcnt()
 		operator[]
 		operator == != > >= < <=
-		print(FD&, uint indent) const				// formatted output for debugger, logfile etc.
-		serialize(FD&, void*) const throws		// serialize
-		deserialize(FD&, void*) throws				// deserialize
+		print(FD&, uint indent) const			// formatted output for debugger, logfile etc.
+		serialize(FD&) const throws				// serialize
+		deserialize(FD&) throws					// deserialize
 		static T* restore(FD&, void*) throws;	// deserialize
 
 	RCArray:

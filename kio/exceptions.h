@@ -29,7 +29,7 @@
 	ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
+; // don't ask why…
 
 #ifndef	EXCEPTIONS_H
 #define	EXCEPTIONS_H
@@ -101,14 +101,14 @@ class any_error : public std::exception
 {
 public:
 	int		error;		// errno
-	cstr	text;		// const or temp
+	cstr	text;		// allocated
 
 public:
-	any_error (cstr msg, ...)				noexcept __printflike(2,3);
+	explicit any_error (cstr msg, ...)		noexcept __printflike(2,3);
 	any_error (cstr msg, va_list va)		noexcept __printflike(2,0);
-	any_error (int error)					noexcept :error(error), text(nullptr){}
+	explicit any_error (int error)			noexcept :error(error), text(nullptr){}
 	any_error (int error, cstr msg)			noexcept;
-	~any_error ()							noexcept;
+	~any_error ()							noexcept override;
 
 	cstr what () const						noexcept override;
 

@@ -88,7 +88,7 @@ public:
 	~Array ()								noexcept { for(uint i=0;i<cnt;i++) data[i].~T(); deallocate(data); }
 	Array ()								noexcept :max(0),cnt(0),data(nullptr){}
 	Array (Array&& q)						noexcept :max(q.max),cnt(q.cnt),data(q.data){q.max=q.cnt=0;q.data=nullptr;}
-	explicit Array (Array const& q)			throws;
+	Array (Array const& q)					throws;
 	Array& operator= (Array&& q)			noexcept { swap(*this,q); return *this; }
 	Array& operator= (Array const& q)		throws   { return operator=(Array(q)); }
 	explicit Array (uint cnt, uint max=0)	throws;

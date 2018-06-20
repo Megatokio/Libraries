@@ -682,8 +682,8 @@ struct LogIndent { LogIndent(cstr fmt, ...) __printflike(2,3); ~LogIndent(); };
 //	Test Macros:
 //	must not be called from a function registered with atexit()
 #ifndef NDEBUG
-  #define IERR()		abort("INTERNAL ERROR")
-  #define TODO()		abort("TODO")
+  #define IERR()		abort("%s line %u: INTERNAL ERROR",__FILE__,__LINE__)
+  #define TODO()		abort("%s line %u: TODO",__FILE__,__LINE__)
 #else
   #define IERR()		throw internal_error(__FILE__, __LINE__,internalerror)
   #define TODO()		throw internal_error(__FILE__,__LINE__,notyetimplemented)
