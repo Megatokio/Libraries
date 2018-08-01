@@ -566,17 +566,9 @@ void FD::read_file(Array<str>& a, uint32 maxsize) THF
 void FD::read_file(StrArray& a, uint32 maxsize) THF
 {
     TempMemPool tmp;
-    try
-    {
-        Array<str> z;
-        read_file(z,maxsize);
-        for(uint i=0;i<z.count();i++) a.append(z[i]);
-    }
-    catch(file_error& e)
-    {
-        e.text = xdupstr(e.text);
-        throw std::move(e);
-    }
+	Array<str> z;
+	read_file(z,maxsize);
+	for(uint i=0;i<z.count();i++) a.append(z[i]);
 }
 
 
