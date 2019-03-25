@@ -670,7 +670,7 @@ ON_INIT([]{ IFDEBUG( int e = ) pthread_mutex_init(&is_in_group_mutex, NULL); ass
 static bool is_in_group(uid_t uid, gid_t gid)
 {
 	bool f = yes;
-	int  e = pthread_mutex_lock(&is_in_group_mutex);	assert(!e);
+	IFDEBUG( int e = ) pthread_mutex_lock(&is_in_group_mutex);	assert(!e);
 
 	static uid_t  s_uid  = 0;		// cached user
 	static gid_t* s_gids = NULL;	// cached groups[]
@@ -689,7 +689,7 @@ static bool is_in_group(uid_t uid, gid_t gid)
 	goto x0;
 
 x0:	f = no;
-x1:	e = pthread_mutex_unlock(&is_in_group_mutex);		assert(!e);
+x1:	IFDEBUG( e = ) pthread_mutex_unlock(&is_in_group_mutex);		assert(!e);
 	return f;
 }
 
