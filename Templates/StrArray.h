@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2015 - 2019
 					mailto:kio@little-bat.de
 
@@ -23,11 +24,6 @@
 	TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 	PERFORMANCE OF THIS SOFTWARE.
 */
-
-
-
-#ifndef STRARRAY_H
-#define STRARRAY_H
 
 #include "Array.h"
 
@@ -240,7 +236,7 @@ inline void StrArray::deserialize(FD& fd) throws
 	retain_all();
 }
 
-#endif
+
 
 
 

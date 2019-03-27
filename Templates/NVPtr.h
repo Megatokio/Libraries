@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2015 - 2015
 					mailto:kio@little-bat.de
 
@@ -23,9 +24,6 @@
 	TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 	PERFORMANCE OF THIS SOFTWARE.
 */
-
-#ifndef NVPTR_H
-#define NVPTR_H
 
 #include "../kio/kio.h"
 #include "../unix/FD.h"
@@ -152,5 +150,11 @@ void NVPtr<T>::writeToFile(FD& fd, void* data) const THF
 }
 
 
-#endif
+
+
+
+
+
+
+
 

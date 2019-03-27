@@ -1,3 +1,4 @@
+#pragma once
 /*
  * This is the header file for the MD5 message-digest algorithm.
  * The algorithm is due to Ron Rivest.  This code was
@@ -20,10 +21,6 @@
  * Still in the public domain.
  */
 
-
-#ifndef MD5_H
-#define MD5_H
-
 #include "../kio/kio.h"
 
 typedef unsigned char md5byte;
@@ -42,4 +39,4 @@ extern void MD5Final(struct MD5Context *context, unsigned char digest[16]);
 
 
 
-#endif /* !MD5_H */
+

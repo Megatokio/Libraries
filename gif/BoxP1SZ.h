@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 1997 - 2019
   					mailto:kio@little-bat.de
 
@@ -36,10 +37,6 @@
 	note: Da es in C++ keine typedefs für Templateklassen gibt,
 		  bleibt es bei der Methode mit wählbarem, festem Datentyp Cord.
 */
-
-
-#ifndef BOX_H
-#define BOX_H
 
 
 typedef int	 Cord;		typedef Cord const cCord;
@@ -226,7 +223,7 @@ inline Box AlertBox ( cBox& bbox, cDist& size )
 #undef w
 #undef h
 
-#endif
+
 
 
 

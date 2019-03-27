@@ -1,3 +1,4 @@
+pragma once
 /*	Copyright  (c)	Günter Woigk 2007 - 2019
   					mailto:kio@little-bat.de
 
@@ -23,10 +24,6 @@
  	TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  	PERFORMANCE OF THIS SOFTWARE.
 */
-
-
-#ifndef GIFPIXELMAP_H
-#define	GIFPIXELMAP_H
 
 #include "../kio/kio.h"
 #include "BoxP1SZ.h"
@@ -151,7 +148,7 @@ public:
 
 
 
-#endif
+
 
 
 

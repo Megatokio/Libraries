@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 1998 - 2019
   					mailto:kio@little-bat.de
 
@@ -28,9 +29,6 @@
 	OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 	ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-#ifndef SORT_H
-#define SORT_H
 
 #include "../kio/kio.h"
 #include "relational_operators.h"
@@ -69,7 +67,7 @@ template<typename TYPE> inline void sort(TYPE* a, TYPE* e, COMPARATOR(TYPE) gt)
 template<typename TYPE> inline void sort(TYPE* a, TYPE* e)  { sort(a,e,gt); }
 template<typename TYPE> inline void rsort(TYPE* a, TYPE* e) { sort(a,e,lt); }
 
-#endif
+
 
 
 

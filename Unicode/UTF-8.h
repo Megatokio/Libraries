@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2002 - 2019
   					mailto:kio@little-bat.de
 
@@ -28,9 +29,6 @@
 	OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 	ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-#ifndef  UTF_8_h
-#define	 UTF_8_h
 
 #include "Unicode.h"
 #define INL	inline
@@ -295,7 +293,7 @@ INL	bool		UTF8CharIsLetter		( UTF8Char p )
 
 
 
-#endif
+
 
 
 

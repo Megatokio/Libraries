@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2001 - 2019
   					mailto:kio@little-bat.de
 
@@ -28,10 +29,6 @@
 	OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 	ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-#ifndef FILES_H
-#define	FILES_H
-
 
 #include "kio/kio.h"
 #include "s_type.h"
@@ -224,7 +221,7 @@ public:		MyVolumeInfoArray();
 //#undef INL
 
 
-#endif
+
 
 
 

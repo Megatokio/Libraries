@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2018 - 2019
 					mailto:kio@little-bat.de
 
@@ -24,13 +25,10 @@
 	PERFORMANCE OF THIS SOFTWARE.
 */
 
-#ifndef RCARRAY_H
-#define RCARRAY_H
-
 #include "Array.h"
 #include "RCPtr.h"
 #include "RCObject.h"
 
-#endif
+
 
 

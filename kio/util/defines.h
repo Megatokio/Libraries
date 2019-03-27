@@ -1,4 +1,5 @@
-﻿/*	Copyright  (c)	Günter Woigk 1995 - 2015
+﻿#pragma once
+/*	Copyright  (c)	Günter Woigk 1995 - 2015
   					mailto:kio@little-bat.de
 
 	This file is free software
@@ -28,11 +29,6 @@
 	OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 	ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-
-#ifndef _defines_h_
-#define _defines_h_
-
 
 
 // ----	Nice defines -------------------------------------------------------
@@ -74,7 +70,7 @@
 
 
 
-#endif
+
 
 
 

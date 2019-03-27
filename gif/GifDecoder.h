@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2007 - 2019
   					mailto:kio@little-bat.de
 
@@ -29,9 +30,6 @@
 
 	To my best knowing the copyright never extended on the decoder.
 */
-
-#ifndef GIFDECODER_H
-#define GIFDECODER_H
 
 #include "../kio/kio.h"
 #include "../unix/FD.h"
@@ -73,7 +71,7 @@ public:
 	void 	Finish				();
 };
 
-#endif
+
 
 
 

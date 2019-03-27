@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2015 - 2019
 					mailto:kio@little-bat.de
 
@@ -23,9 +24,6 @@
 	TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 	PERFORMANCE OF THIS SOFTWARE.
 */
-
-#ifndef RCOBJECT_H
-#define RCOBJECT_H
 
 #include "../kio/kio.h"
 #include "../unix/FD.h"
@@ -108,7 +106,10 @@ cstr tostr (RCObject const&)
 }
 
 
-#endif
+
+
+
+
 
 
 

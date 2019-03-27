@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2008 - 2019
   					mailto:kio@little-bat.de
 
@@ -33,12 +34,7 @@
 	Any moderately-sized data which does not have a destructor can be stored in temp mem.
 */
 
-
-#ifndef MEMPOOL_H
-#define	MEMPOOL_H
-
 #include "../kio/kio.h"
-#define throws noexcept(false)	// bad_alloc
 
 
 class MemPool final
@@ -72,7 +68,7 @@ public:
 };
 
 
-#endif
+
 
 
 

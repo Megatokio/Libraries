@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2018 - 2019
 					mailto:kio@little-bat.de
 
@@ -24,8 +25,6 @@
 	PERFORMANCE OF THIS SOFTWARE.
 */
 
-#ifndef UTF8_H
-#define UTF8_H
 #include "Libraries/kio/kio.h"
 #include "Libraries/cstrings/cstrings.h"
 #include "ucs4.h"
@@ -141,6 +140,6 @@ inline	float		numeric_value (cptr p)
 };
 
 
-#endif // UTF8_H
+
 
 

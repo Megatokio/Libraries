@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 1999 - 2019
                     mailto:kio@little-bat.de
 
@@ -34,10 +35,6 @@
     integer size: one of the prominent examples, why leaving central points of
     a language specification as an option to the implementer totally sucks.
 */
-
-
-#ifndef STANDARD_TYPES_H
-#define STANDARD_TYPES_H
 
 #include "config.h"
 
@@ -201,7 +198,8 @@ const OSErr	error		=	-1;
 #define GB					*0x40000000
 
 
-#endif
+
+
 
 
 

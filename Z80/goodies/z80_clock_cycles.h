@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2014 - 2019
   					mailto:kio@little-bat.de
 
@@ -28,9 +29,6 @@
 	-----------------------
 */
 
-#ifndef Z80_CLOCK_CYCLES_H
-#define Z80_CLOCK_CYCLES_H
-
 #include "kio/kio.h"
 
 #ifndef DEFINE_CB_TABLES
@@ -58,6 +56,6 @@ EXT	uint z80_clock_cycles_on_branch(uint8 op1, uint8 op2);		// op2 only used if 
 
 
 
-#endif
+
 
 

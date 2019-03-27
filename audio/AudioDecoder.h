@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2015 - 2019
 					mailto:kio@little-bat.de
 
@@ -29,11 +30,6 @@
 		http://www.oscillicious.com/libaudiodecoder
 		Copyright (c) 2010-2012 Albert Santoni, Bill Good, RJ Ryan
  */
-
-
-#ifndef AUDIODECODER_H
-#define AUDIODECODER_H
-
 
 #include "kio/kio.h"
 //#include "Templates/MTObject.h"
@@ -128,7 +124,7 @@ public:		AudioDecoder();
 };
 
 
-#endif
+
 
 
 

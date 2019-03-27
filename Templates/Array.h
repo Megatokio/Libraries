@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2010 - 2019
 					mailto:kio@little-bat.de
 
@@ -28,10 +29,6 @@
 	OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 	ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-
-#ifndef ARRAY_H
-#define ARRAY_H
 
 #include <memory>
 #include <type_traits>
@@ -770,7 +767,7 @@ inline void Array<str>::deserialize(FD& fd) throws
 	while (cnt<n) { data[cnt++] = fd.read_nstr(); }
 }
 
-#endif
+
 
 
 

@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2004 - 2019
   					mailto:kio@little-bat.de
 
@@ -28,13 +29,8 @@
 	2008-05-02 kio	made PLock a subclass of pthread_mutex_t (instead having a data member of this class)
 */
 
-
-#ifndef PTHREADS_H
-#define	PTHREADS_H
-
 #include <pthread.h>
 #include "kio/kio.h"
-
 
 
 // =====================================================================
@@ -169,7 +165,7 @@ inline bool	 isMainThread()		{ return pthread_equal(pthread_self(),main_thread);
 inline void  assertMainThread()	{ assert(isMainThread()); }
 
 
-#endif
+
 
 
 

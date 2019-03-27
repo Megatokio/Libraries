@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2007 - 2019
   					mailto:kio@little-bat.de
 
@@ -53,10 +54,6 @@ Overview:
 
 	used colors can be accessed with operator[], which returns a pointer (!) to the first color component.
 */
-
-
-#ifndef COLORMAP_H
-#define COLORMAP_H
 
 #include "kio/kio.h"
 #include "GifArray.h"
@@ -155,7 +152,7 @@ public:
 };
 
 
-#endif
+
 
 
 

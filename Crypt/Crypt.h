@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2013 - 2019
                     mailto:kio@little-bat.de
 
@@ -28,11 +29,6 @@
     OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
     ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-
-#ifndef CRYPT_H
-#define CRYPT_H
-
 
 #include "kio/kio.h"
 #include "rng/MersenneTwister64.h"
@@ -94,7 +90,8 @@ public:
 
 
 
-#endif
+
+
 
 
 

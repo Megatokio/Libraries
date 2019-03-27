@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 1999 - 2019
 					mailto:kio@little-bat.de
 
@@ -29,10 +30,6 @@
 	ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-; // don't ask why…
-
-#ifndef	EXCEPTIONS_H
-#define	EXCEPTIONS_H
 
 #include <new>
 #include "kio/kio.h"
@@ -191,7 +188,7 @@ public:
 
 
 
-#endif
+
 
 
 

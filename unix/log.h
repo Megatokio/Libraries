@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 1999 - 2019
 					mailto:kio@little-bat.de
 
@@ -37,10 +38,6 @@
 */
 
 
-
-#ifndef LOG_H
-#define LOG_H
-
 //	–––––––––––––––––––––––––––––––––––––––––––––––––––
 //	Logfile:
 //	–––––––––––––––––––––––––––––––––––––––––––––––––––
@@ -75,7 +72,7 @@ extern void openLogfile(cstr dirpath, LogRotation, uint max_logfiles, bool log2c
 extern void openLogfile(cstr dirpath, LogRotation, uint max_logfiles, bool log2console);
 
 
-#endif
+
 
 
 

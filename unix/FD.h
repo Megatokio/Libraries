@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2001 - 2019
   					mailto:kio@little-bat.de
 
@@ -28,10 +29,6 @@
 	OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 	ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-
-#ifndef FD_H
-#define FD_H
 
 #include "kio/kio.h"
 #include "s_type.h"				// --> classify_file()
@@ -338,7 +335,7 @@ TPL	uint32	write_z			(T const& n)				THF		{ return write_bytes_z(_cptr(&n),SOT);
 
 
 
-#endif
+
 
 
 

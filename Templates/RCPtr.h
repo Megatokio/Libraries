@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2015 - 2019
   					mailto:kio@little-bat.de
 
@@ -28,10 +29,6 @@
 	OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 	ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-
-#ifndef RCPTR_H
-#define RCPTR_H
 
 #include "../kio/kio.h"
 #include "../unix/FD.h"
@@ -217,7 +214,8 @@ void RCPtr<T>::deserialize (FD& fd) throws
 }
 
 
-#endif
+
+
 
 
 

@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2018 - 2019
 					mailto:kio@little-bat.de
 
@@ -25,8 +26,6 @@
 */
 
 #include "Libraries/kio/kio.h"
-#ifndef TEMPLATE_HELPERS_H
-#define TEMPLATE_HELPERS_H
 
 namespace kio {
 
@@ -88,6 +87,6 @@ namespace DebugTemplateHelpers{
 
 }; // namespace
 
-#endif // TEMPLATE_HELPERS_H
+
 
 

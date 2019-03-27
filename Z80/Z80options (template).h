@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2015 - 2015
   					mailto:kio@little-bat.de
 
@@ -25,10 +26,6 @@
 
 	Z80 cpu options
 */
-
-
-#ifndef _Z80options_h_
-#define _Z80options_h_
 
 
 /* #####################################################################
@@ -60,7 +57,7 @@ typedef uint16 CoreByte;
 // if included from Z80.cpp
 #endif
 
-#endif
+
 
 
 

@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2018 - 2019
 					mailto:kio@little-bat.de
 
@@ -24,8 +25,6 @@
 	PERFORMANCE OF THIS SOFTWARE.
 */
 
-#ifndef UCS1_H
-#define UCS1_H
 #include "Libraries/kio/kio.h"
 #include "Libraries/cstrings/cstrings.h"
 
@@ -66,7 +65,7 @@ extern	str	 lowerstr (cstr)		throws;
 };
 
 
-#endif // UCS1_H
+
 
 
 

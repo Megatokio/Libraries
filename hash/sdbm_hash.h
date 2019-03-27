@@ -1,6 +1,4 @@
-#ifndef SDBM_HASH_H
-#define SDBM_HASH_H
-
+#pragma once
 
 inline unsigned int sdbm_hash( const char* key )
 {
@@ -38,7 +36,7 @@ inline unsigned int sdbm_hash( const char* bptr, unsigned int size )
 }
 
 
-#endif // SDBM_HASH_H
+
 
 
 

@@ -1,6 +1,4 @@
-
-#ifndef RELATIONAL_OPERATORS_H
-#define RELATIONAL_OPERATORS_H
+#pragma once
 
 #include "../kio/kio.h"
 #include <type_traits>
@@ -72,4 +70,5 @@ template<class T> bool le(T* a, T* b)	noexcept { return le(const_cast<cT*>(a),co
 #undef cT
 
 
-#endif
+
+

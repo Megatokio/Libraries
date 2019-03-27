@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2018 - 2019
 					mailto:kio@little-bat.de
 
@@ -24,8 +25,6 @@
 	PERFORMANCE OF THIS SOFTWARE.
 */
 
-#ifndef UCS4_H
-#define UCS4_H
 #include "Libraries/kio/kio.h"
 #include "cstrings.h"
 #include "ucs1.h"
@@ -167,7 +166,7 @@ inline  ucs4char hexchar  (int n)		noexcept { n &= 15; return ucs4char((n>=10 ? 
 };
 
 
-#endif
+
 
 
 

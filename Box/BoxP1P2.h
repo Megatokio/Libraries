@@ -1,9 +1,10 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 1997 - 2007
   					mailto:kio@little-bat.de
 
  	This program is distributed in the hope that it will be useful,
  	but WITHOUT ANY WARRANTY; without even the implied warranty of
- 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
  	Permission to use, copy, modify, distribute, and sell this software and
  	its documentation for any purpose is hereby granted without fee, provided
@@ -33,10 +34,6 @@
 	Dist	distance 	= distance (vector) between points
 	Box 	rectangle	= rectangular area between two points
 */
-
-
-#ifndef Box_h
-#define Box_h
 
 
 typedef int	   Cord;	typedef Cord const cCord;
@@ -110,7 +107,7 @@ inline Loc		operator- ( Loc p, cDist& d )	{ return p-=d; }				// Loc - Dist = Lo
 // ====	rectangles  [p1 ... [p2 ======================================
 
 /*	Empty Box  <=>  width <= 0  ||  height <= 0
-	
+
 	most class Box member functions set  width = height = 0  if returning an empty box.
 	but this is not strictly enforced.
 */
@@ -146,7 +143,7 @@ struct Box
 	void	SetHeight	( Cord H )			{ y2 = y1 + H; }
 	void	SetSize		( cDist& SZ )		{ p2 = p1 + SZ; }
 	void	SetSize		( Cord W, Cord H )	{ x2 = x1 + W; y2 = y1 + H; }
-	
+
 // original creators
 	Box		( )									: p1(0,0), p2(0,0) {}
 	Box		( cLoc& P1, cLoc& P2 )				: p1(P1),  p2(P2) {}
@@ -165,17 +162,17 @@ Box&		operator-= 	( cBox& );				// Punch
 Box& 		operator^= 	( cBox& );				// Intersection
 
 // grow / shrink box at all 4 corners
-Box&		Grow		( Cord W )				{ x1-=W; x2+=W; y1-=W; y2+=W; return *this; }	
-Box&		Grow		( Cord W, Cord H )		{ x1-=W; x2+=W; y1-=H; y2+=H; return *this; }	
-Box&		Grow		( cDist& D )			{ return Grow(D.dx,D.dy); }	
+Box&		Grow		( Cord W )				{ x1-=W; x2+=W; y1-=W; y2+=W; return *this; }
+Box&		Grow		( Cord W, Cord H )		{ x1-=W; x2+=W; y1-=H; y2+=H; return *this; }
+Box&		Grow		( cDist& D )			{ return Grow(D.dx,D.dy); }
 
 // grow / shrink box by moving bottom/right corner
 Box&		Resize		( cDist& SZ )			{ p2 = p1+SZ; return *this; }
 Box& 		Resize		( Cord W, Cord H )		{ x2=x1+W; y2=y1+H; return *this; }
 
 // move box
-Box&		Move 		( Cord DX, Cord DY )	{ x1+=DX; x2+=DX; y1+=DY; y2+=DY; return *this; }	
-Box&		Move 		( cDist& D )			{ p1+=D; p2+=D; return *this; }								
+Box&		Move 		( Cord DX, Cord DY )	{ x1+=DX; x2+=DX; y1+=DY; y2+=DY; return *this; }
+Box&		Move 		( cDist& D )			{ p1+=D; p2+=D; return *this; }
 Box&		operator+=	( cDist& D )			{ return Move(D); }
 Box&		operator-=	( cDist& D )			{ return Move(-D.dx,-D.dy); }
 
@@ -205,15 +202,15 @@ Box AlertBox ( cBox& bbox, cDist& size )
 }
 
 
-#undef	x1	
-#undef	x2	
-#undef	y1	
-#undef	y2	
-#undef	w	
-#undef 	h	
+#undef	x1
+#undef	x2
+#undef	y1
+#undef	y2
+#undef	w
+#undef 	h
 
 
-#endif
+
 
 
 

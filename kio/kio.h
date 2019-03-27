@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 1994 - 2019
                     mailto:kio@little-bat.de
 
@@ -73,9 +74,6 @@
         char const nl;		line break character			(dep. on target platform)
         #define no_index	dummy index for empty arrays	(dep. on compiler)
 */
-
-#ifndef	KIO_H
-#define	KIO_H
 
 
 #define	myName				"Günter Woigk"
@@ -816,8 +814,6 @@ namespace kio
 
 
 
-
-#endif		// kio_h
 
 
 

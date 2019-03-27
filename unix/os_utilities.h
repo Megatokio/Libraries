@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2001 - 2019
   					mailto:kio@little-bat.de
 
@@ -29,10 +30,6 @@
 	ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef OS_UTILITIES_H
-#define	OS_UTILITIES_H
-
-
 #include	<time.h>
 #include	"kio/kio.h"
 
@@ -63,7 +60,7 @@ extern	str		execCmd			( /* cmd = argv[0] */ str const argv[], str const envv[]=N
 extern	str		execCmd			( cstr cmd, ... /* argv[1] ... NULL */ );
 
 
-#endif
+
 
 
 

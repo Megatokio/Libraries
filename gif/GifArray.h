@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2007 - 2019
 					mailto:kio@little-bat.de
 
@@ -52,10 +53,6 @@
 		-	destructor:			no action
 		-	copy creator:		flat copy
 */
-
-
-#ifndef GIFARRAY_H
-#define GIFARRAY_H
 
 #include "../kio/kio.h"
 #include "../unix/FD.h"
@@ -225,7 +222,7 @@ GifArray<T>::Grow ( int new_count ) throws/*bad alloc*/
 }
 
 
-#endif
+
 
 
 

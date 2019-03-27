@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 1995 - 2019
   					mailto:kio@little-bat.de
 
@@ -35,10 +36,6 @@
 	PeekZ => 'abcd' == *(uint32*)"dcba"	--> access data written by i386, z80, ...	<-- avoid if possible
 	peek  =>  machine order, unaligned. --> glue for machines which don't support unaligned memory access.
 */
-
-
-#ifndef PEEKPOKE_H
-#define PEEKPOKE_H
 
 #include "kio/kio.h"
 #include <utility>
@@ -154,7 +151,8 @@ inline void revert_bytes(void* p, uint sz)
 	while(a<e) { std::swap(*a++,*e--); }
 }
 
-#endif
+
+
 
 
 

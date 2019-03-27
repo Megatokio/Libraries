@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2007 - 2013
 					mailto:kio@little-bat.de
 
@@ -30,11 +31,6 @@
 
 	used in vipsi.Compiler.cpp
 */
-
-
-
-// used in Var/var.cpp
-
 
 template<class T>
 class Stack

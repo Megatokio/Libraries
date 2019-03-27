@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2001 - 2019
   					mailto:kio@little-bat.de
 
@@ -28,10 +29,6 @@
 	OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 	ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-#ifndef MyFileInfo_h
-#define	MyFileInfo_h
-
 
 #include "s_type.h"
 #include "../Templates/Array.h"
@@ -73,7 +70,7 @@ typedef Array<MyFileInfo> MyFileInfoArray;
 
 
 
-#endif
+
 
 
 

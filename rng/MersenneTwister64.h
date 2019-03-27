@@ -1,3 +1,4 @@
+#pragma once
 /*
     Original C-source:
 
@@ -57,10 +58,6 @@
 
     thread-safe encapulation in C++ class by kio@little-bat.de
 */
-
-#ifndef MERSENNETWISTER64_H
-#define MERSENNETWISTER64_H
-
 
 #include "kio/kio.h"
 #include <stdint.h>
@@ -176,7 +173,7 @@ inline uint64	random64()	{ return static_twister.random64(); }
 inline int64	random63()	{ return static_twister.random63(); }
 
 
-#endif
+
 
 
 

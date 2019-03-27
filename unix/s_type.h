@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2001 - 2019
                     mailto:kio@little-bat.de
 
@@ -28,10 +29,6 @@
     OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
     ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-#ifndef s_type_h
-#define s_type_h
-
 
 #include "config.h"
 
@@ -71,7 +68,8 @@ enum s_type		// range: 0 .. 15
 
 
 
-#endif
+
+
 
 
 

@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2014 - 2019
 					mailto:kio@little-bat.de
 
@@ -28,10 +29,6 @@
 	OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 	ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-
-#ifndef HASHMAP_H
-#define HASHMAP_H
 
 #include "kio/kio.h"
 #include "Templates/Array.h"
@@ -550,7 +547,7 @@ void HashMap<KEY,ITEM>::print (FD& fd, cstr indent) const throws
 }
 
 
-#endif
+
 
 
 

@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 1995 - 2019
   					mailto:kio@little-bat.de
 
@@ -38,9 +39,6 @@
 	  and for returning result strings.
 */
 
-
-#ifndef CSTRINGS_H
-#define CSTRINGS_H
 
 #include "kio/kio.h"
 template <class T> class Array;
@@ -227,7 +225,7 @@ inline cptr findStr	 (cstr target, cstr search) noexcept {return find(target,sea
 inline cptr rFindStr (cstr target, cstr search) noexcept __attribute__((deprecated));	// use rfind()
 inline cptr rFindStr (cstr target, cstr search) noexcept {return rfind(target,search);}
 
-#endif
+
 
 
 

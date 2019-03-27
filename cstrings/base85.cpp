@@ -55,10 +55,6 @@
     the encoded strings are suitable for file names on most systems.
 */
 
-#ifndef base85_h
-#define base85_h
-
-
 #include "kio/kio.h"
 #include "kio/peekpoke.h"
 #include "base85.h"
@@ -204,7 +200,7 @@ ON_INIT(test_base85);
 
 
 
-#endif
+
 
 
 

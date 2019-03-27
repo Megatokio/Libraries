@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 1995 - 2019
   					mailto:kio@little-bat.de
 
@@ -28,10 +29,6 @@
 	OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 	ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-
-#ifndef MSBIT_H
-#define MSBIT_H
 
 #include "kio/kio.h"
 
@@ -80,7 +77,7 @@ template <class T> INL int	reqBytes	( T count )	{ return count>1 ? msbit(count-1
 
 
 
-#endif
+
 
 
 

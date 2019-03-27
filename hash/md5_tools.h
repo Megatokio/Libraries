@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2013 - 2019
                     mailto:kio@little-bat.de
 
@@ -29,11 +30,6 @@
     ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
-
-#ifndef MD5_TOOLS_H
-#define MD5_TOOLS_H
-
 #include "md5.h"
 #include "kio/kio.h"
 #include "unix/FD.h"
@@ -44,7 +40,7 @@ extern void calc_md5  (const uint8 data[], uint32 count, uint8 md5[16]);
 extern void check_md5 (const uint8 data[], uint32 count, const uint8 md5[16], cstr msg) throws;
 
 
-#endif
+
 
 
 

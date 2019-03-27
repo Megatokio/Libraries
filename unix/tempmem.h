@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2008 - 2019
   					mailto:kio@little-bat.de
 
@@ -98,9 +99,6 @@
 	You must then pass a copy in the surrounding pool, e.g. made with xdupstr() (see "cstrings.h")
 */
 
-
-#ifndef TEMPMEM_H
-#define	TEMPMEM_H
 #include "../kio/kio.h"
 
 
@@ -164,7 +162,7 @@ char* TempMemPool::allocStr (uint len) noexcept
 }
 
 
-#endif
+
 
 
 

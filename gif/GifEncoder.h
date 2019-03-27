@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2007 - 2019
   					mailto:kio@little-bat.de
 
@@ -29,9 +30,6 @@
 
 	To my best knowing the copyright on the algorithm has expired.
 */
-
-#ifndef GIFENCODER_H
-#define GIFENCODER_H
 
 #include "../kio/kio.h"
 #include "../unix/FD.h"
@@ -230,7 +228,7 @@ public:
 	void writeImage ( Pixelmap& pm )               THF    { writeImage(&pm,&global_cmap); }
 };
 
-#endif
+
 
 
 

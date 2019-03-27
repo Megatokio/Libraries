@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2018 - 2019
 					mailto:kio@little-bat.de
 
@@ -26,8 +27,6 @@
 
 #include "Libraries/kio/kio.h"
 #include "Libraries/unix/FD.h"
-#ifndef WAVFILE_H
-#define WAVFILE_H
 
 
 class WavFile
@@ -148,7 +147,7 @@ WavFile::FrameFormat WavFile::readFrames(Array<T>& dest, uint32 cnt, FrameFormat
 }
 
 
-#endif // WAVFILE_H
+
 
 
 

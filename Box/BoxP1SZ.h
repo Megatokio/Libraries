@@ -1,9 +1,10 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 1997 - 2009
   					mailto:kio@little-bat.de
 
  	This program is distributed in the hope that it will be useful,
  	but WITHOUT ANY WARRANTY; without even the implied warranty of
- 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
  	Permission to use, copy, modify, distribute, and sell this software and
  	its documentation for any purpose is hereby granted without fee, provided
@@ -34,12 +35,8 @@
 	Box		rectangle	= rectangular area with top/left point and size
 
 	note: Da es in C++ keine typedefs für Templateklassen gibt,
-		  bleibt es bei der Methode mit wählbarem, festem Datentyp Cord. 
+		  bleibt es bei der Methode mit wählbarem, festem Datentyp Cord.
 */
-
-
-#ifndef Box_h
-#define Box_h
 
 
 typedef int	 Cord;		typedef Cord const cCord;
@@ -114,7 +111,7 @@ inline Loc	operator- ( Loc p, cDist& d )	{ return p-=d; }				// Loc - Dist = Loc
 // ====	rectangles  [p1 ... [p2 ======================================
 
 /*	Empty Box  <=>  width <= 0  ||  height <= 0
-	
+
 	most class Box member functions set  width = height = 0  if returning an empty box.
 	but this is not strictly enforced.
 */
@@ -131,7 +128,7 @@ struct Box
 	#define	w	sz.dx
 	#define	h	sz.dy
 
-	
+
 // accessing the members
 	cLoc&	P1			( )	const throw()		{ return p1; }
 	Loc		P2			( ) const throw()		{ return p1+sz; }
@@ -162,7 +159,7 @@ struct Box
 	void	SetP1		( cLoc& P ) throw()			{ p1 = P; }
 	void	SetSize		( cDist& SZ ) throw()		{ sz = SZ; }
 	void	SetP2		( cLoc& P ) throw()			{ w = P.x-x1; h = P.y-y1; }
-	
+
 // original creators:
 	Box		( )									: p1(0,0), sz(0,0) {}
 	Box		( cLoc& P1, cLoc& P2 )				: p1(P1),  sz(P2-P1) {}
@@ -181,17 +178,17 @@ Box&		operator-= 	( cBox& );				// Punch
 Box& 		operator^= 	( cBox& );				// Intersection
 
 // grow / shrink box at all 4 corners
-Box&		Grow		( Cord d )				{ x1-=d;  y1-=d;  w+=2*d;  h+=2*d;  return *this; }	
-Box&		Grow		( Cord dx, Cord dy )	{ x1-=dx; y1-=dy; w+=2*dx; h+=2*dy; return *this; }	
-Box&		Grow		( cDist& d )			{ return Grow(d.dx,d.dy); }	
+Box&		Grow		( Cord d )				{ x1-=d;  y1-=d;  w+=2*d;  h+=2*d;  return *this; }
+Box&		Grow		( Cord dx, Cord dy )	{ x1-=dx; y1-=dy; w+=2*dx; h+=2*dy; return *this; }
+Box&		Grow		( cDist& d )			{ return Grow(d.dx,d.dy); }
 
 // grow / shrink box by moving bottom/right corner
 Box&		Resize		( cDist& SZ )			{ sz = SZ; return *this; }
 Box& 		Resize		( Cord W, Cord H )		{ w = W; h = H; return *this; }
 
 // move box
-Box&		Move 		( Cord dx, Cord dy )	{ x1 += dx; y1 += dy;  return *this; }	
-Box&		Move 		( cDist& d )			{ p1 += d; return *this; }								
+Box&		Move 		( Cord dx, Cord dy )	{ x1 += dx; y1 += dy;  return *this; }
+Box&		Move 		( cDist& d )			{ p1 += d; return *this; }
 Box&		operator+=	( cDist& d )			{ return Move(d); }
 Box&		operator-=	( cDist& d )			{ return Move(-d.dx,-d.dy); }
 
@@ -226,7 +223,7 @@ inline Box AlertBox ( cBox& bbox, cDist& size )
 #undef w
 #undef h
 
-#endif
+
 
 
 

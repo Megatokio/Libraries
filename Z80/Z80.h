@@ -1,4 +1,5 @@
-/*	Copyright  (c)	Günter Woigk 1996 - 2015
+#pragma once
+/*	Copyright  (c)	Günter Woigk 1996 - 2019
   					mailto:kio@little-bat.de
 
  	This program is distributed in the hope that it will be useful,
@@ -25,10 +26,6 @@
 
 	Z80 cpu emulation version 2.2.4
 */
-
-#ifndef	_Z80_h_
-#define	_Z80_h_
-
 
 #include "Z80options.h"
 #include "Item.h"
@@ -184,7 +181,7 @@ static inline void c2c(CoreByte const* q, CoreByte* z, uint n) { for( uint i=0; 
 
 
 
-#endif
+
 
 
 

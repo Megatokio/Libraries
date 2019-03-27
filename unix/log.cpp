@@ -312,20 +312,6 @@ inline void lock()   { pthread_mutex_lock(&mutex);	 }
 inline void unlock() { pthread_mutex_unlock(&mutex); }
 #endif
 
-#ifndef CSTRINGS_H
-//  strncpy variant which always terminates the destination string
-//  Returns the resulting string size or the buffer size, if the string was truncated.
-//  The string is always delimited with a 0 character unless sz = 0.
-//
-static uint strcpy( ptr z, cptr q, uint sz )
-{
-    ptr za = z, ze = za+sz;
-    while(z<ze) { if((*z++=*q++)==0) return uint(--z-za); }
-    if(sz) *--z = 0;
-    return sz;
-}
-#endif
-
 // get (the best guess of) the current thread id
 // without creating a LogFile instance
 // for abort() and panic()

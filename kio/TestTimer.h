@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2015 - 2019
 					mailto:kio@little-bat.de
 
@@ -23,10 +24,6 @@
 	TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 	PERFORMANCE OF THIS SOFTWARE.
 */
-
-
-#ifndef TESTTIMER_H
-#define TESTTIMER_H
 
 #include "kio/kio.h"
 
@@ -59,6 +56,6 @@ public:
 
 
 
-#endif
+
 
 

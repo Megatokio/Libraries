@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2004 - 2019
   					mailto:kio@little-bat.de
 
@@ -27,10 +28,6 @@
 
 	2008-05-02 kio	made PLock a subclass of pthread_mutex_t (instead having a data member of this class)
 */
-
-
-#ifndef CPPTHREADS_H
-#define	CPPTHREADS_H
 
 #include <mutex>
 #include <thread>
@@ -161,7 +158,7 @@ extern const std::thread::id	main_thread;
 inline bool	 isMainThread()		{ return std::this_thread::get_id() == main_thread; }
 
 
-#endif
+
 
 
 

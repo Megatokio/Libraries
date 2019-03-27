@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2014 - 2019
 					mailto:kio@little-bat.de
 
@@ -24,17 +25,13 @@
 	PERFORMANCE OF THIS SOFTWARE.
 */
 
-
-#ifndef Z80_MAJOR_OPCODE_H
-#define Z80_MAJOR_OPCODE_H
-
 #include "kio/kio.h"
 
 
 EXT uint8 z80_major_opcode(cstr q) noexcept(false); // any_error
 
 
-#endif
+
 
 
 

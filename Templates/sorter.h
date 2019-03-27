@@ -78,13 +78,6 @@
 */
 
 
-#ifndef SORT_H
- // this file is included from sort.h
- #include "../kio/kio.h"
- template<class TYPE>
- void sort(TYPE* a, TYPE* e)
-#endif
-
 #ifndef SWAP
  #define SWAP std::swap
 #endif
@@ -94,6 +87,7 @@
 #endif
 
 
+// template<class TYPE> void sort(TYPE* a, TYPE* e)
 {
 	assert(a && e);							// both pointers not NULL
 	assert(a + (e-a) == e);					// check alignment

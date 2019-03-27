@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 1995 - 2019
   					mailto:kio@little-bat.de
 
@@ -32,10 +33,6 @@
 	swap halves of int
 */
 
-
-#ifndef SWAP_H
-#define SWAP_H
-
 #include "kio/kio.h"
 
 
@@ -47,7 +44,7 @@ INL int32  swap	(int32 n)	{ return swap(uint32(n)); }
 INL int64  swap	(int64 n)	{ return swap(uint64(n)); }
 
 
-#endif
+
 
 
 

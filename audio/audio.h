@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2018 - 2019
 					mailto:kio@little-bat.de
 
@@ -24,8 +25,6 @@
 	PERFORMANCE OF THIS SOFTWARE.
 */
 
-#ifndef AUDIO_AUDIO_H
-#define AUDIO_AUDIO_H
 #include "Libraries/kio/kio.h"
 #include "Libraries/unix/FD.h"
 #include "Libraries/Templates/Array.h"
@@ -203,7 +202,7 @@ inline void right_channel(Array<T> const& q, Array<T>& z)
 
 
 
-#endif
+
 
 
 

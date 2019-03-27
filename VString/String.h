@@ -1,3 +1,4 @@
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2001 - 2015
   					mailto:kio@little-bat.de
 
@@ -41,10 +42,6 @@
 
 ---------------------------------------------------------------------------
 */
-
-
-#ifndef _String_h_
-#define _String_h_
 
 #include "kio/kio.h"
 #include "Unicode/Unicode.h"
@@ -377,7 +374,7 @@ inline void String::_kill()
 }
 
 
-#endif
+
 
 
 
