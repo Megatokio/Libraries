@@ -95,7 +95,16 @@ enum MatchType { fnm_basic=0, fnm_escape=1, fnm_pathname=2, fnm_period=4, fnm_ca
 
 class String
 {
+	union
+	{
 	ptr			text;			// ptr -> start of text
+	UCS1Char*	ucs1_text;
+	UCS2Char*	ucs2_text;
+	UCS4Char*	ucs4_text;
+	cUCS1Char*	cucs1_text;
+	cUCS2Char*	cucs2_text;
+	cUCS4Char*	cucs4_text;
+	};
 	int32		count;			// number of characters
 	size_t		data_and_csz;	// data ptr for delete[]; lower 2 bits: csz -1
 	String*		next;			// next string sharing same data
@@ -110,25 +119,25 @@ class String
 	void		_resize			( int32 newlen );
 	int32		compare	  		( cString& q ) const;
 
-	UCS1Char*&	Ucs1			( )									{ return *(UCS1Char**)&text; }
-	UCS2Char*&	Ucs2			( )									{ return *(UCS2Char**)&text; }
-	UCS4Char*&	Ucs4			( )									{ return *(UCS4Char**)&text; }
-	cUCS1Char*&	Ucs1			( )	const							{ return *(cUCS1Char**)&text; }
-	cUCS2Char*&	Ucs2			( )	const							{ return *(cUCS2Char**)&text; }
-	cUCS4Char*&	Ucs4			( ) const							{ return *(cUCS4Char**)&text; }
-	UCS1Char&	Ucs1			( int32 i )							{ return ((UCS1Char*)text)[i]; }
-	UCS2Char&	Ucs2			( int32 i )							{ return ((UCS2Char*)text)[i]; }
-	UCS4Char&	Ucs4			( int32 i )							{ return ((UCS4Char*)text)[i]; }
-	cUCS1Char&	Ucs1			( int32 i ) const					{ return ((cUCS1Char*)text)[i]; }
-	cUCS2Char&	Ucs2			( int32 i ) const					{ return ((cUCS2Char*)text)[i]; }
-	cUCS4Char&	Ucs4			( int32 i ) const					{ return ((cUCS4Char*)text)[i]; }
+	UCS1Char*&	Ucs1			( )						{ return ucs1_text; }
+	UCS2Char*&	Ucs2			( )						{ return ucs2_text; }
+	UCS4Char*&	Ucs4			( )						{ return ucs4_text; }
+	cUCS1Char* const&	Ucs1	( )	const				{ return cucs1_text; }
+	cUCS2Char* const&	Ucs2	( )	const				{ return cucs2_text; }
+	cUCS4Char* const&	Ucs4	( ) const				{ return cucs4_text; }
+	UCS1Char&	Ucs1			( int32 i )				{ return ucs1_text[i]; }
+	UCS2Char&	Ucs2			( int32 i )				{ return ucs2_text[i]; }
+	UCS4Char&	Ucs4			( int32 i )				{ return ucs4_text[i]; }
+	cUCS1Char&	Ucs1			( int32 i ) const		{ return cucs1_text[i]; }
+	cUCS2Char&	Ucs2			( int32 i ) const		{ return cucs2_text[i]; }
+	cUCS4Char&	Ucs4			( int32 i ) const		{ return cucs4_text[i]; }
 
-	ptr			Data			( ) const							{ return ptr(data_and_csz&~3); }
-	size_t		DataAndCsz		( )	const							{ return data_and_csz; }
-	void		SetData			( cptr p )							{ assert(!(size_t(p)&3)); data_and_csz = (data_and_csz&3)+(size_t)p; }
-	void		SetCsz			( CharSize sz )						{ data_and_csz = (data_and_csz&~3)+sz-1; }
-	void		SetDataAndCsz	( cptr p, CharSize sz )				{ assert(!(size_t(p)&3)); data_and_csz = size_t(p)+sz-1; }
-	void		SetDataAndCsz	( size_t q )						{ data_and_csz = q; }
+	ptr			Data			( ) const				{ return ptr(data_and_csz&size_t(~3)); }
+	size_t		DataAndCsz		( )	const				{ return data_and_csz; }
+	void		SetData			( cptr p )				{ assert(!(size_t(p)&3)); data_and_csz = (data_and_csz&3)+size_t(p); }
+	void		SetCsz			( CharSize sz )			{ data_and_csz = (data_and_csz&size_t(~3))+sz-1; }
+	void		SetDataAndCsz	( cptr p, CharSize sz )	{ assert(!(size_t(p)&3)); data_and_csz = size_t(p)+sz-1; }
+	void		SetDataAndCsz	( size_t q )			{ data_and_csz = q; }
 
 public:
 //	void*		operator new	( size_t );
@@ -341,7 +350,7 @@ inline void String::_init ( cString& q )
 	count  = q.count;
 	SetDataAndCsz(q.DataAndCsz());
 	next   = q.next;
-	prev   = (String*)&q;
+	prev   = const_cast<String*>(&q);
 	next->prev = prev->next = this;
 }
 
