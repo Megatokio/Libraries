@@ -150,6 +150,16 @@ file_error::file_error (cstr path, int error, cstr msg) noexcept
   filepath(newcopy(path))
 {}
 
+file_error::file_error (const FD& fd, int error) noexcept
+: any_error(error),
+  filepath(newcopy(fd.filepath()))
+{}
+
+file_error::file_error (const FD& fd, int error, cstr msg) noexcept
+: any_error(error,msg),
+  filepath(newcopy(fd.filepath()))
+{}
+
 file_error::file_error(file_error const& q) noexcept
 : any_error(q),
   filepath(newcopy(q.filepath))

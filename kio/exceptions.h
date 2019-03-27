@@ -34,6 +34,7 @@
 #include <new>
 #include "kio/kio.h"
 extern str usingstr( cstr, ... ) noexcept;		// #include "cstrings/cstrings.h"
+class FD;
 
 #ifndef __cplusplus
 	#error	C und nicht C++  !!
@@ -176,6 +177,8 @@ public:
 public:
 	file_error(cstr path, int error)			noexcept;
 	file_error(cstr path, int error, cstr msg)	noexcept;
+	file_error(const FD&, int error)			noexcept;
+	file_error(const FD&, int error, cstr msg)	noexcept;
 	~file_error ()								noexcept override;
 
 	cstr what() const							noexcept override;

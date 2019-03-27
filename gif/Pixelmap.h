@@ -1,4 +1,4 @@
-pragma once
+#pragma once
 /*	Copyright  (c)	Günter Woigk 2007 - 2019
   					mailto:kio@little-bat.de
 
@@ -38,7 +38,7 @@ class Pixelmap
 {
 protected:
 
-	void		kill()				{ delete[] data; data=0; }
+	void		kill()				{ delete[] data; data=nullptr; }
 	void		init(cPixelmap& q)	noexcept(false); // bad_alloc
 
 	Box			box;			// frame: x,y,w,h
@@ -49,7 +49,7 @@ protected:
 
 public:
 
-	Pixelmap	()							: box(),		dy(0),   data(NULL),               pixels(NULL)              {}
+	Pixelmap	()							: box(),		dy(0),   data(nullptr),               pixels(nullptr)              {}
 	Pixelmap	( cBox& bbox )				: box(bbox),    dy(width()), data(new uchar[width()*height()]), pixels(data-x1()-y1()*dy) {}
 	Pixelmap	( int w,int h )				: box(w,h),     dy(w),   data(new uchar[w*h]),     pixels(data)              {}
 	Pixelmap	( int x,int y,int w,int h )	: box(x,y,w,h), dy(w),   data(new uchar[w*h]),     pixels(data-x-y*w)        {}
@@ -134,7 +134,7 @@ public:
 
 // Color tools:
 	int			getMaxColorIndex() const;
-	int			countUsedColors	( int* max_color_index=NULL ) const;
+	int			countUsedColors	( int* max_color_index=nullptr ) const;
 	void		reduceColors	( Colormap& cmap );
 
 // Special resizing:
