@@ -1,4 +1,4 @@
-/*	Copyright  (c)	Günter Woigk 2002 - 2018
+/*	Copyright  (c)	Günter Woigk 2002 - 2019
   					mailto:kio@little-bat.de
 
 	This file is free software
