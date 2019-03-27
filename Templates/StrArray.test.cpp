@@ -88,10 +88,10 @@ static void test1(uint& num_tests, uint& num_errors)
 		assert(&c.first()==&c.last());
 	END
 
-	TRY
+	/*TRY
 		StrArray a;
 		a.first() = nullptr;
-	EXPECT(internal_error)
+	EXPECT(internal_error)*/
 
 	TRY
 		StrArray a;
@@ -249,9 +249,9 @@ static void test1(uint& num_tests, uint& num_errors)
 	assert(array == StrArray() << "6" << "5" << "9" << "7");
 	END
 
-	TRY array[4]; EXPECT(internal_error)
+	/*TRY array[4]; EXPECT(internal_error)*/
 
-	TRY array[uint(-1)]; EXPECT(internal_error)
+	/*TRY array[uint(-1)]; EXPECT(internal_error)*/
 
 	TRY
 	str s=newcopy("8");
