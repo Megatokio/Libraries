@@ -77,8 +77,8 @@ class FD
 public:
 
 // c'tor and d'tor:
-			FD				()											noexcept	:fd(-1),fpath(NULL) {}
-			FD				(cstr path, int flags='r', int perm=0664) 	THF	:fd(-1),fpath(NULL) { open_file(path,flags,perm); }
+			FD				()											noexcept	:fd(-1),fpath(nullptr) {}
+			FD				(cstr path, int flags='r', int perm=0664) 	THF	:fd(-1),fpath(nullptr) { open_file(path,flags,perm); }
 			FD				(int fd, cstr fname)						noexcept	:fd(fd),fpath(newcopy(fname)){}
 			~FD				()											noexcept;
 

@@ -179,7 +179,7 @@ public:
 public:
 	file_error(cstr path, int error)			noexcept;
 	file_error(cstr path, int error, cstr msg)	noexcept;
-	~file_error ()								noexcept;
+	~file_error ()								noexcept override;
 
 	cstr what() const							noexcept override;
 

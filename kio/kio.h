@@ -615,6 +615,10 @@ struct LogIndent { LogIndent(cstr fmt, ...) __printflike(2,3); ~LogIndent(); };
   #endif
 #endif
 
+
+#define likely(x)      __builtin_expect(!!(x), 1)
+#define unlikely(x)    __builtin_expect(!!(x), 0)
+
 #if SAFETY==0
   #undef  NDEBUG
   #define NDEBUG
@@ -631,7 +635,7 @@ struct LogIndent { LogIndent(cstr fmt, ...) __printflike(2,3); ~LogIndent(); };
   #undef  debugstr
   #define debugstr(FMT,...)	vfprintf(stderr,FMT,__VA_ARGS__)
   #undef  assert
-  #define assert(X)		((void) ((X) ? ((void)0) : abort("%s:%u: assert failed: %s\n",__FILE__, __LINE__, #X)))
+  #define assert(X)		do{ if(unlikely(!(X))) abort("%s:%u: assert failed: %s\n",__FILE__, __LINE__, #X); }while(0)
 #endif
 
 #define XSAFE  (SAFETY>=1)

@@ -57,7 +57,7 @@ static void create_key (void)
     if(err) abort( "init TempMemPool: %s", strerror(err) );
 }
 
-static void init ()
+static void init () noexcept
 {
     xlogIn("init TempMemPool");
 

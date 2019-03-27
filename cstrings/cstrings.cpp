@@ -470,6 +470,7 @@ str usingstr (cstr format, va_list va) noexcept
 
     static char bu[1];
     int n = vsnprintf( bu, 0, format, va2 );	// calc. req. size
+    assert(n>=0);
 
     str z = tempstr(n);
     vsnprintf( z, size_t(n+1), format, va );	// create formatted string

@@ -30,7 +30,6 @@
 #define STRARRAY_H
 
 #include "Array.h"
-#define throws noexcept(false)
 
 
 // ___________________________________________________________

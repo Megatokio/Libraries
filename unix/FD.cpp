@@ -90,7 +90,7 @@ FD FD::stderr(2,"STDERR");
 //
 int FD::open_file( cstr path, int mode, int perm ) THF
 {
-    assert(path!=NULL);
+    assert(path!=nullptr);
     assert(fd==-1);
 
     if(path[0]=='~' && path[1]=='/')			// test: add user's home directory path?
@@ -403,12 +403,13 @@ uint32 FD::write_fmt( cstr format, ... ) THF
     va_copy(va2,va);
     char bu[1];
     int n = vsnprintf( bu, 0, format, va2 );	// calc. req. size
+    assert(n>=0);
     char s[n+1];
-    vsnprintf( s, n+1, format, va );			// create formatted string
+    vsnprintf( s, uint(n+1), format, va );		// create formatted string
     errno = err;
 
     va_end(va);
-    return write_bytes(s,n);
+    return write_bytes(s,uint(n));
 }
 
 //	read line-break separated string from file or stream
@@ -426,7 +427,7 @@ str FD::read_str() THF
 
     if(is_file())		// regular file
     {
-        s = NULL;		// rval
+        s = nullptr;		// rval
         char bu[100+1];
 a:		uint32 n = read_bytes(bu,100,no), i;
         char c = 0;
@@ -671,7 +672,7 @@ bool FD::data_available() const noexcept
     FD_SET(fd,&fdset);
     struct timeval timeout = {0,0};
 
-r:	int n = select(fd+1/*nfds*/, &fdset/*readfds*/, NULL/*writefds*/, NULL/*exceptfds*/, &timeout);
+r:	int n = select(fd+1/*nfds*/, &fdset/*readfds*/, nullptr/*writefds*/, nullptr/*exceptfds*/, &timeout);
     if(n>=0) { errno=noerror; return n; }
     if(errno==EINTR) goto r;
     else return no;	// error

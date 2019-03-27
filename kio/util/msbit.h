@@ -50,10 +50,10 @@ INL int	msbit		( uint8 n )	 { int b=0,i=4; do{ if(n>>i){n>>=i;b+=i;} }while((i>>
 INL int	msbit		( uint16 n ) { int b=0,i=8; do{ if(n>>i){n>>=i;b+=i;} }while((i>>=1)); return b; } 	// 0 .. 15
 INL int	msbit		( uint32 n ) { int b=0,i=16;do{ if(n>>i){n>>=i;b+=i;} }while((i>>=1)); return b; } 	// 0 .. 31
 INL int	msbit		( uint64 n ) { int b=0,i=32;do{ if(n>>i){n>>=i;b+=i;} }while((i>>=1)); return b; } 	// 0 .. 63
-INL int	msbit		( int8 n )	 { return msbit((uint8)n);  }
-INL int	msbit		( int16 n )	 { return msbit((uint16)n); }
-INL int	msbit		( int32 n )	 { return msbit((uint32)n); }
-INL int	msbit		( int64 n )	 { return msbit((uint64)n); }
+INL int	msbit		( int8 n )	 { return msbit(uint8(n));  }
+INL int	msbit		( int16 n )	 { return msbit(uint16(n)); }
+INL int	msbit		( int32 n )	 { return msbit(uint32(n)); }
+INL int	msbit		( int64 n )	 { return msbit(uint64(n)); }
 
 
 /* ----	Calculate the number of digits required to print a number:

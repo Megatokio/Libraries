@@ -187,7 +187,7 @@ public:
 	String		SubString   	( int32 a, int32 e ) const			{ return String(*this,a,e); }
 	String		MidString   	( int32 a, int32 n ) const			{ return String(*this,a,a+n); }
 	String		MidString		( int32 a ) const					{ return String(*this,a,Len()); }
-	String		LeftString  	( int32 n ) const					{ return String(*this,(int32)0,n); }
+	String		LeftString  	( int32 n ) const					{ return String(*this,int32(0),n); }
 	String		RightString 	( int32 n ) const					{ return String(*this,Len()-n,Len()); }
 
 	String&		operator=   	( cString& q );
@@ -206,8 +206,8 @@ public:
 	bool		operator<=  	( cString& q ) const				{ return compare(q)<=0; }
 
 	str			CString			( ) const;
-	double		NumVal			( int32* index_inout=NULL ) const;
-	String		StrVal			( int32* index_inout=NULL ) const;
+	double		NumVal			( int32* index_inout=nullptr ) const;
+	String		StrVal			( int32* index_inout=nullptr ) const;
 
 	int32		Find			( UCS4Char c, int32 startidx= 0 ) const;
 	int32		RFind			( UCS4Char c, int32 startidx= 0x7fffffff ) const;
@@ -328,9 +328,9 @@ inline void String::_init ( )
 {
 	xxlogIn("String::_init()");
 
-	text   = NULL;
+	text   = nullptr;
 	count  = 0;
-	SetDataAndCsz(NULL,csz1);
+	SetDataAndCsz(nullptr,csz1);
 	next   = this;
 	prev   = this;
 }

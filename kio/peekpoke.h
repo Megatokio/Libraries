@@ -137,8 +137,8 @@
 	inline void   poke4 (void* p, int32 n)	noexcept { poke4Z(p,uint32(n)); }
 	inline void   poke8 (void* p, int64 n)	noexcept { poke8Z(p,uint64(n)); }
 
-	inline void   poke1 (void* p, uint   n) noexcept { poke1Z(p,n); }
-	inline void   poke2 (void* p, uint   n) noexcept { poke2Z(p,n); }
+	inline void   poke1 (void* p, uint   n) noexcept { poke1Z(p,uint8(n)); }
+	inline void   poke2 (void* p, uint   n) noexcept { poke2Z(p,uint16(n)); }
 	inline void   poke3 (void* p, uint32 n) noexcept { poke3Z(p,n); }
 	inline void   poke4 (void* p, uint32 n) noexcept { poke4Z(p,n); }
 	inline void   poke8 (void* p, uint64 n) noexcept { poke8Z(p,n); }

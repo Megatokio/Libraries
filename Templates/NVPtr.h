@@ -97,7 +97,7 @@ public:
 	NVPtr&	operator=	(NVPtr&& q)			{ assert(this!=&q); unlock(); p=q.p; q.p=NULL; return *this; }
 //	NVPtr&	operator=	(RCPtr<vT>& q)		{ if(p!=q.p) { unlock(); p=q.p; lock(); } return *this; }
 	NVPtr&	operator=	(vT* q)				{ if(p!=q)   { unlock(); p=q;   lock(); } return *this; }
-	NVPtr&	operator=	(ptr p)				{ assert(p==NULL); unlock(); p=NULL; return *this; }
+	NVPtr&	operator=	(ptr p)				{ assert(p==nullptr); unlock(); p=nullptr; return *this; }
 
 
 	T*		operator->	()					{ return p; }
@@ -125,8 +125,8 @@ public:
 //	bool	operator==	(const T* p) const	{ return p == this->p; }		ohne geht's besser
 
 	void	print		(FD&, cstr indent) const;
-	void	writeToFile	(FD&, void* data=NULL) const		THF;
-// 	void	readFromFile(FD&, void* data=NULL)				THF;
+	void	writeToFile	(FD&, void* data=nullptr) const		THF;
+// 	void	readFromFile(FD&, void* data=nullptr)			THF;
 };
 
 
