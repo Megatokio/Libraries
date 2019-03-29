@@ -66,6 +66,42 @@ HEADERS += \
     Libraries/Templates/template_helpers.h \
     Libraries/VString/String_errors.h \
     Libraries/VString/String.h \
+    Libraries/Unicode/Unicode.h \
+    Libraries/Unicode/Includes/Blocks.h \
+    Libraries/Unicode/Includes/CanonicalCombiningClass.h \
+    Libraries/Unicode/Includes/CanonicalCombiningClassUCS4.h \
+    Libraries/Unicode/Includes/CodePointRanges.h \
+    Libraries/Unicode/Includes/CodePointRanges_UCS4.h \
+    Libraries/Unicode/Includes/EastAsianWidth.h \
+    Libraries/Unicode/Includes/EastAsianWidth_UCS4.h \
+    Libraries/Unicode/Includes/GeneralCategory.h \
+    Libraries/Unicode/Includes/GeneralCategory_UCS4.h \
+    Libraries/Unicode/Includes/GlobalConstants.h \
+    Libraries/Unicode/Includes/Names.h \
+    Libraries/Unicode/Includes/NumericValue.h \
+    Libraries/Unicode/Includes/NumericValue_UCS4.h \
+    Libraries/Unicode/Includes/Property_Enum.h \
+    Libraries/Unicode/Includes/Property_Groups.h \
+    Libraries/Unicode/Includes/Property_LongNames.h \
+    Libraries/Unicode/Includes/Property_ShortNames.h \
+    Libraries/Unicode/Includes/PropertyGroup_Enum.h \
+    Libraries/Unicode/Includes/PropertyGroup_Names.h \
+    Libraries/Unicode/Includes/PropertyValue_Enum.h \
+    Libraries/Unicode/Includes/PropertyValue_LongNames.h \
+    Libraries/Unicode/Includes/PropertyValue_ShortNames.h \
+    Libraries/Unicode/Includes/Scripts.h \
+    Libraries/Unicode/Includes/Scripts_UCS4.h \
+    Libraries/Unicode/Includes/SimpleLowercase_Even.h \
+    Libraries/Unicode/Includes/SimpleLowercase_Odd.h \
+    Libraries/Unicode/Includes/SimpleLowercase_UCS4.h \
+    Libraries/Unicode/Includes/SimpleTitlecase.h \
+    Libraries/Unicode/Includes/SimpleUppercase_Even.h \
+    Libraries/Unicode/Includes/SimpleUppercase_Odd.h \
+    Libraries/Unicode/Includes/SimpleUppercase_UCS4.h \
+    Libraries/Unicode/Includes/SpecialCasing.h \
+    Libraries/Unicode/Includes/UnicodeData_Index.h \
+    Libraries/Unicode/Includes/UnicodeData_Names.h \
+    Libraries/Unicode/UTF-8.h
 
 
 

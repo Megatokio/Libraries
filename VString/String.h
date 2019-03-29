@@ -132,6 +132,7 @@ class String
 	cUCS2Char&	Ucs2			( int32 i ) const		{ return cucs2_text[i]; }
 	cUCS4Char&	Ucs4			( int32 i ) const		{ return cucs4_text[i]; }
 
+	static size_t calc_data_and_csz ( cptr p, CharSize sz ) { assert(!(size_t(p)&3)); return size_t(p)+sz-1; }
 	ptr			Data			( ) const				{ return ptr(data_and_csz&size_t(~3)); }
 	size_t		DataAndCsz		( )	const				{ return data_and_csz; }
 	void		SetData			( cptr p )				{ assert(!(size_t(p)&3)); data_and_csz = (data_and_csz&3)+size_t(p); }
@@ -140,11 +141,7 @@ class String
 	void		SetDataAndCsz	( size_t q )			{ data_and_csz = q; }
 
 public:
-//	void*		operator new	( size_t );
-//	void*		operator new	( size_t sz, void* p )				{ XXXTRAP(sz!=sizeof(String)); return p; }
-//	void		operator delete	( void*, size_t );
-
-				~String		( );
+				~String			( );
 				String			( );
 
 				String			( UCS4Char c );						// may be 'not writable'
@@ -255,7 +252,7 @@ public:
 	void		ReadFromFile	( cstr cpath,    off_t max_sz = 1 MB );
 	void		ReadFromFile	( cString& path, off_t max_sz = 1 MB );
 
-	ulong 		CalcHash 		( ) const;
+	uint32 		CalcHash 		( ) const;
 
 	void		Check			( cstr filename, uint line_no ) const;
 
