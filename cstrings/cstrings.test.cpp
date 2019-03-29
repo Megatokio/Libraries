@@ -551,10 +551,10 @@ void test_cstrings(uint& num_tests, uint& num_errors)
 		assert(utf8::max_csz(catstr("\t1hGf∆º¶§",utf8::to_utf8(&c1,1),"x")) == 2);
 		assert(utf8::max_csz(catstr("\t1hGf∆º¶§",utf8::to_utf8(&c2,1),"x")) == 4);
 
-		assert(utf8::fits_ucs1("\t1hGfr&%<'"));
-		assert(!utf8::fits_ucs1("ß≤4€•@∆º¶§"));
-		assert(utf8::fits_ucs2("ß3≥€•@∆º¶§"));
-		assert(!utf8::fits_ucs2(catstr("\t1hGfr&%<'",utf8::to_utf8(&c2,1))));
+		assert(utf8::fits_in_ucs1("\t1hGfr&%<'"));
+		assert(!utf8::fits_in_ucs1("ß≤4€•@∆º¶§"));
+		assert(utf8::fits_in_ucs2("ß3≥€•@∆º¶§"));
+		assert(!utf8::fits_in_ucs2(catstr("\t1hGfr&%<'",utf8::to_utf8(&c2,1))));
 		assert(errno==0);
 	END
 
@@ -577,15 +577,15 @@ void test_cstrings(uint& num_tests, uint& num_errors)
 	TRY
 		errno=0;
 		uint32 bu[10],bu2[10];
-		for(uint i=0;i<NELEM(bu);i++) { bu[i] = random()+random()*0x10000u; }
+		for(uint i=0;i<NELEM(bu);i++) { bu[i] = uint32(random()) + uint32(random()) * 0x10000u; }
 		uint n = utf8::utf8len(bu,10);
 		str s = tempstr(n);
 		ptr e = utf8::ucs4_to_utf8(bu,10,s);
 		assert(*e==0);
 		assert(e-s==n);
 		assert(utf8::charcount(s)==10);
-		n = utf8::utf8_to_ucs4(s,bu2) - bu2;
-		assert(n==10);
+		ssize_t len = utf8::utf8_to_ucs4(s,bu2) - bu2;
+		assert(len==10);
 		assert(memcmp(bu,bu2,sizeof(bu))==0);
 		assert(errno==0);
 	END
@@ -598,8 +598,8 @@ void test_cstrings(uint& num_tests, uint& num_errors)
 			for( int i=0; i<200; i++ )
 			{
 				uint32 n[2], m[2];
-				n[0] = (random()+random()*0x10000); if(nbits<32) n[0] &= RMASK(nbits);
-				n[1] = (random()+random()*0x10000); if(nbits<32) n[1] &= RMASK(nbits);
+				n[0] = uint32(random()) + uint32(random()) * 0x10000; if(nbits<32) n[0] &= RMASK(nbits);
+				n[1] = uint32(random()) + uint32(random()) * 0x10000; if(nbits<32) n[1] &= RMASK(nbits);
 
 				ptr e = utf8::ucs4_to_utf8(n,2,bu);
 				assert(*e==0);
@@ -619,8 +619,8 @@ void test_cstrings(uint& num_tests, uint& num_errors)
 			for( int i=0; i<100; i++ )
 			{
 				uint16 n[2], m[2];
-				n[0] = random() & RMASK(nbits);
-				n[1] = random() & RMASK(nbits);
+				n[0] = uint16(uint(random()) & RMASK(nbits));
+				n[1] = uint16(uint(random()) & RMASK(nbits));
 
 				ptr e = utf8::ucs2_to_utf8(n,2,bu);
 				assert(*e==0);
@@ -640,8 +640,8 @@ void test_cstrings(uint& num_tests, uint& num_errors)
 			for( int i=0; i<100; i++ )
 			{
 				uint8 n[2], m[2];
-				n[0] = random() & RMASK(nbits);
-				n[1] = random() & RMASK(nbits);
+				n[0] = uint8(uint(random()) & RMASK(nbits));
+				n[1] = uint8(uint(random()) & RMASK(nbits));
 
 				ptr e = utf8::ucs1_to_utf8(n,2,bu);
 				assert(*e==0);

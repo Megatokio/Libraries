@@ -81,7 +81,7 @@ void test_tempmem(uint& num_tests, uint& num_errors)
 		for(uint i=0;i<N;i++)
 		{
 			uint n = min(random(0x1fff),random(0x1fff));
-			list1[i] = tempmempool.alloc(int(n));
+			list1[i] = tempmempool.alloc(n);
 			list2[i] = new char[n];
 			size[i] = n;
 			while(n--) list1[i][n] = char(random(256));
@@ -98,8 +98,8 @@ void test_tempmem(uint& num_tests, uint& num_errors)
 		for(uint i=0;i<N;i++)
 		{
 			uint n = min(random(0x1fff),random(0x1fff));
-			str a = tempmempool.allocStr(int(n));
-			str b = tempmempool.allocMem(int(n));
+			str a = tempmempool.allocStr(n);
+			str b = tempmempool.allocMem(n);
 			assert(a[n] == 0);
 			assert(size_t(b) % _MAX_ALIGNMENT == 0);
 		}

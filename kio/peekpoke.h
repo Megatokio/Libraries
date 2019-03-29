@@ -83,14 +83,14 @@
 	inline void   poke4Z (void* p, uint32 n)	noexcept { *u32ptr(p) = n; }
 	inline void   poke8Z (void* p, uint64 n)	noexcept { *u64ptr(p) = n; }
 #else
-	inline uint8  peek1Z (void const* p)		{ return								 P(0); }
-	inline uint16 peek2Z (void const* p)		{ return					   P(1)<<8 | P(0); }
-	inline uint32 peek4Z (void const* p)		{ return P(3)<<24 | P(2)<<16 | P(1)<<8 | P(0); }
-	inline uint64 peek8Z (void const* p)		{ return ((uint64)peek4X((ptr)p+4)<<32) + peek4X(p); }
-	inline void   poke1Z (void* p, uint8 n)		{								     P(0)=n; }
-	inline void   poke2Z (void* p, uint16 n)	{					      P(1)=n>>8; P(0)=n; }
-	inline void   poke4Z (void* p, uint32 n)	{ P(3)=n>>24; P(2)=n>>16; P(1)=n>>8; P(0)=n; }
-	inline void   poke8Z (void* p, uint64 n)	{ for(uint i=8;i--;) P(i) = n>>(i<<3); }
+	inline uint8  peek1Z (void const* p)		noexcept { return								 P(0); }
+	inline uint16 peek2Z (void const* p)		noexcept { return					   P(1)<<8 | P(0); }
+	inline uint32 peek4Z (void const* p)		noexcept { return P(3)<<24 | P(2)<<16 | P(1)<<8 | P(0); }
+	inline uint64 peek8Z (void const* p)		noexcept { return ((uint64)peek4X((ptr)p+4)<<32) + peek4X(p); }
+	inline void   poke1Z (void* p, uint8 n)		noexcept {								     P(0)=n; }
+	inline void   poke2Z (void* p, uint16 n)	noexcept {					      P(1)=n>>8; P(0)=n; }
+	inline void   poke4Z (void* p, uint32 n)	noexcept { P(3)=n>>24; P(2)=n>>16; P(1)=n>>8; P(0)=n; }
+	inline void   poke8Z (void* p, uint64 n)	noexcept { for(uint i=8;i--;) P(i) = n>>(i<<3); }
 #endif
 	inline void   poke3Z (void* p, uint32 n)	noexcept { P(2) = uint8(n>>16); poke2Z(p,uint16(n)); }
 	inline uint32 peek3Z (void const* p)		noexcept { return uint32(P(2)<<16 | peek2Z(p)); }

@@ -63,14 +63,14 @@ static int sum(int bu[])
 	return cnt;
 }
 
-static int/*error*/ test_buffer_is_sorted()
+static uint/*error*/ test_buffer_is_sorted()
 {
 	if(sum(bu)!=cnt) return 1;
 	for(uint i=1;i<NELEM(bu);i++) if(bu[i-1]>bu[i]) return 1;
 	return 0;
 }
 
-static int/*error*/ test_buffer_is_rsorted()
+static uint/*error*/ test_buffer_is_rsorted()
 {
 	if(sum(bu)!=cnt) return 1;
 	for(uint i=1;i<NELEM(bu);i++) if(bu[i-1]<bu[i]) return 1;
@@ -92,7 +92,7 @@ static void swap_buffers()
 	kio::swap(cnt2,cnt);
 }
 
-static int/*error*/ rcompare_buffers()
+static uint/*error*/ rcompare_buffers()
 {
 	if(sum(bu)!=cnt) return 1;
 	if(sum(bu2)!=cnt2) return 1;
@@ -139,7 +139,7 @@ void test_sort_template(uint& num_tests, uint& num_errors)
 
 void test_sort_template_with_fu(uint& num_tests, uint& num_errors)
 {
-	int error;
+	uint error;
 
 	fill_buffer();
 	copy_buffer();
@@ -173,7 +173,7 @@ void test_sort_template_with_fu(uint& num_tests, uint& num_errors)
 
 void test_sort_int(uint& num_tests, uint& num_errors)
 {
-	int error;
+	uint error;
 
 	fill_buffer();
 	copy_buffer();
@@ -207,7 +207,7 @@ void test_sort_int(uint& num_tests, uint& num_errors)
 
 void test_sort_int_with_fu(uint& num_tests, uint& num_errors)
 {
-	int error;
+	uint error;
 
 	fill_buffer();
 	copy_buffer();
@@ -242,7 +242,7 @@ void test_sort_int_with_fu(uint& num_tests, uint& num_errors)
 void test_speed()
 {
 	uint32 sz = 100000;
-	char* bu1 = new char[sz]; int32* p = (int32*)bu1; for(uint i=sz/sizeof(int32);i;) { p[--i]=(int32)random(); }
+	char* bu1 = new char[sz]; for (char* p = bu1; p < bu1+sz; p++) { *p = char(random()); }
 	char* bu2 = new char[sz]; memcpy(bu2,bu1,sz);
 
 	double t0 = now();
@@ -286,7 +286,7 @@ void test_sort(uint& num_tests, uint& num_errors)
 {
 	logIn("test sort.h");
 
-	try{ sort(bu,bu); }catch(std::exception& e){ logline("test #265 failed: " __FILE__); num_errors++; } num_tests++;
+	try{ sort(bu,bu); }catch(std::exception&){ logline("test #265 failed: " __FILE__); num_errors++; } num_tests++;
 
 	test_sort_template(num_tests, num_errors);
 	test_sort_template_with_fu(num_tests, num_errors);

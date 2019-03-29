@@ -32,8 +32,8 @@
 static cptr str_comp(cstr a, cstr b) noexcept
 {
 	char c,d;
-    while ((c=*a) && (d=*b) && c==d) { a++; b++; }
-    return a;
+	while ((c=*a) && (d=*b) && c==d) { a++; b++; }
+	return a;
 }
 
 
@@ -75,7 +75,7 @@ uint max_csz (cstr q) noexcept
 	}
 	return 1;
 }
-bool fits_ucs1 (cstr q) noexcept
+bool fits_in_ucs1 (cstr q) noexcept
 {
 	// test whether utf-8 string q can be encoded to ucs1
 	// note: if q contains broken characters then these will be replaced with '?' not $FFFD
@@ -87,7 +87,7 @@ bool fits_ucs1 (cstr q) noexcept
 	}
 	return yes;
 }
-bool fits_ucs2 (cstr q) noexcept
+bool fits_in_ucs2 (cstr q) noexcept
 {
 	// test whether utf-8 string q can be encoded to ucs2
 

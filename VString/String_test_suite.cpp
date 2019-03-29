@@ -238,7 +238,7 @@ void TestStringClass(uint& num_tests, uint& num_errors)
 		TRAP(s.Len()!=19);
 		TRAP(s.Csz()!=1);
 		TRAP(s.NotWritable());
-		for(int i=0;i<s.Len();i++) TRAP((long)s[i]!="Trottellumme_0123FF"[i]);
+		for(int i=0;i<s.Len();i++) TRAP(s[i] != uint("Trottellumme_0123FF"[i]));
 
 		uchar c[]={'G','r',0xfc,0xdf,' ','G','o','t','t','!'};
 		s=String("Grüß Gott!");
@@ -261,7 +261,7 @@ void TestStringClass(uint& num_tests, uint& num_errors)
 
 		uchar bogus[] = { 0x80,'a',0x93,'b',0xbf,0xbf,0xc0,0xc1,0xc2,0x80,0 };
 		uchar anton[] = {      'a',     'b',          '?', '?', 0x80,       };
-		s=String((char*)bogus);
+		s=String(ptr(bogus));
 		TRAP(s.Len()!=5);
 		TRAP(s.Csz()!=1);
 		TRAP(s.NotWritable());
@@ -269,7 +269,7 @@ void TestStringClass(uint& num_tests, uint& num_errors)
 
 		uchar  bummer[] = { 0x80,'a',0x93,'b',0xbf,0xbf,0xc0,0xc1,0xc2,0x80,0xdf,0xbf,0 };
 		ushort anton2[] = {      'a',     'b',          '?', '?', 0x80,     (1<<11)-1      };
-		s=String((char*)bummer);
+		s=String(ptr(bummer));
 		TRAP(s.Len()!=6);
 		TRAP(s.Csz()!=2);
 		TRAP(s.NotWritable());
@@ -318,9 +318,9 @@ void TestStringClass(uint& num_tests, uint& num_errors)
 
 	TRY // compare(cString)
 		String a[]={""," ","2•","2€","A","Antimon","Anton","Antonov","a","a ","aa","aaa","aab","anton","b","b ","berta","cÄsar","cäsar","Äffchen","•","•2"};
-		for( int i=0;i<(int)NELEM(a);i+=2 ) a[i] = (SpaceString(i)+a[i]).MidString(i);
-		for( int i=0;i<(int)NELEM(a);i++ )
-		for( int j=0;j<(int)NELEM(a);j++ )
+		for( int i=0;i<int(NELEM(a));i+=2 ) a[i] = (SpaceString(i)+a[i]).MidString(i);
+		for( int i=0;i<int(NELEM(a));i++ )
+		for( int j=0;j<int(NELEM(a));j++ )
 		{
 			TRAP ( sign(a[i].compare(a[j])) != sign(i-j) );
 		}
@@ -442,11 +442,11 @@ void TestStringClass(uint& num_tests, uint& num_errors)
 
 	TRY // Text()
 		String s="xxanton";
-		TRAP(s.Text()!=(cptr)s.UCS1Text());
+		TRAP(s.Text()!=ptr(s.UCS1Text()));
 		s="x€anton";
-		TRAP(s.Text()!=(cptr)s.UCS2Text());
+		TRAP(s.Text()!=ptr(s.UCS2Text()));
 		s=String(0x101010)+"€anton";
-		TRAP(s.Text()!=(cptr)s.UCS4Text());
+		TRAP(s.Text()!=ptr(s.UCS4Text()));
 	END
 
 	TRY // IsWritable()
@@ -709,8 +709,8 @@ void TestStringClass(uint& num_tests, uint& num_errors)
 		TRAP(NumVal("+123.00e-00")!=123);
 		TRAP(NumVal("-123.00e+00")!=-123);
 		TRAP(NumVal("47.5")!=47.5);
-		TRAP(NumVal("47.12")!=(double)47.12);
-		TRAP(NumVal("47.12Effe")!=(double)47.12);
+		TRAP(NumVal("47.12")!=47.12);
+		TRAP(NumVal("47.12Effe")!=47.12);
 		TRAP(NumVal("-432e+123")!=-432e123);
 		TRAP(NumVal("-56789056.7890")!=-56789056.7890);
 		TRAP(NumVal("+56789056.7890")!= 56789056.7890);
@@ -725,7 +725,7 @@ void TestStringClass(uint& num_tests, uint& num_errors)
 		TRAP(NumVal("'\\x'")!='x');
 		TRAP(NumVal("'\\017'")!=15);
 		TRAP(NumVal("'\\017\\100'")!=15*256+8*8);
-		TRAP(NumVal("'ABCD'")!=(ulong)0x41424344);
+		TRAP(NumVal("'ABCD'")!=0x41424344u);
 		f = NumVal("''");	TRAP(errno!=notanumber);
 		errno=0;			TRAP(f==f);
 		f = NumVal("'12");	TRAP(errno!=notanumber);
@@ -1075,7 +1075,7 @@ void TestStringClass(uint& num_tests, uint& num_errors)
 				UCS4Char u4[300];
 				for( int j=0; j<nu; j++ )
 				{
-					u4[j] = (random()+random()*0x10000);
+					u4[j] = (uint32(random())+uint32(random())*0x10000u);
 					if (bu<32) u4[j] &= RMASK(bu);
 				}
 				String su = String(ptr(u4),nu,csz4);
@@ -1084,7 +1084,7 @@ void TestStringClass(uint& num_tests, uint& num_errors)
 				su = su.FromUTF8();
 				assert(su.Len() == nu);
 				su.ResizeCsz(csz4);
-				assert(memcmp(u4,su.Text(),nu*4) == 0);
+				assert(memcmp(u4,su.Text(),uint(nu)*4) == 0);
 			}
 		}
 	END
@@ -1147,8 +1147,8 @@ void TestStringClass(uint& num_tests, uint& num_errors)
 		TRAP(NumString(-1)!="-1");
 		TRAP(NumString(-26473246)!="-26473246");
 		TRAP(NumString(26473246)!="26473246");
-		TRAP(NumString((int32)0x7FFFFFFF)!= "2147483647");
-		TRAP(NumString((int32)0x80000000)!="-2147483648");
+		TRAP(NumString(0x7FFFFFFF)!= "2147483647");
+		TRAP(NumString(int32(0x80000000))!="-2147483648");
 	END
 
 	TRY // HexString(ulong,int)
@@ -1170,32 +1170,30 @@ void TestStringClass(uint& num_tests, uint& num_errors)
 	END
 
 	TRY // allocation test
-		srandom(time(NULL));
+		srandom(uint(time(nullptr)));
 		const uint SZ=5000;
 		String* v[SZ];
-		for (uint i=0;i<SZ;i++) v[i]=NULL;
+		for (uint i=0;i<SZ;i++) v[i]=nullptr;
 
 		int i,j;
-		CharSize csz;
-		long count;
 
 		for( uint ii=0; ii<50000; ii++ )
 		{
-			i = random(NELEM(v));
-			j = random(NELEM(v));
+			i = int(random(NELEM(v)));
+			j = int(random(NELEM(v)));
 
 			if(v[i])
 			{
 				if(v[j])
 				{
 					*v[i] += *v[j];
-					*v[i] = v[i]->MidString(random(v[i]->Len()),random(100000));
-					delete v[j]; v[j]=NULL;
+					*v[i] = v[i]->MidString(int(random(uint(v[i]->Len()))),int(random(100000)));
+					delete v[j]; v[j]=nullptr;
 				}
 				else
 				{
 					*v[i] += *v[i];
-					*v[i] = v[i]->MidString(random(v[i]->Len()),random(100000));
+					*v[i] = v[i]->MidString(int(random(uint(v[i]->Len()))),int(random(100000)));
 				}
 			}
 			else
@@ -1206,8 +1204,8 @@ void TestStringClass(uint& num_tests, uint& num_errors)
 				}
 				else
 				{
-					csz = random(5) ? csz1 : random(5) ? csz2 : csz4;
-					count = random(10000);
+					CharSize csz = random(5) ? csz1 : random(5) ? csz2 : csz4;
+					int32 count = int32(random(10000));
 					v[i] = new String(count,csz);
 				}
 			}

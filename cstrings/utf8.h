@@ -50,8 +50,8 @@ inline ptr  nextchar  (ptr p)		noexcept { while (is_fup(*++p) ) {} return p; }
 
 extern uint charcount (cstr)		noexcept; // count characters in utf-8 string
 extern uint max_csz	  (cstr)		noexcept; // required ucs* character size to store utf-8 string
-extern bool fits_ucs1 (cstr)		noexcept;
-extern bool fits_ucs2 (cstr)		noexcept;
+extern bool fits_in_ucs1 (cstr)		noexcept;
+extern bool fits_in_ucs2 (cstr)		noexcept;
 
 inline uint charcount (ucs1char const* q)	noexcept { uint n=0; if(q) while(*q++) n++; return n; }
 inline uint charcount (ucs2char const* q)	noexcept { uint n=0; if(q) while(*q++) n++; return n; }
