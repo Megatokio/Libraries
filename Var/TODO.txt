@@ -1,0 +1,6 @@
+
+
+
+			NEW: v.join(liste,sep)		join list of strings, optionally inserting separator
+			BUG: NameHash("HNIET") == NameHash("")
+			
