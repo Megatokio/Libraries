@@ -194,7 +194,7 @@ INL U_PropertyValue	UTF8CharBlockProperty	( UTF8Char p )	{ return UCS4CharBlockP
 INL U_PropertyValue	UTF8CharScriptProperty	( UTF8Char p )	{ return UCS4CharScriptProperty(UCS4CharFromUTF8(p) ); }
 INL U_PropertyValue	UTF8CharCccProperty		( UTF8Char p )	{ return UCS4CharCccProperty(UCS4CharFromUTF8(p) ); }
 INL U_PropertyValue	UTF8CharGeneralCategory	( UTF8Char p )	{ return UCS4CharGeneralCategory(UCS4CharFromUTF8(p) ); }
-INL cstr			UTF8CharCharacterName	( UTF8Char p )	{ return *p>=0 ? UCS1CharCharacterName(*p)
+INL cstr			UTF8CharCharacterName	( UTF8Char p )	{ return *p>=0 ? UCS1CharCharacterName(UCS1Char(*p))
 																: UCS4CharCharacterName(UCS4CharFromUTF8(p)); }
 INL U_PropertyValue	UTF8CharEAWidthProperty ( UTF8Char p )	{ return UCS4CharEAWidthProperty(UCS4CharFromUTF8(p)); }
 INL uint			UTF8CharPrintWidth		( UTF8Char p )	{ return UCS4CharPrintWidth(UCS4CharFromUTF8(p)); }		// 0, 1, or 2
@@ -216,32 +216,47 @@ INL uint			UTF8CharPrintWidth		( UTF8Char p )	{ return UCS4CharPrintWidth(UCS4Ch
 	extern	void		utf8_simple_titlecase	( cUTF8CharPtr, UTF8CharPtr& );
 
 // Simple Lowercase:
-INL	UTF8Char	UTF8SimpleLowercase	( UTF8Char p )
-					{ return *p>=0   ? (ptr)&UCS1_SLC_Table[(uint)*p] : utf8_simple_lowercase(p); }
-INL	void		UTF8SimpleLowercase	( cUTF8CharPtr q, UTF8CharPtr& z )
-					{ if(*q>=0) *z++ = UCS1_SLC_Table[(uint)*q]; else utf8_simple_lowercase(q,z); }
+inline UTF8Char	UTF8SimpleLowercase	( UTF8Char p )
+{
+	return *p>=0 ? ptr(&UCS1_SLC_Table[uint(*p)]) : utf8_simple_lowercase(p);
+}
+inline void UTF8SimpleLowercase	( cUTF8CharPtr q, UTF8CharPtr& z )
+{
+	if (*q>=0) *z++ = char(UCS1_SLC_Table[uint(*q)]); else utf8_simple_lowercase(q,z);
+}
 
 // Simple Uppercase:
-INL	UTF8Char	UTF8SimpleUppercase	( UTF8Char p )
-					{ return *p>=0   ? (ptr)&UCS1_SUC_Table[(uint)*p] : utf8_simple_uppercase(p); }
-INL	void		UTF8SimpleUppercase	( cUTF8CharPtr q, UTF8CharPtr& z )
-					{ if(*q>=0) *z++ = UCS1_SUC_Table[(uint)*q]; else utf8_simple_uppercase(q,z); }
+inline UTF8Char	UTF8SimpleUppercase	( UTF8Char p )
+{
+	return *p>=0 ? ptr(&UCS1_SUC_Table[uint(*p)]) : utf8_simple_uppercase(p);
+}
+inline void UTF8SimpleUppercase	( cUTF8CharPtr q, UTF8CharPtr& z )
+{
+	if (*q>=0) *z++ = char(UCS1_SUC_Table[uint(*q)]); else utf8_simple_uppercase(q,z);
+}
 
 // Simple Titlecase:
-INL	UTF8Char
-UTF8SimpleTitlecase	( UTF8Char p )
-					{ return *p>=0   ? (ptr)&UCS1_SUC_Table[(uint)*p] : utf8_simple_titlecase(p); }
-INL	void
-UTF8SimpleTitlecase	( cUTF8CharPtr q, UTF8CharPtr& z )
-					{ if(*q>=0) *z++ = UCS1_SUC_Table[(uint)*q]; else utf8_simple_titlecase(q,z); }
+inline UTF8Char UTF8SimpleTitlecase ( UTF8Char p )
+{
+	return *p>=0 ? ptr(&UCS1_SUC_Table[uint(*p)]) : utf8_simple_titlecase(p);
+}
+inline void UTF8SimpleTitlecase ( cUTF8CharPtr q, UTF8CharPtr& z )
+{
+	if (*q>=0) *z++ = char(UCS1_SUC_Table[uint(*q)]); else utf8_simple_titlecase(q,z);
+}
 
 // Info:
-INL	bool
-UTF8CharIsUppercase ( UTF8Char p )								// <==>  "will change if converted to lowercase"
-					{ return *p>=0 ? is_uppercase(*p) : uchar_in_range(U_gc_lt, UTF8CharGeneralCategory(p), U_gc_lu); }
-INL	bool
-UTF8CharIsLowercase ( UTF8Char p )								// <==>  "will change if converted to uppercase"
-					{ return *p>=0 ? is_lowercase(*p) : UTF8CharGeneralCategory(p) == U_gc_ll; }
+__attribute__((deprecated))  // utf8.h: use utf8::is_is_uppercase()
+inline bool UTF8CharIsUppercase ( UTF8Char p )		// <==>  "will change if converted to lowercase"
+{
+	return *p>=0 ? is_uppercase(*p) : uchar_in_range(U_gc_lt, UTF8CharGeneralCategory(p), U_gc_lu);
+}
+
+__attribute__((deprecated))  // utf8.h: use utf8::is_is_lowercase()
+inline bool UTF8CharIsLowercase ( UTF8Char p )		// <==>  "will change if converted to uppercase"
+{
+	return *p>=0 ? is_lowercase(*p) : UTF8CharGeneralCategory(p) == U_gc_ll;
+}
 
 
 
@@ -250,30 +265,58 @@ UTF8CharIsLowercase ( UTF8Char p )								// <==>  "will change if converted to 
 **************************************************************** */
 
 // quick variants
-INL	bool		UTF8CharIsDec			( UTF8Char p )	{ return is_dec_digit(*p);  }	// '0'..'9'
-INL	bool		UTF8CharIsOct			( UTF8Char p )	{ return is_oct_digit(*p);  }	// '0'..'7'
-INL	bool		UTF8CharIsBin			( UTF8Char p )	{ return is_bin_digit(*p);  }	// '0'..'1'
-INL	bool		UTF8CharIsHex			( UTF8Char p )	{ return is_hex_digit(*p);  }	// 0-9,a-f,A-F
-INL	int			UTF8CharDecVal			( UTF8Char p )	{ return digit_val(*p);     }	// 0..9; NaN>9
-INL	int			UTF8CharHexVal			( UTF8Char p )	{ return digit_value(*p);   }	// 0..36; NaN>36
+__attribute__((deprecated))  // utf8.h: use utf8::is_dec_digit()
+inline bool UTF8CharIsDec	( UTF8Char p )	{ return is_dec_digit(*p);  }	// '0'..'9'
 
-INL	bool		UTF8CharIsDecimalDigit	( UTF8Char p )
-					{ return *p>=0 ? is_dec_digit(*p) : UTF8CharGeneralCategory(p) == U_gc_decimal_number; }
-INL	bool		UTF8CharIsNumberLetter	( UTF8Char p )
-					{ return *p>=0 ? is_dec_digit(*p) : UTF8CharGeneralCategory(p) == U_gc_letter_number; }
-INL	bool		UTF8CharHasNumericValue	( UTF8Char p )			// digits, numbers & decorated numbers
-					{ return *p>=0 ? is_dec_digit(*p)
-					: uchar_in_range(U_gc_number, UTF8CharGeneralCategory(p), U_gc_other_number); }
+__attribute__((deprecated))  // utf8.h: use utf8::is_oct_digit()
+inline bool UTF8CharIsOct	( UTF8Char p )	{ return is_oct_digit(*p);  }	// '0'..'7'
+
+__attribute__((deprecated))  // utf8.h: use utf8::is_bin_digit()
+inline bool UTF8CharIsBin	( UTF8Char p )	{ return is_bin_digit(*p);  }	// '0'..'1'
+
+__attribute__((deprecated))  // utf8.h: use utf8::is_hex_digit()
+inline bool UTF8CharIsHex	( UTF8Char p )	{ return is_hex_digit(*p);  }	// 0-9,a-f,A-F
+
+__attribute__((deprecated))  // utf8.h: use utf8::digit_val()
+inline uint UTF8CharDecVal	( UTF8Char p )	{ return digit_val(*p);     }	// 0..9; NaN>9
+
+__attribute__((deprecated))  // utf8.h: use utf8::digit_value()
+inline uint UTF8CharHexVal	( UTF8Char p )	{ return digit_value(*p);   }	// 0..36; NaN>36
+
+__attribute__((deprecated))  // utf8.h: use utf8::is_dec_digit()
+inline bool UTF8CharIsDecimalDigit	( UTF8Char p )
+{
+//	return *p>=0 ? is_dec_digit(*p) : UTF8CharGeneralCategory(p) == U_gc_decimal_number;
+	return *p>=0 ? is_dec_digit(*p) : UTF8CharGeneralCategory(p) == U_gc_digit;
+}
+
+__attribute__((deprecated))  // utf8.h: use utf8::is_number_letter()
+inline bool UTF8CharIsNumberLetter	( UTF8Char p )
+{
+	return *p>=0 ? is_dec_digit(*p) : UTF8CharGeneralCategory(p) == U_gc_letter_number;
+}
+
+__attribute__((deprecated))  // utf8.h: use utf8::has_numeric_value()
+inline bool UTF8CharHasNumericValue	( UTF8Char p )  // digits, numbers & decorated numbers
+{
+	return *p>=0 ? is_dec_digit(*p) : uchar_in_range(U_gc_number, UTF8CharGeneralCategory(p), U_gc_other_number);
+}
+
 // Get Decimal Digit Value.
 // No error checking. Non-Decimal-Digits return meaningless values.
-INL	int			UTF8CharDigitValue		( UTF8Char p )
-					{ return *p>=0 ? digit_val(*p) : ucs4_get_digitvalue(UCS4CharFromUTF8(p)); }
+__attribute__((deprecated))  // utf8.h: use utf8::digit_value()
+inline uint UTF8CharDigitValue ( UTF8Char p )
+{
+	return *p>=0 ? digit_val(*p) : ucs4_get_digitvalue(UCS4CharFromUTF8(p));
+}
 
 // Get Digit, Number & Decorated Number value.
 // some fractionals. one negative. two NaNs.
-INL	float		UTF8CharNumericValue	( UTF8Char p )
-					{ return uchar_in_range('0',*p,'9')  ? digit_val(*p)
-					: ucs4_get_numericvalue(UCS4CharFromUTF8(p)); }
+__attribute__((deprecated))  // utf8.h: use utf8::numeric_value()
+inline float UTF8CharNumericValue ( UTF8Char p )
+{
+	return uchar_in_range('0',*p,'9')  ? digit_val(*p) : ucs4_get_numericvalue(UCS4CharFromUTF8(p));
+}
 
 
 
@@ -281,16 +324,23 @@ INL	float		UTF8CharNumericValue	( UTF8Char p )
 					UNICODE INFO METHODS
 **************************************************************** */
 
-INL	bool		UTF8CharIsPrintable		( UTF8Char p )
-					{ return *p>=0 ? *p>=0x20 && *p!=0x7f : ucs4_is_printable(UCS4CharFromUTF8(p)); }
-INL	bool		UTF8CharIsControl		( UTF8Char p )
-					{ return *p>=0 ? *p<0x20  || *p==0x7f : UTF8CharGeneralCategory(p) == U_gc_control; }
-INL	bool		UTF8CharIsLetter		( UTF8Char p )
-					{ return *p>=0 ? is_letter(*p)
-					: uchar_in_range(U_gc_letter, UTF8CharGeneralCategory(p), U_gc_lu); }
+__attribute__((deprecated))  // #include utf8.h and use utf8::is_printable()
+inline bool UTF8CharIsPrintable ( UTF8Char p )
+{
+	return *p>=0 ? *p>=0x20 && *p!=0x7f : ucs4_is_printable(UCS4CharFromUTF8(p));
+}
 
+__attribute__((deprecated))  // #include utf8.h and use utf8::is_control()
+inline bool UTF8CharIsControl ( UTF8Char p )
+{
+	return *p>=0 ? *p<0x20  || *p==0x7f : UTF8CharGeneralCategory(p) == U_gc_control;
+}
 
-
+__attribute__((deprecated))  // #include utf8.h and use utf8::is_letter()
+inline bool UTF8CharIsLetter ( UTF8Char p )
+{
+	return *p>=0 ? is_letter(*p) : uchar_in_range(U_gc_letter, UTF8CharGeneralCategory(p), U_gc_lu);
+}
 
 
 

@@ -102,7 +102,7 @@ HEADERS += \
     Libraries/Unicode/Includes/SpecialCasing.h \
     Libraries/Unicode/Includes/UnicodeData_Index.h \
     Libraries/Unicode/Includes/UnicodeData_Names.h \
-    Libraries/Unicode/UTF-8.h
+    Libraries/Unicode/UTF-8.h \
 
 
 
