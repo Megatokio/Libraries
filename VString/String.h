@@ -309,18 +309,6 @@ extern bool		FNMatch		( cString& filename, cString& pattern, MatchType=fnm_basic
 
 extern void		UCSCopy		( CharSize zcsz, void* z, CharSize qcsz, const void* q, int32 n );
 
-// serrors.cp
-//extern	void	ForceError	( int/*OSErr*/e, cString& msg );
-//inline	void	SetError	( int/*OSErr*/e, cString& msg )	{ if(errno==ok) ForceError(e,msg); }
-//inline	void	ForceError	( cString& msg )				{ ForceError(-1,msg); }
-//inline	void	SetError	( cString& msg )				{ if(errno==ok) ForceError(-1,msg); }
-//extern	void	AppendToError	( cString& msg );
-//extern	void	PrependToError	( cString& msg );
-
-inline	String	ErrorString	( int/*OSErr*/ e )				{ return errorstr(e); }
-extern	String	ErrorString	( );
-
-
 
 
 /* ****************************************************************

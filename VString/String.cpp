@@ -57,6 +57,8 @@
 */
 
 #define SAFE 1
+#define LOGLEVEL 0
+#define LOG 0         // for use in project vipsi
 #include "config.h"
 #include <sys/stat.h>
 #include <sys/param.h>
@@ -483,9 +485,9 @@ void String::Check ( cstr filename, uint line ) const
 
 	if (next==nullptr||prev==nullptr||(text==nullptr&&count!=0))
 	{
-		if(next==nullptr) log ("(next==NULL)");
-		if(prev==nullptr) log ("(prev==NULL)");
-		if(text==nullptr) log ("(text==NULL)");
+		if(next==nullptr) logline("(next==NULL)");
+		if(prev==nullptr) logline("(prev==NULL)");
+		if(text==nullptr) logline("(text==NULL)");
 		abort("String::Check() failed in file %s line %u",filename,line);
 	}
 
@@ -510,7 +512,7 @@ void String::Check ( cstr filename, uint line ) const
 	{
 		if( text < Data() )
 		{
-			log(" count=%u, text=0x%08lx, data=0x%08lx ",uint(count),size_t(text),size_t(Data()));
+			logline(" count=%u, text=0x%08lx, data=0x%08lx ",uint(count),size_t(text),size_t(Data()));
 			abort("String::Check(): text<data in file %s line %u",filename,line);
 		}
 		char c = text[0];
@@ -2919,14 +2921,14 @@ String String::FromUrl ( ) const
 
 String String::ToMime() const
 {
-	log("String::ToMime() not yet implemented");		// ***TODO***
+	logline("String::ToMime() not yet implemented");		// ***TODO***
 	return *this;
 }
 
 
 String String::FromMime() const
 {
-	log("String::FromMime() not yet implemented");		// ***TODO***
+	logline("String::FromMime() not yet implemented");		// ***TODO***
 	return *this;
 }
 
