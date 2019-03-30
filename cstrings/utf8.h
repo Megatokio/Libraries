@@ -43,7 +43,8 @@ namespace utf8
 static const char replacementchar = '?';	// offiziell $FFFD -> ucs2, utf8 = 3 bytes
 
 inline bool is_fup (char c)			noexcept { return int8(c) < int8(0xc0); }
-inline bool	no_fup (char c)			noexcept { return int8(c) >= int8(0xc0); }
+inline bool no_fup (char c)			noexcept { return int8(c) >= int8(0xc0); }
+inline bool is_7bit (char c)		noexcept { return int8(c) >= 0; }			// %0xxxxxxx = ascii
 
 inline cptr nextchar  (cptr p)		noexcept { while (is_fup(*++p) ) {} return p; }
 inline ptr  nextchar  (ptr p)		noexcept { while (is_fup(*++p) ) {} return p; }

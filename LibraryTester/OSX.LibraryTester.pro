@@ -21,6 +21,7 @@ SOURCES += \
     Libraries/cstrings/cstrings.test.cpp \
     Libraries/cstrings/utf8.cpp \
     Libraries/cstrings/ucs1.cpp \
+    Libraries/cstrings/ucs4.cpp \
     Libraries/unix/FD.cpp \
     Libraries/unix/tempmem.cpp \
     Libraries/unix/tempmem.test.cpp \

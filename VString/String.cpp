@@ -69,6 +69,7 @@
 #include "String.h"
 #include "Unicode/Unicode.h"
 #include "Unicode/UTF-8.h"
+#include "cstrings/utf8.h"
 
 
 #ifdef NDEBUG
@@ -141,6 +142,13 @@ inline	uint8	_digit_value(char c)		{ return c<='9' ? uint8 (c-'0') : uint8 ((c|0
 inline	uint8	_digit_value(UCS1Char c)	{ return c<='9' ? uint8 (c-'0') : uint8 ((c|0x20)-'a')+10; }
 inline	uint16	_digit_value(UCS2Char c)	{ return c<='9' ? uint16(c-'0') : uint16((c|0x20)-'a')+10; }
 inline	uint32	_digit_value(UCS4Char c)	{ return c<='9' ? uint32(c-'0') : uint32((c|0x20)-'a')+10; }
+
+// UCSx char -> 1st char for UTF8
+static inline char _utf8_fup		( UCS1Char c )	{ return char(0x80) | char(c&0x3f); }
+static inline char _utf8_starter_c2	( UCS1Char c )	{ return char(0xc0) | char(c>>6);   }
+static inline char _utf8_starter_c2	( UCS2Char c )	{ return char(0xc0) | char(c>>6);   }
+static inline char _utf8_starter_c2	( UCS4Char c )	{ return char(0xc0) | char(c>>6);   }
+static inline char _utf8_starter_c3	( UCS2Char c )	{ return char(0xe0) | char(c>>12);  }
 
 
 template<typename ZT, typename QT>
@@ -295,7 +303,7 @@ static int32 utf8_charcount ( cptr a, cptr e )
 	// count characters in UTF-8 string
 
 	int32 n = int32(e-a);
-	while (a<e) { n -= utf8_is_fup(*a++); }
+	while (a<e) { n -= utf8::is_fup(*a++); }
 	return n;
 }
 
@@ -307,9 +315,9 @@ static UCS1Char* ucs1_from_utf8 ( UCS1Char* z, cUTF8CharPtr a, cUTF8CharPtr e, b
 
 	while(a<e)
 	{
-		if( utf8_is_7bit(c1=*a++) )					{ *z++ = c1; continue; }
-		if( utf8_is_fup(c1) )						{ continue; }
-		if( a>=e||utf8_no_fup(c2=*a)||c1>=0xc4 )	{ *z++ = latin_1 ? c1 : '?'; continue; }
+		if( utf8::is_7bit(c1=*a++) )					{ *z++ = c1; continue; }
+		if( utf8::is_fup(c1) )						{ continue; }
+		if( a>=e||utf8::no_fup(c2=*a)||c1>=0xc4 )	{ *z++ = latin_1 ? c1 : '?'; continue; }
 		a++; *z++ = (c1<<6) + (c2&0x3f);
 	}
 	return z;
@@ -323,11 +331,11 @@ static UCS2Char* ucs2_from_utf8 ( UCS2Char* z, cUTF8CharPtr a, cUTF8CharPtr e, b
 
 	while(a<e)
 	{
-		if( utf8_is_7bit(c1=*a++) )		{ *z++=c1; continue; }	// 7-bit ascii
-		if( utf8_is_fup(c1) )			{ continue; }			// unexpected fup
-		if( a>=e||utf8_no_fup(c2=*a) )	{ goto x; }
+		if( utf8::is_7bit(c1=*a++) )		{ *z++=c1; continue; }	// 7-bit ascii
+		if( utf8::is_fup(c1) )			{ continue; }			// unexpected fup
+		if( a>=e||utf8::no_fup(c2=*a) )	{ goto x; }
 		a++; c2 &= 0x3f; if (c1<0xe0)	{ *z++ = (uint16(c1&0x1f)<<6) + c2; continue; }
-		if( a>=e||utf8_no_fup(c3=*a) )	{ goto x; }
+		if( a>=e||utf8::no_fup(c3=*a) )	{ goto x; }
 		a++; c3 &= 0x3f; if (c1<0xf0)	{ *z++ = (uint16(c1)<<12) + (uint16(c2)<<6) + c3; continue; }
 x:		*z++ = latin_1 ? c1 : '?';
 	}
@@ -342,8 +350,8 @@ static UCS4Char* ucs4_from_utf8 ( UCS4Char*z, cUTF8CharPtr a, cUTF8CharPtr e, bo
 	while ( a<e )
 	{
 		UCS4Char c0 = uchar(*a++);
-		if( utf8_is_7bit(c0) ) { *z++ = c0; continue; }		// 7-bit ascii char
-		if( utf8_is_fup(c0) ) continue;						// unexpected fups
+		if( utf8::is_7bit(c0) ) { *z++ = c0; continue; }		// 7-bit ascii char
+		if( utf8::is_fup(c0) ) continue;						// unexpected fups
 
 	// c0 is a starter for a 2 … 6 bytes character:
 	// 0xC0.. => 2 bytes:	110xxxxx 10xxxxxx
@@ -356,7 +364,7 @@ static UCS4Char* ucs4_from_utf8 ( UCS4Char*z, cUTF8CharPtr a, cUTF8CharPtr e, bo
 		while( char(c<<(++i)) < 0 )				// loop over required fups
 		{
 			if (a>=e) goto x;
-			uchar c1 = *a; if( utf8_no_fup(c1) ) goto x;
+			uchar c1 = *a; if( utf8::no_fup(c1) ) goto x;
 			a++; c0 = (c0<<6) + (c1&0x3F);
 		}
 
@@ -422,7 +430,7 @@ static ptr utf8_from_ucs1 ( ptr z, cUCS1Char* q, int32 n )
 	{
 		UCS1Char c = *q++;
 		if (int8(c)>=0) *z++ = char(c);
-		else { *z++ = utf8_starter_c2(c); *z++ = utf8_fup(c); }
+		else { *z++ = _utf8_starter_c2(c); *z++ = _utf8_fup(c); }
 	}
 	return z;
 }
@@ -436,8 +444,8 @@ static ptr utf8_from_ucs2 ( ptr z, cUCS2Char* q, int32 n )
 	{
 		UCS2Char c = *q++;
 		if( !(c>>7)  )	{ *z++ = char(c); continue; }
-		if( !(c>>11) )	{ *z++ = utf8_starter_c2(c); *z++ = utf8_fup(uint8(c)); }
-		else			{ *z++ = utf8_starter_c3(c); *z++ = utf8_fup(uint8(c>>6));  *z++ = utf8_fup(uint8(c)); }
+		if( !(c>>11) )	{ *z++ = _utf8_starter_c2(c); *z++ = _utf8_fup(uint8(c)); }
+		else			{ *z++ = _utf8_starter_c3(c); *z++ = _utf8_fup(uint8(c>>6));  *z++ = _utf8_fup(uint8(c)); }
 	}
 	return z;
 }
@@ -452,12 +460,12 @@ static ptr utf8_from_ucs4 ( ptr z, cUCS4Char* q, int32 n )
 	{
 		UCS4Char c = *q++;
 		if( !(c>>7)  )	{ *z++ = char(c); continue; }								// 1 byte code
-		if( !(c>>11) )	{ *z++ = utf8_starter_c2(c); *z++ = utf8_fup(uint8(c)); }	// 2 byte code
+		if( !(c>>11) )	{ *z++ = _utf8_starter_c2(c); *z++ = _utf8_fup(uint8(c)); }	// 2 byte code
 		else																// 3…6 byte codes
 		{																	// num fups = i =	15/6=2	20/6=3	25/6=4	30/6=5	35/6=5
 			int i = 15; for( uint m = c>>16; m; m>>=5 ) { i+=5; } i = i/6;	// num bits in fups = i*6
 			*z++ = char((0xFF80>>i) | (c>>(i*6)));							// starter
-			while(i--) *z++ = utf8_fup(uint8(c>>(i*6)));					// fups
+			while(i--) *z++ = _utf8_fup(uint8(c>>(i*6)));					// fups
 		}
 	}
 	return z;
@@ -3104,21 +3112,21 @@ String String::ConvertedTo ( CharEncoding e ) const
 
 	switch(int(e))
 	{
-	case ucs1:		return ToUCS1();
-	case ucs2:		return ToUCS2();
-	case ucs4:		return ToUCS4();
-	case utf8:		return ToUTF8();
-	case url:		return ToUrl();
-	case url_all:	return ToUrl(no);
-	case mime:		return ToMime();
-	case html:		return ToHtml();
-	case quoted:	return ToQuoted();
-	case escaped:	return ToEscaped();
-	case uppercase:	return ToUpper();
-	case lowercase:	return ToLower();
+	case UCS1:		return ToUCS1();
+	case UCS2:		return ToUCS2();
+	case UCS4:		return ToUCS4();
+	case UTF8:		return ToUTF8();
+	case URL:		return ToUrl();
+	case URL_ALL:	return ToUrl(no);
+	case MIME:		return ToMime();
+	case HTML:		return ToHtml();
+	case QUOTED:	return ToQuoted();
+	case ESCAPED:	return ToEscaped();
+	case UPPERCASE:	return ToUpper();
+	case LOWERCASE:	return ToLower();
 
-	case ascii_us:
-		{	String s = ConvertedTo(ucs1);
+	case ASCII_US:
+		{	String s = ConvertedTo(UCS1);
 			s.MakeWritable();
 			UCS1CharPtr z = s.Ucs1();
 			for (int32 i=0;i<s.Len();i++) if (z[i]>>7) z[i] ='?';
@@ -3126,11 +3134,11 @@ String String::ConvertedTo ( CharEncoding e ) const
 			return s;
 		}
 
-	case ascii_ger:	ctable = ucs2_from_ascii_ger; goto b8;
-	case cp_437:	ctable = ucs2_from_cp_437;	  goto b8;
-	case mac_roman:	ctable = ucs2_from_mac_roman; goto b8;
-	case atari_st:	ctable = ucs2_from_atari_st;  goto b8;
-	case rtos:		ctable = ucs2_from_rtos;	  goto b8;
+	case ASCII_GER:	ctable = ucs2_from_ascii_ger; goto b8;
+	case CP_437:	ctable = ucs2_from_cp_437;	  goto b8;
+	case MAC_ROMAN:	ctable = ucs2_from_mac_roman; goto b8;
+	case ATARI_ST:	ctable = ucs2_from_atari_st;  goto b8;
+	case RTOS:		ctable = ucs2_from_rtos;	  goto b8;
 b8:		{
 			String s(Len(),csz1);
 			ptr z = s.text;
@@ -3145,7 +3153,7 @@ b8:		{
 		}
 
 	default:
-		if (e>=tab1 && e<=tab9) return ToTab(e-tab1+1);
+		if (e>=TAB1 && e<=TAB9) return ToTab(e-TAB1+1);
 
 		xlog("String::ConvertedTo(%i): not yet implemented",int(e));
 		TODO();
@@ -3162,21 +3170,21 @@ String String::ConvertedFrom ( CharEncoding e ) const
 	XXXCHECK(*this);
 	switch(int(e))
 	{
-	case ucs1:		return FromUCS1();
-	case ucs2:		return FromUCS2();
-	case ucs4:		return FromUCS4();
-	case utf8:		return FromUTF8();
-	case html:		return FromHtml();
-	case url_all:
-	case url:		return FromUrl();
-	case mime:		return FromMime();
-	case quoted:	return FromQuoted();
-	case escaped:	return FromEscaped();
+	case UCS1:		return FromUCS1();
+	case UCS2:		return FromUCS2();
+	case UCS4:		return FromUCS4();
+	case UTF8:		return FromUTF8();
+	case HTML:		return FromHtml();
+	case URL_ALL:
+	case URL:		return FromUrl();
+	case MIME:		return FromMime();
+	case QUOTED:	return FromQuoted();
+	case ESCAPED:	return FromEscaped();
 
-	case uppercase:						// senseless
-	case lowercase:	return *this;		// senseless
+	case UPPERCASE:						// senseless
+	case LOWERCASE:	return *this;		// senseless
 
-	case ascii_us:
+	case ASCII_US:
 		{
 			String s(*this);
 			s.ResizeCsz(csz1);
@@ -3187,11 +3195,11 @@ String String::ConvertedFrom ( CharEncoding e ) const
 			return s;
 		}
 
-	case ascii_ger:	ctable = ucs2_from_ascii_ger; goto b8;
-	case cp_437:	ctable = ucs2_from_cp_437;	  goto b8;
-	case mac_roman:	ctable = ucs2_from_mac_roman; goto b8;
-	case atari_st:	ctable = ucs2_from_atari_st;  goto b8;
-	case rtos:		ctable = ucs2_from_rtos;	  goto b8;
+	case ASCII_GER:	ctable = ucs2_from_ascii_ger; goto b8;
+	case CP_437:	ctable = ucs2_from_cp_437;	  goto b8;
+	case MAC_ROMAN:	ctable = ucs2_from_mac_roman; goto b8;
+	case ATARI_ST:	ctable = ucs2_from_atari_st;  goto b8;
+	case RTOS:		ctable = ucs2_from_rtos;	  goto b8;
 b8:		{
 			String s(*this);
 			s.ResizeCsz(csz1);
@@ -3213,7 +3221,7 @@ b16:		s.ResizeCsz(csz2);
 		}
 
 	default:
-		if (e>=tab1&&e<=tab9) return FromTab(e-tab1+1);
+		if (e>=TAB1&&e<=TAB9) return FromTab(e-TAB1+1);
 
 		xlog("String::ConvertedFrom(%i): not yet implemented",(int)e);
 		TODO();

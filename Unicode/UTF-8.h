@@ -57,71 +57,112 @@ UTF8Char const 	UTF8ReplacementChar		= "?";			// offiziell: $FFFD => 3 Bytes => 
 size_t const  	UTF8ReplacementCharSize	= 1;
 
 // Classification for 1st byte of utf-8 character
+__attribute__((deprecated))
 INL bool		utf8_is_null		( signed char c )	{ return c == 0; }
+__attribute__((deprecated))
 INL bool		utf8_is_7bit		( signed char c )	{ return c >= 0; }			// %0xxxxxxx = ascii
+__attribute__((deprecated))
 INL bool		utf8_no_7bit		( signed char c )	{ return c < 0; }
+__attribute__((deprecated))
 INL bool		utf8_is_fup			( signed char c )	{ return c < int8(0xc0); }	// %10xxxxxx = fup
+__attribute__((deprecated))
 INL bool		utf8_no_fup			( signed char c )	{ return c >= int8(0xc0); }
+__attribute__((deprecated))
 INL bool		utf8_is_starter		( signed char c )	{ return uchar(c)>=0xc0; }
+__attribute__((deprecated))
 INL bool		utf8_is_c1			( signed char c )	{ return c>=0; }			// == utf8_is_7bit
+__attribute__((deprecated))
 INL bool		utf8_is_c2			( signed char c )	{ return (c&0xe0)==0xc0; }	// %110xxxxx
+__attribute__((deprecated))
 INL bool		utf8_is_c3			( signed char c )	{ return (c&0xf0)==0xe0; }	// %1110xxxx
+__attribute__((deprecated))
 INL bool		utf8_is_c4			( signed char c )	{ return (c&0xf8)==0xf0; }	// %11110xxx
+__attribute__((deprecated))
 INL bool		utf8_is_c5			( signed char c )	{ return (c&0xfc)==0xf8; }	// %111110xx
+__attribute__((deprecated))
 INL bool		utf8_is_c6			( signed char c )	{ return uchar(c)>=0xfc; }	// %1111110x 2005-06-11 full 32 bit support
+__attribute__((deprecated))
 INL bool 		utf8_is_ucs4		( signed char c )	{ return uchar(c)> 0xf0; }	// 2015-01-02 doesn't fit in ucs2?
+__attribute__((deprecated))
 INL bool 		utf8_requires_c4	( signed char c )	{ return uchar(c)>=0xf0; }	// 2015-01-02 requires processing of c4/c5/c6?
 
 
 // UCSx char -> 1st char for UTF8
+__attribute__((deprecated))
 INL char		utf8_fup			( UCS1Char c )		{ return char(0x80) | char(c&0x3f); }
+__attribute__((deprecated))
 INL char		utf8_starter_c2		( UCS1Char c )		{ return char(0xc0) | char(c>>6);   }
+__attribute__((deprecated))
 INL char		utf8_starter_c2		( UCS2Char c )		{ return char(0xc0) | char(c>>6);   }
+__attribute__((deprecated))
 INL char		utf8_starter_c2		( UCS4Char c )		{ return char(0xc0) | char(c>>6);   }
+__attribute__((deprecated))
 INL char		utf8_starter_c3		( UCS2Char c )		{ return char(0xe0) | char(c>>12);  }
 
 // nominal size of utf-8 character (bytes) based on char[0] of UTF-8 character
 // fups  are size = 1
 // 2005-06-11: added support for full 32 bit characters
+__attribute__((deprecated))
 INL int			UTF8CharNominalSize	( char c )			{ int n=1; if (c<0) { c&=~0x02; while(char(c<<n)<0) n++; } return n; }
+__attribute__((deprecated))
 INL int			UTF8CharNominalSize	( cUTF8CharPtr p )	{ return UTF8CharNominalSize(*p); }
 
 // nominal size of utf-8 character (bytes) based on UCS-1, UCS-2, or UCS-4 character
 // 2005-06-11: added support for full 32 bit characters
+__attribute__((deprecated))
 INL int			UTF8CharNominalSize	( UCS1Char n )		{ return 1 + (n>0x7f); }
+__attribute__((deprecated))
 INL int			UTF8CharNominalSize	( UCS2Char n )		{ return 1 + (n>0x7f) + (n>0x7ff); }
+__attribute__((deprecated))
 INL int			UTF8CharNominalSize	( UCS4Char n )		{ if(n<0x80) return 1; int i=16; n>>=11; while(n) { n>>=5; i+=5; } return i/6; }
 																			// note:	16/6=2	21/6=3	26/6=4	31/6=5	36/6=6	41/6=6
 // find next character in utf-8 string
 // skip current assumed non-fup byte and find next
+__attribute__((deprecated))
 INL void			UTF8SkipChar	( cUTF8CharPtr& p )					{ while (		 utf8_is_fup(*++p) ) {} }
+__attribute__((deprecated))
 INL cUTF8CharPtr	UTF8NextChar	( cUTF8CharPtr p )					{ while (		 utf8_is_fup(*++p) ) {} return p; }
+__attribute__((deprecated))
 INL cUTF8CharPtr	UTF8NextChar	( cUTF8CharPtr p, cUTF8CharPtr e )	{ while ( ++p<e && utf8_is_fup(*p) ) {} return p; }
 
 // find previous character in utf-8 string
 // rskip current assumed non-fup byte and find previous
+__attribute__((deprecated))
 INL void			UTF8RSkipChar	( cUTF8CharPtr& p )					{ while (           utf8_is_fup(*--p) ) {} }
+__attribute__((deprecated))
 INL cUTF8CharPtr	UTF8PrevChar	( cUTF8CharPtr p )					{ while (           utf8_is_fup(*--p) ) {} return p; }
+__attribute__((deprecated))
 INL  UTF8CharPtr	UTF8PrevChar	(  UTF8CharPtr p )					{ while (           utf8_is_fup(*--p) ) {} return p; }
+__attribute__((deprecated))
 INL cUTF8CharPtr	UTF8PrevChar	( cUTF8CharPtr a, cUTF8CharPtr p )	{ while ( --p>=a && utf8_is_fup(*  p) ) {} return p; }
 
 // find first character in utf-8 string
 // skip fups, find next non-fup byte
+__attribute__((deprecated))
 INL cUTF8CharPtr	UTF8FirstChar	( cUTF8CharPtr a )					{ while (        utf8_is_fup(*a) ) a++; return a; }
+__attribute__((deprecated))
 INL cUTF8CharPtr	UTF8FirstChar	( cUTF8CharPtr a, cUTF8CharPtr e )	{ while ( a<e && utf8_is_fup(*a) ) a++; return a; }
 
+__attribute__((deprecated))
 INL void			UTF8SkipFups	( cUTF8CharPtr& a )					{ while (        utf8_is_fup(*a) ) a++; }
+__attribute__((deprecated))
 INL void			UTF8SkipFups	( cUTF8CharPtr& a, cUTF8CharPtr e )	{ while ( a<e && utf8_is_fup(*a) ) a++; }
+__attribute__((deprecated))
 INL void			UTF8SkipFups	(  UTF8CharPtr& a, cUTF8CharPtr e )	{ while ( a<e && utf8_is_fup(*a) ) a++; }
 
 // find last char in utf-8 string
 // rskip current non-fup byte and find previous
 // identical to UTF8PrevChar()
+__attribute__((deprecated))
 INL cUTF8CharPtr	UTF8LastChar	( cUTF8CharPtr e )					{ while(utf8_is_fup(*--e)) {} return e; }
+__attribute__((deprecated))
 INL cUTF8CharPtr	UTF8LastChar	( cUTF8CharPtr a, cUTF8CharPtr e )	{ while(--e>=a&&utf8_is_fup(*e)) {} return e; }
 
+__attribute__((deprecated))
 INL void			UTF8RSkipFups	( cUTF8CharPtr& p )					{ while (         utf8_is_fup(*p) ) p++; }
+__attribute__((deprecated))
 INL void			UTF8RSkipFups	( cUTF8CharPtr& a, cUTF8CharPtr p )	{ while ( p>=a && utf8_is_fup(*p) ) p++; }
+__attribute__((deprecated))
 INL void			UTF8RSkipFups	(  UTF8CharPtr& a, cUTF8CharPtr p )	{ while ( p>=a && utf8_is_fup(*p) ) p++; }
 
 #if 0	// ----	USAGE ----
@@ -180,8 +221,11 @@ INL void			UTF8RSkipFups	(  UTF8CharPtr& a, cUTF8CharPtr p )	{ while ( p>=a && u
 					UCS4 <-> UTF8 CHARACTER CONVERSION
 ******************************************************************************** */
 
+__attribute__((deprecated))
 extern	UCS4Char		UCS4CharFromUTF8		( cUTF8Char s );
+__attribute__((deprecated))
 extern	UTF8Char		UTF8CharFromUCS4		( UCS4Char n );				// returns UTF8Char in cstring pool
+__attribute__((deprecated))
 extern	void			UCS4CharToUTF8			( UCS4Char n, UTF8CharPtr& dest );
 
 
@@ -190,13 +234,20 @@ extern	void			UCS4CharToUTF8			( UCS4Char n, UTF8CharPtr& dest );
 						PROPERTIES
 ******************************************************************************** */
 
+__attribute__((deprecated))
 INL U_PropertyValue	UTF8CharBlockProperty	( UTF8Char p )	{ return UCS4CharBlockProperty(UCS4CharFromUTF8(p) ); }
+__attribute__((deprecated))
 INL U_PropertyValue	UTF8CharScriptProperty	( UTF8Char p )	{ return UCS4CharScriptProperty(UCS4CharFromUTF8(p) ); }
+__attribute__((deprecated))
 INL U_PropertyValue	UTF8CharCccProperty		( UTF8Char p )	{ return UCS4CharCccProperty(UCS4CharFromUTF8(p) ); }
+__attribute__((deprecated))
 INL U_PropertyValue	UTF8CharGeneralCategory	( UTF8Char p )	{ return UCS4CharGeneralCategory(UCS4CharFromUTF8(p) ); }
+__attribute__((deprecated))
 INL cstr			UTF8CharCharacterName	( UTF8Char p )	{ return *p>=0 ? UCS1CharCharacterName(UCS1Char(*p))
 																: UCS4CharCharacterName(UCS4CharFromUTF8(p)); }
+__attribute__((deprecated))
 INL U_PropertyValue	UTF8CharEAWidthProperty ( UTF8Char p )	{ return UCS4CharEAWidthProperty(UCS4CharFromUTF8(p)); }
+__attribute__((deprecated))
 INL uint			UTF8CharPrintWidth		( UTF8Char p )	{ return UCS4CharPrintWidth(UCS4CharFromUTF8(p)); }		// 0, 1, or 2
 
 
@@ -206,40 +257,55 @@ INL uint			UTF8CharPrintWidth		( UTF8Char p )	{ return UCS4CharPrintWidth(UCS4Ch
 ******************************************************************************** */
 
 // UPs:
-	extern	UCS1Char const UCS1_SUC_Table[0x100];	// uc(ß)=ß, uc(µ)=µ, uc(ÿ)=Y
-	extern	UCS1Char const UCS1_SLC_Table[0x100];
-	extern	UTF8Char	utf8_simple_lowercase	( UTF8Char );
-	extern	void		utf8_simple_lowercase	( cUTF8CharPtr, UTF8CharPtr& );
-	extern	UTF8Char	utf8_simple_uppercase	( UTF8Char );
-	extern	void		utf8_simple_uppercase	( cUTF8CharPtr, UTF8CharPtr& );
-	extern	UTF8Char	utf8_simple_titlecase	( UTF8Char );
-	extern	void		utf8_simple_titlecase	( cUTF8CharPtr, UTF8CharPtr& );
+__attribute__((deprecated))
+extern	UCS1Char const UCS1_SUC_Table[0x100];	// uc(ß)=ß, uc(µ)=µ, uc(ÿ)=Y
+__attribute__((deprecated))
+extern	UCS1Char const UCS1_SLC_Table[0x100];
+__attribute__((deprecated))
+extern	UTF8Char	utf8_simple_lowercase	( UTF8Char );
+__attribute__((deprecated))
+extern	void		utf8_simple_lowercase	( cUTF8CharPtr, UTF8CharPtr& );
+__attribute__((deprecated))
+extern	UTF8Char	utf8_simple_uppercase	( UTF8Char );
+__attribute__((deprecated))
+extern	void		utf8_simple_uppercase	( cUTF8CharPtr, UTF8CharPtr& );
+__attribute__((deprecated))
+extern	UTF8Char	utf8_simple_titlecase	( UTF8Char );
+__attribute__((deprecated))
+extern	void		utf8_simple_titlecase	( cUTF8CharPtr, UTF8CharPtr& );
 
 // Simple Lowercase:
+__attribute__((deprecated))
 inline UTF8Char	UTF8SimpleLowercase	( UTF8Char p )
 {
 	return *p>=0 ? ptr(&UCS1_SLC_Table[uint(*p)]) : utf8_simple_lowercase(p);
 }
+__attribute__((deprecated))
 inline void UTF8SimpleLowercase	( cUTF8CharPtr q, UTF8CharPtr& z )
 {
 	if (*q>=0) *z++ = char(UCS1_SLC_Table[uint(*q)]); else utf8_simple_lowercase(q,z);
 }
 
 // Simple Uppercase:
+__attribute__((deprecated))
 inline UTF8Char	UTF8SimpleUppercase	( UTF8Char p )
 {
 	return *p>=0 ? ptr(&UCS1_SUC_Table[uint(*p)]) : utf8_simple_uppercase(p);
 }
+__attribute__((deprecated))
 inline void UTF8SimpleUppercase	( cUTF8CharPtr q, UTF8CharPtr& z )
 {
 	if (*q>=0) *z++ = char(UCS1_SUC_Table[uint(*q)]); else utf8_simple_uppercase(q,z);
 }
 
 // Simple Titlecase:
+__attribute__((deprecated))
 inline UTF8Char UTF8SimpleTitlecase ( UTF8Char p )
 {
 	return *p>=0 ? ptr(&UCS1_SUC_Table[uint(*p)]) : utf8_simple_titlecase(p);
 }
+
+__attribute__((deprecated))
 inline void UTF8SimpleTitlecase ( cUTF8CharPtr q, UTF8CharPtr& z )
 {
 	if (*q>=0) *z++ = char(UCS1_SUC_Table[uint(*q)]); else utf8_simple_titlecase(q,z);

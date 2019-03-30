@@ -43,13 +43,13 @@ static const float NAN (0.0f/0.0f);
 #endif
 
 struct UCS2_Short { ucs2char code; int16 value; };
-struct UCS4_Short { ucs4char code; int16 value; };
+struct UCS4_Short { ucs4char code; int32 value; };  // int32 instead of int16 wg. alignment
 
 struct UCS2Range_Short { ucs2char startcode; ucs2char endcode; int16 value; };
-struct UCS4Range_Short { ucs4char startcode; ucs4char endcode; int16 value; };
+struct UCS4Range_Short { ucs4char startcode; ucs4char endcode; int32 value; };  // int32 wg. alignment
 
-struct UCS2_NumVal { ucs2char startcode; uchar generalcategory; uchar count; int16 codedvalue; };
-struct UCS4_NumVal { ucs4char startcode; uchar generalcategory; uchar count; int16 codedvalue; };
+struct UCS2_NumVal { ucs2char startcode; uint8 generalcategory; uint8 count; uint16 codedvalue; };
+struct UCS4_NumVal { ucs4char startcode; uint8 generalcategory; uint8 count; uint16 codedvalue; };
 
 #include "Libraries/Unicode/Includes/GlobalConstants.h"
 

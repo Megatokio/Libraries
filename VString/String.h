@@ -57,28 +57,28 @@
 enum CharEncoding
 {
 	// character encodings:
-		ucs1,			iso_latin_1 = ucs1,
-		ucs2,
-		ucs4,
-		ascii_us,		// 7-bit character set
-		ascii_ger,		// 7-bit character set
-		cp_437,			// the one with the line graphics
-		mac_roman,
-		atari_st,
-		rtos,			// a private one for kio
-		utf8,
+		UCS1,			iso_latin_1 = UCS1,
+		UCS2,
+		UCS4,
+		ASCII_US,		// 7-bit character set
+		ASCII_GER,		// 7-bit character set
+		CP_437,			// the one with the line graphics
+		MAC_ROMAN,
+		ATARI_ST,
+		RTOS,			// a private one for kio
+		UTF8,
 
 	// conversions:
-		html,
-		url,			// no '/' encoding
-		url_all,		// also encode '/'
-		mime,
-		escaped,
-		quoted,
-		uppercase,		// ?
-		lowercase,		// ?
-		tab1,tab2,tab3,tab4,
-		tab5,tab6,tab7,tab8,tab9,
+		HTML,
+		URL,			// no '/' encoding
+		URL_ALL,		// also encode '/'
+		MIME,
+		ESCAPED,
+		QUOTED,
+		UPPERCASE,		// ?
+		LOWERCASE,		// ?
+		TAB1,TAB2,TAB3,TAB4,
+		TAB5,TAB6,TAB7,TAB8,TAB9,
 };
 
 
