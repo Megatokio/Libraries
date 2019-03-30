@@ -62,6 +62,7 @@ HEADERS += \
     Libraries/hash/sdbm_hash.h \
     Libraries/cstrings/utf8.h \
     Libraries/cstrings/ucs1.h \
+    Libraries/cstrings/ucs4.h \
     Libraries/kio/peekpoke.h \
     Libraries/Templates/template_helpers.h \
     Libraries/VString/String_errors.h \

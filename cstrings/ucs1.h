@@ -62,7 +62,7 @@ inline	void toupper (str s)		throws	{ if(s) for( ;*s;s++ ) *s = to_upper(*s); }
 inline	void tolower (str s)		throws	{ if(s) for( ;*s;s++ ) *s = to_lower(*s); }
 extern	str	 upperstr (cstr)		throws;
 extern	str	 lowerstr (cstr)		throws;
-};
+}
 
 
 

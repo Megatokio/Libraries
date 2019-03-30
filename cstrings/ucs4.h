@@ -163,7 +163,7 @@ inline float numeric_value (ucs4char c)	noexcept { return c <= '9' ? c-'0' : _nu
 
 // create hex digit, (masked legal):
 inline  ucs4char hexchar  (int n)		noexcept { n &= 15; return ucs4char((n>=10 ? 'A'-10 : '0') + n); }
-};
+}
 
 
 

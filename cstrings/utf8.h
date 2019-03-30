@@ -126,18 +126,36 @@ inline	uint digit_val	  (cptr p)	{ return ::digit_val(*p);     }	// 0..9;  NaN>9
 inline	uint digit_value  (cptr p)	{ return ::digit_value(*p);   }	// 0..36; NaN>36
 
 // decimal digits, roman numbers
-inline	bool is_number_letter (cptr p)
-					{ return *p>=0 ? is_in_range('0',*p,'9')
-							: is_in_range(ucs4::U_gc_digit, generalCategory(p), ucs4::U_gc_letter_number); }
-inline	bool has_numeric_value (cptr p)
-					{ return *p>=0 ? ::is_dec_digit(*p)
-							: is_in_range(ucs4::U_gc_number, generalCategory(p), ucs4::U_gc_other_number); }
+inline bool is_number_letter (cptr p)
+{
+	return *p>=0 ? is_in_range('0',*p,'9')
+			: is_in_range(ucs4::U_gc_digit, generalCategory(p), ucs4::U_gc_letter_number);
+}
+inline bool has_numeric_value (cptr p)
+{
+	return *p>=0 ? ::is_dec_digit(*p)
+		: is_in_range(ucs4::U_gc_number, generalCategory(p), ucs4::U_gc_other_number);
+}
 
 // Get Digit, Number & Decorated Number value.
 // some fractionals. one negative. two NaNs.
-inline	float		numeric_value (cptr p)
-					{ return is_in_range('0',*p,'9') ? ::digit_val(*p) : ucs4::_numeric_value(utf8_to_ucs4char(p)); }
-};
+inline float numeric_value (cptr p)
+{
+	return is_in_range('0',*p,'9') ? ::digit_val(*p) : ucs4::_numeric_value(utf8_to_ucs4char(p));
+}
+
+// Info:
+inline bool is_uppercase ( cptr p )		// <==>  "will change if converted to lowercase"
+{
+	return *p>=0 ? ::is_uppercase(*p) : is_in_range(ucs4::U_gc_lt, generalCategory(p), ucs4::U_gc_lu);
+}
+
+inline bool is_lowercase ( cptr p )		// <==>  "will change if converted to uppercase"
+{
+	return *p>=0 ? ::is_lowercase(*p) : generalCategory(p) == ucs4::U_gc_ll;
+}
+
+} // namespace
 
 
 
