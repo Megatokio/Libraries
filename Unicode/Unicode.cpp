@@ -140,7 +140,7 @@ U_PropertyValue UCS4CharEAWidthProperty ( UCS4Char n )
 
 						http://www.unicode.org/reports/tr11/tr11-14.html
 */
-int UCS4CharPrintWidth ( UCS4Char n )
+uint UCS4CharPrintWidth ( UCS4Char n )
 {
 	U_PropertyValue w = UCS4CharEAWidthProperty(n); if (w!=U_ea_n) return w==U_ea_w || w==U_ea_f ? 2 : 1;
 
@@ -420,8 +420,8 @@ UCS4Char ucs4_simple_titlecase ( UCS4Char n )
 	Count>1								->	Value[i] = (BBBBBBBB+i) * 10eEEEE / DDDD
 */
 
-struct UCS2_NumVal { UCS2Char StartCode; uchar GeneralCategory; uchar Count; signed short CodedValue; };
-struct UCS4_NumVal { UCS4Char StartCode; uchar GeneralCategory; uchar Count; signed short CodedValue; };
+struct UCS2_NumVal { UCS2Char StartCode; uchar GeneralCategory; uchar Count; uint16 CodedValue; };
+struct UCS4_NumVal { UCS4Char StartCode; uchar GeneralCategory; uchar Count; uint16 CodedValue; };
 
 static UCS2_NumVal const UCS2_NumVal_Table[U_NUMERIC_UCS2] =
 #include "Includes/NumericValue.h"
@@ -430,15 +430,15 @@ static UCS4_NumVal const UCS4_NumVal_Table[U_NUMERIC_UCS4] =
 #include "Includes/NumericValue_UCS4.h"
 
 
-inline int UCS2_GetNumValIndex ( UCS2Char n, int e )
+inline uint UCS2_GetNumValIndex ( UCS2Char n, uint e )
 {
-	int a=0; do { int i=(a+e)/2; if( n<UCS2_NumVal_Table[i].StartCode ) e=i; else a=i; } while (a<e-1);
+	uint a=0; do { uint i=(a+e)/2; if( n<UCS2_NumVal_Table[i].StartCode ) e=i; else a=i; } while (a+1<e);
 	return a;
 }
 
-inline int UCS4_GetNumValIndex ( UCS4Char n, int e )
+inline uint UCS4_GetNumValIndex ( UCS4Char n, uint e )
 {
-	int a=0; do { int i=(a+e)/2; if( n<UCS4_NumVal_Table[i].StartCode ) e=i; else a=i; } while (a<e-1);
+	uint a=0; do { uint i=(a+e)/2; if( n<UCS4_NumVal_Table[i].StartCode ) e=i; else a=i; } while (a+1<e);
 	return a;
 }
 
@@ -447,18 +447,18 @@ inline int UCS4_GetNumValIndex ( UCS4Char n, int e )
 	Nur für Dezimalziffern gedacht: GC=Nd. No Checking.
 	Non-Digits, auch GC=No und Nl, resultieren idR. in sinnlosen Rückgabewerten.
 */
-int ucs2_get_digitvalue ( UCS2Char n )
+uint ucs2_get_digitvalue ( UCS2Char n )
 {
-	int i = UCS2_GetNumValIndex( n, U_NUMERIC_UCS2 );
-	int d = n - UCS2_NumVal_Table[i].StartCode;
+	uint i = UCS2_GetNumValIndex( n, U_NUMERIC_UCS2 );
+	uint d = n - UCS2_NumVal_Table[i].StartCode;
 	return (UCS2_NumVal_Table[i].CodedValue>>8) + d;
 }
 
-int ucs4_get_digitvalue ( UCS4Char n )
+uint ucs4_get_digitvalue( UCS4Char n )
 {
 	if(!(n>>16)) return ucs2_get_digitvalue(UCS2Char(n));
-	int i = UCS4_GetNumValIndex( n, U_NUMERIC_UCS4 );
-	int d = int(n - UCS4_NumVal_Table[i].StartCode);
+	uint i = UCS4_GetNumValIndex( n, U_NUMERIC_UCS4 );
+	uint d = n - UCS4_NumVal_Table[i].StartCode;
 	return (UCS4_NumVal_Table[i].CodedValue>>8) + d;
 }
 
@@ -470,29 +470,40 @@ int ucs4_get_digitvalue ( UCS4Char n )
 		  0x2183 = ROMAN NUMERAL REVERSED ONE HUNDRED
 		  beide haben CodedValue = 0x0000 und Count=1
 		  => decoded_value() wird NaN zurückgeben
+	note: there is one negative value:
+		  TIBETAN DIGIT HALF ZERO {0x0F33, U_gc_no, 1,  0xFF02}
+		  which equals -0.5
 */
 static int const dec[] = { 1,10,100,1000,10000 };
 
-inline float decoded_value ( int coded_value, int offset )
+inline float decoded_value ( uint coded_value, uint offset )
 {
-	int D = coded_value&0x0F, N = coded_value>>8, E = uchar(coded_value)>>4;
-	return (N+offset) * dec[E] / float(D);
+	int N = int8(coded_value >> 8);
+	float rval = N + int(offset);
+
+	uint E = coded_value & 0x00F0;
+	if (E!=0) rval *= dec[E>>4];
+
+	uint D = coded_value & 0x000F;
+	if (D!=1) rval /= D;
+
+	return rval;
 }
 
 float ucs2_get_numericvalue ( UCS2Char n )		// returns Value or NaN
 {
-	int i = UCS2_GetNumValIndex( n, U_NUMERIC_UCS2 );
-	int d = n - UCS2_NumVal_Table[i].StartCode;
-	if( d >= int(UCS2_NumVal_Table[i].Count) ) return NAN;
+	uint i = UCS2_GetNumValIndex( n, U_NUMERIC_UCS2 );
+	uint d = n - UCS2_NumVal_Table[i].StartCode;
+	if (d >= UCS2_NumVal_Table[i].Count) return NAN;
 	return decoded_value(UCS2_NumVal_Table[i].CodedValue,d);
 }
 
 float ucs4_get_numericvalue ( UCS4Char n )		// returns Value or NaN
 {
-	if(!(n>>16)) return ucs2_get_numericvalue(UCS2Char(n));
-	int i = UCS4_GetNumValIndex( n, U_NUMERIC_UCS4 );
-	int d = int(n - UCS4_NumVal_Table[i].StartCode);
-	if( d >= int(UCS4_NumVal_Table[i].Count) ) return NAN;
+	if (!(n>>16)) return ucs2_get_numericvalue(UCS2Char(n));
+	uint i = UCS4_GetNumValIndex( n, U_NUMERIC_UCS4 );
+	uint d = n - UCS4_NumVal_Table[i].StartCode;
+	if (d >= UCS4_NumVal_Table[i].Count) return NAN;
 	return decoded_value(UCS4_NumVal_Table[i].CodedValue,d);
 }
 

@@ -239,7 +239,7 @@ extern U_PropertyValue	UCS1CharEAWidthProperty ( UCS1Char n );
 extern U_PropertyValue	UCS2CharEAWidthProperty ( UCS2Char n );
 extern U_PropertyValue	UCS4CharEAWidthProperty ( UCS4Char n );
 
-extern int				UCS4CharPrintWidth		( UCS4Char n );		// print width of char in monospaced font  ->  0, 1, or 2
+extern uint				UCS4CharPrintWidth		( UCS4Char n );		// print width of char in monospaced font  ->  0, 1, or 2
 
 
 
@@ -248,8 +248,8 @@ extern int				UCS4CharPrintWidth		( UCS4Char n );		// print width of char in mon
 ******************************************************************************** */
 
 // UPs:
-	extern int		ucs2_get_digitvalue		( UCS2Char n );
-	extern int		ucs4_get_digitvalue		( UCS4Char n );
+	extern uint		ucs2_get_digitvalue		( UCS2Char n );
+	extern uint		ucs4_get_digitvalue		( UCS4Char n );
 	extern float	ucs2_get_numericvalue	( UCS2Char n );
 	extern float	ucs4_get_numericvalue	( UCS4Char n );
 
