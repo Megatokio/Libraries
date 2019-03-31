@@ -176,29 +176,43 @@ char* ucs2_to_utf8 (ucs2char const* q, uint qcnt, char* z) noexcept
 	*z = 0;
 	return z;
 }
-char* ucs4_to_utf8 (ucs4char const* q, uint qcnt, char* z) noexcept
+
+ptr ucs4char_to_utf8 (ucs4char c, ptr z ) noexcept
 {
-	// encode ucs4 text to utf-8
-	// this can encode any 4-byte data to utf-8
-	// if $00 is part of the source data it will be encoded as 2 non-zero bytes
-	// return: ptr -> chr0 at end of utf8 text
+	// encode ucs-4 char to utf-8
+	// supports full 32 bits
+	// encodes $00 as 2 non-zero bytes
+	// return: ptr -> behind utf8 char
 
-	while(qcnt--)
+	if (c && c <  0x80) { *z++ = char(c); return z; }
+
+	if (c <      0x800) { *z++ = 0xC0 + char(c>>6);  goto f1; }
+	if (c <    0x10000) { *z++ = 0xE0 + char(c>>12); goto f2; }
+	if (c <   0x200000) { *z++ = 0xF0 + char(c>>18); goto f3; }
+	if (c <  0x4000000) { *z++ = 0xF8 + char(c>>24); goto f4; }
+	else				{ *z++ = 0xFC + char(c>>30); goto f5; }		// full 32 bit encoded
+
+	f5:	*z++ = char(0x80 + ((c>>24) & 0x3F));
+	f4:	*z++ = char(0x80 + ((c>>18) & 0x3F));
+	f3:	*z++ = char(0x80 + ((c>>12) & 0x3F));
+	f2:	*z++ = char(0x80 + ((c>>6)  & 0x3F));
+	f1:	*z++ = char(0x80 + ((c)     & 0x3F));
+
+	return z;
+}
+
+ptr ucs4_to_utf8 (const ucs4char* q, uint qcnt, ptr z) noexcept
+{
+	// encode ucs-4 text to utf-8
+	// supports full 32 bits
+	// encodes $00 as 2 non-zero bytes
+	// return: ptr -> char0 at end of utf8 text
+
+	while (qcnt--)
 	{
-		uint32 c = *q++;
-		if (c && c <  0x80) { *z++ = char(c); continue; }
-
-		if (c <      0x800) { *z++ = 0xC0 + char(c>>6);  goto f1; }
-		if (c <    0x10000) { *z++ = 0xE0 + char(c>>12); goto f2; }
-		if (c <   0x200000) { *z++ = 0xF0 + char(c>>18); goto f3; }
-		if (c <  0x4000000) { *z++ = 0xF8 + char(c>>24); goto f4; }
-		else				{ *z++ = 0xFC + char(c>>30); goto f5; }		// full 32 bit encoded
-
-		f5:	*z++ = char(0x80 + ((c>>24) & 0x3F));
-		f4:	*z++ = char(0x80 + ((c>>18) & 0x3F));
-		f3:	*z++ = char(0x80 + ((c>>12) & 0x3F));
-		f2:	*z++ = char(0x80 + ((c>>6)  & 0x3F));
-		f1:	*z++ = char(0x80 + ((c)     & 0x3F));
+		ucs4char c = *q++;
+		if (c && c < 0x80) { *z++ = char(c); }
+		else { z = ucs4char_to_utf8(c,z); }
 	}
 	*z = 0;
 	return z;

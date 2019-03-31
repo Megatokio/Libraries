@@ -988,7 +988,7 @@ String::String ( cUTF8Str s, CharEncoding ce )
 {
 	xlogIn("String::String(utf8str,encoding)");
 
-	assert(ce==iso_latin_1);
+	assert(ce==ISO_LATIN_1);
 	if (s&&*s)	_init_from_utf8( s,strchr(s,0), yes );
 	else		_init();
 }

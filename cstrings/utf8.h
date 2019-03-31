@@ -42,25 +42,47 @@ namespace utf8
 {
 static const char replacementchar = '?';	// offiziell $FFFD -> ucs2, utf8 = 3 bytes
 
+// examine byte from utf8 char or string:
 inline bool is_fup (char c)			noexcept { return int8(c) < int8(0xc0); }
 inline bool no_fup (char c)			noexcept { return int8(c) >= int8(0xc0); }
 inline bool is_7bit (char c)		noexcept { return int8(c) >= 0; }			// %0xxxxxxx = ascii
 
+// find start of next character in utf-8 string
+// skip current assumed non-fup byte and find next
 inline cptr nextchar  (cptr p)		noexcept { while (is_fup(*++p) ) {} return p; }
 inline ptr  nextchar  (ptr p)		noexcept { while (is_fup(*++p) ) {} return p; }
+inline cptr nextchar  (cptr p, cptr e) noexcept { while ( ++p<e && is_fup(*p) ) {} return p; }
+
+// find start of previous character in utf-8 string
+// rskip current assumed non-fup byte and find previous
+inline cptr prevchar (cptr p)		noexcept { while (is_fup(*--p)) {} return p; }
+inline ptr  prevchar (ptr p)		noexcept { while (is_fup(*--p)) {} return p; }
+inline cptr prevchar (cptr a, cptr p) noexcept { while (--p >= a && is_fup(*p)) {} return p; }
 
 extern uint charcount (cstr)		noexcept; // count characters in utf-8 string
 extern uint max_csz	  (cstr)		noexcept; // required ucs* character size to store utf-8 string
 extern bool fits_in_ucs1 (cstr)		noexcept;
 extern bool fits_in_ucs2 (cstr)		noexcept;
 
-inline uint charcount (ucs1char const* q)	noexcept { uint n=0; if(q) while(*q++) n++; return n; }
-inline uint charcount (ucs2char const* q)	noexcept { uint n=0; if(q) while(*q++) n++; return n; }
-inline uint charcount (ucs4char const* q)	noexcept { uint n=0; if(q) while(*q++) n++; return n; }
+inline uint charcount (const ucs1char* q) noexcept { auto a = q; if(q) { while(*q) q++; } return uint(q-a); }
+inline uint charcount (const ucs2char* q) noexcept { auto a = q; if(q) { while(*q) q++; } return uint(q-a); }
+inline uint charcount (const ucs4char* q) noexcept { auto a = q; if(q) { while(*q) q++; } return uint(q-a); }
 
 extern uint utf8len	(ucs1char const*, uint) noexcept; // calc. required size for utf-8 string to store ucs text
 extern uint utf8len	(ucs2char const*, uint) noexcept; // ""
 extern uint utf8len	(ucs4char const*, uint) noexcept; // ""
+
+// nominal size of utf-8 character (bytes) based on char[0] of UTF-8 character
+// fups  are size = 1
+// support full 32 bit characters
+inline uint nominal_size ( char c )			{ uint n=1; if (c<0) { c &= ~0x02; while(int8(c<<n)<0) n++; } return n; }
+inline uint nominal_size ( cptr p )			{ return nominal_size(*p); }
+
+// nominal size of utf-8 character (bytes) based on UCS-1, UCS-2, or UCS-4 character
+// support full 32 bit characters
+inline uint nominal_size ( ucs1char n )		{ return 1 + (n>0x7f); }
+inline uint nominal_size ( ucs2char n )		{ return 1 + (n>0x7f) + (n>0x7ff); }
+inline uint nominal_size ( ucs4char n )		{ if(n<0x80) return 1; uint i=16; n>>=11; while(n) { n>>=5; i+=5; } return i/6; }
 
 // *** conversion utf8 <-> ucs1 / ucs2 / ucs4 ***
 
@@ -94,6 +116,16 @@ extern	cstr detabstr	(cstr, uint tabs)	noexcept;
 extern	str	 whitestr	(cstr, char c=' ')	noexcept;
 extern	str	 unescapedstr(cstr)				noexcept; // sets errno
 
+extern	ucs4char utf8_to_ucs4char (cptr s) noexcept;
+extern	ptr ucs4char_to_utf8 (ucs4char c, ptr z) noexcept;
+
+inline ptr simple_uppercase (cptr q, ptr z) noexcept { return ucs4char_to_utf8(ucs4::simple_uppercase(utf8_to_ucs4char(q)),z); }
+inline ptr simple_lowercase (cptr q, ptr z) noexcept { return ucs4char_to_utf8(ucs4::simple_lowercase(utf8_to_ucs4char(q)),z); }
+inline ptr simple_titlecase (cptr q, ptr z) noexcept { return ucs4char_to_utf8(ucs4::simple_titlecase(utf8_to_ucs4char(q)),z); }
+inline ptr simple_uppercase (cptr q)		noexcept { str s = tempstr(8); *simple_uppercase(q,s) = 0; return s;  }
+inline ptr simple_lowercase (cptr q)		noexcept { str s = tempstr(8); *simple_lowercase(q,s) = 0; return s;  }
+inline ptr simple_titlecase (cptr q)		noexcept { str s = tempstr(8); *simple_titlecase(q,s) = 0; return s;  }
+
 extern	bool isupperstr	(cstr)				noexcept; // TODO
 extern	bool islowerstr	(cstr)				noexcept; // TODO
 
@@ -101,9 +133,6 @@ extern	void toupper	(str)				noexcept; // TODO	{ if(s) for( ;*s;s++ ) *s = to_up
 extern	void tolower	(str)				noexcept; // TODO	{ if(s) for( ;*s;s++ ) *s = to_lower(*s); }
 extern	str	 upperstr	(cstr)				noexcept; // TODO
 extern	str	 lowerstr	(cstr)				noexcept; // TODO
-
-
-extern	ucs4char utf8_to_ucs4char	(cptr s) noexcept;
 
 inline ucs4::Enum blockProperty		(cptr p)	{ return ucs4::blockProperty(utf8_to_ucs4char(p) ); }
 inline ucs4::Enum scriptProperty	(cptr p)	{ return ucs4::scriptProperty(utf8_to_ucs4char(p) ); }

@@ -57,7 +57,7 @@
 enum CharEncoding
 {
 	// character encodings:
-		UCS1,			iso_latin_1 = UCS1,
+		UCS1,			ISO_LATIN_1 = UCS1,
 		UCS2,
 		UCS4,
 		ASCII_US,		// 7-bit character set
