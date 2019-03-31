@@ -61,7 +61,6 @@
 #include	<math.h>
 #include	"config.h"
 #include	"Var.h"
-#include	"Unicode/Unicode.h"
 #include	"Templates/Stack.h"
 
 // serrors.cpp:
@@ -1952,9 +1951,9 @@ String Var::ToString ( bool quotestring, DisassProcPtr disass ) const
 				if (v->IsNamed())							// include name ?
 				{
 					cString& v_name = v->Name();
-					UCS4Char c = v_name[0];					// check for malformed name
-					bool f = UCS4CharIsLetter(c) || c=='_';
-					for (int i=1;f&&i<v_name.Len();i++) { c = v_name[i]; f = UCS4CharIsLetter(c) || UCS4CharIsDecimalDigit(c) || c=='_'; }
+					ucs4char c = v_name[0];					// check for malformed name
+					bool f = ucs4::is_letter(c) || c=='_';
+					for (int i=1;f&&i<v_name.Len();i++) { c = v_name[i]; f = ucs4::is_letter(c) || ucs4::is_dec_digit(c) || c=='_'; }
 					s += f ? sep + v_name					// add well formed name
 						   : sep + '@'+v_name.ToQuoted();	// add malformed name
 					sep = '=';
@@ -2108,7 +2107,7 @@ void Var::SplitLines ( cString& sep )
 		case 0:
 			break;
 		case 1:
-			for( UCS4Char c=sep[0];; )
+			for( ucs4char c=sep[0];; )
 			{
 				int32 ni = s.Find(c,qi); if(ni<0) break;
 				new Var( this,li++, s.SubString(qi,ni) );
@@ -2163,7 +2162,7 @@ void Var::SplitLines ( )
 		for ( int32 i=0; i<s.Len(); )
 		{
 	//		TRAP(s.Len()!=slen);
-			UCS4Char c = s[i++];
+			ucs4char c = s[i++];
 	//		Log("%c",c>=' '&&c<127 ? (char)c : '.');
 			if( c>13 || (c!=10&&c!=13&&c!=0) ) continue;
 			new Var( this,li++, s.SubString(qi,i-1) );

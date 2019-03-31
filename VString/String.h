@@ -44,9 +44,9 @@
 */
 
 #include "kio/kio.h"
-#include "Unicode/Unicode.h"
-#include "Unicode/UTF-8.h"
-
+//#include "Unicode/Unicode.h"
+//#include "Unicode/UTF-8.h"
+#include "cstrings/utf8.h"
 
 
 
@@ -98,12 +98,12 @@ class String
 	union
 	{
 	ptr			text;			// ptr -> start of text
-	UCS1Char*	ucs1_text;
-	UCS2Char*	ucs2_text;
-	UCS4Char*	ucs4_text;
-	cUCS1Char*	cucs1_text;
-	cUCS2Char*	cucs2_text;
-	cUCS4Char*	cucs4_text;
+	ucs1char*	ucs1_text;
+	ucs2char*	ucs2_text;
+	ucs4char*	ucs4_text;
+	const ucs1char*	cucs1_text;
+	const ucs2char*	cucs2_text;
+	const ucs4char*	cucs4_text;
 	};
 	int32		count;			// number of characters
 	size_t		data_and_csz;	// data ptr for delete[]; lower 2 bits: csz -1
@@ -119,18 +119,18 @@ class String
 	void		_resize			( int32 newlen );
 	int32		compare	  		( cString& q ) const;
 
-	UCS1Char*&	Ucs1			( )						{ return ucs1_text; }
-	UCS2Char*&	Ucs2			( )						{ return ucs2_text; }
-	UCS4Char*&	Ucs4			( )						{ return ucs4_text; }
-	cUCS1Char* const&	Ucs1	( )	const				{ return cucs1_text; }
-	cUCS2Char* const&	Ucs2	( )	const				{ return cucs2_text; }
-	cUCS4Char* const&	Ucs4	( ) const				{ return cucs4_text; }
-	UCS1Char&	Ucs1			( int32 i )				{ return ucs1_text[i]; }
-	UCS2Char&	Ucs2			( int32 i )				{ return ucs2_text[i]; }
-	UCS4Char&	Ucs4			( int32 i )				{ return ucs4_text[i]; }
-	cUCS1Char&	Ucs1			( int32 i ) const		{ return cucs1_text[i]; }
-	cUCS2Char&	Ucs2			( int32 i ) const		{ return cucs2_text[i]; }
-	cUCS4Char&	Ucs4			( int32 i ) const		{ return cucs4_text[i]; }
+	ucs1char*&	Ucs1			( )						{ return ucs1_text; }
+	ucs2char*&	Ucs2			( )						{ return ucs2_text; }
+	ucs4char*&	Ucs4			( )						{ return ucs4_text; }
+	const ucs1char* const&	Ucs1	( )	const				{ return cucs1_text; }
+	const ucs2char* const&	Ucs2	( )	const				{ return cucs2_text; }
+	const ucs4char* const&	Ucs4	( ) const				{ return cucs4_text; }
+	ucs1char&	Ucs1			( int32 i )				{ return ucs1_text[i]; }
+	ucs2char&	Ucs2			( int32 i )				{ return ucs2_text[i]; }
+	ucs4char&	Ucs4			( int32 i )				{ return ucs4_text[i]; }
+	const ucs1char&	Ucs1			( int32 i ) const		{ return cucs1_text[i]; }
+	const ucs2char&	Ucs2			( int32 i ) const		{ return cucs2_text[i]; }
+	const ucs4char&	Ucs4			( int32 i ) const		{ return cucs4_text[i]; }
 
 	static size_t calc_data_and_csz ( cptr p, CharSize sz ) { assert(!(size_t(p)&3)); return size_t(p)+sz-1; }
 	ptr			Data			( ) const				{ return ptr(data_and_csz&size_t(~3)); }
@@ -144,18 +144,18 @@ public:
 				~String			( );
 				String			( );
 
-				String			( UCS4Char c );						// may be 'not writable'
+				String			( ucs4char c );						// may be 'not writable'
 				String   		( int32 n, CharSize sz );			// uncleared
-				String   		( int32 n, UCS4Char c );			// cleared; may be 'not writable'
+				String   		( int32 n, ucs4char c );			// cleared; may be 'not writable'
 
-				String   		( cUCS1Char* p, int32 chars );
-				String   		( cUCS2Char* p, int32 chars );
-				String   		( cUCS4Char* p, int32 chars );
-				String   		( cUTF8CharPtr p, int32 bytes );
-				String   		( cptr p, int32 chars, CharSize sz );
+				String   		( const ucs1char* p, int32 chars );
+				String   		( const ucs2char* p, int32 chars );
+				String   		( const ucs4char* p, int32 chars );
+				String   		( cstr p, int32 bytes );
+				String   		( cstr p, int32 chars, CharSize sz );
 
-				String   		( cUTF8Str s );						// string from c-string
-				String			( cUTF8Str s, CharEncoding );		// string from c-string: interpret bogus utf-8 as latin-1
+				String   		( cstr s );					// string from utf-8 c-string
+				String			( cstr s, CharEncoding );	// string from utf-8 c-string: interpret bogus utf-8 as latin-1
 				String   		( cString& q );						// copy creator
 				String   		( cString& q, int32 a, int32 e );	// substring
 				String			( cString& q, cuptr txt, int32 chars, CharSize sz );	// special re-interpret substring
@@ -166,21 +166,21 @@ public:
 	void		Clear    		( );								// quick clear string: len=0
 	void		Truncate		( int32 newlen );
 	void		Crop			( int32 left, int32 right );
-	void		Resize			( int32 newlen, UCS4Char padding=' ' );
+	void		Resize			( int32 newlen, ucs4char padding=' ' );
 
 	int32		Len				( ) const							{ return count; }
 	CharSize	Csz				( )	const							{ return CharSize((data_and_csz&3)+1); }
 	void		ResizeCsz		( CharSize );
-	UCS4Char	operator[]  	( int32 i ) const;
-	UCS4Char	LastChar		( ) const throws;
+	ucs4char	operator[]  	( int32 i ) const;
+	ucs4char	LastChar		( ) const throws;
 
-	UCS1Char*	UCS1Text		( )									{ assert(Csz()==csz1); return Ucs1(); }
-	UCS2Char*	UCS2Text		( )									{ assert(Csz()==csz2); return Ucs2(); }
-	UCS4Char*	UCS4Text		( )									{ assert(Csz()==csz4); return Ucs4(); }
+	ucs1char*	UCS1Text		( )									{ assert(Csz()==csz1); return Ucs1(); }
+	ucs2char*	UCS2Text		( )									{ assert(Csz()==csz2); return Ucs2(); }
+	ucs4char*	UCS4Text		( )									{ assert(Csz()==csz4); return Ucs4(); }
 	ptr			Text			( )									{ return text; }
-	cUCS1Char*	UCS1Text		( ) const							{ assert(Csz()==csz1); return Ucs1(); }
-	cUCS2Char*	UCS2Text		( ) const							{ assert(Csz()==csz2); return Ucs2(); }
-	cUCS4Char*	UCS4Text		( ) const							{ assert(Csz()==csz4); return Ucs4(); }
+	const ucs1char*	UCS1Text		( ) const							{ assert(Csz()==csz1); return Ucs1(); }
+	const ucs2char*	UCS2Text		( ) const							{ assert(Csz()==csz2); return Ucs2(); }
+	const ucs4char*	UCS4Text		( ) const							{ assert(Csz()==csz4); return Ucs4(); }
 	cptr		Text			( ) const							{ return text; }
 
 	bool		IsWritable  	( ) const							{ return (next==this && (data_and_csz>>2)!=0) || count==0; }
@@ -212,25 +212,25 @@ public:
 	double		NumVal			( int32* index_inout=nullptr ) const;
 	String		StrVal			( int32* index_inout=nullptr ) const;
 
-	int32		Find			( UCS4Char c, int32 startidx= 0 ) const;
-	int32		RFind			( UCS4Char c, int32 startidx= 0x7fffffff ) const;
+	int32		Find			( ucs4char c, int32 startidx= 0 ) const;
+	int32		RFind			( ucs4char c, int32 startidx= 0x7fffffff ) const;
 	int32		Find			( cString& s, int32 startidx= 0 ) const;
 	int32		RFind			( cString& s, int32 startidx= 0x7fffffff ) const;
-	int32		Find			( cUTF8Str s, int32 startidx= 0 ) const;
-	int32		RFind			( cUTF8Str s, int32 startidx= 0x7fffffff ) const;
+	int32		Find			( cstr s, int32 startidx= 0 ) const;
+	int32		RFind			( cstr s, int32 startidx= 0x7fffffff ) const;
 
-	void		Replace     	( UCS4Char o, UCS4Char n );
+	void		Replace     	( ucs4char o, ucs4char n );
 	void		Replace     	( cString& o, cString& n );
-	void		Swap			( UCS4Char o, UCS4Char n );
+	void		Swap			( ucs4char o, ucs4char n );
 
 	String		ToUpper  		( )	const;
 	String		ToLower  		( )	const;
 	String		ToHtml			( ) const;
 	String		FromHtml		( ) const;
-	String		ToEscaped		( UCS4Char addquotes=no ) const;
-	String		FromEscaped		( UCS4Char rmvquotes=no ) const;
-	String		ToQuoted		( UCS4Char leftquote='"' ) const	{ return ToEscaped(leftquote); }
-	String		FromQuoted		( UCS4Char leftquote='"' ) const	{ return FromEscaped(leftquote); }
+	String		ToEscaped		( ucs4char addquotes=no ) const;
+	String		FromEscaped		( ucs4char rmvquotes=no ) const;
+	String		ToQuoted		( ucs4char leftquote='"' ) const	{ return ToEscaped(leftquote); }
+	String		FromQuoted		( ucs4char leftquote='"' ) const	{ return FromEscaped(leftquote); }
 	String		ToUCS1			( ) const;
 	String		FromUCS1		( ) const;
 	String		ToUCS2			( ) const;
@@ -274,8 +274,8 @@ extern void		TestStringClass	( );
 #define			emptyString	String()						// String() benötigt keine Initialisierung!
 //extern String	emptyString;								// Bummer: erst valide nach Initialisierung!
 
-inline String	CharString	( UCS4Char c )					{ return String(c); }
-inline String	SpaceString	( int32 n, UCS4Char c=' ' )		{ return String(n,c); }
+inline String	CharString	( ucs4char c )					{ return String(c); }
+inline String	SpaceString	( int32 n, ucs4char c=' ' )		{ return String(n,c); }
 
 extern String  	NumString	( double n );
 extern String  	NumString	( long n );
@@ -297,10 +297,10 @@ inline String	ToUpper		( cString& s )					{ return s.ToUpper(); }
 inline String	ToLower		( cString& s )					{ return s.ToLower(); }
 inline String	ToHtml		( cString& s )					{ return s.ToHtml(); }
 inline String	FromHtml	( cString& s )					{ return s.FromHtml(); }
-inline String	ToQuoted	( cString& s, UCS4Char f='"' )	{ return s.ToQuoted(f); }
-inline String	FromQuoted	( cString& s, UCS4Char f='"' )	{ return s.FromQuoted(f); }
-inline String	ToEscaped	( cString& s, UCS4Char f=no )	{ return s.ToEscaped(f); }
-inline String	FromEscaped	( cString& s, UCS4Char f=no )	{ return s.FromEscaped(f); }
+inline String	ToQuoted	( cString& s, ucs4char f='"' )	{ return s.ToQuoted(f); }
+inline String	FromQuoted	( cString& s, ucs4char f='"' )	{ return s.FromQuoted(f); }
+inline String	ToEscaped	( cString& s, ucs4char f=no )	{ return s.ToEscaped(f); }
+inline String	FromEscaped	( cString& s, ucs4char f=no )	{ return s.FromEscaped(f); }
 
 inline str		CString		( cString& s )					{ return s.CString(); }
 inline double	NumVal		( cString& s )					{ return s.NumVal(); }

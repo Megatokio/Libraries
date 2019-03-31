@@ -40,7 +40,7 @@
 	2003-08-15 kio	extended NumVal(), new StrVal()
 	2003-09-05 kio	void String::ResizeCsz ( CharSize csz )
 	2003-09-20 kio	fixed bug in _move(String&)  ((3 days work to find it...))
-	2003-10-09 kio	String(cUTF8Str,latin_1): convert from utf-8 but assume broken utf-8 is latin-1
+	2003-10-09 kio	String(cstr,latin_1): convert from utf-8 but assume broken utf-8 is latin-1
 	2003-10-11 kio	FNMatch() and Match() to match filenames with patterns ((filename globbing))
 	2003-10-15 kio	void String::Replace ( cString& o, cString& n )
 	2003-10-18 kio	ToURL() and FromURL()
@@ -67,9 +67,8 @@
 #include <string.h>
 #include <math.h>
 #include "String.h"
-#include "Unicode/Unicode.h"
-#include "Unicode/UTF-8.h"
 #include "cstrings/utf8.h"
+#include "cstrings/8bit/legacy_charsets.h"
 
 
 #ifdef NDEBUG
@@ -82,15 +81,23 @@
 #define	 RMASK(n)		(~(0xFFFFFFFF<<(n)))				// mask to select n bits from the right
 
 
-INIT_MSG//("<init-free>");
+INIT_MSG;
 
 
 #ifndef NAN
-	const double NAN = 0.0/0.0;
+	static const double NAN = 0.0/0.0;
 #endif
 
+// typedefs match definitions in standard_types.h:
+typedef ucs1char* u8ptr;
+typedef ucs2char* u16ptr;
+typedef ucs4char* u32ptr;
+typedef const ucs1char* cu8ptr;
+typedef const ucs2char* cu16ptr;
+typedef const ucs4char* cu32ptr;
 
-static UCS4Char quotes[][2] =
+
+static ucs4char quotes[][2] =
 {	{'<','>'},
 	{0x00ab/*«*/,0x00bb/*»*/},
 	{0x00bb/*»*/,0x00ab/*«*/},
@@ -106,8 +113,8 @@ static UCS4Char quotes[][2] =
 #define B1(n)		 		 n,    n+ 1,    n+ 2,    n+ 3
 #define B2(n)		 	  B1(n),B1(n+ 4),B1(n+ 8),B1(n+12)
 #define B3(n)		 	  B2(n),B2(n+16),B2(n+32),B2(n+48)
-static UCS1Char abc[] = { B3(0),B3(  64),B3( 128),B3( 192) };
-static UCS1Char spc[] =
+static ucs1char abc[] = { B3(0),B3(  64),B3( 128),B3( 192) };
+static ucs1char spc[] =
 "          ""          ""          ""          ""          ";
 
 
@@ -133,22 +140,22 @@ static UCS1Char spc[] =
 
 // char -> digit value: ['0'..'9'] ---> [0..9]; non-digits ---> [10..255]
 inline	uint8	_digit_val(char c)			{ return uint8 (c-'0'); }
-inline	uint8	_digit_val(UCS1Char c)	 	{ return uint8 (c-'0'); }
-inline	uint16	_digit_val(UCS2Char c)	 	{ return uint16(c-'0'); }
-inline	uint32	_digit_val(UCS4Char c)	 	{ return uint32(c-'0'); }
+inline	uint8	_digit_val(ucs1char c)	 	{ return uint8 (c-'0'); }
+inline	uint16	_digit_val(ucs2char c)	 	{ return uint16(c-'0'); }
+inline	uint32	_digit_val(ucs4char c)	 	{ return uint32(c-'0'); }
 
 // char -> digit value: ['0'..'9']['A'..'Z']['a'..'z'] ---> [0...35]; non-digits ---> [36..233]
 inline	uint8	_digit_value(char c)		{ return c<='9' ? uint8 (c-'0') : uint8 ((c|0x20)-'a')+10; }
-inline	uint8	_digit_value(UCS1Char c)	{ return c<='9' ? uint8 (c-'0') : uint8 ((c|0x20)-'a')+10; }
-inline	uint16	_digit_value(UCS2Char c)	{ return c<='9' ? uint16(c-'0') : uint16((c|0x20)-'a')+10; }
-inline	uint32	_digit_value(UCS4Char c)	{ return c<='9' ? uint32(c-'0') : uint32((c|0x20)-'a')+10; }
+inline	uint8	_digit_value(ucs1char c)	{ return c<='9' ? uint8 (c-'0') : uint8 ((c|0x20)-'a')+10; }
+inline	uint16	_digit_value(ucs2char c)	{ return c<='9' ? uint16(c-'0') : uint16((c|0x20)-'a')+10; }
+inline	uint32	_digit_value(ucs4char c)	{ return c<='9' ? uint32(c-'0') : uint32((c|0x20)-'a')+10; }
 
 // UCSx char -> 1st char for UTF8
-static inline char _utf8_fup		( UCS1Char c )	{ return char(0x80) | char(c&0x3f); }
-static inline char _utf8_starter_c2	( UCS1Char c )	{ return char(0xc0) | char(c>>6);   }
-static inline char _utf8_starter_c2	( UCS2Char c )	{ return char(0xc0) | char(c>>6);   }
-static inline char _utf8_starter_c2	( UCS4Char c )	{ return char(0xc0) | char(c>>6);   }
-static inline char _utf8_starter_c3	( UCS2Char c )	{ return char(0xe0) | char(c>>12);  }
+static inline char _utf8_fup		( ucs1char c )	{ return char(0x80) | char(c&0x3f); }
+static inline char _utf8_starter_c2	( ucs1char c )	{ return char(0xc0) | char(c>>6);   }
+static inline char _utf8_starter_c2	( ucs2char c )	{ return char(0xc0) | char(c>>6);   }
+static inline char _utf8_starter_c2	( ucs4char c )	{ return char(0xc0) | char(c>>6);   }
+static inline char _utf8_starter_c3	( ucs2char c )	{ return char(0xe0) | char(c>>12);  }
 
 
 template<typename ZT, typename QT>
@@ -160,47 +167,47 @@ static inline void copy_and_convert(ZT* z, const QT* q, int32 n)
 
 inline void ucs4_from_ucs1 ( void* z, const void* q, int32 n )
 {
-	copy_and_convert(UCS4CharPtr(z),cUCS1CharPtr(q),n);
+	copy_and_convert(u32ptr(z), cu8ptr(q),n);
 }
 
 inline void ucs4_from_ucs2 ( void* z, const void* q, int32 n )
 {
-	copy_and_convert(UCS4CharPtr(z),cUCS2CharPtr(q),n);
+	copy_and_convert(u32ptr(z),cu16ptr(q),n);
 }
 
 inline void ucs4_from_ucs4 ( void* z, const void* q, int32 n )
 {
-	copy_and_convert(UCS4CharPtr(z),cUCS4CharPtr(q),n);
+	copy_and_convert(u32ptr(z),cu32ptr(q),n);
 }
 
 inline void ucs2_from_ucs1 ( void* z, const void* q, int32 n )
 {
-	copy_and_convert(UCS2CharPtr(z),cUCS1CharPtr(q),n);
+	copy_and_convert(u16ptr(z),cu8ptr(q),n);
 }
 
 inline void ucs2_from_ucs2 ( void* z, const void* q, int32 n )
 {
-	copy_and_convert(UCS2CharPtr(z),cUCS2CharPtr(q),n);
+	copy_and_convert(u16ptr(z),cu16ptr(q),n);
 }
 
 inline void ucs2_from_ucs4 ( void* z, const void* q, int32 n )
 {
-	copy_and_convert(UCS2CharPtr(z),cUCS4CharPtr(q),n);
+	copy_and_convert(u16ptr(z),cu32ptr(q),n);
 }
 
 inline void ucs1_from_ucs1 ( void* z, const void* q, int32 n )
 {
-	copy_and_convert(UCS1CharPtr(z),cUCS1CharPtr(q),n);
+	copy_and_convert(u8ptr(z),cu8ptr(q),n);
 }
 
 inline void ucs1_from_ucs2 ( void* z, const void* q, int32 n )
 {
-	copy_and_convert(UCS1CharPtr(z),cUCS2CharPtr(q),n);
+	copy_and_convert(u8ptr(z),cu16ptr(q),n);
 }
 
 inline void ucs1_from_ucs4 ( void* z, const void* q, int32 n )
 {
-	copy_and_convert(UCS1CharPtr(z),cUCS4CharPtr(q),n);
+	copy_and_convert(u8ptr(z),cu32ptr(q),n);
 }
 
 #define ucs_from_ucs UCSCopy
@@ -247,19 +254,19 @@ static void ucs_copy ( CharSize csz, void* z, const void* q, int32 n )
 }
 
 template<typename T>
-static inline void ucs_clear ( T* z, int32 n, UCS4Char filler )
+static inline void ucs_clear ( T* z, int32 n, ucs4char filler )
 {
 	assert(n>=0);
 	while(n--) { *z++ = T(filler); }
 }
 
-static void ucs_clear ( int csz, void* z, int32 n, UCS4Char filler )
+static void ucs_clear ( int csz, void* z, int32 n, ucs4char filler )
 {
 	switch(csz)
 	{
-	case csz1: ucs_clear(UCS1CharPtr(z),n,filler); return;
-	case csz2: ucs_clear(UCS2CharPtr(z),n,filler); return;
-	case csz4: ucs_clear(UCS4CharPtr(z),n,filler); return;
+	case csz1: ucs_clear(u8ptr(z),n,filler); return;
+	case csz2: ucs_clear(u16ptr(z),n,filler); return;
+	case csz4: ucs_clear(u32ptr(z),n,filler); return;
 	}
 }
 
@@ -276,13 +283,13 @@ static CharSize utf8_req_charsize ( cptr a, cptr e )
 	while ( a<e && uchar(*a)<0xF0 ) { a++; } if (a==e) return csz2; else return csz4;
 }
 
-static inline CharSize req_charsize ( UCS4Char n )
+static inline CharSize req_charsize ( ucs4char n )
 {
 	return n>>16 ? csz4 : n>>8 ? csz2 : csz1;
 }
 
 __attribute__((__unused__))
-static inline CharSize req_charsize ( UCS2Char n )
+static inline CharSize req_charsize ( ucs2char n )
 {
 	return n>>8 ? csz2 : csz1;
 }
@@ -307,7 +314,7 @@ static int32 utf8_charcount ( cptr a, cptr e )
 	return n;
 }
 
-static UCS1Char* ucs1_from_utf8 ( UCS1Char* z, cUTF8CharPtr a, cUTF8CharPtr e, bool latin_1 = no )
+static ucs1char* ucs1_from_utf8 ( ucs1char* z, cstr a, cstr e, bool latin_1 = no )
 {
 	// convert utf-8 to ucs-1
 
@@ -323,7 +330,7 @@ static UCS1Char* ucs1_from_utf8 ( UCS1Char* z, cUTF8CharPtr a, cUTF8CharPtr e, b
 	return z;
 }
 
-static UCS2Char* ucs2_from_utf8 ( UCS2Char* z, cUTF8CharPtr a, cUTF8CharPtr e, bool latin_1 = no )
+static ucs2char* ucs2_from_utf8 ( ucs2char* z, cstr a, cstr e, bool latin_1 = no )
 {
 	// convert utf-8 to ucs-2
 
@@ -345,11 +352,11 @@ x:		*z++ = latin_1 ? c1 : '?';
 /* ----	convert utf-8 to ucs-4 --------------------------------------
 		2005-06-09: added support for full 32 bit
 */
-static UCS4Char* ucs4_from_utf8 ( UCS4Char*z, cUTF8CharPtr a, cUTF8CharPtr e, bool latin_1 = no )
+static ucs4char* ucs4_from_utf8 ( ucs4char*z, cstr a, cstr e, bool latin_1 = no )
 {
 	while ( a<e )
 	{
-		UCS4Char c0 = uchar(*a++);
+		ucs4char c0 = uchar(*a++);
 		if( utf8::is_7bit(c0) ) { *z++ = c0; continue; }		// 7-bit ascii char
 		if( utf8::is_fup(c0) ) continue;						// unexpected fups
 
@@ -385,33 +392,33 @@ static UCS4Char* ucs4_from_utf8 ( UCS4Char*z, cUTF8CharPtr a, cUTF8CharPtr e, bo
 /* ----	Convert UCS-1, UCS-2, or UCS-4 to UTF-8 ----------------------------
 */
 
-static int32 utf8_bytecount ( cUCS1Char* p, int32 n )
+static int32 utf8_bytecount ( const ucs1char* p, int32 n )
 {
 	// calculate byte-size for utf-8 string
 
-	cUCS1Char* e = p + n;
+	const ucs1char* e = p + n;
 	while(p<e) { n += *p++>>7; }
 	return n;
 }
 
-static int32 utf8_bytecount ( cUCS2Char* p, int32 n )
+static int32 utf8_bytecount ( const ucs2char* p, int32 n )
 {
 	// calculate byte-size for utf-8 string
 
-	cUCS2Char* e = p + n;
-	while(p<e) { UCS2Char c = *p++; if(c>>7) { n += c>>11 ? 2 : 1; } }
+	const ucs2char* e = p + n;
+	while(p<e) { ucs2char c = *p++; if(c>>7) { n += c>>11 ? 2 : 1; } }
 	return n;
 }
 
-static int32 utf8_bytecount ( cUCS4Char* p, int32 n )
+static int32 utf8_bytecount ( const ucs4char* p, int32 n )
 {
 	// calculate byte-size for utf-8 string
 	// supports full 32 bit
 
-	cUCS4Char* e = p + n;
+	const ucs4char* e = p + n;
 	while (p<e)
 	{
-		UCS4Char c = *p++;
+		ucs4char c = *p++;
 		if(c>>7)		// 2…6 bytes: 1…5 fups
 		{
 			int i = 10; for( c>>=11; c; c>>=5 ) { i+=5; }
@@ -421,28 +428,28 @@ static int32 utf8_bytecount ( cUCS4Char* p, int32 n )
 	return n;
 }
 
-static ptr utf8_from_ucs1 ( ptr z, cUCS1Char* q, int32 n )
+static ptr utf8_from_ucs1 ( ptr z, const ucs1char* q, int32 n )
 {
 	// create utf-8 string from UCS-1 string
 
-	cUCS1Char* e = q + n;
+	const ucs1char* e = q + n;
 	while (q<e)
 	{
-		UCS1Char c = *q++;
+		ucs1char c = *q++;
 		if (int8(c)>=0) *z++ = char(c);
 		else { *z++ = _utf8_starter_c2(c); *z++ = _utf8_fup(c); }
 	}
 	return z;
 }
 
-static ptr utf8_from_ucs2 ( ptr z, cUCS2Char* q, int32 n )
+static ptr utf8_from_ucs2 ( ptr z, const ucs2char* q, int32 n )
 {
 	// create utf-8 string from UCS-2 string
 
-	cUCS2Char* e = q+n;
+	const ucs2char* e = q+n;
 	while (q<e)
 	{
-		UCS2Char c = *q++;
+		ucs2char c = *q++;
 		if( !(c>>7)  )	{ *z++ = char(c); continue; }
 		if( !(c>>11) )	{ *z++ = _utf8_starter_c2(c); *z++ = _utf8_fup(uint8(c)); }
 		else			{ *z++ = _utf8_starter_c3(c); *z++ = _utf8_fup(uint8(c>>6));  *z++ = _utf8_fup(uint8(c)); }
@@ -450,15 +457,15 @@ static ptr utf8_from_ucs2 ( ptr z, cUCS2Char* q, int32 n )
 	return z;
 }
 
-static ptr utf8_from_ucs4 ( ptr z, cUCS4Char* q, int32 n )
+static ptr utf8_from_ucs4 ( ptr z, const ucs4char* q, int32 n )
 {
 	// create utf-8 string from UCS-4 string
 	// supports full 32 bit
 
-	cUCS4Char* e = q + n;
+	const ucs4char* e = q + n;
 	while (q<e)
 	{
-		UCS4Char c = *q++;
+		ucs4char c = *q++;
 		if( !(c>>7)  )	{ *z++ = char(c); continue; }								// 1 byte code
 		if( !(c>>11) )	{ *z++ = _utf8_starter_c2(c); *z++ = _utf8_fup(uint8(c)); }	// 2 byte code
 		else																// 3…6 byte codes
@@ -633,8 +640,8 @@ bool Match ( cString& filename, cString& pattern )
 	{
 	// skip matching characters up to '*'
 
-		UCS4Char p = pattern[pi++];
-		UCS4Char f = filename[fi++];
+		ucs4char p = pattern[pi++];
+		ucs4char f = filename[fi++];
 		if (p!='*') { if (p=='?'||p==f) continue; else return no; }
 
 	// skip more '*' and '?'
@@ -798,7 +805,7 @@ String::String ( )
 		charsize is choosen to fit
 		returned String may be 'not writable'
 */
-String::String ( UCS4Char c )
+String::String ( ucs4char c )
 {
 	xlogIn("String::String(char)");
 
@@ -806,20 +813,20 @@ String::String ( UCS4Char c )
 	next  = this;
 	prev  = this;
 
-	if (c == UCS1Char(c))
+	if (c == ucs1char(c))
 	{
 		ucs1_text = abc+c;
 		SetDataAndCsz(nullptr,csz1);
 	}
-	else if (c == UCS2Char(c))
+	else if (c == ucs2char(c))
 	{
-		ucs2_text = new UCS2Char[1];
+		ucs2_text = new ucs2char[1];
 		SetDataAndCsz(text,csz2);
-		ucs2_text[0] = UCS2Char(c);
+		ucs2_text[0] = ucs2char(c);
 	}
 	else
 	{
-		ucs4_text = new UCS4Char[1];
+		ucs4_text = new ucs4char[1];
 		SetDataAndCsz(text,csz4);
 		ucs4_text[0] = c;
 	}
@@ -830,7 +837,7 @@ String::String ( UCS4Char c )
 		the buffer data is copied.
 		to avoid this, use strings for your buffers!
 */
-String::String ( cUCS1Char* p, int32 n )
+String::String ( const ucs1char* p, int32 n )
 {
 	xlogIn("String::String(ucs1ptr,len)");
 
@@ -847,7 +854,7 @@ String::String ( cUCS1Char* p, int32 n )
 		the buffer data is copied.
 		to avoid this, use strings for your buffers!
 */
-String::String ( cUCS2Char* p, int32 n )
+String::String ( const ucs2char* p, int32 n )
 {
 	xlogIn("String::String(ucs2ptr,len)");
 
@@ -864,7 +871,7 @@ String::String ( cUCS2Char* p, int32 n )
 		the buffer data is copied.
 		to avoid this, use strings for your buffers!
 */
-String::String ( cUCS4Char* p, int32 n )
+String::String ( const ucs4char* p, int32 n )
 {
 	xlogIn("String::String(ucs4ptr,len)");
 
@@ -898,7 +905,7 @@ String::String ( cptr p, int32 n, CharSize cs )
 		the UTF-8 encoded text is converted
 		to UCS-1, -2 or -4 as required.
 */
-String::String ( cUTF8CharPtr p, int32 n )
+String::String ( cstr p, int32 n )
 {
 	xlogIn("String::String(utf8ptr,len)");
 
@@ -928,7 +935,7 @@ String::String ( int32 n, CharSize csz )
 /* ----	create cleared string -----------------------------------------------------
 		created string may be 'not writable'
 */
-String::String ( int32 n, UCS4Char c )
+String::String ( int32 n, ucs4char c )
 {
 	xlogIn("String::String(len,char)");
 
@@ -946,21 +953,21 @@ String::String ( int32 n, UCS4Char c )
 		ucs1_text = spc;
 		SetDataAndCsz(nullptr,csz1);
 	}
-	else if (c == UCS1Char(c))
+	else if (c == ucs1char(c))
 	{
-		ucs1_text = new UCS1Char[n];
+		ucs1_text = new ucs1char[n];
 		SetDataAndCsz(text,csz1);
 		ucs_clear(ucs1_text,n,c);
 	}
-	else if (c == UCS2Char(c))
+	else if (c == ucs2char(c))
 	{
-		ucs2_text = new UCS2Char[n];
+		ucs2_text = new ucs2char[n];
 		SetDataAndCsz(text,csz2);
 		ucs_clear(ucs2_text,n,c);
 	}
 	else
 	{
-		ucs4_text = new UCS4Char[n];
+		ucs4_text = new ucs4char[n];
 		SetDataAndCsz(text,csz4);
 		ucs_clear(ucs4_text,n,c);
 	}
@@ -969,7 +976,7 @@ String::String ( int32 n, UCS4Char c )
 
 /* ----	create string from c-style text literal ------------------------------------
 */
-String::String ( cUTF8Str s )
+String::String ( cstr s )
 {
 	xlogIn("String::String(\"%s\")",s);
 
@@ -984,7 +991,7 @@ String::String ( cUTF8Str s )
 		because characters $80..$BF are not handled this way!
 		which is not such a problem because all letters in latin-1 are $C0..$FF
 */
-String::String ( cUTF8Str s, CharEncoding ce )
+String::String ( cstr s, CharEncoding ce )
 {
 	xlogIn("String::String(utf8str,encoding)");
 
@@ -1076,14 +1083,14 @@ CharSize String::ReqCsz() const
 		break;
 
 	case csz2:
-		{	cUCS2Char* a = Ucs2();
-			cUCS2Char* e = a+Len();
+		{	const ucs2char* a = Ucs2();
+			const ucs2char* e = a+Len();
 			while (a<e) { if (*--e>>8) return csz2; }
 		}	break;
 
 	case csz4:
-		{	cUCS4Char* a = Ucs4();
-			cUCS4Char* e = a+Len();
+		{	const ucs4char* a = Ucs4();
+			const ucs4char* e = a+Len();
 			while (a<e)
 			{
 				if (*--e>>8)
@@ -1204,7 +1211,7 @@ void String::Crop ( int32 left, int32 right )
 }
 
 
-void String::Resize ( int32 newlen, UCS4Char padding )
+void String::Resize ( int32 newlen, ucs4char padding )
 {
 	// resize string
 	// shrink or grow string to new len
@@ -1233,7 +1240,7 @@ void String::Resize ( int32 newlen, UCS4Char padding )
 }
 
 
-UCS4Char String::operator[] ( int32 i ) const
+ucs4char String::operator[] ( int32 i ) const
 {
 	// access character at given position
 	// the index must be in range
@@ -1250,7 +1257,7 @@ UCS4Char String::operator[] ( int32 i ) const
 }
 
 
-UCS4Char String::LastChar ( ) const throws
+ucs4char String::LastChar ( ) const throws
 {
 	// access last character in string
 	// the string must not be empty
@@ -1404,19 +1411,19 @@ double String::NumVal ( int32* idx_io ) const
 	{
 	case csz4:
 	{
-		int i; cUCS4Char* p4 = ucs4_text+idx;
+		int i; const ucs4char* p4 = ucs4_text+idx;
 		for (i=0;i<n;i++) { if(p4[i]>>8) break; }
 		q=bu; n=i; ucs1_from_ucs4(bu,p4,n); break;
 	}
 	case csz2:
 	{
-		int i; cUCS2Char* p2 = ucs2_text+idx;
+		int i; const ucs2char* p2 = ucs2_text+idx;
 		for (i=0;i<n;i++) { if(p2[i]>>8) break; }
 		q=bu; n=i; ucs1_from_ucs2(bu,p2,n); break;
 	}
 	case csz1:
 	{
-		cUCS1Char* p1 = ucs1_text+idx;
+		const ucs1char* p1 = ucs1_text+idx;
 		q=bu; ucs1_from_ucs1(bu,p1,n); break;
 	}
 	}
@@ -1520,7 +1527,7 @@ String String::StrVal ( int32* idx_io ) const
 	while( idx<end && operator[](idx)<=' ' ) { idx++; }
 	if( end-idx<2 ) { errno = notastring; return emptyString; }
 
-	UCS4Char leftquote,rightquote; leftquote=rightquote=operator[](idx);
+	ucs4char leftquote,rightquote; leftquote=rightquote=operator[](idx);
 	if( leftquote!='"' && leftquote!='\'' )
 	{
 		uint i;
@@ -1534,7 +1541,7 @@ String String::StrVal ( int32* idx_io ) const
 
 	while (idx<end)
 	{
-		UCS4Char c = operator[](idx++);
+		ucs4char c = operator[](idx++);
 
 		if (c==rightquote)
 		{
@@ -1582,7 +1589,7 @@ String String::StrVal ( int32* idx_io ) const
 		returns index of character found
 		returns -1 if not found
 */
-int32 String::Find ( UCS4Char c, int32 idx ) const
+int32 String::Find ( ucs4char c, int32 idx ) const
 {
 	XXXCHECK(*this);
 	if (idx<0) idx=0;
@@ -1590,30 +1597,30 @@ int32 String::Find ( UCS4Char c, int32 idx ) const
 	switch(Csz())
 	{
 	case csz1:
-		if (c==UCS1Char(c))
+		if (c==ucs1char(c))
 		{
-			for (cUCS1Char* p1 = ucs1_text; idx<count; idx++)
-			{ if (p1[idx]==UCS1Char(c)) return idx; }
+			for (const ucs1char* p1 = ucs1_text; idx<count; idx++)
+			{ if (p1[idx]==ucs1char(c)) return idx; }
 		}
 		break;
 	case csz2:
-		if (c==UCS2Char(c))
+		if (c==ucs2char(c))
 		{
-			for (cUCS2Char* p2 = ucs2_text; idx<count; idx++)
-			{ if (p2[idx]==UCS2Char(c)) return idx; }
+			for (const ucs2char* p2 = ucs2_text; idx<count; idx++)
+			{ if (p2[idx]==ucs2char(c)) return idx; }
 		}
 		break;
 	case csz4:
 		{
-			for (cUCS4Char* p4 = ucs4_text; idx<count; idx++)
-			{ if (p4[idx]==UCS4Char(c)) return idx; }
+			for (const ucs4char* p4 = ucs4_text; idx<count; idx++)
+			{ if (p4[idx]==ucs4char(c)) return idx; }
 		}
 		break;
 	}
 	return -1;  	// not found
 }
 
-int32 String::RFind ( UCS4Char c, int32 idx ) const
+int32 String::RFind ( ucs4char c, int32 idx ) const
 {
 	XXXCHECK(*this);
 	if (idx >= count) idx = int32(count-1);
@@ -1621,22 +1628,22 @@ int32 String::RFind ( UCS4Char c, int32 idx ) const
 	switch (Csz())
 	{
 	case csz1:
-		if (c==UCS1Char(c))
+		if (c==ucs1char(c))
 		{
-			for (cUCS1Char* p1 = ucs1_text; idx>=0; idx--)
+			for (const ucs1char* p1 = ucs1_text; idx>=0; idx--)
 			{ if (p1[idx]==c) return idx; }
 		}
 		break;
 	case csz2:
-		if (c==UCS2Char(c))
+		if (c==ucs2char(c))
 		{
-			for (cUCS2Char* p2 = ucs2_text; idx>=0; idx--)
+			for (const ucs2char* p2 = ucs2_text; idx>=0; idx--)
 			{ if (p2[idx]==c) return idx; }
 		}
 		break;
 	case csz4:
 		{
-			for (cUCS4Char* p4 = ucs4_text; idx>=0; idx--)
+			for (const ucs4char* p4 = ucs4_text; idx>=0; idx--)
 			{ if (p4[idx]==c) return idx; }
 		}
 		break;
@@ -1661,7 +1668,7 @@ int32 String::Find ( cString& s, int32 idx ) const
 	if (idx>n) return -1;
 	if (sn==0) return idx;
 
-	UCS4Char s0 = s[0];
+	ucs4char s0 = s[0];
 
 	while ( idx<=n )
 	{
@@ -1684,7 +1691,7 @@ int32 String::RFind ( cString& s, int32 idx ) const
 	if (idx<0) return -1;
 	if (sn==0) return idx;
 
-	UCS4Char s0 = s[0];
+	ucs4char s0 = s[0];
 
 	while ( idx>=0 )
 	{
@@ -1700,20 +1707,20 @@ int32 String::RFind ( cString& s, int32 idx ) const
 		returns index of c-string found
 		returns -1 if not found
 */
-int32 String::Find ( cUTF8Str s, int32 idx ) const
+int32 String::Find ( cstr s, int32 idx ) const
 {
 	XXXCHECK(*this);
 	return Find(String(s),idx);		// to be optimized...
 }
 
-int32 String::RFind ( cUTF8Str s, int32 idx ) const
+int32 String::RFind (cstr s, int32 idx ) const
 {
 	XXXCHECK(*this);
 	return RFind(String(s),idx);		// to be optimized...
 }
 
 
-void String::Replace ( UCS4Char o, UCS4Char n )
+void String::Replace ( ucs4char o, ucs4char n )
 {
 	XXXCHECK(*this);
 	MakeWritable();
@@ -1734,19 +1741,19 @@ void String::Replace ( UCS4Char o, UCS4Char n )
 	switch(Csz())
 	{
 	case csz1:
-		{	UCS1Char* a = Ucs1();
-			UCS1Char* e = a + Len();
-			while ( --e>=a ) { if (*e==UCS1Char(o)) *e = UCS1Char(n); }
+		{	ucs1char* a = Ucs1();
+			ucs1char* e = a + Len();
+			while ( --e>=a ) { if (*e==ucs1char(o)) *e = ucs1char(n); }
 		}	return;
 	case csz2:
-		{	UCS2Char* a = Ucs2();
-			UCS2Char* e = a + Len();
-			while ( --e>=a ) { if (*e==UCS2Char(o)) *e = UCS2Char(n); }
+		{	ucs2char* a = Ucs2();
+			ucs2char* e = a + Len();
+			while ( --e>=a ) { if (*e==ucs2char(o)) *e = ucs2char(n); }
 		}	return;
 	case csz4:
-		{	UCS4Char* a = Ucs4();
-			UCS4Char* e = a + Len();
-			while ( --e>=a ) { if (*e==UCS4Char(o)) *e = UCS4Char(n); }
+		{	ucs4char* a = Ucs4();
+			ucs4char* e = a + Len();
+			while ( --e>=a ) { if (*e==ucs4char(o)) *e = ucs4char(n); }
 		}	return;
 	}
 	IERR();
@@ -1767,7 +1774,7 @@ void String::Replace ( cString& o, cString& n )
 }
 
 
-void String::Swap ( UCS4Char o, UCS4Char n )
+void String::Swap ( ucs4char o, ucs4char n )
 {
 	XXXCHECK(*this);
 	MakeWritable();
@@ -1783,27 +1790,27 @@ void String::Swap ( UCS4Char o, UCS4Char n )
 		prev = this;
 		XXXCHECK(*this);
 	}
-	UCS4Char x = o^n;
+	ucs4char x = o^n;
 
 	switch(Csz())
 	{
 	case csz1:
-		{	UCS1Char* a = Ucs1();
-			UCS1Char* e = a + Len();
-			UCS1Char c;
-			while ( --e >= a ) { c = *e; if (c==UCS1Char(o)||c==UCS1Char(n)) *e = UCS1Char(c^x); }
+		{	ucs1char* a = Ucs1();
+			ucs1char* e = a + Len();
+			ucs1char c;
+			while ( --e >= a ) { c = *e; if (c==ucs1char(o)||c==ucs1char(n)) *e = ucs1char(c^x); }
 		}	return;
 	case csz2:
-		{	UCS2Char* a = Ucs2();
-			UCS2Char* e = a + Len();
-			UCS2Char c;
-			while ( --e >= a ) { c = *e; if (c==UCS2Char(o)||c==UCS2Char(n)) *e = UCS2Char(c^x); }
+		{	ucs2char* a = Ucs2();
+			ucs2char* e = a + Len();
+			ucs2char c;
+			while ( --e >= a ) { c = *e; if (c==ucs2char(o)||c==ucs2char(n)) *e = ucs2char(c^x); }
 		}	return;
 	case csz4:
-		{	UCS4Char* a = Ucs4();
-			UCS4Char* e = a + Len();
-			UCS4Char c;
-			while ( --e >= a ) { c = *e; if (c==UCS4Char(o)||c==UCS4Char(n)) *e = UCS4Char(c^x); }
+		{	ucs4char* a = Ucs4();
+			ucs4char* e = a + Len();
+			ucs4char c;
+			while ( --e >= a ) { c = *e; if (c==ucs4char(o)||c==ucs4char(n)) *e = ucs4char(c^x); }
 		}	return;
 	}
 	IERR();
@@ -1826,9 +1833,9 @@ String String::ToUpper ( ) const
 	{
 	case csz1:
 		{
-			UCS1Char* za = s.Ucs1();
-			UCS1Char* ze = za + count;
-			UCS1Char  c;
+			ucs1char* za = s.Ucs1();
+			ucs1char* ze = za + count;
+			ucs1char  c;
 
 			while (za<ze)
 			{
@@ -1854,28 +1861,28 @@ String String::ToUpper ( ) const
 		}
 	case csz2:
 		{
-	c2:		UCS2Char* za = s.Ucs2();
-			UCS2Char* ze = za + count;
-			UCS2Char  c;
+	c2:		ucs2char* za = s.Ucs2();
+			ucs2char* ze = za + count;
+			ucs2char  c;
 
 			while (za<ze)
 			{
 				c = *--ze;
-				if ( c>='a' ) *ze = ucs2_simple_uppercase(c);
+				if ( c>='a' ) *ze = ucs4::to_upper(c);
 			}
 			XXXCHECK(s);
 			return s;
 		}
 	case csz4:
 		{
-			UCS4Char* za = s.Ucs4();
-			UCS4Char* ze = za + count;
-			UCS4Char  c;
+			ucs4char* za = s.Ucs4();
+			ucs4char* ze = za + count;
+			ucs4char  c;
 
 			while (za<ze)
 			{
 				c = *--ze;
-				if ( c>='a' ) *ze = ucs4_simple_uppercase(c);
+				if ( c>='a' ) *ze = ucs4::to_upper(c);
 			}
 			XXXCHECK(s);
 			return s;
@@ -1900,9 +1907,9 @@ String String::ToLower ( ) const
 	{
 	case csz1:
 		{
-			UCS1Char* za = s.Ucs1();
-			UCS1Char* ze = za + count;
-			UCS1Char  c;
+			ucs1char* za = s.Ucs1();
+			ucs1char* ze = za + count;
+			ucs1char  c;
 
 			while (za<ze)
 			{
@@ -1917,28 +1924,28 @@ String String::ToLower ( ) const
 		}
 	case csz2:
 		{
-			UCS2Char* za = s.Ucs2();
-			UCS2Char* ze = za + count;
-			UCS2Char  c;
+			ucs2char* za = s.Ucs2();
+			ucs2char* ze = za + count;
+			ucs2char  c;
 
 			while (za<ze)
 			{
 				c = *--ze;
-				if ( (c^0x20)>='a' ) *ze = ucs2_simple_lowercase(c);
+				if ( (c^0x20)>='a' ) *ze = ucs4::to_lower(c);
 			}
 			XXXCHECK(s);
 			return s;
 		}
 	case csz4:
 		{
-			UCS4Char* za = s.Ucs4();
-			UCS4Char* ze = za + count;
-			UCS4Char  c;
+			ucs4char* za = s.Ucs4();
+			ucs4char* ze = za + count;
+			ucs4char  c;
 
 			while (za<ze)
 			{
 				c = *--ze;
-				if ( (c^0x20)>='a' ) *ze = ucs4_simple_lowercase(c);
+				if ( (c^0x20)>='a' ) *ze = ucs4::to_lower(c);
 			}
 			XXXCHECK(s);
 			return s;
@@ -1968,11 +1975,11 @@ String String::ToHtml ( ) const
 	{
 	case csz1:
 		{
-			UCS1Char   c;
-			cUCS1Char* q  = Ucs1();
-			cUCS1Char* qe = q + count;
-			UCS1Char*  z  = s.Ucs1();
-			UCS1Char*  ze = z + s.count -5;
+			ucs1char   c;
+			const ucs1char* q  = Ucs1();
+			const ucs1char* qe = q + count;
+			ucs1char*  z  = s.Ucs1();
+			ucs1char*  ze = z + s.count -5;
 
 			while ( q<qe )
 			{
@@ -2001,11 +2008,11 @@ String String::ToHtml ( ) const
 
 	case csz2:
 		{
-			UCS2Char   c;
-			cUCS2Char* q  = Ucs2();
-			cUCS2Char* qe = q + count;
-			UCS2Char*  z  = s.Ucs2();
-			UCS2Char*  ze = z + s.count -5;
+			ucs2char   c;
+			const ucs2char* q  = Ucs2();
+			const ucs2char* qe = q + count;
+			ucs2char*  z  = s.Ucs2();
+			ucs2char*  ze = z + s.count -5;
 
 			while ( q<qe )
 			{
@@ -2034,11 +2041,11 @@ String String::ToHtml ( ) const
 
 	case csz4:
 		{
-			UCS4Char   c;
-			cUCS4Char* q  = Ucs4();
-			cUCS4Char* qe = q + count;
-			UCS4Char*  z  = s.Ucs4();
-			UCS4Char*  ze = z + s.count -5;
+			ucs4char   c;
+			const ucs4char* q  = Ucs4();
+			const ucs4char* qe = q + count;
+			ucs4char*  z  = s.Ucs4();
+			ucs4char*  ze = z + s.count -5;
 
 			while ( q<qe )
 			{
@@ -2068,7 +2075,7 @@ String String::ToHtml ( ) const
 }
 
 
-struct HtmlInfo { char name[10]; UCS2Char code; };
+struct HtmlInfo { char name[10]; ucs2char code; };
 static HtmlInfo htmlinfo[] =
 {
 #define H(UTF8,BESCHR,NAME,UCS2) { NAME, UCS2 }
@@ -2083,7 +2090,7 @@ static HtmlInfo htmlinfo[] =
 		result string length may shrink
 */
 String String::FromHtml ( ) const
-{	UCS4Char n,m;
+{	ucs4char n,m;
 	uint i,j;
 
 	XXXCHECK(*this);
@@ -2094,11 +2101,11 @@ String String::FromHtml ( ) const
 	{
 	case csz1:
 		{
-			cUCS1Char* q  = Ucs1();
-			cUCS1Char* qe = q + count;
-			UCS1Char*  z  = s.Ucs1();
-			UCS1Char   c;
-			cUCS1Char  *q0,*qs;
+			const ucs1char* q  = Ucs1();
+			const ucs1char* qe = q + count;
+			ucs1char*  z  = s.Ucs1();
+			ucs1char   c;
+			const ucs1char  *q0,*qs;
 
 			while ( q<qe )
 			{
@@ -2135,7 +2142,7 @@ String String::FromHtml ( ) const
 					ucs_from_ucs ( zz.Csz(),zz.text, csz1,text, count );
 					return zz.FromHtml();
 				}
-				q++; *z++ = UCS1Char(n); continue;
+				q++; *z++ = ucs1char(n); continue;
 			}
 
 			s.count = int32(z - s.Ucs1());
@@ -2145,11 +2152,11 @@ String String::FromHtml ( ) const
 
 	case csz2:
 		{
-			cUCS2Char* q  = Ucs2();
-			cUCS2Char* qe = q + count;
-			UCS2Char*  z  = s.Ucs2();
-			UCS2Char   c;
-			cUCS2Char  *q0,*qs;
+			const ucs2char* q  = Ucs2();
+			const ucs2char* qe = q + count;
+			ucs2char*  z  = s.Ucs2();
+			ucs2char   c;
+			const ucs2char  *q0,*qs;
 
 			while ( q<qe )
 			{
@@ -2186,7 +2193,7 @@ String String::FromHtml ( ) const
 					ucs4_from_ucs2 ( zz.Ucs4(), Ucs2(), count );
 					return zz.FromHtml();
 				}
-				q++; *z++ = UCS2Char(n); continue;
+				q++; *z++ = ucs2char(n); continue;
 			}
 
 			s.count = int32(z - s.Ucs2());
@@ -2196,11 +2203,11 @@ String String::FromHtml ( ) const
 
 	case csz4:
 		{
-			cUCS4Char* q  = Ucs4();
-			cUCS4Char* qe = q + count;
-			UCS4Char*  z  = s.Ucs4();
-			UCS4Char   c;
-			cUCS4Char  *q0,*qs;
+			const ucs4char* q  = Ucs4();
+			const ucs4char* qe = q + count;
+			ucs4char*  z  = s.Ucs4();
+			ucs4char   c;
+			const ucs4char  *q0,*qs;
 
 			while ( q<qe )
 			{
@@ -2257,13 +2264,13 @@ static const char cc[] = "\\\"'\?\a\b\f\n\r\t\v";	// result
 		if leftquote!=0 is true then leftquote and matching rightquote are added at both ends
 		*NOTE*: only non-printable 8-bit characters are replaced (=> ANSI-C)
 */
-String String::ToEscaped ( UCS4Char leftquote ) const
+String String::ToEscaped ( ucs4char leftquote ) const
 {
 	XXXCHECK(*this);
 
 	xlogIn("String::ToEscaped()");
 
-	UCS4Char rightquote = leftquote;
+	ucs4char rightquote = leftquote;
 	if (leftquote&&leftquote!='"'&&leftquote!='\'')
 	{
 		uint i;
@@ -2295,13 +2302,13 @@ String String::ToEscaped ( UCS4Char leftquote ) const
 	{
 	case csz1:
 		{
-			UCS1Char   c;
-			cUCS1Char* q  = Ucs1();			// source pointer (q='quelle')
-			cUCS1Char* qe = q+count;		// source end
-			UCS1Char*  z  = s.Ucs1();		// target pointer (z='ziel')
-			UCS1Char*  ze = z +s.count -4;	// target end -3 -1
+			ucs1char   c;
+			const ucs1char* q  = Ucs1();			// source pointer (q='quelle')
+			const ucs1char* qe = q+count;		// source end
+			ucs1char*  z  = s.Ucs1();		// target pointer (z='ziel')
+			ucs1char*  ze = z +s.count -4;	// target end -3 -1
 
-			if (leftquote) *z++ = UCS1Char(leftquote);
+			if (leftquote) *z++ = ucs1char(leftquote);
 
 			while(q<qe)
 			{
@@ -2323,14 +2330,14 @@ String String::ToEscaped ( UCS4Char leftquote ) const
 				*z++ = '\\';
 				if(rightquote&&c==rightquote) { *z++ = c; continue; }
 				cptr p = c ? strchr(cc,c) : nullptr;
-				if (p) { *z++ = UCS1Char(ec[p-cc]); continue; }
+				if (p) { *z++ = ucs1char(ec[p-cc]); continue; }
 				z[2] = '0'+(c&7); c>>=3;
 				z[1] = '0'+(c&7); c>>=3;
 				z[0] = '0'+ c;
 				z+=3;
 			}
 
-			if (rightquote) *z++ = UCS1Char(rightquote);
+			if (rightquote) *z++ = ucs1char(rightquote);
 
 			s.count = int32(z - s.Ucs1());
 			break;
@@ -2338,13 +2345,13 @@ String String::ToEscaped ( UCS4Char leftquote ) const
 
 	case csz2:
 		{
-			UCS2Char   c;
-			cUCS2Char* q  = Ucs2();			// source pointer (q='quelle')
-			cUCS2Char* qe = q+count;		// source end
-			UCS2Char*  z  = s.Ucs2();		// target pointer (z='ziel')
-			UCS2Char*  ze = z +s.count -4;	// target end: space -3 for "\123" -1 for rightquote
+			ucs2char   c;
+			const ucs2char* q  = Ucs2();			// source pointer (q='quelle')
+			const ucs2char* qe = q+count;		// source end
+			ucs2char*  z  = s.Ucs2();		// target pointer (z='ziel')
+			ucs2char*  ze = z +s.count -4;	// target end: space -3 for "\123" -1 for rightquote
 
-			if (leftquote) *z++ = UCS2Char(leftquote);
+			if (leftquote) *z++ = ucs2char(leftquote);
 
 			while(q<qe)
 			{
@@ -2367,7 +2374,7 @@ String String::ToEscaped ( UCS4Char leftquote ) const
 				*z++ = '\\';
 				if(rightquote&&c==rightquote) { *z++ = c; continue; }
 				cptr p = strchr(cc,c);
-				if (p) { *z++ = UCS2Char(ec[p-cc]); continue; }
+				if (p) { *z++ = ucs2char(ec[p-cc]); continue; }
 				assert(z+3 <= s.Ucs2()+s.Len());
 				z[2] = '0'+(c&7); c>>=3;
 				z[1] = '0'+(c&7); c>>=3;
@@ -2375,7 +2382,7 @@ String String::ToEscaped ( UCS4Char leftquote ) const
 				z+=3;
 			}
 
-			if (rightquote) *z++ = UCS2Char(rightquote);
+			if (rightquote) *z++ = ucs2char(rightquote);
 
 			assert(z < s.Ucs2()+s.Len());
 			s.count = int32(z - s.Ucs2());
@@ -2384,11 +2391,11 @@ String String::ToEscaped ( UCS4Char leftquote ) const
 
 	case csz4:
 		{
-			UCS4Char   c;
-			cUCS4Char* q  = Ucs4();			// source pointer (q='quelle')
-			cUCS4Char* qe = q+count;		// source end
-			UCS4Char*  z  = s.Ucs4();		// target pointer (z='ziel')
-			UCS4Char*  ze = z +s.count -4;	// target end -3 -1
+			ucs4char   c;
+			const ucs4char* q  = Ucs4();			// source pointer (q='quelle')
+			const ucs4char* qe = q+count;		// source end
+			ucs4char*  z  = s.Ucs4();		// target pointer (z='ziel')
+			ucs4char*  ze = z +s.count -4;	// target end -3 -1
 
 			if (leftquote) *z++ = leftquote;
 
@@ -2444,14 +2451,14 @@ String String::ToEscaped ( UCS4Char leftquote ) const
 		*NOTE*: octal and hexadecimal escape sequences are only expanded
 		to characters in range of ucs-1 (max. 3 octal digits, max. 2 hex. digits)
 */
-String String::FromEscaped ( UCS4Char leftquote ) const
+String String::FromEscaped ( ucs4char leftquote ) const
 {
 	xlogIn("String::FromEscaped()");
 
 	XXXCHECK(*this);
 	if (count==0) return emptyString;
 
-	UCS4Char rightquote = leftquote;
+	ucs4char rightquote = leftquote;
 	if (leftquote&&leftquote!='"'&&leftquote!='\'')
 	{
 		uint i;
@@ -2470,10 +2477,10 @@ String String::FromEscaped ( UCS4Char leftquote ) const
 	{
 	case csz1:
 		{
-			UCS1Char   c,d;
-			cUCS1Char* q  = Ucs1();
-			cUCS1Char* qe = q+count;
-			UCS1Char*  z  = s.Ucs1();
+			ucs1char   c,d;
+			const ucs1char* q  = Ucs1();
+			const ucs1char* qe = q+count;
+			ucs1char*  z  = s.Ucs1();
 
 			if(leftquote&&count>=2&&*q==leftquote&&qe[-1]==rightquote) { q++; qe--; }
 
@@ -2494,7 +2501,7 @@ String String::FromEscaped ( UCS4Char leftquote ) const
 				{
 					c = _digit_val(c);
 					if (q<qe) { d=_digit_val(*q); if (d<8) { q++; c=(c<<3)+d;         } }
-					if (q<qe) { d=_digit_val(*q); if (d<8) { q++; c=UCS1Char(c<<3)+d; } }
+					if (q<qe) { d=_digit_val(*q); if (d<8) { q++; c=ucs1char(c<<3)+d; } }
 					continue;
 				}
 
@@ -2536,10 +2543,10 @@ String String::FromEscaped ( UCS4Char leftquote ) const
 
 	case csz2:
 		{
-			UCS2Char   c,d;
-			cUCS2Char* q  = Ucs2();
-			cUCS2Char* qe = q+count;
-			UCS2Char*  z  = s.Ucs2();
+			ucs2char   c,d;
+			const ucs2char* q  = Ucs2();
+			const ucs2char* qe = q+count;
+			ucs2char*  z  = s.Ucs2();
 
 			if(leftquote&&count>=2&&*q==leftquote&&qe[-1]==rightquote) { q++; qe--; }
 
@@ -2560,7 +2567,7 @@ String String::FromEscaped ( UCS4Char leftquote ) const
 				{
 					c = _digit_val(c);
 					if (q<qe) { d=_digit_val(*q); if (d<8) { q++; c=(c<<3)+d;         } }
-					if (q<qe) { d=_digit_val(*q); if (d<8) { q++; c=UCS1Char(c<<3)+d; } }
+					if (q<qe) { d=_digit_val(*q); if (d<8) { q++; c=ucs1char(c<<3)+d; } }
 					continue;
 				}
 
@@ -2602,10 +2609,10 @@ String String::FromEscaped ( UCS4Char leftquote ) const
 
 	case csz4:
 		{
-			UCS4Char   c,d;
-			cUCS4Char* q  = Ucs4();
-			cUCS4Char* qe = q+count;
-			UCS4Char*  z  = s.Ucs4();
+			ucs4char   c,d;
+			const ucs4char* q  = Ucs4();
+			const ucs4char* qe = q+count;
+			ucs4char*  z  = s.Ucs4();
 
 			if(leftquote&&count>=2&&*q==leftquote&&qe[-1]==rightquote) { q++; qe--; }
 
@@ -2626,7 +2633,7 @@ String String::FromEscaped ( UCS4Char leftquote ) const
 				{
 					c = _digit_val(c);
 					if (q<qe) { d=_digit_val(*q); if (d<8) { q++; c=(c<<3)+d;         } }
-					if (q<qe) { d=_digit_val(*q); if (d<8) { q++; c=UCS1Char(c<<3)+d; } }
+					if (q<qe) { d=_digit_val(*q); if (d<8) { q++; c=ucs1char(c<<3)+d; } }
 					continue;
 				}
 
@@ -2724,7 +2731,7 @@ String String::FromUTF8() const
 
 	if(len>=3 && peek3X(text)==0x00efbbbf) { text+=3; len-=3; }		// skip BOM
 
-	return String(UTF8CharPtr(text), len);
+	return String(cstr(text), len);
 }
 
 
@@ -2738,9 +2745,9 @@ String String::ToUCS1 ( ) const
 	String s(*this);
 	s.MakeWritable();
 	if(s.Csz()==csz2)
-	{ UCS2CharPtr p = s.UCS2Text(); for (int i=0;i<s.Len();i++) if(p[i]>0xff) p[i]='?'; }
+	{ u16ptr p = s.UCS2Text(); for (int i=0;i<s.Len();i++) if(p[i]>0xff) p[i]='?'; }
 	else
-	{ UCS4CharPtr p = s.UCS4Text(); for (int i=0;i<s.Len();i++) if(p[i]>0xff) p[i]='?'; }
+	{ u32ptr p = s.UCS4Text(); for (int i=0;i<s.Len();i++) if(p[i]>0xff) p[i]='?'; }
 	s.ResizeCsz(csz1);
 	XXXCHECK(s);
 	return s;
@@ -2771,7 +2778,7 @@ String String::ToUCS2 ( ) const
 	if (s.Csz()>csz2)
 	{
 		s.MakeWritable();
-		UCS4CharPtr p = s.UCS4Text(); for (int i=0;i<s.Len();i++) if(p[i]>0xffff) p[i]='?';
+		u32ptr p = s.UCS4Text(); for (int i=0;i<s.Len();i++) if(p[i]>0xffff) p[i]='?';
 	}
 	s.ResizeCsz(csz2);
 	s.SetCsz(csz1); s.count*=csz2;
@@ -2916,7 +2923,7 @@ String String::FromUrl ( ) const
 
 	for( int i=0; i<z.Len()-2; i++ )
 	{
-		UCS1Char c = z.Ucs1()[i];
+		ucs1char c = z.Ucs1()[i];
 		if( c!='%' ) continue;
 		char a = z.text[i+1]; if (no_hex_digit(a)) continue;
 		char b = z.text[i+2]; if (no_hex_digit(b)) continue;
@@ -2963,7 +2970,7 @@ String String::ToTab( int tabstops ) const
 		{
 			while(q<qe&&q<q0+tabstops)
 			{
-				UCS1Char c = Ucs1(q++);
+				ucs1char c = Ucs1(q++);
 				if (c>13)               		{ zstr.Ucs1(z++) = c; continue; }
 				if (c==13||c==10||c==0) 		{ zstr.Ucs1(z++) = c; break; }
 				if (c!='\t')            		{ zstr.Ucs1(z++) = c; continue; }
@@ -2983,7 +2990,7 @@ String String::ToTab( int tabstops ) const
 		{
 			while(q<qe&&q<q0+tabstops)
 			{
-				UCS2Char c = Ucs2(q++);
+				ucs2char c = Ucs2(q++);
 				if (c>13)               		{ zstr.Ucs2(z++) = c; continue; }
 				if (c==13||c==10||c==0) 		{ zstr.Ucs2(z++) = c; break; }
 				if (c!='\t')            		{ zstr.Ucs2(z++) = c; continue; }
@@ -3003,7 +3010,7 @@ String String::ToTab( int tabstops ) const
 		{
 			while(q<qe&&q<q0+tabstops)
 			{
-				UCS4Char c = Ucs4(q++);
+				ucs4char c = Ucs4(q++);
 				if (c>13)               		{ zstr.Ucs4(z++) = c; continue; }
 				if (c==13||c==10||c==0) 		{ zstr.Ucs4(z++) = c; break; }
 				if (c!='\t')            		{ zstr.Ucs4(z++) = c; continue; }
@@ -3050,7 +3057,7 @@ String String::FromTab( int tabstops ) const
 	case csz1:
 		while(q<qe)
 		{
-			UCS1Char c = Ucs1(q++);
+			ucs1char c = Ucs1(q++);
 			if(c>13)			   { zstr.Ucs1(z++) = c; continue; }
 			if(c==13||c==10||c==0) { zstr.Ucs1(z++) = c; z0=z; continue; }
 			if(c!='\t')			   { zstr.Ucs1(z++) = c; continue; }
@@ -3064,7 +3071,7 @@ String String::FromTab( int tabstops ) const
 	case csz2:
 		while(q<qe)
 		{
-			UCS2Char c = Ucs2(q++);
+			ucs2char c = Ucs2(q++);
 			if(c>13)			   { zstr.Ucs2(z++) = c; continue; }
 			if(c==13||c==10||c==0) { zstr.Ucs2(z++) = c; z0=z; continue; }
 			if(c!='\t')			   { zstr.Ucs2(z++) = c; continue; }
@@ -3078,7 +3085,7 @@ String String::FromTab( int tabstops ) const
 	case csz4:
 		while(q<qe)
 		{
-			UCS4Char c = Ucs4(q++);
+			ucs4char c = Ucs4(q++);
 			if(c>13)			   { zstr.Ucs4(z++) = c; continue; }
 			if(c==13||c==10||c==0) { zstr.Ucs4(z++) = c; z0=z; continue; }
 			if(c!='\t')			   { zstr.Ucs4(z++) = c; continue; }
@@ -3103,11 +3110,11 @@ String String::FromTab( int tabstops ) const
 		   therefore characters are spread to multiple csz1 characters:
 		   e.g. convert to ucs4:
 				-> 4 UCS1Chars
-		   not:	-> 1 UCS4Char
+		   not:	-> 1 ucs4char
 */
 String String::ConvertedTo ( CharEncoding e ) const
 {
-	const UCS2Char* ctable;
+	const ucs2char* ctable;
 	XXXCHECK(*this);
 
 	switch(int(e))
@@ -3128,25 +3135,25 @@ String String::ConvertedTo ( CharEncoding e ) const
 	case ASCII_US:
 		{	String s = ConvertedTo(UCS1);
 			s.MakeWritable();
-			UCS1CharPtr z = s.Ucs1();
+			u8ptr z = s.Ucs1();
 			for (int32 i=0;i<s.Len();i++) if (z[i]>>7) z[i] ='?';
 			XXXCHECK(s);
 			return s;
 		}
 
-	case ASCII_GER:	ctable = ucs2_from_ascii_ger; goto b8;
-	case CP_437:	ctable = ucs2_from_cp_437;	  goto b8;
-	case MAC_ROMAN:	ctable = ucs2_from_mac_roman; goto b8;
-	case ATARI_ST:	ctable = ucs2_from_atari_st;  goto b8;
-	case RTOS:		ctable = ucs2_from_rtos;	  goto b8;
+	case ASCII_GER:	ctable = legacy_charset_ascii_ger; goto b8;
+	case CP_437:	ctable = legacy_charset_cp_437;	   goto b8;
+	case MAC_ROMAN:	ctable = legacy_charset_mac_roman; goto b8;
+	case ATARI_ST:	ctable = legacy_charset_atari_st;  goto b8;
+	case RTOS:		ctable = legacy_charset_rtos;	   goto b8;
 b8:		{
 			String s(Len(),csz1);
 			ptr z = s.text;
 			switch(Csz())
 			{
-			case csz1: { cUCS1CharPtr q = Ucs1(); for(int32 i=0;i<Len();i++) z[i] = UCS4CharTo8Bit(q[i],ctable); } break;
-			case csz2: { cUCS2CharPtr q = Ucs2(); for(int32 i=0;i<Len();i++) z[i] = UCS4CharTo8Bit(q[i],ctable); } break;
-			case csz4: { cUCS4CharPtr q = Ucs4(); for(int32 i=0;i<Len();i++) z[i] = UCS4CharTo8Bit(q[i],ctable); } break;
+			case csz1: { cu8ptr q = Ucs1(); for(int32 i=0;i<Len();i++) z[i] = ucs4::to_8bit(q[i],ctable); } break;
+			case csz2: { cu16ptr q = Ucs2(); for(int32 i=0;i<Len();i++) z[i] = ucs4::to_8bit(q[i],ctable); } break;
+			case csz4: { cu32ptr q = Ucs4(); for(int32 i=0;i<Len();i++) z[i] = ucs4::to_8bit(q[i],ctable); } break;
 			}
 			XXXCHECK(s);
 			return s;
@@ -3165,7 +3172,7 @@ b8:		{
 */
 String String::ConvertedFrom ( CharEncoding e ) const
 {
-	const UCS2Char* ctable;
+	const ucs2char* ctable;
 
 	XXXCHECK(*this);
 	switch(int(e))
@@ -3189,39 +3196,39 @@ String String::ConvertedFrom ( CharEncoding e ) const
 			String s(*this);
 			s.ResizeCsz(csz1);
 			s.MakeWritable();
-			UCS1CharPtr z = s.Ucs1();
+			u8ptr z = s.Ucs1();
 			for (int32 i=0;i<s.Len();i++) { if(z[i]>>7) z[i]&=0x7F; }
 			XXXCHECK(s);
 			return s;
 		}
 
-	case ASCII_GER:	ctable = ucs2_from_ascii_ger; goto b8;
-	case CP_437:	ctable = ucs2_from_cp_437;	  goto b8;
-	case MAC_ROMAN:	ctable = ucs2_from_mac_roman; goto b8;
-	case ATARI_ST:	ctable = ucs2_from_atari_st;  goto b8;
-	case RTOS:		ctable = ucs2_from_rtos;	  goto b8;
+	case ASCII_GER:	ctable = legacy_charset_ascii_ger; goto b8;
+	case CP_437:	ctable = legacy_charset_cp_437;	   goto b8;
+	case MAC_ROMAN:	ctable = legacy_charset_mac_roman; goto b8;
+	case ATARI_ST:	ctable = legacy_charset_atari_st;  goto b8;
+	case RTOS:		ctable = legacy_charset_rtos;	   goto b8;
 b8:		{
 			String s(*this);
 			s.ResizeCsz(csz1);
 			s.MakeWritable();
-			UCS1CharPtr z = s.Ucs1();
+			ucs1char* z = s.ucs1_text;
 			int32 i=0;
 			for (;i<s.Len();i++)
 			{
-				UCS2Char c = UCS2CharFrom8Bit(z[i],ctable);
+				ucs2char c = ucs4::from_8bit(char(z[i]),ctable);
 				if (c>255) goto b16;
-				z[i] = c;
+				z[i] = ucs1char(c);
 			}
 			return s;
 b16:		s.ResizeCsz(csz2);
-			UCS2CharPtr zz = s.Ucs2();
-			for (;i<s.Len();i++) { zz[i] = UCS2CharFrom8Bit(zz[i],ctable); }
+			ucs2char* zz = s.ucs2_text;
+			for (;i<s.Len();i++) { zz[i] = ucs4::from_8bit(char(zz[i]),ctable); }
 			XXXCHECK(s);
 			return s;
 		}
 
 	default:
-		if (e>=TAB1&&e<=TAB9) return FromTab(e-TAB1+1);
+		if (e>=TAB1 && e<=TAB9) return FromTab(e-TAB1+1);
 
 		xlog("String::ConvertedFrom(%i): not yet implemented",(int)e);
 		TODO();
@@ -3247,7 +3254,7 @@ void String::PurgeCaches ( )
 
 
 /*
-String CharString ( UCS4Char c )
+String CharString ( ucs4char c )
 {
 	return c<256 ? String(abc+c,1) : String(c);
 }
@@ -3255,7 +3262,7 @@ String CharString ( UCS4Char c )
 
 
 /*
-String SpaceString ( long n, UCS4Char c )
+String SpaceString ( long n, ucs4char c )
 {
 	XXXTRAP( spaceString!=String(spaceString.Len(),' ') );
 	return c==' '&&n<=spaceString.Len() ? spaceString.LeftString(n) : String(n,c);
@@ -3481,9 +3488,9 @@ uint32 String::CalcHash( ) const
 
 		switch (Csz())
 		{
-		case csz1:	{ cUCS1Char* p = Ucs1()+a; for ( i=0; i<n; i++ ) hash ^= p[i] * prim[i]; } break;
-		case csz2:	{ cUCS2Char* p = Ucs2()+a; for ( i=0; i<n; i++ ) hash ^= p[i] * prim[i]; } break;
-		case csz4:	{ cUCS4Char* p = Ucs4()+a; for ( i=0; i<n; i++ ) hash ^= p[i] * prim[i]; } break;
+		case csz1:	{ const ucs1char* p = Ucs1()+a; for ( i=0; i<n; i++ ) hash ^= p[i] * prim[i]; } break;
+		case csz2:	{ const ucs2char* p = Ucs2()+a; for ( i=0; i<n; i++ ) hash ^= p[i] * prim[i]; } break;
+		case csz4:	{ const ucs4char* p = Ucs4()+a; for ( i=0; i<n; i++ ) hash ^= p[i] * prim[i]; } break;
 		}
 	}
 

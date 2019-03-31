@@ -579,9 +579,9 @@ explicit		Var				( Stream* s )			{ init_name(); init_link(); init_data_and_lock(
 	String&		Text			( )						{ xassert(IsText());   return text(); }
 	cString&	Text			( ) const				{ xassert(IsText());   return text(); }
 	ptr			TextAddr		( )						{ xassert(IsText());   return text().Text(); }
-	UCS1Char*	Ucs1Addr		( )						{ xassert(IsText());   return text().Ucs1(); }
-	UCS2Char*	Ucs2Addr		( )						{ xassert(IsText());   return text().Ucs2(); }
-	UCS4Char*	Ucs4Addr		( )						{ xassert(IsText());   return text().Ucs4(); }
+	ucs1char*	Ucs1Addr		( )						{ xassert(IsText());   return text().Ucs1(); }
+	ucs2char*	Ucs2Addr		( )						{ xassert(IsText());   return text().Ucs2(); }
+	ucs4char*	Ucs4Addr		( )						{ xassert(IsText());   return text().Ucs4(); }
 	uint		TextLen			( )						{ xassert(IsText());   return text().Len(); }
 
 	Proc&		GetProc			( )						{ xassert(IsProc());   return proc(); }
