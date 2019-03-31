@@ -548,13 +548,13 @@ void test_cstrings(uint& num_tests, uint& num_errors)
 
 		ucs4char c1 = 0x09999;
 		ucs4char c2 = 0x10000;
-		assert(utf8::max_csz(catstr("\t1hGf∆º¶§",utf8::to_utf8(&c1,1),"x")) == 2);
-		assert(utf8::max_csz(catstr("\t1hGf∆º¶§",utf8::to_utf8(&c2,1),"x")) == 4);
+		assert(utf8::max_csz(catstr("\t1hGf∆º¶§",utf8::to_utf8str(&c1,1),"x")) == 2);
+		assert(utf8::max_csz(catstr("\t1hGf∆º¶§",utf8::to_utf8str(&c2,1),"x")) == 4);
 
 		assert(utf8::fits_in_ucs1("\t1hGfr&%<'"));
 		assert(!utf8::fits_in_ucs1("ß≤4€•@∆º¶§"));
 		assert(utf8::fits_in_ucs2("ß3≥€•@∆º¶§"));
-		assert(!utf8::fits_in_ucs2(catstr("\t1hGfr&%<'",utf8::to_utf8(&c2,1))));
+		assert(!utf8::fits_in_ucs2(catstr("\t1hGfr&%<'",utf8::to_utf8str(&c2,1))));
 		assert(errno==0);
 	END
 
@@ -564,13 +564,13 @@ void test_cstrings(uint& num_tests, uint& num_errors)
 
 		errno=0;
 		uint8 bu1[20], *e1 = utf8::utf8_to_ucs1(s1,bu1);
-		assert(utf8::utf8len(bu1,uint(e1-bu1)) == NELEM(s1)-1);
+		assert(utf8::utf8strlen(bu1,uint(e1-bu1)) == NELEM(s1)-1);
 		assert(errno==0);
 		uint16 bu2[20], *e2 = utf8::utf8_to_ucs2(s2,bu2);
-		assert(utf8::utf8len(bu2,uint(e2-bu2)) == NELEM(s2)-1);
+		assert(utf8::utf8strlen(bu2,uint(e2-bu2)) == NELEM(s2)-1);
 		assert(errno==0);
 		uint32 bu3[20], *e3 = utf8::utf8_to_ucs4(s2,bu3);
-		assert(utf8::utf8len(bu3,uint(e3-bu3)) == NELEM(s2)-1);
+		assert(utf8::utf8strlen(bu3,uint(e3-bu3)) == NELEM(s2)-1);
 		assert(errno==0);
 	END
 
@@ -578,7 +578,7 @@ void test_cstrings(uint& num_tests, uint& num_errors)
 		errno=0;
 		uint32 bu[10],bu2[10];
 		for(uint i=0;i<NELEM(bu);i++) { bu[i] = uint32(random()) + uint32(random()) * 0x10000u; }
-		uint n = utf8::utf8len(bu,10);
+		uint n = utf8::utf8strlen(bu,10);
 		str s = tempstr(n);
 		ptr e = utf8::ucs4_to_utf8(bu,10,s);
 		assert(*e==0);

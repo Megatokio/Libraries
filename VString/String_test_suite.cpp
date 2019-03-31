@@ -91,7 +91,7 @@ void TestStringClass(uint& num_tests, uint& num_errors)
 	END
 
 	TRY // String(cUCS1CharPtr,long)
-		UCS1Char c[]={ 'a','n','t','o','n','x','x' };
+		ucs1char c[]={ 'a','n','t','o','n','x','x' };
 		String s(c,5);
 		TRAP(s.Len()!=5);
 		TRAP(s.Csz()!=1);
@@ -105,7 +105,7 @@ void TestStringClass(uint& num_tests, uint& num_errors)
 	END
 
 	TRY // String(cUCS2CharPtr,long)
-		UCS2Char c[]={ 'a','n','t','o','n','x','x' };
+		ucs2char c[]={ 'a','n','t','o','n','x','x' };
 		String s(c,5);
 		TRAP(s.Len()!=5);
 		TRAP(s.Csz()!=2);
@@ -119,7 +119,7 @@ void TestStringClass(uint& num_tests, uint& num_errors)
 	END
 
 	TRY // String(cUCS4CharPtr,long)
-		UCS4Char c[]={ 'a','n','t','o','n','x','x' };
+		ucs4char c[]={ 'a','n','t','o','n','x','x' };
 		String s(c,5);
 		TRAP(s.Len()!=5);
 		TRAP(s.Csz()!=4);
@@ -138,23 +138,23 @@ void TestStringClass(uint& num_tests, uint& num_errors)
 		TRAP(s.Len()!=5);
 		TRAP(s.Csz()!=1);
 		TRAP(s.NotWritable());
-		for(int i=0;i<s.Len();i++) TRAP( s[i] != UCS1Char("anton"[i]) );
+		for(int i=0;i<s.Len();i++) TRAP( s[i] != ucs1char("anton"[i]) );
 
-		UCS2Char c3[]={ 'a','n','t',0xf6,'n','z','x' };
+		ucs2char c3[]={ 'a','n','t',0xf6,'n','z','x' };
 		s=String("antönxx",6);
 		TRAP(s.Len()!=5);
 		TRAP(s.Csz()!=1);
 		TRAP(s.NotWritable());
 		for(int i=0;i<s.Len();i++) TRAP( s[i] != c3[i] );
 
-		UCS2Char c5[]={ 'a','n','t',0x160,'n','z','x' };
+		ucs2char c5[]={ 'a','n','t',0x160,'n','z','x' };
 		s=String("antŠnxx",6);
 		TRAP(s.Len()!=5);
 		TRAP(s.Csz()!=2);
 		TRAP(s.NotWritable());
 		for(int i=0;i<s.Len();i++) TRAP( s[i] != c5[i] );
 
-		UCS4Char c2[]={'<','a','h','a',8226,8364,'>'};
+		ucs4char c2[]={'<','a','h','a',8226,8364,'>'};
 		s=String("<aha•€>",11);
 		TRAP(s.Len()!=7);
 		TRAP(s.Csz()!=2);
@@ -252,7 +252,7 @@ void TestStringClass(uint& num_tests, uint& num_errors)
 		TRAP(s.Csz()!=1);
 		TRAP(s.NotWritable());
 
-		UCS4Char c2[]={'<','a','h','a',8226,8364,'>'};
+		ucs4char c2[]={'<','a','h','a',8226,8364,'>'};
 		s=String("<aha•€>");
 		TRAP(s.Len()!=7);
 		TRAP(s.Csz()!=2);
@@ -1072,7 +1072,7 @@ void TestStringClass(uint& num_tests, uint& num_errors)
 		{
 			for( int nu=0; nu<300; nu+=1+nu/2 )		// str.len
 			{
-				UCS4Char u4[300];
+				ucs4char u4[300];
 				for( int j=0; j<nu; j++ )
 				{
 					u4[j] = (uint32(random())+uint32(random())*0x10000u);

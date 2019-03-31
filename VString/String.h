@@ -44,8 +44,6 @@
 */
 
 #include "kio/kio.h"
-//#include "Unicode/Unicode.h"
-//#include "Unicode/UTF-8.h"
 #include "cstrings/utf8.h"
 
 

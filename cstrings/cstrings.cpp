@@ -63,7 +63,7 @@ static char null = 0;
 str emptystr = &null;
 
 
-// statt UTF-8.h:
+// statt utf8.h:
 inline bool utf8_is_7bit (char c)	{ return int8(c) >= 0; }
 inline bool	utf8_no_7bit (char c)	{ return int8(c) < 0;  }
 inline bool utf8_is_fup	 (char c)	{ return int8(c) < int8(0xc0); }
