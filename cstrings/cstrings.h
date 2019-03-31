@@ -98,15 +98,16 @@ extern	str	 newcopy	(cstr)				noexcept; // allocate memory with new[] and copy t
 
 
 // ---- allocate in TempMemPool ----
+extern	ptr	 tempmem	(uint size)			noexcept; // tempmem.h
 extern	str	 tempstr	(uint n)			noexcept; // tempmem.h
 inline	str	 tempstr	(int size)			noexcept { assert(size>=0); return tempstr(uint(size)); }
 inline	str	 tempstr	(ulong size)		noexcept { assert(size==uint(size)); return tempstr(uint(size)); }
 inline	str	 tempstr	(long size)			noexcept { assert(size>=0); return tempstr(ulong(size)); }
-inline	str	 xtempstr	(int n)				noexcept; // tempmem.h
+extern	ptr	 xtempmem	(uint n)			noexcept; // tempmem.h
 extern	str	 xtempstr	(uint n)			noexcept; // tempmem.h
 extern	str	 spacestr	(int n, char c=' ')	noexcept;
 extern	cstr spaces		(uint n)			noexcept;
-extern	str	 whitestr	(cstr, char c=' ')	noexcept; // also in utf8
+extern	str	 whitestr	(cstr, char c=' ')	noexcept;
 extern	str	 dupstr		(cstr)				noexcept;
 extern	str	 xdupstr    (cstr)				noexcept;
 

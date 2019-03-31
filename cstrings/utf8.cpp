@@ -29,6 +29,38 @@
 #include "utf8.h"
 
 
+namespace utf8 {
+
+/* best effort mapping inside ascii range:
+*/
+	#define N3(C)	{C,0},{C+1,0},{C+2,0}
+	#define N4(C)	{C,0},{C+1,0},{C+2,0},{C+3,0}
+	#define N7(C)	N4(C),N3(C+4)
+	#define N8(C)	N4(C),N4(C+4)
+	#define N16(C)	N8(C),N8(C+8)
+	#define N32(C)	N16(C),N16(C+16)
+
+const char uc_table[0x80][2] =
+{
+	N32(0), N32(0x20), N32(0x40),
+	{0x60,0}, N7(0x41), N8(0x48),
+	N8(0x50), N3(0x58), {0x7b,0}, N4(0x7c)
+};
+
+const char lc_table[0x80][2] =
+{
+	N32(0), N32(0x20),
+	{0x40,0}, N7(0x61), N8(0x68),
+	N8(0x70), N3(0x78), {0x5b,0}, N4(0x5c),
+	N32(0x60)
+};
+
+const char hex_table[16][2] =
+{
+	"0","1","2","3", "4","5","6","7",
+	"8","9","A","B", "C","D","E","F"
+};
+
 static cptr str_comp(cstr a, cstr b) noexcept
 {
 	char c,d;
@@ -37,7 +69,6 @@ static cptr str_comp(cstr a, cstr b) noexcept
 }
 
 
-namespace utf8 {
 
 //	0fup: c < %10000000		c <= %01111111		c = %0xxxxxxx	ucs < 0x80
 //	fup:  c < %11000000		c <= %10111111		c = %10xxxxxx
@@ -98,7 +129,7 @@ bool fits_in_ucs2 (cstr q) noexcept
 	return yes;
 }
 
-uint utf8len (ucs1char const* q, uint cnt) noexcept
+uint utf8strlen (ucs1char const* q, uint cnt) noexcept
 {
 	// calculate required size for an utf-8 string to store ucs1 string
 
@@ -109,7 +140,7 @@ uint utf8len (ucs1char const* q, uint cnt) noexcept
 	}
 	return rval;
 }
-uint utf8len (ucs2char const* q, uint cnt) noexcept
+uint utf8strlen (ucs2char const* q, uint cnt) noexcept
 {
 	// calculate required size for an utf-8 string to store ucs2 string
 
@@ -122,7 +153,7 @@ uint utf8len (ucs2char const* q, uint cnt) noexcept
 	}
 	return rval;
 }
-uint utf8len (ucs4char const* q, uint cnt) noexcept
+uint utf8strlen (ucs4char const* q, uint cnt) noexcept
 {
 	// calculate required size for an utf-8 string to store ucs4 string
 
@@ -177,14 +208,11 @@ char* ucs2_to_utf8 (ucs2char const* q, uint qcnt, char* z) noexcept
 	return z;
 }
 
-ptr ucs4char_to_utf8 (ucs4char c, ptr z ) noexcept
+ptr _ucs4char_to_utf8 (ucs4char c, ptr z) noexcept
 {
-	// encode ucs-4 char to utf-8
+	// helper: encode ucs4char to 2 .. 6 byte utf8char:
 	// supports full 32 bits
-	// encodes $00 as 2 non-zero bytes
-	// return: ptr -> behind utf8 char
-
-	if (c && c <  0x80) { *z++ = char(c); return z; }
+	// return: ptr -> behind utf8char
 
 	if (c <      0x800) { *z++ = 0xC0 + char(c>>6);  goto f1; }
 	if (c <    0x10000) { *z++ = 0xE0 + char(c>>12); goto f2; }
@@ -201,6 +229,16 @@ ptr ucs4char_to_utf8 (ucs4char c, ptr z ) noexcept
 	return z;
 }
 
+ptr _ucs4char_to_utf8 (ucs4char c) noexcept
+{
+	// helper: encode ucs4char to 2 .. 6 byte utf8char:
+	// supports full 32 bits
+
+	ptr z = tempmem(c<=0xffffu ? 3+1 : 6+1);
+	*_ucs4char_to_utf8(c,z) = 0;
+	return z;
+}
+
 ptr ucs4_to_utf8 (const ucs4char* q, uint qcnt, ptr z) noexcept
 {
 	// encode ucs-4 text to utf-8
@@ -212,7 +250,7 @@ ptr ucs4_to_utf8 (const ucs4char* q, uint qcnt, ptr z) noexcept
 	{
 		ucs4char c = *q++;
 		if (c && c < 0x80) { *z++ = char(c); }
-		else { z = ucs4char_to_utf8(c,z); }
+		else { z = _ucs4char_to_utf8(c,z); }
 	}
 	*z = 0;
 	return z;
@@ -376,39 +414,39 @@ ucs1char* utf8_to_ucs1 (cptr q, ucs1char* z) noexcept
 	return z;
 }
 
-str to_utf8(ucs1char const* q, uint qcnt) throws
+str to_utf8str(ucs1char const* q, uint qcnt) throws
 {
-	str s = tempstr(utf8len(q,qcnt));
+	str s = tempstr(utf8strlen(q,qcnt));
 	ucs1_to_utf8(q,qcnt,s);
 	return s;
 }
-str to_utf8(ucs2char const* q, uint qcnt) throws
+str to_utf8str(ucs2char const* q, uint qcnt) throws
 {
-	str s = tempstr(utf8len(q,qcnt));
+	str s = tempstr(utf8strlen(q,qcnt));
 	ucs2_to_utf8(q,qcnt,s);
 	return s;
 }
-str to_utf8(ucs4char const* q, uint qcnt) throws
+str to_utf8str(ucs4char const* q, uint qcnt) throws
 {
-	str s = tempstr(utf8len(q,qcnt));
+	str s = tempstr(utf8strlen(q,qcnt));
 	ucs4_to_utf8(q,qcnt,s);
 	return s;
 }
 
-str to_utf8 (ucs1char const* q)
+str to_utf8str (ucs1char const* q)
 {
-	return to_utf8(q,charcount(q));
+	return to_utf8str(q,charcount(q));
 }
-str to_utf8 (ucs2char const* q)
+str to_utf8str (ucs2char const* q)
 {
-	return to_utf8(q,charcount(q));
+	return to_utf8str(q,charcount(q));
 }
-str to_utf8 (ucs4char const* q)
+str to_utf8str (ucs4char const* q)
 {
-	return to_utf8(q,charcount(q));
+	return to_utf8str(q,charcount(q));
 }
 
-ucs1char* to_ucs1(cstr q) throws
+ucs1char* to_ucs1str(cstr q) throws
 {
 	uint cnt = charcount(q);
 	uint8* z = reinterpret_cast<ucs1char*>(tempmem(cnt+1));
@@ -416,7 +454,7 @@ ucs1char* to_ucs1(cstr q) throws
 	z[cnt] = 0;
 	return z;
 }
-ucs2char* to_ucs2(cstr q) throws
+ucs2char* to_ucs2str(cstr q) throws
 {
 	uint cnt = charcount(q);
 	uint16* z = reinterpret_cast<ucs2char*>(tempmem(cnt*2+2));
@@ -424,7 +462,7 @@ ucs2char* to_ucs2(cstr q) throws
 	z[cnt] = 0;
 	return z;
 }
-ucs4char* to_ucs4(cstr q) throws
+ucs4char* to_ucs4str(cstr q) throws
 {
 	uint cnt = charcount(q);
 	uint32* z = reinterpret_cast<ucs4char*>(tempmem(cnt*4+4));

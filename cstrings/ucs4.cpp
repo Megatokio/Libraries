@@ -118,19 +118,19 @@ static UCS4_Short const UCS4_SLC_Table[] =
 /*	UP: retrieve PropertyValue from UCS2 Character Table
 		e = initial end value, e.g. Nelem(Table)
 */
-inline Enum propertyValue ( ucs2char n, UCS2_Short const* Table, int e )
+inline Enum property_value (ucs2char n, const UCS2_Short* table, int e) noexcept
 {
-	int a=0; do { int i=(a+e)/2; if(n<Table[i].code) e=i; else a=i; } while (a<e-1);
-	return Enum(Table[a].value);
+	int a=0; do { int i=(a+e)/2; if(n<table[i].code) e=i; else a=i; } while (a<e-1);
+	return Enum(table[a].value);
 }
 
 /*	UP: retrieve PropertyValue from UCS4 Character Table
 		e = initial end value, e.g. Nelem(Table)
 */
-inline Enum propertyValue ( ucs4char n, UCS4_Short const* Table, int e )
+inline Enum property_value (ucs4char n, const UCS4_Short* table, int e) noexcept
 {
-	int a=0; do { int i=(a+e)/2; if(n<Table[i].code) e=i; else a=i; } while (a<e-1);
-	return Enum(Table[a].value);
+	int a=0; do { int i=(a+e)/2; if(n<table[i].code) e=i; else a=i; } while (a<e-1);
+	return Enum(table[a].value);
 }
 
 
@@ -142,35 +142,35 @@ inline Enum propertyValue ( ucs4char n, UCS4_Short const* Table, int e )
 	http://www.unicode.org/reports/tr11/tr11-14.html
 */
 
-inline int findEAIndex (ucs2char n, int e)
+inline int find_EA_index (ucs2char n, int e) noexcept
 {
 	int a=0; do { int i=(a+e)/2; if( n<UCS2_EA_Table[i].startcode ) e=i; else a=i; } while (a<e-1);
 	return a;
 }
-inline int findEAIndex (ucs4char n, int e)
+inline int find_EA_index (ucs4char n, int e) noexcept
 {
 	int a=0; do { int i=(a+e)/2; if( n<UCS4_EA_Table[i].startcode ) e=i; else a=i; } while (a<e-1);
 	return a;
 }
 
-Enum eaWidthProperty (ucs1char n)
+Enum ea_width_property (ucs1char n) noexcept
 {
 	if (n<0xa1) return uint8_in_range(0x20,n,0x7e) ? U_ea_na : U_ea_n;
-	int i = findEAIndex(ucs2char(n),U_EA_UCS1);
+	int i = find_EA_index(ucs2char(n),U_EA_UCS1);
 	return n <= UCS2_EA_Table[i].endcode ? Enum(UCS2_EA_Table[i].value) : U_ea_n;
 }
 
-Enum eaWidthProperty (ucs2char n)
+Enum ea_width_property (ucs2char n) noexcept
 {
 	if (n<0xa1) return uint8_in_range(0x20,n,0x7e) ? U_ea_na : U_ea_n;
-	int i = findEAIndex(n,U_EA_UCS2);
+	int i = find_EA_index(n,U_EA_UCS2);
 	return n <= UCS2_EA_Table[i].endcode ? Enum(UCS2_EA_Table[i].value) : U_ea_n;
 }
 
-Enum eaWidthProperty (ucs4char n)
+Enum ea_width_property (ucs4char n) noexcept
 {
-	if (!(n>>16)) return eaWidthProperty(ucs2char(n)); if (n<U_EA_UCS4_START) return U_ea_n;
-	int i = findEAIndex(n,U_EA_UCS4);
+	if (!(n>>16)) return ea_width_property(ucs2char(n)); if (n<U_EA_UCS4_START) return U_ea_n;
+	int i = find_EA_index(n,U_EA_UCS4);
 	return n <= UCS4_EA_Table[i].endcode ? Enum(UCS4_EA_Table[i].value) : U_ea_n;
 }
 
@@ -202,12 +202,12 @@ Enum eaWidthProperty (ucs4char n)
 						http://www.unicode.org/reports/tr11/tr11-14.html
 */
 
-uint printWidth (ucs4char n)
+uint print_width (ucs4char n) noexcept
 {
-	Enum w = eaWidthProperty(n);
+	Enum w = ea_width_property(n);
 	if (w!=U_ea_n) return w==U_ea_w || w==U_ea_f ? 2 : 1;
 
-	Enum m = generalCategory(n);								// ~ UCS4CharIsPrintable()
+	Enum m = general_category(n);								// ~ UCS4CharIsPrintable()
 	return m>=U_gc_letter /* && m<=U_gc_space_separator */
 		&& !uint8_in_range(U_gc_separator,m,U_gc_paragraph_separator)	// line and paragraph separators
 		&& !uint8_in_range(U_gc_enclosing_mark,m,U_gc_nonspacing_mark);	// combining letters
@@ -229,7 +229,15 @@ uint printWidth (ucs4char n)
 	http://www.unicode.org/reports/tr24/#Blocks
 */
 
-Enum blockProperty (ucs4char n)	{ return propertyValue( n, Blocks, U_BLOCKS_UCS4 ); }
+Enum block_property (ucs4char n) noexcept
+{
+	return property_value( n, Blocks, U_BLOCKS_UCS4 );
+}
+
+Enum block_property (ucs2char n) noexcept
+{
+	return property_value( n, Blocks, U_BLOCKS_UCS2 );
+}
 
 
 /*	------------------------------------------------------------------------------------------
@@ -239,10 +247,21 @@ Enum blockProperty (ucs4char n)	{ return propertyValue( n, Blocks, U_BLOCKS_UCS4
 	http://www.unicode.org/reports/tr24/
 */
 
-Enum scriptProperty (ucs1char n)	{ return propertyValue(ucs2char(n), UCS2_Scripts, U_SCRIPTS_UCS1); }
-Enum scriptProperty (ucs2char n)	{ return propertyValue(n, UCS2_Scripts, n>>8 ? U_SCRIPTS_UCS2 : U_SCRIPTS_UCS1); }
-Enum scriptProperty (ucs4char n)	{ return n>>16 ? propertyValue(n, UCS4_Scripts, U_SCRIPTS_UCS4)
-													: propertyValue(ucs2char(n), UCS2_Scripts, U_SCRIPTS_UCS2); }
+Enum script_property (ucs1char n) noexcept
+{
+	return property_value(ucs2char(n), UCS2_Scripts, U_SCRIPTS_UCS1);
+}
+
+Enum script_property (ucs2char n) noexcept
+{
+	return property_value(n, UCS2_Scripts, n>>8 ? U_SCRIPTS_UCS2 : U_SCRIPTS_UCS1);
+}
+
+Enum script_property (ucs4char n) noexcept
+{
+	return n>>16 ? property_value(n, UCS4_Scripts, U_SCRIPTS_UCS4)
+				 : property_value(ucs2char(n), UCS2_Scripts, U_SCRIPTS_UCS2);
+}
 
 
 /*	------------------------------------------------------------------------------------------
@@ -255,15 +274,16 @@ Enum scriptProperty (ucs4char n)	{ return n>>16 ? propertyValue(n, UCS4_Scripts,
 
 */
 
-Enum cccProperty (ucs2char n)
+Enum ccc_property (ucs2char n) noexcept
 {
-	return n<U_CCC_UCS2_START ? U_ccc_0 : propertyValue( n, UCS2_Ccc, U_CCC_UCS2 );
+	return n<U_CCC_UCS2_START ? U_ccc_0 : property_value( n, UCS2_Ccc, U_CCC_UCS2 );
 }
-Enum cccProperty (ucs4char n)
+
+Enum ccc_property (ucs4char n) noexcept
 {
 	return n>>16
-	? n<U_CCC_UCS4_START||n>=U_CCC_UCS4_END ? U_ccc_defaultvalue : propertyValue( n, UCS4_Ccc, U_CCC_UCS4 )
-	: n<U_CCC_UCS2_START||n>=U_CCC_UCS2_END ? U_ccc_defaultvalue : propertyValue( ucs2char(n), UCS2_Ccc, U_CCC_UCS2 );
+	? n<U_CCC_UCS4_START||n>=U_CCC_UCS4_END ? U_ccc_defaultvalue : property_value( n, UCS4_Ccc, U_CCC_UCS4 )
+	: n<U_CCC_UCS2_START||n>=U_CCC_UCS2_END ? U_ccc_defaultvalue : property_value( ucs2char(n), UCS2_Ccc, U_CCC_UCS2 );
 }
 
 
@@ -281,21 +301,21 @@ Enum cccProperty (ucs4char n)
 			Diese kommen nur im Bereich für UCS2 ohne UCS1 vor.
 */
 
-Enum generalCategory (ucs1char n)
+Enum general_category (ucs1char n) noexcept
 {
-	return propertyValue( n, UCS2_GC_Table, U_GC_UCS1 );
+	return property_value( n, UCS2_GC_Table, U_GC_UCS1 );
 }
-Enum generalCategory (ucs2char n)
+Enum general_category (ucs2char n) noexcept
 {
-	if (!(n>>8)) return propertyValue( n, UCS2_GC_Table, U_GC_UCS1 );
-	Enum v = propertyValue( n, UCS2_GC_Table, U_GC_UCS2 );
+	if (!(n>>8)) return property_value( n, UCS2_GC_Table, U_GC_UCS1 );
+	Enum v = property_value( n, UCS2_GC_Table, U_GC_UCS2 );
 	return int8(v)>=0 ? v : int8(v)==U_gc_luello&&n&1 ? U_gc_ll : U_gc_lu;
 }
-Enum generalCategory (ucs4char n)
+Enum general_category (ucs4char n) noexcept
 {
-	if (n <= 0xff) return propertyValue( ucs2char(n), UCS2_GC_Table, U_GC_UCS1 );
-	if (n > 0xffff) return propertyValue( n, UCS4_GC_Table, U_GC_UCS4 );
-	Enum v = propertyValue( ucs2char(n), UCS2_GC_Table, U_GC_UCS2 );
+	if (n <= 0xff) return property_value( ucs2char(n), UCS2_GC_Table, U_GC_UCS1 );
+	if (n > 0xffff) return property_value( n, UCS4_GC_Table, U_GC_UCS4 );
+	Enum v = property_value( ucs2char(n), UCS2_GC_Table, U_GC_UCS2 );
 	return int8(v) >= 0 ? v : int8(v) == U_gc_luello && n&1 ? U_gc_ll : U_gc_lu;
 }
 
@@ -310,15 +330,15 @@ Enum generalCategory (ucs4char n)
 inline ucs2char simple_uc (ucs2char n)
 {
 	return n&1
-		? n + propertyValue(n, UCS2_SUC_Odd_Table,  U_SUC_ODD_UCS2 )
-		: n + propertyValue(n, UCS2_SUC_Even_Table, U_SUC_EVEN_UCS2);
+		? n + property_value(n, UCS2_SUC_Odd_Table,  U_SUC_ODD_UCS2 )
+		: n + property_value(n, UCS2_SUC_Even_Table, U_SUC_EVEN_UCS2);
 }
 
 inline ucs2char simple_lc (ucs2char n)
 {
 	return n&1
-		? n + propertyValue(n, UCS2_SLC_Odd_Table,  U_SLC_ODD_UCS2 )
-		: n + propertyValue(n, UCS2_SLC_Even_Table, U_SLC_EVEN_UCS2);
+		? n + property_value(n, UCS2_SLC_Odd_Table,  U_SLC_ODD_UCS2 )
+		: n + property_value(n, UCS2_SLC_Even_Table, U_SLC_EVEN_UCS2);
 }
 
 inline ucs4char simple_uc (ucs4char n)
@@ -341,12 +361,27 @@ inline ucs4char simple_lc (ucs4char n)
 	#endif
 }
 
-ucs2char simple_uppercase (ucs2char n)	{ return simple_uc(n); }
-ucs4char simple_uppercase (ucs4char n)	{ return n > 0xffff ? simple_uc(n) : simple_uc(ucs2char(n)); }
-ucs2char simple_lowercase (ucs2char n)	{ return simple_lc(n); }
-ucs4char simple_lowercase (ucs4char n)	{ return n > 0xffff ? simple_lc(n) : simple_lc(ucs2char(n)); }
+ucs2char simple_uppercase (ucs2char n) noexcept
+{
+	return simple_uc(n);
+}
 
-ucs2char simple_titlecase (ucs2char n)
+ucs4char simple_uppercase (ucs4char n) noexcept
+{
+	return n > 0xffff ? simple_uc(n) : simple_uc(ucs2char(n));
+}
+
+ucs2char simple_lowercase (ucs2char n) noexcept
+{
+	return simple_lc(n);
+}
+
+ucs4char simple_lowercase (ucs4char n) noexcept
+{
+	return n > 0xffff ? simple_lc(n) : simple_lc(ucs2char(n));
+}
+
+ucs2char simple_titlecase (ucs2char n) noexcept
 {
 	#if U_STC_UCS2 == 12	//	01C4/5/6 -> 01C5, 01C7/8/9 -> 01C8, 01CA/B/C -> 01CB, 01F1/2/3 -> 01F2
 	return not_in_range(0x01C4, n, 0x01F4-1) || is_in_range(0x01cd, n, 0x01f1-1)
@@ -362,7 +397,7 @@ ucs2char simple_titlecase (ucs2char n)
 	#endif
 }
 
-ucs4char simple_titlecase (ucs4char n)
+ucs4char simple_titlecase (ucs4char n) noexcept
 {
 	return n>>16 ? simple_uc(n)		// solange es keine TC im UCS4-Bereich gibt ((wird im Script geprüft))
 				 : simple_titlecase(ucs2char(n));
@@ -377,13 +412,15 @@ ucs4char simple_titlecase (ucs4char n)
 	Count>1								->	Value[i] = (BBBBBBBB+i) * 10eEEEE / DDDD
 */
 
-inline int numValIndex (ucs2char n, int e)
+inline int get_NumVal_index (ucs2char n, int e) noexcept
 {
 	int a=0; do { int i=(a+e)/2; if( n<UCS2_NumVal_Table[i].startcode ) e=i; else a=i; } while (a<e-1);
 	return a;
 }
-inline int numValIndex (ucs4char n, int e)
-{	int a=0; do { int i=(a+e)/2; if( n<UCS4_NumVal_Table[i].startcode ) e=i; else a=i; } while (a<e-1);
+
+inline int get_NumVal_index (ucs4char n, int e) noexcept
+{
+	int a=0; do { int i=(a+e)/2; if( n<UCS4_NumVal_Table[i].startcode ) e=i; else a=i; } while (a<e-1);
 	return a;
 }
 
@@ -391,17 +428,17 @@ inline int numValIndex (ucs4char n, int e)
 	Nur für Dezimalziffern gedacht: GC=Nd. No Checking.
 	Non-Digits, auch GC=No und Nl, resultieren idR. in sinnlosen Rückgabewerten.
 */
-uint _dec_digit_value (ucs2char n)
+uint _dec_digit_value (ucs2char n) noexcept
 {
-	int i = numValIndex( n, U_NUMERIC_UCS2 );
+	int i = get_NumVal_index( n, U_NUMERIC_UCS2 );
 	uint d = n - UCS2_NumVal_Table[i].startcode;
 	return (uint16(UCS2_NumVal_Table[i].codedvalue)>>8) + d;
 }
 
-uint _dec_digit_value (ucs4char n)
+uint _dec_digit_value (ucs4char n) noexcept
 {
 	if(n <= 0xffff) return _dec_digit_value(ucs2char(n));
-	int i = numValIndex(n, U_NUMERIC_UCS4);
+	int i = get_NumVal_index(n, U_NUMERIC_UCS4);
 	uint d = n - UCS4_NumVal_Table[i].startcode;
 	return (uint16(UCS4_NumVal_Table[i].codedvalue)>>8) + d;
 }
@@ -413,28 +450,38 @@ uint _dec_digit_value (ucs4char n)
 		  0x2183 = ROMAN NUMERAL REVERSED ONE HUNDRED
 		  beide haben CodedValue = 0x0000 und Count=1
 		  => decoded_value() wird NaN zurückgeben
+	note: there is one negative value:
+		  TIBETAN DIGIT HALF ZERO {0x0F33, U_gc_no, 1,  0xFF02}
+		  which equals -0.5
 */
-inline float decoded_value (int coded_value, uint offset)
+inline float decoded_value ( uint coded_value, uint offset )
 {
-	static float const dec[] = { 1,10,100,1000,10000, 0,0,0 };
-	int  N = coded_value >> 8;
-	uint E =(coded_value & 0x0070) >> 4;
-	int  D = coded_value & 0x000F;
-	return (N+int(offset)) * dec[E] / D;
+	static int const dec[] = { 1,10,100,1000,10000 };
+
+	int N = int8(coded_value >> 8);
+	float rval = N + int(offset);
+
+	uint E = coded_value & 0x00F0;
+	if (E!=0) rval *= dec[E>>4];
+
+	uint D = coded_value & 0x000F;
+	if (D!=1) rval /= D;
+
+	return rval;
 }
 
-float _numeric_value (ucs2char n)		// returns Value or NaN
+float _numeric_value (ucs2char n) noexcept		// returns Value or NaN
 {
-	int i = numValIndex( n, U_NUMERIC_UCS2 );
+	int i = get_NumVal_index( n, U_NUMERIC_UCS2 );
 	uint d = n - UCS2_NumVal_Table[i].startcode;
 	if( d >= UCS2_NumVal_Table[i].count ) return NAN;
 	return decoded_value(UCS2_NumVal_Table[i].codedvalue,d);
 }
 
-float _numeric_value (ucs4char n)		// returns Value or NaN
+float _numeric_value (ucs4char n) noexcept		// returns Value or NaN
 {
 	if (n <= 0xffff) return _numeric_value(ucs2char(n));
-	int i = numValIndex(n, U_NUMERIC_UCS4);
+	int i = get_NumVal_index(n, U_NUMERIC_UCS4);
 	uint d = n - UCS4_NumVal_Table[i].startcode;
 	if (d >= UCS4_NumVal_Table[i].count) return NAN;
 	return decoded_value(UCS4_NumVal_Table[i].codedvalue,d);
@@ -450,10 +497,10 @@ float _numeric_value (ucs4char n)		// returns Value or NaN
 		mark_nonspacing and mark_enclosing (and mark_spacing) are also marked 'printable',
 		though they should be better combined with their preceding base letter.
 */
-bool _is_printable (ucs4char n)
+bool _is_printable (ucs4char n) noexcept
 {
 //	if( n < 0x700 ) return n!=0x7f && (n&~0x80)>=0x20;
-	Enum m = generalCategory(n);
+	Enum m = general_category(n);
 	return m>=U_gc_letter /* && m<=U_gc_space_separator */
 		&& !uint8_in_range(U_gc_separator,m,U_gc_paragraph_separator);	// line and paragraph separators
 	//	&& !uchar_in_range(U_gc_enclosing_mark,m,U_gc_nonspacing_mark);	// combining letters

@@ -37,6 +37,8 @@
 
 namespace ucs1
 {
+static const char replacementchar = '?';	// offiziell $FFFD -> ucs2, utf8 = 3 bytes
+
 extern char const uc_table[0x100];	// simple uppercase table
 extern char const lc_table[0x100];	// simple lowercase table
 
