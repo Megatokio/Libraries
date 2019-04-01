@@ -142,32 +142,50 @@ data_error::data_error (cstr msg, ...) noexcept
 
 file_error::file_error (cstr path, int error) noexcept
 : any_error(error),
-  filepath(newcopy(path))
+  filepath(newcopy(path)),
+  fd(-1)
 {}
 
 file_error::file_error (cstr path, int error, cstr msg) noexcept
 : any_error(error,msg),
-  filepath(newcopy(path))
+  filepath(newcopy(path)),
+  fd(-1)
+{}
+
+file_error::file_error (cstr path, int fd, int error) noexcept
+: any_error(error),
+  filepath(newcopy(path)),
+  fd(fd)
+{}
+
+file_error::file_error (cstr path, int fd, int error, cstr msg) noexcept
+: any_error(error,msg),
+  filepath(newcopy(path)),
+  fd(fd)
 {}
 
 file_error::file_error (const FD& fd, int error) noexcept
 : any_error(error),
-  filepath(newcopy(fd.filepath()))
+  filepath(newcopy(fd.filepath())),
+  fd(fd.file_id())
 {}
 
 file_error::file_error (const FD& fd, int error, cstr msg) noexcept
 : any_error(error,msg),
-  filepath(newcopy(fd.filepath()))
+  filepath(newcopy(fd.filepath())),
+  fd(fd.file_id())
 {}
 
 file_error::file_error(file_error const& q) noexcept
 : any_error(q),
-  filepath(newcopy(q.filepath))
+  filepath(newcopy(q.filepath)),
+  fd(q.fd)
 {}
 
 file_error::file_error(file_error&& q) noexcept
-: any_error(q),
-  filepath(q.filepath)
+: any_error(std::move(q)),
+  filepath(q.filepath),
+  fd(q.fd)
 {
 	q.filepath = nullptr;
 }

@@ -173,20 +173,23 @@ class file_error : public any_error
 {
 public:
 	cstr filepath;
+	int  fd;
 
 public:
 	file_error(cstr path, int error)			noexcept;
 	file_error(cstr path, int error, cstr msg)	noexcept;
+	file_error(cstr path, int fd, int error)			noexcept;
+	file_error(cstr path, int fd, int error, cstr msg)	noexcept;
 	file_error(const FD&, int error)			noexcept;
 	file_error(const FD&, int error, cstr msg)	noexcept;
-	~file_error ()								noexcept override;
-
-	cstr what() const							noexcept override;
 
 	file_error(file_error const&)				noexcept;
 	file_error(file_error&&)					noexcept;
 	file_error& operator= (file_error const&)	= delete;
 	file_error& operator= (file_error&&)		= delete;
+	~file_error ()								noexcept override;
+
+	cstr what() const							noexcept override;
 };
 
 
