@@ -115,23 +115,23 @@ void test_cstrings(uint& num_tests, uint& num_errors)
 	END
 
 	TRY
-		assert(digit_val(('0')==0));
+		assert(dec_digit_value(('0')==0));
 	END
 
 	TRY
-		assert(digit_value(('0')==0));
-		assert(digit_value(('9')==9));
-		assert(digit_value(('A')==10));
-		assert(digit_value(('a')==10));
-		assert(digit_value(('Z')==35));
-		assert(digit_value(('z')==35));
-		assert(digit_value(('0'-1)>=36));
-		assert(digit_value(('9'+1)>=36));
-		assert(digit_value(('a'-1)>=36));
-		assert(digit_value(('z'+1)>=36));
-		assert(digit_value(('A'-1)>=36));
-		assert(digit_value(('Z'+1)>=36));
-		char c=0; do { assert((digit_value(c)>=36) == (no_dec_digit(c) && !is_letter(c))); } while(++c);
+		assert(hex_digit_value(('0')==0));
+		assert(hex_digit_value(('9')==9));
+		assert(hex_digit_value(('A')==10));
+		assert(hex_digit_value(('a')==10));
+		assert(hex_digit_value(('Z')==35));
+		assert(hex_digit_value(('z')==35));
+		assert(hex_digit_value(('0'-1)>=36));
+		assert(hex_digit_value(('9'+1)>=36));
+		assert(hex_digit_value(('a'-1)>=36));
+		assert(hex_digit_value(('z'+1)>=36));
+		assert(hex_digit_value(('A'-1)>=36));
+		assert(hex_digit_value(('Z'+1)>=36));
+		char c=0; do { assert((hex_digit_value(c)>=36) == (no_dec_digit(c) && !is_letter(c))); } while(++c);
 	END
 
 	TRY

@@ -105,7 +105,7 @@
 extern	char*	tempmem (uint size)		noexcept;
 extern	char*	tempstr (uint size)		noexcept;
 inline	char*	tempmem (int size)		noexcept { assert(size>=0); return tempmem(uint(size)); }
-//inline char*	tempstr (int size)		noexcept { assert(size>=0); return tempstr(uint(size)); }
+inline	char*	tempstr (int size)		noexcept; // cstrings.h
 
 extern	char*	xtempmem (uint size)	noexcept;
 extern	char*	xtempstr (uint size)	noexcept;

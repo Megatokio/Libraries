@@ -66,8 +66,11 @@ inline	bool no_oct_digit (char c)	noexcept { return uchar(c-'0')>'7'-'0'; }	// {
 inline	bool no_dec_digit (char c)	noexcept { return uchar(c-'0')>'9'-'0'; }
 inline	bool no_hex_digit (char c)	noexcept { return uchar(c-'0')>'9'-'0' && uchar((c|0x20)-'a') > 'f'-'a'; }
 
-inline	uint digit_val (char c)		noexcept { return uchar(c-'0'); }		// char -> digit value: non-digits ≥ 10
-inline	uint digit_value (char c)	noexcept { return c<='9'?uchar(c-'0'):uchar((c|0x20)-'a')+10;} // non-digits ≥ 36
+inline	uint digit_val (char c)		noexcept __attribute__((deprecated)); // --> dec_digit_value()
+inline	uint digit_value (char c)	noexcept __attribute__((deprecated)); // --> hex_digit_value()
+
+inline	uint dec_digit_value (char c) noexcept { return uchar(c-'0'); }		// char -> digit value: non-digits ≥ 10
+inline	uint hex_digit_value (char c) noexcept { return c<='9'?uchar(c-'0'):uchar((c|0x20)-'a')+10;} // non-digits ≥ 36
 inline	char hexchar (int n)		noexcept { n &= 15; return char((n>=10 ? 'A'-10 : '0') + n); } // masked legal
 
 
@@ -93,7 +96,7 @@ extern	bool islowerstr	(cstr)				noexcept;
 
 
 // ----	allocate with new[] ----
-extern	str  newstr		(int n)				noexcept; // allocate memory with new[]
+extern	str  newstr		(uint n)			noexcept; // allocate memory with new[]
 extern	str	 newcopy	(cstr)				noexcept; // allocate memory with new[] and copy text
 
 

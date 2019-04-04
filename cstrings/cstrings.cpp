@@ -70,7 +70,7 @@ inline bool utf8_is_fup	 (char c)	{ return int8(c) < int8(0xc0); }
 inline bool utf8_no_fup	 (char c)	{ return int8(c) >= int8(0xc0); }
 
 
-str newstr (int n) noexcept
+str newstr (uint n) noexcept
 {
 	// allocate char[]
 	// deallocate with delete[]
@@ -90,7 +90,7 @@ str newcopy (cstr s) noexcept
     str c = nullptr;
     if (s)
     {
-        c = newstr(int(strlen(s)));
+        c = newstr(uint(strlen(s)));
         strcpy(c,s);
     }
     return c;
@@ -102,7 +102,7 @@ str dupstr (cstr s) noexcept
 
     if (!s||!*s) return emptystr;
     size_t n = strlen(s);
-    str c = tempstr(int(n));
+    str c = tempstr(uint(n));
     memcpy(c,s,n);
     return c;
 }
@@ -113,7 +113,7 @@ str xdupstr (cstr s) noexcept
 
     if (!s||!*s) return emptystr;
     size_t n = strlen(s);
-    str c = xtempstr(int(n));
+    str c = xtempstr(uint(n));
     memcpy(c,s,n);
     return c;
 }
@@ -594,9 +594,9 @@ str	unescapedstr (cstr s0) noexcept  // sets errno
 			// \o	   allowed but not recommended.
 
 			uint d;
-			c = char(digit_val(c));
-			d = digit_val(*q); if (d<8) { q++; c = char(c<<3)+char(d); }
-			d = digit_val(*q); if (d<8) { q++; c = char(c<<3)+char(d); }
+			c = char(dec_digit_value(c));
+			d = dec_digit_value(*q); if (d<8) { q++; c = char(c<<3)+char(d); }
+			d = dec_digit_value(*q); if (d<8) { q++; c = char(c<<3)+char(d); }
 			if (c==0) errno = brokenescapecode;
 		}
 
@@ -606,8 +606,8 @@ str	unescapedstr (cstr s0) noexcept  // sets errno
 			// \xH     allowed but not recommended.
 			// \x      'x' masked for unknown reason => stores 'x'
 
-			c = char(digit_value(*q++));
-			if (is_hex_digit(*q)) c = char(c<<4) + char(digit_value(*q++));
+			c = char(hex_digit_value(*q++));
+			if (is_hex_digit(*q)) c = char(c<<4) + char(hex_digit_value(*q++));
 			if (c==0) errno = brokenescapecode;
 		}
 
@@ -906,8 +906,8 @@ str unhexstr (cstr s) noexcept
     str z = tempstr(n);
     while (*s)
     {
-        uint c1 = digit_value(*s++);
-        uint c2 = digit_value(*s++);
+        uint c1 = hex_digit_value(*s++);
+        uint c2 = hex_digit_value(*s++);
         if ((c1|c2) >> 4) return nullptr;
         *z++ = char((c1<<4) + c2);
     }
