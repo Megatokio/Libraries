@@ -21,7 +21,9 @@ SOURCES += \
     Libraries/cstrings/cstrings.test.cpp \
     Libraries/cstrings/utf8.cpp \
     Libraries/cstrings/ucs1.cpp \
+    Libraries/cstrings/ucs2.cpp \
     Libraries/cstrings/ucs4.cpp \
+    Libraries/cstrings/legacy_charsets.cpp \
     Libraries/unix/FD.cpp \
     Libraries/unix/tempmem.cpp \
     Libraries/unix/tempmem.test.cpp \
@@ -33,8 +35,7 @@ SOURCES += \
     Libraries/Templates/RCArray.test.cpp \
     \
     Libraries/VString/String_test_suite.cpp \
-    Libraries/VString/String.cpp \
-    Libraries/cstrings/8bit/legacy_charsets.cpp
+    Libraries/VString/String.cpp
 
 HEADERS += \
     config.h \
