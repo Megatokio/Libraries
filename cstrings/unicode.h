@@ -37,9 +37,7 @@ namespace unicode
 {
 
 // Unicode Character PROPERTY VALUES for Catalog Properties and Enumerated Properties
-enum Property : int16 {
-#include "unicode/property_values.h"
-};
+#include "unicode/properties.h"
 
 }; // namespace
 

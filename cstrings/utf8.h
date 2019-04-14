@@ -25,8 +25,8 @@
 	PERFORMANCE OF THIS SOFTWARE.
 */
 
-#include "Libraries/kio/kio.h"
-#include "Libraries/cstrings/cstrings.h"
+#include "cstrings.h"
+#include "unicode.h"
 #include "ucs4.h"
 
 
@@ -41,7 +41,10 @@ typedef uint32 ucs4char;
 namespace utf8
 {
 static const char replacementchar = '?';	// offiziell $FFFD -> ucs2, utf8 = 3 bytes
+
+using namespace unicode;
 using namespace ucs4;
+
 extern const char uc_table[0x80][2];
 extern const char lc_table[0x80][2];
 extern const char hex_table[16][2];
@@ -88,13 +91,15 @@ inline ptr ucs4char_to_utf8 (ucs4char c) noexcept
 	else return _ucs4char_to_utf8(c);
 }
 
-inline Enum block_property	(cptr p) noexcept { return ucs4::block_property(utf8_to_ucs4char(p)); }
-inline Enum script_property	(cptr p) noexcept { return ucs4::script_property(utf8_to_ucs4char(p)); }
-inline Enum ccc_property	(cptr p) noexcept { return ucs4::ccc_property(utf8_to_ucs4char(p)); }
-inline Enum general_category(cptr p) noexcept { return ucs4::general_category(utf8_to_ucs4char(p)); }
+inline Block block_property (cptr p) noexcept { return ucs4::block_property(utf8_to_ucs4char(p)); }
+inline Script script_property (cptr p) noexcept { return ucs4::script_property(utf8_to_ucs4char(p)); }
+inline CanonicalCombiningClass ccc_property	(cptr p) noexcept { return ucs4::ccc_property(utf8_to_ucs4char(p)); }
+inline GeneralCategory general_category(cptr p) noexcept { return ucs4::general_category(utf8_to_ucs4char(p)); }
 //inline cstr character_name(cptr p) noexcept { return *p>=0 ? ucs1::character_name(*p) : ucs4::character_name(utf8_to_ucs4char(p)); }
-inline Enum ea_width_property(cptr p) noexcept { return ucs4::ea_width_property(utf8_to_ucs4char(p)); }
-inline uint print_width		(cptr p) noexcept { return ucs4::print_width(utf8_to_ucs4char(p)); } // 0, 1, or 2
+inline EastAsianWidth ea_width_property(cptr p) noexcept { return ucs4::ea_width_property(utf8_to_ucs4char(p)); }
+inline uint print_width (cptr p) noexcept { return ucs4::print_width(utf8_to_ucs4char(p)); } // 0, 1, or 2
+
+inline bool gc_in_range (GeneralCategory a, cptr p, GeneralCategory e) { return uint16(general_category(p)-a) <= uint16(e-a); }
 
 
 /* ****************************************************************
@@ -102,16 +107,16 @@ inline uint print_width		(cptr p) noexcept { return ucs4::print_width(utf8_to_uc
 **************************************************************** */
 
 inline bool is_space	(cptr p) noexcept { return ::is_space(*p); }
-inline bool is_letter	(cptr p) noexcept { return *p>=0 ? ::is_letter(*p) : gc_in_range(ucs4::U_gc_letter, p, ucs4::U_gc_lu); }
-inline bool is_control	(cptr p) noexcept { return *p>=0 ? ::is_control(*p) : general_category(p) == ucs4::U_gc_control; }
+inline bool is_letter	(cptr p) noexcept { return *p>=0 ? ::is_letter(*p)  : gc_in_range(GcLetter,p,GcUppercaseLetter); }
+inline bool is_control	(cptr p) noexcept { return *p>=0 ? ::is_control(*p) : general_category(p) == GcControl; }
 
 inline bool is_printable (cptr p) noexcept { return *p>=0 ? ::is_printable(*p) : ucs4::is_printable(utf8_to_ucs4char(p)); }
-inline bool is_uppercase (cptr p) noexcept { return *p>=0 ? ::is_uppercase(*p) : gc_in_range(ucs4::U_gc_lt, p, ucs4::U_gc_lu); }
-inline bool is_lowercase (cptr p) noexcept { return *p>=0 ? ::is_lowercase(*p) : general_category(p) == ucs4::U_gc_ll; }
+inline bool is_uppercase (cptr p) noexcept { return *p>=0 ? ::is_uppercase(*p) : gc_in_range(GcTitlecaseLetter,p,GcUppercaseLetter); }
+inline bool is_lowercase (cptr p) noexcept { return *p>=0 ? ::is_lowercase(*p) : general_category(p) == GcLowercaseLetter; }
 
 inline bool is_bin_digit (cptr p) noexcept { return ::is_bin_digit(*p);  }	// '0'..'1'
 inline bool is_oct_digit (cptr p) noexcept { return ::is_oct_digit(*p);  }	// '0'..'7'
-inline bool is_dec_digit (cptr p) noexcept { return *p>=0 ? ::is_dec_digit(*p) : general_category(p) == ucs4::U_gc_digit; }
+inline bool is_dec_digit (cptr p) noexcept { return *p>=0 ? ::is_dec_digit(*p) : general_category(p) == GcDecimalNumber; }
 inline bool is_hex_digit (cptr p) noexcept { return ::is_hex_digit(*p);  }	// 0-9,a-f,A-F
 
 inline cptr hexchar (int n) noexcept
@@ -129,7 +134,7 @@ inline cptr to_lower (cptr p) noexcept
 	// returned utf8char is const or allocated in tempmem
 
 	if (*p>=0) { return lc_table[int(*p)]; }
-	else return ucs4char_to_utf8(ucs4::simple_lowercase(utf8_to_ucs4char(p)));
+	else return ucs4char_to_utf8(_to_lower(utf8_to_ucs4char(p)));
 }
 
 inline cptr to_upper (cptr p) noexcept
@@ -140,7 +145,7 @@ inline cptr to_upper (cptr p) noexcept
 	// returned utf8char is const or allocated in tempmem
 
 	if (*p>=0) return uc_table[int(*p)];
-	else return ucs4char_to_utf8(ucs4::simple_uppercase(utf8_to_ucs4char(p)));
+	else return ucs4char_to_utf8(_to_upper(utf8_to_ucs4char(p)));
 }
 
 inline cptr to_title (cptr p) noexcept
@@ -151,38 +156,40 @@ inline cptr to_title (cptr p) noexcept
 	// returned utf8char is const or allocated in tempmem
 
 	if (*p>=0) return uc_table[int(*p)];
-	else return ucs4char_to_utf8(ucs4::simple_titlecase(utf8_to_ucs4char(p)));
+	else return ucs4char_to_utf8(_to_title(utf8_to_ucs4char(p)));
 }
 
-inline uint digit_val (cptr p) noexcept
+inline uint digit_val (cptr p) noexcept __attribute__((deprecated)); // --> dec_digit_value()
+inline uint dec_digit_value (cptr p) noexcept
 {
 	// Get Decimal Digit Value.
 	// non-decimal-digits return values ≥ 10.
 	// if is_dec_digit() returned true then digit_val() should return a value in range 0 … 9
 
-	return *p>=0 ? ::digit_val(*p) : ucs4::_dec_digit_value(utf8_to_ucs4char((p)));
+	return *p>=0 ? ::dec_digit_value(*p) : ucs4::_dec_digit_value(utf8_to_ucs4char((p)));
 }
 
-inline uint digit_value  (cptr p) noexcept
+inline uint digit_value  (cptr p) noexcept __attribute__((deprecated)); // --> hex_digit_value()
+inline uint hex_digit_value  (cptr p) noexcept
 {
 	// Get Digit Value in Number Base 2 … 36:
 	// non-digits return value ≥ 36.
 
-	return ::digit_value(*p);
+	return ::hex_digit_value(*p);
 }
 
 inline bool is_number_letter (cptr p) noexcept
 {
 	// decimal digits, roman numbers
 
-	return *p>=0 ? ::is_dec_digit(*p) : gc_in_range(ucs4::U_gc_digit, p, ucs4::U_gc_letter_number);
+	return *p>=0 ? ::is_dec_digit(*p) : gc_in_range(GcDecimalNumber, p, GcLetterNumber);
 }
 
 inline bool has_numeric_value (cptr p) noexcept
 {
 	// digits, indexes, numbers & decorated numbers
 
-	return *p>=0 ? ::is_dec_digit(*p) : gc_in_range(ucs4::U_gc_number, p, ucs4::U_gc_other_number);
+	return *p>=0 ? ::is_dec_digit(*p) : gc_in_range(GcNumber, p, GcOtherNumber);
 }
 
 inline float numeric_value (cptr p) noexcept
@@ -191,7 +198,7 @@ inline float numeric_value (cptr p) noexcept
 	// everything for which has_numeric_value() returned true.
 	// some fractionals. one negative. two NaNs.
 
-	return *p>=0 ? ::digit_val(*p) : ucs4::_numeric_value(utf8_to_ucs4char(p));
+	return *p>=0 ? ::dec_digit_value(*p) : ucs4::numeric_value(utf8_to_ucs4char(p));
 }
 
 

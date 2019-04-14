@@ -68,7 +68,7 @@
 #include <math.h>
 #include "String.h"
 #include "cstrings/utf8.h"
-#include "cstrings/8bit/legacy_charsets.h"
+#include "cstrings/legacy_charsets.h"
 
 
 #ifdef NDEBUG
@@ -2079,7 +2079,7 @@ struct HtmlInfo { char name[10]; ucs2char code; };
 static HtmlInfo htmlinfo[] =
 {
 #define H(UTF8,BESCHR,NAME,UCS2) { NAME, UCS2 }
-#include "Unicode/Headers/html.h"
+#include "Libraries/cstrings/legacy_charsets/html.h"
 #undef H
 };
 

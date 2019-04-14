@@ -44,17 +44,17 @@ extern const uint8 gc_table[256];
 inline bool is_letter (ucs1char c) noexcept;
 
 // get character properies:
-inline Property general_category (ucs1char c) noexcept { return Property(gc_table[c]); }
-inline Property	block_property (ucs1char n) noexcept { return n<0x80 ? U_blk_basic_latin : U_blk_latin_1_supplement; }
-inline Property	script_property	(ucs1char c) noexcept { return is_letter(c) ? U_sc_latin : U_sc_common; }
-inline uint	print_width (ucs1char c) noexcept { return general_category(c) != U_gc_cc; } // 0 or 1
-inline Property	ccc_property (ucs1char) noexcept { return U_ccc_0; }	// for completeness
-inline Property	ea_width_property (ucs1char) noexcept {return U_ea_n; } // for completeness
+inline GeneralCategory general_category (ucs1char c) noexcept { return GeneralCategory(gc_table[c]); }
+inline Block block_property (ucs1char n) noexcept { return n<0x80 ?  BlkBasicLatin : BlkLatin1Supplement; }
+inline Script script_property	(ucs1char c) noexcept { return is_letter(c) ?  ScLatin : ScCommon; }
+inline uint	print_width (ucs1char c) noexcept { return general_category(c) != GcControl; } // 0 or 1
+inline CanonicalCombiningClass	ccc_property (ucs1char) noexcept { return CccNotReordered; }	// for completeness
+inline EastAsianWidth ea_width_property (ucs1char) noexcept {return EaNeutral; } // for completeness
 inline bool	not_in_any_block (ucs1char) noexcept { return false; }		// for completeness
 
 // helper:
 inline bool is_in_range (ucs1char a, ucs1char c, ucs1char e) noexcept { return uint8(c-a) <= uint8(e-a); }
-inline bool gc_in_range (Property a, ucs1char c, Property e) noexcept { return uint16(general_category(c)-a) <= uint16(e-a); }
+inline bool gc_in_range (GeneralCategory a, ucs1char c, GeneralCategory e) noexcept { return uint16(general_category(c)-a) <= uint16(e-a); }
 
 
 /* ****************************************************************
@@ -67,13 +67,13 @@ inline bool gc_in_range (Property a, ucs1char c, Property e) noexcept { return u
 // is_lowercase() is true for 'a' … 'z', and 'ß' … 'ÿ' except '÷'.
 // is_letter()    is true for all letters which have a different uppercase and lowercase version and for 'ß'.
 
-inline bool is_control	 (ucs1char c) noexcept { return general_category(c) == U_gc_cc; } // control code incl. 0x00
-inline bool is_space	 (ucs1char c) noexcept { return (--c&0x7f) <= ' ' || c==0x7e; } // space, nbsp or ctrl excl. 0
-inline bool is_letter	 (ucs1char c) noexcept { return gc_in_range(U_gc_letter,c,U_gc_lu); }
+inline bool is_control	 (ucs1char c) noexcept { return general_category(c) == GcControl; } // control code incl. 0x00
+inline bool is_space	 (ucs1char c) noexcept { return (--c&0x7f) < ' '; } // space, nbsp or ctrl excl. 0 and 0x7F
+inline bool is_letter	 (ucs1char c) noexcept { return gc_in_range(GcLetter,c,GcUppercaseLetter); }
 
-inline bool is_printable (ucs1char c) noexcept { return general_category(c) != U_gc_cc; }
-inline bool is_lowercase (ucs1char c) noexcept { return general_category(c) == U_gc_ll; }
-inline bool is_uppercase (ucs1char c) noexcept { return general_category(c) == U_gc_lu; }
+inline bool is_printable (ucs1char c) noexcept { return general_category(c) != GcControl; }
+inline bool is_lowercase (ucs1char c) noexcept { return general_category(c) == GcLowercaseLetter; }
+inline bool is_uppercase (ucs1char c) noexcept { return general_category(c) == GcUppercaseLetter; }
 
 inline bool is_bin_digit (ucs1char c) noexcept { return (c|1) == '1'; }
 inline bool is_oct_digit (ucs1char c) noexcept { return is_in_range('0',c,'7'); }
@@ -81,14 +81,14 @@ inline bool is_dec_digit (ucs1char c) noexcept { return is_in_range('0',c,'9'); 
 inline bool is_hex_digit (ucs1char c) noexcept { return is_in_range('0',c,'9') || is_in_range('a',c|0x20,'f'); }
 
 // digits, indexes, numbers & decorated numbers: 0 - 9, ^2, ^3, ^1, 1/4, 1/2 and 3/4
-inline bool has_numeric_value (ucs1char c) noexcept { return gc_in_range(U_gc_number,c,U_gc_no); }
+inline bool has_numeric_value (ucs1char c) noexcept { return gc_in_range(GcNumber, c, GcOtherNumber); }
 
 // decimal digits, roman numbers
 inline bool is_number_letter (ucs1char c) noexcept { return is_dec_digit(c); }
 
 // Simple Upper/Lower/Titlecase:
 inline ucs1char to_lower (ucs1char c) noexcept { return is_uppercase(c) ? c^0x20 : c; }
-inline ucs1char to_upper (ucs1char c) noexcept { return is_uppercase(c^0x20) ? c^0x20 : c; }
+inline ucs1char to_upper (ucs1char c) noexcept { return is_uppercase(c^0x20) ? c^0x20 : c; } // not is_lowercase(c)!!
 inline ucs1char to_title (ucs1char c) noexcept { return to_upper(c); }
 
 // Get Decimal Digit Value.

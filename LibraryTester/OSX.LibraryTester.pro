@@ -43,7 +43,6 @@ HEADERS += \
     Source/custom_errors.h \
     Libraries/unix/FD.h \
     Libraries/unix/tempmem.h \
-    Libraries/cstrings/cstrings.h \
     Libraries/kio/error_emacs.h \
     Libraries/kio/errors.h \
     Libraries/kio/exceptions.h \
@@ -60,58 +59,43 @@ HEADERS += \
     Libraries/Templates/relational_operators.h \
     Libraries/kio/standard_types.h \
     Libraries/hash/sdbm_hash.h \
-    Libraries/cstrings/utf8.h \
-    Libraries/cstrings/ucs1.h \
-    Libraries/cstrings/ucs4.h \
     Libraries/kio/peekpoke.h \
     Libraries/Templates/template_helpers.h \
     Libraries/VString/String_errors.h \
     Libraries/VString/String.h \
-    Libraries/Unicode/Includes/Blocks.h \
-    Libraries/Unicode/Includes/CanonicalCombiningClass.h \
-    Libraries/Unicode/Includes/CanonicalCombiningClassUCS4.h \
-    Libraries/Unicode/Includes/CodePointRanges.h \
-    Libraries/Unicode/Includes/CodePointRanges_UCS4.h \
-    Libraries/Unicode/Includes/EastAsianWidth.h \
-    Libraries/Unicode/Includes/EastAsianWidth_UCS4.h \
-    Libraries/Unicode/Includes/GeneralCategory.h \
-    Libraries/Unicode/Includes/GeneralCategory_UCS4.h \
-    Libraries/Unicode/Includes/GlobalConstants.h \
-    Libraries/Unicode/Includes/Names.h \
-    Libraries/Unicode/Includes/NumericValue.h \
-    Libraries/Unicode/Includes/NumericValue_UCS4.h \
-    Libraries/Unicode/Includes/Property_Enum.h \
-    Libraries/Unicode/Includes/Property_Groups.h \
-    Libraries/Unicode/Includes/Property_LongNames.h \
-    Libraries/Unicode/Includes/Property_ShortNames.h \
-    Libraries/Unicode/Includes/PropertyGroup_Enum.h \
-    Libraries/Unicode/Includes/PropertyGroup_Names.h \
-    Libraries/Unicode/Includes/PropertyValue_Enum.h \
-    Libraries/Unicode/Includes/PropertyValue_LongNames.h \
-    Libraries/Unicode/Includes/PropertyValue_ShortNames.h \
-    Libraries/Unicode/Includes/Scripts.h \
-    Libraries/Unicode/Includes/Scripts_UCS4.h \
-    Libraries/Unicode/Includes/SimpleLowercase_Even.h \
-    Libraries/Unicode/Includes/SimpleLowercase_Odd.h \
-    Libraries/Unicode/Includes/SimpleLowercase_UCS4.h \
-    Libraries/Unicode/Includes/SimpleTitlecase.h \
-    Libraries/Unicode/Includes/SimpleUppercase_Even.h \
-    Libraries/Unicode/Includes/SimpleUppercase_Odd.h \
-    Libraries/Unicode/Includes/SimpleUppercase_UCS4.h \
-    Libraries/Unicode/Includes/SpecialCasing.h \
-    Libraries/Unicode/Includes/UnicodeData_Index.h \
-    Libraries/Unicode/Includes/UnicodeData_Names.h \
-    Libraries/Unicode/UTF-8.h \
-    Libraries/cstrings/8bit/8859-1.h \
-    Libraries/cstrings/8bit/8859-2.h \
-    Libraries/cstrings/8bit/ascii_ger.h \
-    Libraries/cstrings/8bit/ascii_us.h \
-    Libraries/cstrings/8bit/atari_st.h \
-    Libraries/cstrings/8bit/cp_437.h \
-    Libraries/cstrings/8bit/html.h \
-    Libraries/cstrings/8bit/legacy_charsets.h \
-    Libraries/cstrings/8bit/mac_roman.h \
-    Libraries/cstrings/8bit/rtos.h
+    \
+    Libraries/cstrings/cstrings.h \
+    Libraries/cstrings/utf8.h \
+    Libraries/cstrings/ucs1.h \
+    Libraries/cstrings/ucs4.h \
+    Libraries/cstrings/unicode.h \
+    Libraries/cstrings/ucs2.h \
+    \
+    Libraries/cstrings/legacy_charsets.h \
+    Libraries/cstrings/legacy_charsets/ascii_ger.h \
+    Libraries/cstrings/legacy_charsets/ascii_us.h \
+    Libraries/cstrings/legacy_charsets/atari_st.h \
+    Libraries/cstrings/legacy_charsets/cp_437.h \
+    Libraries/cstrings/legacy_charsets/html.h \
+    Libraries/cstrings/legacy_charsets/mac_roman.h \
+    Libraries/cstrings/legacy_charsets/rtos.h \
+    \
+    Libraries/cstrings/unicode/global_constants.h \
+    Libraries/cstrings/unicode/properties.h \
+    Libraries/cstrings/unicode/ucs2_blocks.h \
+    Libraries/cstrings/unicode/ucs2_general_category.h \
+    Libraries/cstrings/unicode/ucs2_numeric_values.h \
+    Libraries/cstrings/unicode/ucs2_scripts.h \
+    Libraries/cstrings/unicode/ucs2_simple_lowercase.h \
+    Libraries/cstrings/unicode/ucs2_simple_titlecase.h \
+    Libraries/cstrings/unicode/ucs2_simple_uppercase.h \
+    Libraries/cstrings/unicode/ucs4_blocks.h \
+    Libraries/cstrings/unicode/ucs4_general_category.h \
+    Libraries/cstrings/unicode/ucs4_numeric_values.h \
+    Libraries/cstrings/unicode/ucs4_scripts.h \
+    Libraries/cstrings/unicode/ucs4_simple_lowercase.h \
+    Libraries/cstrings/unicode/ucs4_simple_titlecase.h \
+    Libraries/cstrings/unicode/ucs4_simple_uppercase.h
 
 
 

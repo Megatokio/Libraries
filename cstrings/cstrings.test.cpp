@@ -514,22 +514,22 @@ void test_cstrings(uint& num_tests, uint& num_errors)
 
 	TRY
 		assert(ucs1::is_uppercase('A'));
-		assert(ucs1::is_uppercase(char(0xc1)));
-		assert(!ucs1::is_uppercase(char(0)));
-		char c=0; do
+		assert(ucs1::is_uppercase(0xc1));
+		assert(!ucs1::is_uppercase(0));
+		ucs1char c=0; do
 		{
-			assert(ucs1::is_uppercase(c) == ((c>='A' && c<='Z') || (c>=char(0xc0) && c<=char(0xde) && c!=char(0xd7))));
+			assert(ucs1::is_uppercase(c) == ((c>='A' && c<='Z') || (c>=0xc0 && c<=0xde && c!=0xd7)));
 		}
 		while(++c);
 	END
 
 	TRY
 		assert(ucs1::is_lowercase('a'));
-		assert(ucs1::is_lowercase(char(0xe1)));
-		char c=0; do
+		assert(ucs1::is_lowercase(0xe1));
+		ucs1char c=0; do
 		{
-			assert(ucs1::is_lowercase(c) == ((c>='a' && c<='z') ||
-				(c>=char(0xdf) && c<=char(0xff) && c!=char(0xf7))));
+			assert(ucs1::is_lowercase(c) == ((c>='a' && c<='z')
+				|| (c>=0xdf && c<=0xff && c!=0xf7)) || c==0xb5/*µ*/);
 		}
 		while(++c);
 	END

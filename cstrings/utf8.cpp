@@ -509,11 +509,17 @@ cstr fromhtmlstr (cstr s0) throws
 			if(*p == 'x')
 			{
 				p++;
-				while (p<q+6 && *p && *p!=';' && ::is_hex_digit(*p)) { n = (n<<4) + ::digit_value(*p++); }
+				while (p<q+6 && *p && *p!=';' && ::is_hex_digit(*p))
+				{
+					n = (n<<4) + ::hex_digit_value(*p++);
+				}
 			}
 			else
 			{
-				while (p<q+6 && *p && *p!=';' && ::is_dec_digit(*p)) { n = (n<<4) + ::digit_val(*p++); }
+				while (p<q+6 && *p && *p!=';' && ::is_dec_digit(*p))
+				{
+					n = (n<<4) + ::dec_digit_value(*p++);
+				}
 			}
 			if (*p == ';')
 			{
@@ -630,9 +636,9 @@ str unescapedstr (cstr s0) noexcept  // sets errno
 			// \o	   allowed but not recommended. typically used for chr(0)
 
 			uint d;
-			c = char(::digit_val(c));
-			d = digit_val(q); if (d<8) { q++; c = char(c<<3)+char(d); }
-			d = digit_val(q); if (d<8) { q++; c = char(c<<3)+char(d); }
+			c = char(::dec_digit_value(c));
+			d = dec_digit_value(q); if (d<8) { q++; c = char(c<<3)+char(d); }
+			d = dec_digit_value(q); if (d<8) { q++; c = char(c<<3)+char(d); }
 			if (c==0) { *z++ = char(0xC0); c = char(0x80); }
 		}
 
@@ -642,8 +648,8 @@ str unescapedstr (cstr s0) noexcept  // sets errno
 			// \xH     allowed but not recommended.
 			// \x      'x' masked for unknown reason => stores 'x'
 
-			c = char(::digit_value(*q++));
-			if (is_hex_digit(q)) c = char(c<<4) + char(::digit_value(*q++));
+			c = char(::hex_digit_value(*q++));
+			if (is_hex_digit(q)) c = char(c<<4) + char(::hex_digit_value(*q++));
 			if (c==0) { *z++ = char(0xC0); c = char(0x80); }
 		}
 
@@ -654,7 +660,7 @@ str unescapedstr (cstr s0) noexcept  // sets errno
 
 			ucs4char d = 0;
 			uint n = c=='U' ? 8 : 4;
-			do { d = (d<<4) + digit_value(q++); } while (--n && is_hex_digit(q));
+			do { d = (d<<4) + hex_digit_value(q++); } while (--n && is_hex_digit(q));
 			z = ucs4_to_utf8(&d,1,z);
 			continue;
 		}
