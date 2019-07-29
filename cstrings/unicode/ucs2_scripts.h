@@ -1,6 +1,6 @@
 
 // map code point ranges -> Script property
-// created 2019-04-14 13:08:16 by script create_all.vs
+// created 2019-05-08 15:16:16 by script create_all.vs
 //
 // note: code ranges include unassigned character codes to reduce map size
 //       if in doubt you must also check that GeneralCategory != GcUnassigned
@@ -223,7 +223,9 @@ ADD_USED(0x3200,32,ScHangul)
 ADD_USED(0x3220,64,ScCommon)
 ADD_USED(0x3260,31,ScHangul)
 ADD_USED(0x327F,81,ScCommon)
-ADD_USED(0x32D0,136,ScKatakana)
+ADD_USED(0x32D0,47,ScKatakana)
+ADD_USED(0x32FF,1,ScCommon)
+ADD_USED(0x3300,88,ScKatakana)
 ADD_USED(0x3358,168,ScCommon)
 ADD_USED(0x3400,6592,ScHan)
 ADD_USED(0x4DC0,64,ScCommon)

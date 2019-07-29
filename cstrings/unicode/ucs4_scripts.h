@@ -1,6 +1,6 @@
 
 // map code point ranges -> Script property
-// created 2019-04-14 13:08:16 by script create_all.vs
+// created 2019-05-08 15:16:16 by script create_all.vs
 //
 // note: code ranges include unassigned character codes to reduce map size
 //       if in doubt you must also check that GeneralCategory != GcUnassigned

@@ -1,6 +1,6 @@
 
 // map code point ranges -> simple uppercase code
-// created 2019-04-14 13:08:15 by script create_all.vs
+// created 2019-05-08 15:16:15 by script create_all.vs
 //
 // Simple uppercase mapping is when mapping is to a single letter
 // ATTN: Mapping is invalid for codes which are already uppercase!

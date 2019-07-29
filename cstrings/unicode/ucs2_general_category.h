@@ -1,6 +1,6 @@
 
 	// map code point ranges -> GeneralCategory property
-	// created 2019-04-14 13:08:15 by script create_all.vs
+	// created 2019-05-08 15:16:15 by script create_all.vs
 	//
 	// Macros define code ranges:
 	//
@@ -2301,9 +2301,7 @@ ADD_USED(0x3260,32,GcOtherSymbol)
 ADD_USED(0x3280,10,GcOtherNumber)
 ADD_USED(0x328A,39,GcOtherSymbol)
 ADD_USED(0x32B1,15,GcOtherNumber)
-ADD_USED(0x32C0,63,GcOtherSymbol)
-ADD_NONE(0x32FF,1,GcUnassigned)
-ADD_USED(0x3300,256,GcOtherSymbol)
+ADD_USED(0x32C0,320,GcOtherSymbol)
 ADD_USED(0x3400,6582,GcOtherLetter)
 ADD_NONE(0x4DB6,10,GcUnassigned)
 ADD_USED(0x4DC0,64,GcOtherSymbol)

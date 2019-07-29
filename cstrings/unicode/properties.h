@@ -1,6 +1,6 @@
 
 	// enums for boolean, enumerated and catalog properties
-	// created 2019-04-14 13:08:14 by script create_all.vs
+	// created 2019-05-08 15:16:14 by script create_all.vs
 
 enum Block
 {
@@ -331,6 +331,7 @@ enum Age
 	AgeV100,
 	AgeV110,
 	AgeV120,
+	AgeV121,
 	AgeUnassigned,
 };
 
