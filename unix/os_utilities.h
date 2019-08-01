@@ -1,12 +1,12 @@
 #pragma once
 /*	Copyright  (c)	Günter Woigk 2001 - 2019
-  					mailto:kio@little-bat.de
+					mailto:kio@little-bat.de
 
 	This file is free software
 
- 	This program is distributed in the hope that it will be useful,
- 	but WITHOUT ANY WARRANTY; without even the implied warranty of
- 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 	Redistribution and use in source and binary forms, with or without
 	modification, are permitted provided that the following conditions are met:
@@ -30,7 +30,6 @@
 	ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include	<time.h>
 #include	"kio/kio.h"
 
 
@@ -48,10 +47,13 @@ extern	time_t	intCurrentTime	();
 extern	double	now				();		// was: floatCurrentTime
 inline	time_t	upTime			()		{ return intCurrentTime()-bootTime(); }
 
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
 inline	uid_t	getUID			( )		{ return getuid(); }
 inline	gid_t	getGID			( )		{ return getgid(); }
 inline	uid_t	getEffUID		( )		{ return geteuid(); }
 inline	gid_t	getEffGID		( )		{ return getegid(); }
+#endif
 extern	cstr	getUser			( );
 extern	cstr	getEffUser		( );
 

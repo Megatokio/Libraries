@@ -3,9 +3,9 @@
 
 	This file is free software
 
- 	This program is distributed in the hope that it will be useful,
- 	but WITHOUT ANY WARRANTY; without even the implied warranty of
- 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 	Redistribution and use in source and binary forms, with or without
 	modification, are permitted provided that the following conditions are met:
@@ -36,6 +36,8 @@
 #include "Libraries/kio/kio.h"
 #undef  assert
 #define assert(X) do{ if(X){}else{throw internal_error(__FILE__, __LINE__, "FAILED: " #X);} }while(0)
+#undef IERR
+#define IERR()		throw internal_error(__FILE__, __LINE__,internalerror)
 #include "Libraries/unix/FD.h"
 #include "Templates/StrArray.h"
 

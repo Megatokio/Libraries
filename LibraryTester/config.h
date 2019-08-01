@@ -1,24 +1,5 @@
 
 
-// processor:
-//#define _ALPHA 1
-//#define _I386  1
-#define _I386x64 1
-//#define _POWERPC 1
-//#define _SPARC 1
-//#define _M68K  1
-
-// operating system:
-#define _UNIX 1
-//#define _WINDOWS 1
-
-// minor OS:
-#define _BSD 1
-//#define _LINUX 
-//#define _MINIX 
-//#define _SOLARIS 
-
-
 // system files:
 #define HAVE_ASSERT_H 1			// <assert.h>
 #define HAVE_CTYPE_H 1			// <ctype.h>
@@ -61,7 +42,7 @@
 //#define _FILE_OFFSET_BITS	1	// Number of bits in a file offset
 //#define _POSIX_1_SOURCE	2	// if the system does not provide POSIX.1 features except with this define
 //#define _POSIX_SOURCE		1	// if needed for 'stat' and other things to work
-#define _GNU_SOURCE			1	// enable GNU extensions 
+#define _GNU_SOURCE			1	// enable GNU extensions
 
 
 

@@ -57,6 +57,9 @@
 #ifdef HAVE_MNTENT_H    // Linux
 #include <mntent.h>
 #endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #include "kio/kio.h"
 #include "Templates/Array.h"
 #include "tempmem.h"

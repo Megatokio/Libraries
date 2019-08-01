@@ -1,33 +1,9 @@
 #pragma once
 /*	Copyright  (c)	Günter Woigk 1995 - 2019
-  					mailto:kio@little-bat.de
+					mailto:kio@little-bat.de
 
 	This file is free software
-
- 	This program is distributed in the hope that it will be useful,
- 	but WITHOUT ANY WARRANTY; without even the implied warranty of
- 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-	Redistribution and use in source and binary forms, with or without
-	modification, are permitted provided that the following conditions are met:
-
-	• Redistributions of source code must retain the above copyright notice,
-	  this list of conditions and the following disclaimer.
-	• Redistributions in binary form must reproduce the above copyright notice,
-	  this list of conditions and the following disclaimer in the documentation
-	  and/or other materials provided with the distribution.
-
-	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-	AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-	THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-	PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
-	CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-	EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-	PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-	OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-	WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
-	OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
-	ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+	License: BSD-2-Clause, see https://opensource.org/licenses/BSD-2-Clause
 
 	c-string library
 
@@ -39,10 +15,8 @@
 	  and for returning result strings.
 */
 
-
 #include "kio/kio.h"
-template <class T> class Array;
-
+template<typename T> class Array;
 
 extern	str  emptystr;				// non-const version of ""
 
@@ -188,8 +162,8 @@ inline	str	 durationstr (int secs)			noexcept { return durationstr(time_t(secs))
 #ifndef _LINUX
 inline	str	 durationstr (int64 secs)		noexcept { return durationstr(time_t(secs)); }
 #endif
-extern	str	 durationstr (float64 secs)		noexcept;
-inline	str	 durationstr (float32 secs)		noexcept { return durationstr(float64(secs)); }
+extern	str	 durationstr (double secs)		noexcept;
+inline	str	 durationstr (float secs)		noexcept { return durationstr(double(secs)); }
 
 // NOTE: split() reuses the source buffer and overwrites line delimiters with 0, evtl. overwriting char at ptr e!
 extern	void _split (Array<str>& z, ptr a, ptr e)			throws; // split at line breaks
@@ -209,8 +183,8 @@ extern	uint strcpy	(ptr z, cptr q, uint buffersize) noexcept;
 extern	uint strcat	(ptr z, cptr q, uint buffersize) noexcept;
 
 extern str join (Array<cstr> const& q) throws;
-extern str join (Array<cstr> const& q, char, bool final=no) throws;
-extern str join (Array<cstr> const& q, cstr, bool final=no) throws;
+extern str join (Array<cstr> const& q, char, bool final=false) throws;
+extern str join (Array<cstr> const& q, cstr, bool final=false) throws;
 
 // _________________________________________________________________________
 //

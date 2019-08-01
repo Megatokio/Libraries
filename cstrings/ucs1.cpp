@@ -1,35 +1,15 @@
 /*	Copyright  (c)	Günter Woigk 2018 - 2019
 					mailto:kio@little-bat.de
 
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-	Permission to use, copy, modify, distribute, and sell this software and
-	its documentation for any purpose is hereby granted without fee, provided
-	that the above copyright notice appear in all copies and that both that
-	copyright notice and this permission notice appear in supporting
-	documentation, and that the name of the copyright holder not be used
-	in advertising or publicity pertaining to distribution of the software
-	without specific, written prior permission.  The copyright holder makes no
-	representations about the suitability of this software for any purpose.
-	It is provided "as is" without express or implied warranty.
-
-	THE COPYRIGHT HOLDER DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
-	INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
-	EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY SPECIAL, INDIRECT OR
-	CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
-	DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
-	TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-	PERFORMANCE OF THIS SOFTWARE.
+	This file is free software
+	License: BSD-2-Clause, see https://opensource.org/licenses/BSD-2-Clause
 */
 
-#include <math.h>
-#include "Libraries/kio/kio.h"
+#include <cmath>
 #include "ucs1.h"
 
 #ifndef NAN
-static const float NAN (0.0f/0.0f);
+	static const float NAN (0.0f/0.0f);
 #endif
 
 
@@ -109,33 +89,33 @@ bool isupperstr	(ucs1cstr s) noexcept
 {
 	// Test if string is all upper case
 
-    if(s) while(*s)
-    {
+	if(s) while(*s)
+	{
 		if (is_uppercase(*s++)) continue;
 		else return no;
 	}
-    return yes;
+	return yes;
 }
 
 bool islowerstr	(ucs1cstr s) noexcept
 {
 	// Test if string is all lower case
 
-    if(s) while(*s)
-    {
+	if(s) while(*s)
+	{
 		if (is_lowercase(*s++)) continue;
 		else return no;
 	}
-    return yes;
+	return yes;
 }
 
 ucs1str lowerstr (ucs1cstr s) throws
 {
 	// Convert a string to all lower case
 
-    ucs1str t = dupstr(s);
-    tolower(t);
-    return t;
+	ucs1str t = dupstr(s);
+	tolower(t);
+	return t;
 }
 
 ucs1str upperstr (ucs1cstr s) throws

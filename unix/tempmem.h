@@ -1,28 +1,9 @@
 #pragma once
 /*	Copyright  (c)	Günter Woigk 2008 - 2019
-  					mailto:kio@little-bat.de
+					mailto:kio@little-bat.de
 
- 	This program is distributed in the hope that it will be useful,
- 	but WITHOUT ANY WARRANTY; without even the implied warranty of
- 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
- 	Permission to use, copy, modify, distribute, and sell this software and
- 	its documentation for any purpose is hereby granted without fee, provided
- 	that the above copyright notice appear in all copies and that both that
- 	copyright notice and this permission notice appear in supporting
- 	documentation, and that the name of the copyright holder not be used
- 	in advertising or publicity pertaining to distribution of the software
- 	without specific, written prior permission.  The copyright holder makes no
- 	representations about the suitability of this software for any purpose.
- 	It is provided "as is" without express or implied warranty.
-
- 	THE COPYRIGHT HOLDER DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
- 	INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
- 	EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY SPECIAL, INDIRECT OR
- 	CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
- 	DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
- 	TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
- 	PERFORMANCE OF THIS SOFTWARE.
+	This file is free software
+	License: BSD-2-Clause, see https://opensource.org/licenses/BSD-2-Clause
 
 
 	Temporary Memory Pool
@@ -41,14 +22,14 @@
 
 	Temporary memory pools are created automatically for every thread.
 
-	tempStr() and tempMem() retrieve memory from the pool:
+	tempstr() and tempmem() retrieve memory from the pool:
 
-	• allocation with tempStr(len)
+	• allocation with tempstr(len)
 		• 1 byte for c-string delimiter is added and cleared to 0
 		• string is not cleared, except delimiter
 		• string is not aligned
 
-	• allocation with tempMem(size)
+	• allocation with tempmem(size)
 		• memory is aligned to a multiple of 4
 		• memory is not cleared
 
@@ -99,7 +80,7 @@
 	You must then pass a copy in the surrounding pool, e.g. made with xdupstr() (see "cstrings.h")
 */
 
-#include "../kio/kio.h"
+#include "kio/kio.h"
 
 
 extern	char*	tempmem (uint size)		noexcept;

@@ -42,6 +42,8 @@
 
 #include "../kio/kio.h"
 #include "FD.h"
+#include <unistd.h>
+
 
 #undef	min
 #define	min(a,b)	((a>b) ? b : a)
@@ -141,7 +143,7 @@ union bytes
 #else
 #define	input(b,o,c,n,m){	uint8* p = &(b)[(o)>>3];						\
 							(c) = (((int32(p[0]))|(int32(p[1])<<8)|			\
-								    (int32(p[2])<<16))>>((o)&0x7))&(m);		\
+									(int32(p[2])<<16))>>((o)&0x7))&(m);		\
 							(o) += (n);										\
 						}
 #endif

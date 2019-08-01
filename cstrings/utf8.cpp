@@ -1,31 +1,12 @@
 /*	Copyright  (c)	Günter Woigk 2018 - 2019
 					mailto:kio@little-bat.de
 
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-	Permission to use, copy, modify, distribute, and sell this software and
-	its documentation for any purpose is hereby granted without fee, provided
-	that the above copyright notice appear in all copies and that both that
-	copyright notice and this permission notice appear in supporting
-	documentation, and that the name of the copyright holder not be used
-	in advertising or publicity pertaining to distribution of the software
-	without specific, written prior permission.  The copyright holder makes no
-	representations about the suitability of this software for any purpose.
-	It is provided "as is" without express or implied warranty.
-
-	THE COPYRIGHT HOLDER DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
-	INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
-	EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY SPECIAL, INDIRECT OR
-	CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
-	DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
-	TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-	PERFORMANCE OF THIS SOFTWARE.
+	This file is free software
+	License: BSD-2-Clause, see https://opensource.org/licenses/BSD-2-Clause
 */
 
-#include "Libraries/kio/kio.h"
-#include "Libraries/unix/tempmem.h"
+#include "kio/kio.h"
+#include "unix/tempmem.h"
 #include "utf8.h"
 
 
@@ -476,30 +457,30 @@ cstr fromhtmlstr (cstr s0) throws
 	// decode &lt; &rt; &amp; &quot; and <br>
 	// decode &#123; and &#x123;
 
-    if (!s0||!*s0) return emptystr;
+	if (!s0||!*s0) return emptystr;
 
-    cptr q = strchr(s0,'&');
-    cptr q2 = find(s0,"<br>");
-    if(q2 && (q==nullptr || q2<q) ) q = q2;
-    if (q==nullptr) return s0;
-    str  s = dupstr(s0);
-    ptr  z = s + (q-s0);
+	cptr q = strchr(s0,'&');
+	cptr q2 = find(s0,"<br>");
+	if(q2 && (q==nullptr || q2<q) ) q = q2;
+	if (q==nullptr) return s0;
+	str  s = dupstr(s0);
+	ptr  z = s + (q-s0);
 
-    for (;;)
-    {
-	    char c;
-        while ((c=*q++) != '&')
-        {
+	for (;;)
+	{
+		char c;
+		while ((c=*q++) != '&')
+		{
 			if(c=='<' && *str_comp("br>", q)==0) { *z++ = '\n'; q+=3; continue; }
 			*z++ = c;
 			if (!c) return s;
 		}
 
-        if (*str_comp("gt;",  q)==0) { *z++ = '>'; q+=3; continue; }
-        if (*str_comp("lt;",  q)==0) { *z++ = '<'; q+=3; continue; }
-        if (*str_comp("amp;", q)==0) { *z++ = '&'; q+=4; continue; }
-        if (*str_comp("quot;",q)==0) { *z++ = '"'; q+=5; continue; }
-        //if (*str_comp("apos;",q)==0) { *z++ = '\''; q+=5; continue; }	// XML
+		if (*str_comp("gt;",  q)==0) { *z++ = '>'; q+=3; continue; }
+		if (*str_comp("lt;",  q)==0) { *z++ = '<'; q+=3; continue; }
+		if (*str_comp("amp;", q)==0) { *z++ = '&'; q+=4; continue; }
+		if (*str_comp("quot;",q)==0) { *z++ = '"'; q+=5; continue; }
+		//if (*str_comp("apos;",q)==0) { *z++ = '\''; q+=5; continue; }	// XML
 
 		if(*q=='#')		// &#1234;  or  &#x1234;
 		{
@@ -529,8 +510,8 @@ cstr fromhtmlstr (cstr s0) throws
 			}
 		}
 
-        *z++ = '&';	// unencoded '&'
-    }
+		*z++ = '&';	// unencoded '&'
+	}
 }
 
 cstr detabstr (cstr s, uint tabs) noexcept
@@ -587,9 +568,9 @@ str whitestr (cstr q, char c) noexcept
 	// replace all printable characters with space
 	// usecase: to place an error indicator exactly beneath an error
 
-    str rval = dupstr(q);
-    for (ptr p = rval; *p; p++)
-    {
+	str rval = dupstr(q);
+	for (ptr p = rval; *p; p++)
+	{
 		if(*p >= 0)
 		{
 			if (*p > ' ') *p = c;
@@ -597,15 +578,15 @@ str whitestr (cstr q, char c) noexcept
 		}
 
 		ptr z; for(z=p; *p; p++)
-	    {
+		{
 			if (no_fup(*p))
 			{
 				*z++ = *p > ' ' ? c : *p;
 			}
-	    }
+		}
 		*z = 0;
 	}
-    return rval;
+	return rval;
 }
 
 str unescapedstr (cstr s0) noexcept  // sets errno

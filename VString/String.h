@@ -1,12 +1,12 @@
 #pragma once
 /*	Copyright  (c)	Günter Woigk 2001 - 2015
-  					mailto:kio@little-bat.de
+					mailto:kio@little-bat.de
 
 	This file is free software
 
- 	This program is distributed in the hope that it will be useful,
- 	but WITHOUT ANY WARRANTY; without even the implied warranty of
- 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 	Redistribution and use in source and binary forms, with or without
 	modification, are permitted provided that the following conditions are met:
@@ -89,6 +89,9 @@ enum CharEncoding
 
 enum CharSize  { csz1=1, csz2=2, csz4=4 };
 enum MatchType { fnm_basic=0, fnm_escape=1, fnm_pathname=2, fnm_period=4, fnm_casefold=8 };
+
+typedef class String String;
+typedef const String cString;
 
 
 class String

@@ -1,39 +1,15 @@
 #pragma once
 /*	Copyright  (c)	Günter Woigk 1995 - 2019
-  					mailto:kio@little-bat.de
+					mailto:kio@little-bat.de
 
 	This file is free software
-
- 	This program is distributed in the hope that it will be useful,
- 	but WITHOUT ANY WARRANTY; without even the implied warranty of
- 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-	Redistribution and use in source and binary forms, with or without
-	modification, are permitted provided that the following conditions are met:
-
-	• Redistributions of source code must retain the above copyright notice,
-	  this list of conditions and the following disclaimer.
-	• Redistributions in binary form must reproduce the above copyright notice,
-	  this list of conditions and the following disclaimer in the documentation
-	  and/or other materials provided with the distribution.
-
-	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-	AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-	THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-	PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
-	CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-	EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-	PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-	OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-	WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
-	OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
-	ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+	License: BSD-2-Clause, see https://opensource.org/licenses/BSD-2-Clause
 */
 
 #include "kio/kio.h"
 
 
-INL uint count1bits( uint8 z )
+inline uint count1bits( uint8 z )
 {
 	uint rval = z;
 	rval = ((rval & 0xAAu) >> 1) + (rval & 0x55u);
@@ -42,7 +18,7 @@ INL uint count1bits( uint8 z )
 	return rval;
 }
 
-INL uint count1bits( uint16 z )
+inline uint count1bits( uint16 z )
 {
 	uint rval = z;
 	rval = ((rval & 0xAAAAu) >>  1) + (rval & 0x5555u);
@@ -52,7 +28,7 @@ INL uint count1bits( uint16 z )
 	return rval;
 }
 
-INL uint count1bits( uint32 z )
+inline uint count1bits( uint32 z )
 {
 	z = ((z & 0xAAAAAAAAu) >>  1) + (z & 0x55555555u);
 	z = ((z & 0xCCCCCCCCu) >>  2) + (z & 0x33333333u);
@@ -62,14 +38,14 @@ INL uint count1bits( uint32 z )
 	return z;
 }
 
-INL uint count1bits( int8 z )	{ return count1bits((uint8)z); }
-INL uint count1bits( int16 z )	{ return count1bits((uint16)z); }
-INL uint count1bits( int32 z )	{ return count1bits((uint32)z); }
+inline uint count1bits( int8 z )	{ return count1bits((uint8)z); }
+inline uint count1bits( int16 z )	{ return count1bits((uint16)z); }
+inline uint count1bits( int32 z )	{ return count1bits((uint32)z); }
 
 
 // count bits in array:
 //
-INL uint32 count1bits( cu8ptr p, uint32 bytes )
+inline uint32 count1bits( cu8ptr p, uint32 bytes )
 {
 	uint32 rval = 0;
 	uint32 n;
@@ -88,7 +64,7 @@ b:	n=0; while(bytes) { n = (n<<8) + *p++; bytes--; }
 // count bits in array:
 // if bits&7 != 0 then the last byte must be filled left-aligned (msbit)
 //
-INL uint32 count1bitsL( cu8ptr p, uint32 bits )
+inline uint32 count1bitsL( cu8ptr p, uint32 bits )
 {
 	uint32 rval = 0;
 	uint32 n;
@@ -108,7 +84,7 @@ b:	n=0; while(bits>=8) { n = (n<<8) + *p++; bits-=8; }
 // count bits in array:
 // if bits&7 != 0 then the last byte must be filled right-aligned (lsb)
 //
-INL uint32 count1bitsR( cu8ptr p, uint32 bits )
+inline uint32 count1bitsR( cu8ptr p, uint32 bits )
 {
 	uint32 rval = count1bits(p,bits/8);
 	if(bits&7) rval += count1bits( uint8(p[bits/8]<<(8-(bits&7))) );

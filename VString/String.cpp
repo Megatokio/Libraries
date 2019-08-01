@@ -1,11 +1,11 @@
 /*	Copyright  (c)	Günter Woigk   2001-2019
-  					mailto:kio@little-bat.de
+					mailto:kio@little-bat.de
 
 	This file is free software
 
- 	This program is distributed in the hope that it will be useful,
- 	but WITHOUT ANY WARRANTY; without even the implied warranty of
- 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 	Redistribution and use in source and binary forms, with or without
 	modification, are permitted provided that the following conditions are met:
@@ -69,6 +69,7 @@
 #include "String.h"
 #include "cstrings/utf8.h"
 #include "cstrings/legacy_charsets.h"
+#include "kio/peekpoke.h"
 
 
 #ifdef NDEBUG
@@ -649,7 +650,7 @@ bool Match ( cString& filename, cString& pattern )
 		for(;;)
 		{
 			if (pi==pe) return yes;
-   			p = pattern[pi++];
+			p = pattern[pi++];
 			if (p=='*') continue;
 			if (p!='?') break;
 			if (fi==fe) return no;
@@ -3353,9 +3354,9 @@ String HexString ( ulong n, int digits )
 
 static off_t file_size(int fd) noexcept
 {
-    struct stat fs;
-    if (fstat(fd,&fs)) return -1;			// error
-    return fs.st_size;
+	struct stat fs;
+	if (fstat(fd,&fs)) return -1;			// error
+	return fs.st_size;
 }
 
 // get working directory or NULL
@@ -3369,14 +3370,14 @@ static cstr workingdirpath()
 // get user home directory or NULL
 static cstr homedirpath()
 {
-    return getenv("HOME");
+	return getenv("HOME");
 }
 
 static cstr quick_fullpath( cstr path )
 {
-    if(path[0]=='~' && path[1]=='/') { cstr h=homedirpath(); if(h) path = catstr(h,path+1); }
-    if(path[0]!='/')				 { path = catstr(workingdirpath(),"/",path); }
-    return path;
+	if(path[0]=='~' && path[1]=='/') { cstr h=homedirpath(); if(h) path = catstr(h,path+1); }
+	if(path[0]!='/')				 { path = catstr(workingdirpath(),"/",path); }
+	return path;
 }
 
 void String::ReadFromFile( cstr cpath, off_t max_sz )

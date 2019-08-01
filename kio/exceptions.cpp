@@ -1,54 +1,22 @@
 /*	Copyright  (c)	Günter Woigk 1999 - 2019
-                    mailto:kio@little-bat.de
+					mailto:kio@little-bat.de
 
-    This file is free software
+	This file is free software
+	License: BSD-2-Clause, see https://opensource.org/licenses/BSD-2-Clause
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-    Permission to use, copy, modify, distribute, and sell this software and
-    its documentation for any purpose is hereby granted without fee, provided
-    that the above copyright notice appear in all copies and that both that
-    copyright notice and this permission notice appear in supporting
-    documentation, and that the name of the copyright holder not be used
-    in advertising or publicity pertaining to distribution of the software
-    without specific, written prior permission. The copyright holder makes no
-    representations about the suitability of this software for any purpose.
-    It is provided "as is" without express or implied warranty.
-
-    THE COPYRIGHT HOLDER DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
-    INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
-    EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY SPECIAL, INDIRECT OR
-    CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
-    DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
-    TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-    PERFORMANCE OF THIS SOFTWARE.
-
-    error handling
-
-note:
-    include errors.cpp:  support for cstrings only, does not require class String
-    _or_    serrors.cpp: support for cstrings and class String strings
-
-
-    1999-01-01	first work on this file
-    2001-02-17	added possibility to #include custom error file
-    2001-11-09	added support for class String
-    2011-01-17	modified to allow simple clearing of errno in most cases
+	custom exceptions
 */
 
-#include "config.h"
-#include "Libraries/kio/kio.h"
-#include "Libraries/unix/s_type.h"
-#include "Libraries/unix/FD.h"
+#include "kio/kio.h"
+#include "unix/s_type.h"
+#include "unix/FD.h"
 
 
 // helper
 static cstr filename(cstr file) noexcept
 {
-    cstr p = strrchr(file,'/');
-    return p ? p+1 : file;
+	cstr p = strrchr(file,'/');
+	return p ? p+1 : file;
 }
 
 
@@ -106,8 +74,8 @@ cstr any_error::what() const noexcept
 
 cstr internal_error::what() const noexcept
 {
-    return usingstr( "%s line %u: %s",
-        filename(file), line, text ? text : errorstr(error) );
+	return usingstr( "%s line %u: %s",
+		filename(file), line, text ? text : errorstr(error) );
 }
 
 
@@ -129,10 +97,10 @@ limit_error::limit_error (cstr where, ulong sz, ulong max) noexcept
 data_error::data_error (cstr msg, ...) noexcept
 : any_error(dataerror)
 {
-    va_list va;
-    va_start(va,msg);
-    text = newcopy(usingstr(msg,va));
-    va_end(va);
+	va_list va;
+	va_start(va,msg);
+	text = newcopy(usingstr(msg,va));
+	va_end(va);
 }
 
 

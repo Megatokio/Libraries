@@ -25,7 +25,6 @@
 */
 
 #include "kio/kio.h"
-#include <time.h>
 
 
 /*	get error string for system or custom error number:
@@ -36,7 +35,7 @@ cstr errorstr( int err )
 	static const cstr ETEXT[] =
 	{
 	#define  EMAC(A,B)	B
-	#include "error_emacs.h"
+	#include "errors.h"
 	};
 
 	if(err==0)						return "no error";
@@ -52,7 +51,7 @@ double now()
 {
 	struct timespec tv;
 	clock_gettime(CLOCK_REALTIME, &tv);
-    return tv.tv_sec + tv.tv_nsec * 1e-9;
+	return tv.tv_sec + tv.tv_nsec * 1e-9;
 }
 
 
@@ -79,18 +78,18 @@ void logNl()
 
 void logline(cstr format, ...)
 {
-    va_list va;
-    va_start(va,format);
-    logline(format,va);
-    va_end(va);
+	va_list va;
+	va_start(va,format);
+	logline(format,va);
+	va_end(va);
 }
 
 void log(cstr format, ...)
 {
-    va_list va;
-    va_start(va,format);
-    log(format,va);
-    va_end(va);
+	va_list va;
+	va_start(va,format);
+	log(format,va);
+	va_end(va);
 }
 
 static uint indent;			// message indentation		TODO
@@ -124,22 +123,22 @@ LogIndent::~LogIndent()
 void abort(cstr fmt, va_list va) // __attribute__((__noreturn__));
 {
 	if(lastchar(fmt)!='\n') fmt = catstr(fmt,"\n");
-    vfprintf(stderr, fmt, va);
-    fprintf(stderr, "aborted.\n");
-	_exit(ABORTED);
+	vfprintf(stderr, fmt, va);
+	fprintf(stderr, "aborted.\n");
+	_Exit(ABORTED);
 }
 
 void abort(cstr fmt, ...) // __attribute__((__noreturn__));
 {
 	va_list va;
 	va_start(va,fmt);
-    abort(fmt, va);
+	abort(fmt, va);
 	//va_end(va);
 }
 
 void abort( int error ) // __attribute__((__noreturn__));
 {
-    abort("%s",strerror(error));
+	abort("%s",strerror(error));
 }
 
 #endif

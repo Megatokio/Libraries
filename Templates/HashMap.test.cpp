@@ -3,9 +3,9 @@
 
 	This file is free software
 
- 	This program is distributed in the hope that it will be useful,
- 	but WITHOUT ANY WARRANTY; without even the implied warranty of
- 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 	Redistribution and use in source and binary forms, with or without
 	modification, are permitted provided that the following conditions are met:
@@ -33,13 +33,13 @@
 #undef NDEBUG
 #define SAFETY 2
 #define LOGLEVEL 1
-#include "Libraries/kio/kio.h"
+#include "kio/kio.h"
 #undef  assert
 #define assert(X) do{ if(X){}else{throw internal_error(__FILE__, __LINE__, "FAILED: " #X);} }while(0)
-#include "Libraries/unix/FD.h"
+#include "unix/FD.h"
 #include "Templates/Array.h"
 #include "Templates/HashMap.h"
-#include "Libraries/unix/tempmem.h"
+#include "unix/tempmem.h"
 
 
 #define TRY num_tests++; try{
