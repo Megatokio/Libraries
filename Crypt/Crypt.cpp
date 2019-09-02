@@ -31,7 +31,6 @@
 
 #include "hash/md5.h"
 #include "kio/kio.h"
-#include "kio/peekpoke.h"
 #include "Crypt.h"
 #include "cstrings/base85.h"
 

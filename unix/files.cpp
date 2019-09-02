@@ -57,9 +57,6 @@
 #ifdef HAVE_MNTENT_H    // Linux
 #include <mntent.h>
 #endif
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 #include "kio/kio.h"
 #include "Templates/Array.h"
 #include "tempmem.h"
@@ -145,7 +142,7 @@ static int stat( cstr path, struct stat* buf, bool follow_symlink )
 
     returns:
         returns iso-latin-1 encoded filename or
-        returns NULL if conversion did not result in a different filename
+        returns nullptr if conversion did not result in a different filename
 */
 cstr latin1str( cstr filename )
 {
@@ -156,7 +153,7 @@ cstr latin1str( cstr filename )
     {
         signed char c = *q++;
         if(c>0)  continue;
-        if(c==0) return NULL;				// no non-ascii letters found
+        if(c==0) return nullptr;				// no non-ascii letters found
         else	 break;						// non-acii letter found
     }
 
@@ -176,9 +173,9 @@ cstr latin1str( cstr filename )
     // 2 byte codes:	110xxxxx 10xxxxxx
     // ill. overlong:	1100000x 10xxxxxx
     // latin-1 range:	1100001x 10xxxxxx
-        if ((c&0xFE)!=0xC2) return NULL;	// char code too high, ill. overlong encoding or broken utf-8
+        if ((c&0xFE)!=0xC2) return nullptr;	// char code too high, ill. overlong encoding or broken utf-8
         uchar c2 = *q++ - 0x80;
-        if (c2>=0x3F) return NULL;			// no fup -> broken utf-8
+        if (c2>=0x3F) return nullptr;			// no fup -> broken utf-8
         *z++ = (c<<6) + c2;					// combine c1 + fup
     }
 
@@ -206,7 +203,7 @@ cstr latin1str( cstr filename )
     {
         uint32 c0 = uchar(*z++);
         if ((signed char)c0>0) continue;					// ascii
-        if (c0==0) return NULL;						// end of filename reached without invalid utf-8
+        if (c0==0) return nullptr;						// end of filename reached without invalid utf-8
         if ((signed char)c0 < (signed char)0xc0) return file;		// unexpected fups
         if (c0>=0xfe) return file;					// ill. codes
 
@@ -475,7 +472,7 @@ str fullpath( cstr _path, bool resolve_last_symlink, bool auto_create_path )
 
 /* ----	find executable ---------------------
 	returns the best guess … does not guarantee that the returned path is valid or executable
-	returns NULL if nothing found
+	returns nullptr if nothing found
 */
 cstr find_executable( cstr name )
 {
@@ -493,7 +490,7 @@ cstr find_executable( cstr name )
 		}
 	}
 
-	return NULL;							// not found
+	return nullptr;							// not found
 }
 
 
@@ -508,7 +505,7 @@ void change_working_dir( cstr path )
     if(errno==ok) {int r = chdir(path); (void)r; }	// will probably fail again
 }
 
-// get working directory or NULL
+// get working directory or nullptr
 cstr workingdirpath()
 {
 	char s[MAXPATHLEN+1];
@@ -516,13 +513,13 @@ cstr workingdirpath()
 	return dupstr( getcwd(s,MAXPATHLEN) );
 }
 
-// get user home directory or NULL
+// get user home directory or nullptr
 cstr homedirpath()
 {
     return getenv("HOME");
 }
 
-// get temp directory or NULL			2016-01-27
+// get temp directory or nullptr			2016-01-27
 cstr tempdirpath()
 {
 	// ISO/IEC 9945 (POSIX):
@@ -540,7 +537,7 @@ cstr tempdirpath()
     }
 
 	xlogline("tempdirpath(): no tempdir found!");
-	return NULL;
+	return nullptr;
 }
 
 
@@ -549,7 +546,7 @@ cstr tempdirpath()
 */
 cstr tempfilepath( cstr file )
 {
-    assert( file!=NULL );
+    assert( file!=nullptr );
 
     if(file[0]!='/') file=quick_fullpath(file);
 
@@ -618,7 +615,7 @@ off_t file_size( cstr path, bool follow_symlink )
 
 
 /*	get list of groups for user uid				2015-01-24	kio
-	on error:   returns NULL
+	on error:   returns nullptr
 	on success: returns 0-terminated list of groups allocated with malloc()
 	sets errno
 */
@@ -640,17 +637,17 @@ gid_t* get_groups(uid_t uid)
 	int size = 400;
 a:	int err; char bu[size];
 	do { err = getpwuid_r(uid,&pwd,bu,size,&pwdptr); } while(err==EINTR);
-	if(err==ERANGE) { if(size>8000) { errno=ERANGE; return NULL; } else { size*=2; goto a; } }
-	if(err) return NULL;
-	if(pwdptr==NULL) { errno=ENOENT; return NULL; }	// zu dieser UID gibt es keinen Eintrag
+	if(err==ERANGE) { if(size>8000) { errno=ERANGE; return nullptr; } else { size*=2; goto a; } }
+	if(err) return nullptr;
+	if(pwdptr==nullptr) { errno=ENOENT; return nullptr; }	// zu dieser UID gibt es keinen Eintrag
 
 //	grp.h:
 //	int getgrouplist(const char *user, gid_t group, gid_t *groups, int *ngroups);
 
 	int ngroups = 50;
-	gid_t* groups = NULL;
+	gid_t* groups = nullptr;
 	do { free(groups); groups = (gid_t*)malloc((ngroups+1)*sizeof(int)); }
-#if _MACOSX
+#ifdef _MACOSX
 	while( getgrouplist(pwd.pw_name, pwd.pw_gid, (int*)groups, &ngroups) == -1 );
 	static_assert(sizeof(gid_t)==sizeof(int),"sizeof(gid_t)==sizeof(int)");
 #else	// _LINUX, _BSD
@@ -663,7 +660,7 @@ a:	int err; char bu[size];
 
 
 static pthread_mutex_t is_in_group_mutex;
-ON_INIT([]{ IFDEBUG( int e = ) pthread_mutex_init(&is_in_group_mutex, NULL); assert(e==0); });
+ON_INIT([]{ IFDEBUG( int e = ) pthread_mutex_init(&is_in_group_mutex, nullptr); assert(e==0); });
 
 
 /*	test whether a user is in the specified group				2015-01-24	kio
@@ -676,16 +673,16 @@ static bool is_in_group(uid_t uid, gid_t gid)
 	IFDEBUG( int e = ) pthread_mutex_lock(&is_in_group_mutex);	assert(!e);
 
 	static uid_t  s_uid  = 0;		// cached user
-	static gid_t* s_gids = NULL;	// cached groups[]
+	static gid_t* s_gids = nullptr;	// cached groups[]
 	static time_t s_when = 0;		// when groups[] was retrieved
 
-	if(uid!=s_uid || s_gids==NULL || time(NULL)>=s_when+5)
+	if(uid!=s_uid || s_gids==nullptr || time(nullptr)>=s_when+5)
 	{
 		free(s_gids);
-		s_gids = NULL;
+		s_gids = nullptr;
 		s_uid  = uid;
-		s_when = time(NULL);
-		s_gids = get_groups(uid); if(s_gids==NULL) goto x0;
+		s_when = time(nullptr);
+		s_gids = get_groups(uid); if(s_gids==nullptr) goto x0;
 	}
 
 	for(gid_t* p=s_gids; *p; p++) { if(*p==gid) goto x1; }
@@ -1052,7 +1049,7 @@ void read_dir( cstr path, MyFileInfoArray& v, bool resolve_symlinks ) THF
         x: throw file_error(path,errno, "read dir");
     }
 
-    cstr pattern = NULL;
+    cstr pattern = nullptr;
     if (lastchar(path)!='/')
     {
         assert(!is_dir(path));				// note: sets sporadic errors
@@ -1071,7 +1068,7 @@ void read_dir( cstr path, MyFileInfoArray& v, bool resolve_symlinks ) THF
     {
         errno = ok;
         dirent* direntry = readdir(dir);
-        if(direntry==NULL) break;
+        if(direntry==nullptr) break;
 
         cstr filename = direntry->d_name;
         if(filename[0]=='.' && ( filename[1]==0 || (filename[1]=='.' && filename[2]==0) )) continue;	// "." or ".."
@@ -1111,12 +1108,12 @@ void read_dir( cstr path, MyFileInfoArray& v, bool resolve_symlinks ) THF
 
 
 /* ----	get link target ----------------------------------------
-        returns NULL on error and errno set
+        returns nullptr on error and errno set
 */
 str read_link( cstr path )
 {
     path = fullpath(path,no,no);
-    if(errno) return NULL;
+    if(errno) return nullptr;
 
     if(is_link(path))
     {
@@ -1125,7 +1122,7 @@ str read_link( cstr path )
         if(n>=0) { str s=tempstr(n); memcpy(s,bu,n); return s; }		// filesystem encoding
     }
     else errno = EINVAL;
-    return NULL;
+    return nullptr;
 }
 
 
@@ -1251,9 +1248,9 @@ MyVolumeInfo::~MyVolumeInfo()
 MyVolumeInfo::MyVolumeInfo(struct statfs& fs)
 :
     valid(no),
-    fstypename(NULL),
-    mountpoint(NULL),
-    volumename(NULL)
+    fstypename(nullptr),
+    mountpoint(nullptr),
+    volumename(nullptr)
 {
     if( fs.f_files+fs.f_ffree==0 ) return;			// special: volfs, free automount slots
 
@@ -1261,7 +1258,7 @@ MyVolumeInfo::MyVolumeInfo(struct statfs& fs)
     cstr mdev  = fs.f_mntfromname;					// mounted filesystem
 
     if(eq(mpath,"/dev")) return;					// devfs, fdesc
-    if(strchr(mdev,'/')==NULL) return;				// "none", "usbdevfs", etc.
+    if(strchr(mdev,'/')==nullptr) return;				// "none", "usbdevfs", etc.
 
 // info from struct statfs:
     this->blocksize 	= fs.f_bsize;
@@ -1311,7 +1308,7 @@ MyVolumeInfoArray::MyVolumeInfoArray()
     while(!feof(file) && !ferror(file))
     {
         struct mntent* mntent = getmntent(file);
-        if(mntent==NULL) break;
+        if(mntent==nullptr) break;
 
         MyVolumeInfo* vi = new MyVolumeInfo(mntent);
         if(vi->valid) append(vi);
@@ -1323,15 +1320,15 @@ MyVolumeInfoArray::MyVolumeInfoArray()
 MyVolumeInfo::MyVolumeInfo(struct mntent* mntent)
 :
     valid(no),
-    fstypename(NULL),
-    mountpoint(NULL),
-    volumename(NULL)
+    fstypename(nullptr),
+    mountpoint(nullptr),
+    volumename(nullptr)
 {
     cstr mpath = mntent->mnt_dir;					// directory on which mounted
     cstr mdev  = mntent->mnt_fsname;                // mounted filesystem
 
     if(eq(mpath,"/dev")) return;					// devfs, fdesc
-    if(strchr(mdev,'/')==NULL) return;				// "none", "usbdevfs", etc.
+    if(strchr(mdev,'/')==nullptr) return;				// "none", "usbdevfs", etc.
 
     struct statfs info;
     if(statfs(mntent->mnt_dir,&info)) return;

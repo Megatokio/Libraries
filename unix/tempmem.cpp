@@ -24,7 +24,7 @@
     PERFORMANCE OF THIS SOFTWARE.
 */
 
-#include "config.h"
+#include "kio/kio.h"
 #include <pthread.h>
 #include "tempmem.h"
 

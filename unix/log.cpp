@@ -88,10 +88,29 @@
 
 //	abort application with _exit(3)
 //
-void panic( cstr format, va_list )	__attribute__((__noreturn__));
-void panic( cstr formatstring, ... )	__attribute__((__noreturn__));
-void panic( int error_number )		__attribute__((__noreturn__));
+__printflike(1,0) __attribute__((__noreturn__))
+void panic( cstr fmt, va_list );
 
+__printflike(1,2) __attribute__((__noreturn__))
+void panic(cstr fmt, ...)
+{
+	va_list va;
+	va_start(va,fmt);
+	panic(fmt, va);
+	//va_end(va);
+}
+
+__attribute__((__noreturn__))
+void panic (int err)
+{
+	panic("%s",strerror(err));
+}
+
+__attribute__((__noreturn__))
+static void panic(cstr where, int err)
+{
+	panic("%s: %s",where,strerror(err));
+}
 
 /*	normalize path (except for symlinks)
 	create missing directories
@@ -131,8 +150,8 @@ static cstr create_path( cstr path )
 	// normalize "./" and "../" and create directories:
 	for(uint a=0;;)
 	{
-		cptr p = strchr(path+a+1,'/'); if(p==NULL) break;
-		uint e = p-path;
+		cptr p = strchr(path+a+1,'/'); if(p==nullptr) break;
+		uint e = uint(p-path);
 
 		if(e-a==1)						// --> "//"
 		{
@@ -251,10 +270,10 @@ static int  fd = -1;						// default: no log file
 static LogRotation 	logrotate = NEVER;
 static double 		logrotate_when = 0.0; 	// 0 = not initialized, 1e99 = never
 static uint 		max_logfiles = 99;
-static cstr 		logdir = NULL;
+static cstr 		logdir = nullptr;
 
 // Existing LogFile instances:
-static class LogFile** logfiles = NULL;		// Pointers to all existing LogFile instances
+static class LogFile** logfiles = nullptr;		// Pointers to all existing LogFile instances
 static uint			logfiles_cnt = 0;
 static uint			logfiles_max = 0;
 
@@ -266,7 +285,7 @@ static pthread_mutex_t mutex;				// access lock
 /*  ___________________________________________________________________
 	forward references:
 */
-static void write2log(int thread_id, double when, uint indent, cstr msg);
+static void write2log(uint thread_id, double when, uint indent, cstr msg);
 static void init();
 
 
@@ -294,7 +313,9 @@ public:
 				LogFile();
 				~LogFile();
 
+    __printflike(3,0)
 	void		valog(double now, cstr fmt, va_list);	// log line with timestamp etc.
+    __printflike(2,0)
 	void		vaadd(cstr fmt, va_list);				// compose log line
 	void		nl(double now);							// finalize and print composed log line
 };
@@ -317,10 +338,10 @@ inline void unlock() { pthread_mutex_unlock(&mutex); }
 // without creating a LogFile instance
 // for abort() and panic()
 //
-static int quick_id()
+static uint quick_id()
 {
 	if(logrotate_when==0.0) return 0;
-	LogFile* logfile = (LogFile*) pthread_getspecific( logfile_key );
+	LogFile* logfile = static_cast<LogFile*> (pthread_getspecific( logfile_key ));
 	return logfile ? logfile->thread_id : logfiles_cnt;
 }
 
@@ -352,7 +373,7 @@ static LogFile* getLogfile(double now)
 						 timestamp_with_date, timestamp_with_msec);
 	}
 
-	LogFile* logfile = (LogFile*) pthread_getspecific( logfile_key );
+	LogFile* logfile = static_cast<LogFile*> (pthread_getspecific( logfile_key ));
 	return logfile ? logfile : new LogFile();
 }
 
@@ -364,7 +385,7 @@ static LogFile* getLogfile(double now)
 	Format: "[<thread_id>] <timestamp> <indentation> <message>\n".
 	lock should be locked.
 */
-static void write2log(int thread_id, double when, uint indent, cstr msg)
+static void write2log(uint thread_id, double when, uint indent, cstr msg)
 {
 	char sbu[260+MAXINDENT+40];
 
@@ -378,12 +399,12 @@ static void write2log(int thread_id, double when, uint indent, cstr msg)
 
 	if(timestamp_with_date)
 	{
-		time_t sec = (time_t)when;
+		time_t sec = time_t(when);
 		tm dt; gmtime_r(&sec,&dt);
 
-		uint y = dt.tm_year+1900;
-		uint m = dt.tm_mon+1;
-		uint d = dt.tm_mday;
+		uint y = uint(dt.tm_year+1900);
+		uint m = uint(dt.tm_mon+1);
+		uint d = uint(dt.tm_mday);
 
 		if(timestamp_with_msec)
 			sprintf(timestamp, fmt11, y, m, d, dt.tm_hour, dt.tm_min, dt.tm_sec, uint((when-sec)*1000));
@@ -402,28 +423,33 @@ static void write2log(int thread_id, double when, uint indent, cstr msg)
 			sprintf(timestamp, fmt00, hour%24, minu%60, uint(sec%60));
 	}
 
-	uint sz = snprintf(sbu, NELEM(sbu), "[%u] %s%s  %s\n", thread_id, timestamp, indentstr(indent), msg);
-	if(sz >= NELEM(sbu)) { sz = NELEM(sbu) -1; sbu[sz-1]='\n'; }
+	uint sz = uint(snprintf(sbu, NELEM(sbu), "[%u] %s%s  %s\n", thread_id, timestamp, indentstr(indent), msg));
+	if (sz >= NELEM(sbu))
+    {
+        assert(int(sz) >= 0);
+        sz = NELEM(sbu);
+        sbu[sz-1] = '\n';
+    }
 
-	if(fd!=-1)  // write to file
+	if (fd != -1)  // write to file
 	{
-		for(uint i=0; i<sz;)
+		for (uint i=0; i<sz;)
 		{
 			int n = int(write(fd,sbu+i,sz-i));
-			if(n>=0) { i+=n; continue; }
-			if(errno==EINTR) continue;
+			if (n >= 0) { i += uint(n); continue; }
+			if (errno == EINTR) continue;
 			close(fd); fd=-1;
 			panic("writing to logfile failed",errno);
 		}
 	}
 
-	if(log2console) // print to stderr
+	if (log2console) // print to stderr
 	{
-		for(uint i=0; i<sz;)
+		for (uint i=0; i<sz;)
 		{
 			int n = int(write(2,sbu+i,sz-i));
-			if(n>=0) { i+=n; continue; }
-			if(errno==EINTR) continue;
+			if (n >= 0) { i += uint(n); continue; }
+			if (errno == EINTR) continue;
 			//log2console = no;
 			panic("logging to stderr failed",errno);
 		}
@@ -441,7 +467,8 @@ static void write2log(int thread_id, double when, uint indent, cstr msg)
 	- in an atexit() registered function
 */
 
-void panic(cstr fmt, va_list va) // __attribute__((__noreturn__));
+__attribute__((__noreturn__))
+void panic(cstr fmt, va_list va)
 {
 	static bool repeat = no;
 	if(repeat) _exit(PANIC_REPEATED);
@@ -450,7 +477,7 @@ void panic(cstr fmt, va_list va) // __attribute__((__noreturn__));
 	pthread_mutex_trylock(&mutex);
 
 	char zbu[280];	vsnprintf(zbu, NELEM(zbu), fmt, va);
-	char msg[300];	snprintf (msg, NELEM(msg), "%s: Panic: %s", APPL_NAME, zbu);
+	char msg[308];	snprintf (msg, NELEM(msg), "%s: Panic: %s", APPL_NAME, zbu);
 
 	log2console = yes;
 	if(fd==-1)
@@ -466,25 +493,6 @@ void panic(cstr fmt, va_list va) // __attribute__((__noreturn__));
 	write2log(quick_id(),now(),0,msg);
 	_exit(PANICED);
 }
-
-void panic(cstr fmt, ...) // __attribute__((__noreturn__));
-{
-	va_list va;
-	va_start(va,fmt);
-	panic(fmt, va);
-	//va_end(va);
-}
-
-void panic( int error ) // __attribute__((__noreturn__));
-{
-	panic("%s",strerror(error));
-}
-
-static void panic(cstr where, uint err) // __attribute__((__noreturn__));
-{
-	panic("%s: %s",where,strerror(err));
-}
-
 
 
 /*  ___________________________________________________________________
@@ -529,7 +537,7 @@ void abort( int error )			// __attribute__((__noreturn__));
 //
 static void delete_logfile(void* logfile)
 {
-	delete (LogFile*) logfile;
+	delete static_cast<LogFile*> (logfile);
 }
 
 
@@ -555,7 +563,7 @@ static void atexit_actions()
 //
 static void init_once(void)
 {
-	int e = pthread_mutex_init(&mutex,NULL);
+	int e = pthread_mutex_init(&mutex,nullptr);
 	if(e) panic("init_mutex", e);
 
 	// create key:
@@ -572,7 +580,7 @@ static void init_once(void)
 	if(LOGFILE_ROTATION != NEVER)
 	{
 		openLogfile(
-			NULL/*dirpath*/, LOGFILE_ROTATION, LOGFILE_MAX_LOGFILES, LOGFILE_LOG_TO_CONSOLE,
+			nullptr/*dirpath*/, LOGFILE_ROTATION, LOGFILE_MAX_LOGFILES, LOGFILE_LOG_TO_CONSOLE,
 			LOGFILE_TIMESTAMP_WITH_DATE, LOGFILE_TIMESTAMP_WITH_MSEC );
 	}
 }
@@ -584,8 +592,6 @@ static void init_once(void)
 //
 static void init()
 {
-	IFDEBUG( char bu[2]; snprintf(bu,2,"ss"); if(bu[1]) panic("snprintf"); )
-
 	// initialize:
 	static pthread_once_t once_control = PTHREAD_ONCE_INIT;
 	int e = pthread_once( &once_control, init_once );
@@ -611,7 +617,7 @@ LogFile::LogFile()
 
 		// find a free slot / thread_id:
 		uint i=0;
-		while(i<logfiles_cnt && logfiles[i]!=NULL) i++;
+		while(i<logfiles_cnt && logfiles[i]!=nullptr) i++;
 
 		// no free slot => append at end of list
 		if(i==logfiles_cnt)
@@ -651,7 +657,7 @@ LogFile::~LogFile()
 		write2log("---thread terminated---");
 
 		// remove this from logfiles[]:
-		logfiles[thread_id] = NULL;
+		logfiles[thread_id] = nullptr;
 
 	unlock();
 }
@@ -704,9 +710,12 @@ void LogFile::vaadd(cstr format, va_list va)
 {
 	lock();
 
-		if(repetitions) print_repetitions();
-		composition += vsnprintf(msg+composition, NELEM(msg)-composition, format, va);
-		if(composition>=NELEM(msg)) composition = NELEM(msg);
+		if (repetitions) print_repetitions();
+        int num_added = vsnprintf(msg+composition, NELEM(msg)-composition, format, va);
+        assert(num_added >= 0);
+        if (num_added < 0) num_added = snprintf(msg+composition, NELEM(msg)-composition, "[[printf format error]]");
+        composition += uint(num_added);
+		if (composition >= NELEM(msg)) composition = NELEM(msg);
 
 	unlock();
 }
@@ -805,13 +814,13 @@ static void purge_old_logfiles(cstr fname)
 	for(;;)
 	{
 		dirent* direntry = readdir(dir);
-		if(direntry==NULL) break;			// end of dir
+		if(direntry==nullptr) break;			// end of dir
 
 		cstr filename = direntry->d_name;
 		#ifdef _BSD
 			uint filenamelen = direntry->d_namlen;
 		#else
-			uint filenamelen = strlen(direntry->d_name);
+			size_t filenamelen = strlen(direntry->d_name);
 		#endif
 		assert(filename[filenamelen]==0);
 
@@ -870,7 +879,7 @@ void openLogfile(cstr dirpath, LogRotation logrotate, uint max_logfiles, bool lo
 	dirpath = create_path(dirpath);
 	if(errno) dirpath = create_path(LOGFILE_BASE_DIRECTORY APPL_NAME "/");
 	if(errno) dirpath = create_path(LOGFILE_AUX_DIRECTORY APPL_NAME "/");
-	if(errno) panic("could not create log dir",strerror(errno));
+	if(errno) panic("could not create log dir",errno);
 
 	char filepath[1024];
 	lock();
@@ -889,12 +898,12 @@ void openLogfile(cstr dirpath, LogRotation logrotate, uint max_logfiles, bool lo
 		::log2console  = log2console;
 		timestamp_with_msec = with_msec;
 		timestamp_with_date = with_date;
-		if(logdir!=dirpath) { delete[] logdir; logdir = new char[strlen(dirpath)+1]; strcpy((ptr)logdir,dirpath); }
+		if(logdir!=dirpath) { delete[] logdir; logdir = new char[strlen(dirpath)+1]; strcpy(ptr(logdir),dirpath); }
 
 		// calculate current logfile filename
 		// and when to rotate log:
 
-		time_t when = (time_t)::now() / seconds_per_day * seconds_per_day;	// start of day
+		time_t when = time_t(::now()) / seconds_per_day * seconds_per_day;	// start of day
 		tm dt; gmtime_r(&when,&dt);
 			//	int	tm_sec;		/* seconds after the minute [0-60] */
 			//	int	tm_min;		/* minutes after the hour [0-59] */

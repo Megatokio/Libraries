@@ -36,7 +36,7 @@
 */
 
 
-#include "config.h"
+#include "kio/kio.h"
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
@@ -46,7 +46,6 @@
 #include "FD.h"
 #include <unistd.h>
 #include <sys/select.h>
-#include "kio/peekpoke.h"
 
 
 #if !defined(_POSIX_SOURCE) && !defined(_SOLARIS)

@@ -30,7 +30,7 @@
     ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "config.h"
+#include "kio/kio.h"
 
 #if defined(HAVE_SYS_DIRENT_H)
     #include <sys/dirent.h>

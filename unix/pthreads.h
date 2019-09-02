@@ -1,28 +1,28 @@
 #pragma once
 /*	Copyright  (c)	Günter Woigk 2004 - 2019
-  					mailto:kio@little-bat.de
+					mailto:kio@little-bat.de
 
- 	This program is distributed in the hope that it will be useful,
- 	but WITHOUT ANY WARRANTY; without even the implied warranty of
- 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
- 	Permission to use, copy, modify, distribute, and sell this software and
- 	its documentation for any purpose is hereby granted without fee, provided
- 	that the above copyright notice appear in all copies and that both that
- 	copyright notice and this permission notice appear in supporting
- 	documentation, and that the name of the copyright holder not be used
- 	in advertising or publicity pertaining to distribution of the software
- 	without specific, written prior permission.  The copyright holder makes no
- 	representations about the suitability of this software for any purpose.
- 	It is provided "as is" without express or implied warranty.
+	Permission to use, copy, modify, distribute, and sell this software and
+	its documentation for any purpose is hereby granted without fee, provided
+	that the above copyright notice appear in all copies and that both that
+	copyright notice and this permission notice appear in supporting
+	documentation, and that the name of the copyright holder not be used
+	in advertising or publicity pertaining to distribution of the software
+	without specific, written prior permission.  The copyright holder makes no
+	representations about the suitability of this software for any purpose.
+	It is provided "as is" without express or implied warranty.
 
- 	THE COPYRIGHT HOLDER DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
- 	INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
- 	EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY SPECIAL, INDIRECT OR
- 	CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
- 	DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
- 	TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
- 	PERFORMANCE OF THIS SOFTWARE.
+	THE COPYRIGHT HOLDER DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+	INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
+	EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+	CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+	DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+	TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+	PERFORMANCE OF THIS SOFTWARE.
 
 	pthread wrappers
 
@@ -41,8 +41,8 @@ class PLock
 {
 	pthread_mutex_t mutex;
 
-            PLock       (const PLock&) = delete;
-    PLock&  operator=   (const PLock&) = delete;
+			PLock       (const PLock&) = delete;
+	PLock&  operator=   (const PLock&) = delete;
 
 public:
 	enum Attr   // for usage with PLock(Attr)
@@ -52,9 +52,9 @@ public:
 		errorcheck	= PTHREAD_MUTEX_ERRORCHECK		// w/ usage error checking
 	};
 
-			PLock	()			{ IFDEBUG( int e = ) pthread_mutex_init(&mutex,NULL); assert(!e); }
+			PLock	()			{ IFDEBUG( int e = ) pthread_mutex_init(&mutex,nullptr); assert(!e); }
 			PLock	(Attr);
-			~PLock	()          { IFDEBUG( int e = ) pthread_mutex_destroy(&mutex); 	assert(!e); }
+			~PLock	()          { IFDEBUG( int e = ) pthread_mutex_destroy(&mutex); assert(!e); }
 
 	void	lock	() volatile noexcept { IFDEBUG( int e = ) pthread_mutex_lock(const_cast<pthread_mutex_t*>(&mutex)); assert(!e); }
 	void	unlock	() volatile noexcept { IFDEBUG( int e = ) pthread_mutex_unlock(const_cast<pthread_mutex_t*>(&mutex));assert(!e);}
@@ -95,8 +95,8 @@ class PSemaphore
 	pthread_mutex_t	mutex;
 	pthread_cond_t	cond;
 
-                    PSemaphore	(PSemaphore const&);    // prohibit
-    PSemaphore&     operator=   (PSemaphore const&);    // prohibit
+					PSemaphore	(PSemaphore const&);    // prohibit
+	PSemaphore&     operator=   (PSemaphore const&);    // prohibit
 
 public:				PSemaphore	(cstr static_name_str="", uint32 _avail = 0);
 					~PSemaphore	();

@@ -7,20 +7,6 @@
 	License: BSD-2-Clause, see https://opensource.org/licenses/BSD-2-Clause
 */
 
-/* include "config.h" and "settigs.h"
-	on unix systems "config.h" could be generated from "configure.in"
-	using autoconf and should not be part of the cvs repository.
-
-	on other systems put this file into the platform specific subfolder
-	and edit this file directly. this platform specific variant should
-	go into the cvs.
-
-	config.h MUST be included before ANY system header
-	wg. #define _FILE_OFFSET_BITS 64 on 32-bit Linux
-*/
-#include "config.h"		// platform settings
-#include "settings.h"	// project settings
-
 
 /* detect platform, compiler, processor, endianess, sizeof(types)
 
@@ -300,7 +286,7 @@
 	static_assert(_MAX_ALIGNMENT == 16, "");
 
 #else
-	#error can't detect processor
+        #error "can't detect processor"
 #endif
 
 

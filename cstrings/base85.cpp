@@ -56,7 +56,6 @@
 */
 
 #include "kio/kio.h"
-#include "kio/peekpoke.h"
 #include "base85.h"
 
 

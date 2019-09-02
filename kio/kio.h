@@ -25,7 +25,12 @@
 #define	kioDomain	"k1.spdns.de"
 
 
-#include "detect_configuration.h"
+#include "auto_config.h"    // platform settings
+#include "settings.h"       // project settings
+
+#ifdef _UNIX
+#include <unistd.h>
+#endif
 
 #include <cstdlib>
 #include <cerrno>
@@ -255,6 +260,8 @@ extern void abort( int error_number )	  __attribute__((__noreturn__));
 	defined in kio/kio.cpp
 */
 extern double now();
+extern void waitDelay (double seconds);
+extern void waitUntil (double seconds_since_epoche);
 
 
 /*	basic maths
@@ -296,6 +303,7 @@ enum Foo{foo};
 #include "errors.h"
 #include "exceptions.h"
 #include "cstrings/cstrings.h"
+#include "peekpoke.h"
 #ifdef LOGFILE
 #include "unix/log.h"
 #endif
@@ -319,10 +327,6 @@ static_assert(sizeof(off_t)==8,"sizeof(off_t) wrong!");
 #define LMASK(i)		(0xFFFFFFFF<<(i))								 // mask to select all but the i bits from right
 double random(double r)	{ return ldexp(random() * r, -31); }			 // #include <cmath>
 uint   random(uint n)	{ return (uint32(n) * uint16(random())) >> 16; } // 16 bit random number in range [0 ... [n
-
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 */
 
 

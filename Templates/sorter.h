@@ -110,9 +110,11 @@
 		case 2: // 3 items
 			if(GT(a[0],a[2])) SWAP(a[0],a[2]);
 			if(GT(a[1],a[2])) SWAP(a[1],a[2]);
+			/* fall through */
 
 		case 1: // 2 items
 			if(GT(a[0],a[1])) SWAP(a[0],a[1]);
+			/* fall through */
 
 		case 0: // 1 item
 			if(pushed)

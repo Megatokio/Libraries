@@ -59,7 +59,7 @@
 #define SAFE 1
 #define LOGLEVEL 0
 #define LOG 0         // for use in project vipsi
-#include "config.h"
+#include "kio/kio.h"
 #include <sys/stat.h>
 #include <sys/param.h>
 #include <fcntl.h>
@@ -69,7 +69,6 @@
 #include "String.h"
 #include "cstrings/utf8.h"
 #include "cstrings/legacy_charsets.h"
-#include "kio/peekpoke.h"
 
 
 #ifdef NDEBUG

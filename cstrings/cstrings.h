@@ -137,7 +137,10 @@ extern	str	 hexstr 	(uint32 n, uint len) noexcept;
 inline	str  hexstr		(int32 n, uint len)  noexcept { return hexstr(uint32(n),len); }
 extern	str	 hexstr 	(uint64 n, uint len) noexcept;
 inline	str	 hexstr		(int64 n, uint len)	noexcept { return hexstr(uint64(n),len); }
-#ifndef _LINUX
+#ifdef _LINUX
+inline	str	 hexstr		(long long n, uint len)  noexcept { return hexstr(uint64(n),len); }
+inline	str	 hexstr		(unsigned long long n, uint len) noexcept { return hexstr(uint64(n),len); }
+#else
 inline	str	 hexstr		(long n, uint len)  noexcept { return hexstr(uint64(n),len); }
 inline	str	 hexstr		(ulong n, uint len) noexcept { return hexstr(uint64(n),len); }
 #endif

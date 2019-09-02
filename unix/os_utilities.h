@@ -47,8 +47,7 @@ extern	time_t	intCurrentTime	();
 extern	double	now				();		// was: floatCurrentTime
 inline	time_t	upTime			()		{ return intCurrentTime()-bootTime(); }
 
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
+#ifdef _UNIX
 inline	uid_t	getUID			( )		{ return getuid(); }
 inline	gid_t	getGID			( )		{ return getgid(); }
 inline	uid_t	getEffUID		( )		{ return geteuid(); }

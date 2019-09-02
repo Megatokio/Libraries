@@ -27,16 +27,16 @@
 #undef NDEBUG
 #define SAFETY 2
 #define LOGLEVEL 1
-#include "Libraries/kio/kio.h"
+#include "kio/kio.h"
 #undef  assert
 #define assert(X) do{ if(X){}else{throw internal_error(__FILE__, __LINE__, "FAILED: " #X);} }while(0)
-#include "Libraries/unix/FD.h"
+#include "unix/FD.h"
 #include "cstrings.h"
 #include "ucs1.h"
 #include "utf8.h"
 #include "unix/tempmem.h"
-#include "Libraries/Templates/Array.h"
-#include "Libraries/kio/util/defines.h"
+#include "Templates/Array.h"
+#include "kio/util/defines.h"
 
 
 #define TRY num_tests++; try{
