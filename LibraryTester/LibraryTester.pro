@@ -5,7 +5,9 @@ CONFIG -= qt
 CONFIG += c++11
 CONFIG += precompiled_header
 
-#LIBS += -pthread
+linux-g++ {
+LIBS += -pthread
+}
 
 INCLUDEPATH +=  \
 	.			\
@@ -39,14 +41,15 @@ SOURCES += \
 	Libraries/VString/String.cpp
 
 HEADERS += \
-	config.h \
 	Source/settings.h \
 	Source/custom_errors.h \
 	Libraries/unix/FD.h \
 	Libraries/unix/tempmem.h \
+	Libraries/unix/s_type.h \
 	Libraries/kio/errors.h \
 	Libraries/kio/exceptions.h \
 	Libraries/kio/kio.h \
+	Libraries/kio/auto_config.h \
 	Libraries/kio/detect_configuration.h \
 	Libraries/kio/util/msbit.h \
 	Libraries/Templates/Array.h \
