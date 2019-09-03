@@ -36,7 +36,9 @@
     2007-02-14 kio	NewTempFile(), DupFile(), filecopy(), lots of new file i/o functions.
 */
 
-#include "config.h"
+#include "kio/kio.h"
+
+#ifdef _UNIX
 #include <sys/stat.h>
 #include <sys/param.h>
 #include <sys/fcntl.h>
@@ -44,20 +46,29 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <termios.h>
-#include <new>
 #include <fnmatch.h>
-#include <dirent.h>
 #include <time.h>
 #include <grp.h>		// BSD, most Linux
 #include <sys/types.h>
 #include <pwd.h>
+#endif
+
+#include <new>
+
+#ifdef HAVE_DIRENT_H
+#include <dirent.h>
+#endif
+#ifdef HAVE_SYS_DIRENT_H
+#include <sys/dirent.h>
+#endif
+
 #ifdef HAVE_SYS_VFS_H   // Linux
 #include <sys/vfs.h>
 #endif
 #ifdef HAVE_MNTENT_H    // Linux
 #include <mntent.h>
 #endif
-#include "kio/kio.h"
+
 #include "Templates/Array.h"
 #include "tempmem.h"
 #include "MyFileInfo.h"

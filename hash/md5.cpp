@@ -20,7 +20,7 @@
  * Still in the public domain.
  */
 
-#include "config.h"
+#include "kio/kio.h"
 #include <string.h>			/* for memcpy() */
 #include <sys/types.h>		/* for stupid systems */
 #include "md5.h"

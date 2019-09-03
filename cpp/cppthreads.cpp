@@ -26,7 +26,7 @@
     2013-08-15	kio	modifications for Linux
 */
 
-#include "config.h"
+#include "kio/kio.h"
 #include <math.h>
 #include <sys/time.h>
 #include <thread>

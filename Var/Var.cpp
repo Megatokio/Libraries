@@ -58,8 +58,8 @@
 #define 	SAFE	2
 #define 	LOG		1
 
+#include	"kio/kio.h"
 #include	<math.h>
-#include	"config.h"
 #include	"Var.h"
 #include	"Templates/Stack.h"
 

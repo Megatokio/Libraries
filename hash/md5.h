@@ -21,10 +21,9 @@
  * Still in the public domain.
  */
 
-#include "../kio/kio.h"
+#include "kio/kio.h"
 
-typedef unsigned char md5byte;
-typedef uint32 uint32;
+typedef uchar md5byte;
 
 struct MD5Context
 {

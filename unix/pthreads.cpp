@@ -26,9 +26,11 @@
 	2013-08-15	kio	modifications for Linux
 */
 
-#include "config.h"
+#include "kio/kio.h"
 #include <math.h>
+#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
+#endif
 #include "pthreads.h"
 
 INIT_MSG
@@ -227,8 +229,8 @@ PSemaphore::PSemaphore( cstr name, uint32 avail )
 	name(name),
 	avail(avail)
 {
-	int e = pthread_mutex_init(&mutex, NULL);
-	if(!e) e = pthread_cond_init(&cond, NULL);
+	int e = pthread_mutex_init(&mutex, nullptr);
+	if(!e) e = pthread_cond_init(&cond, nullptr);
 
 	if(e) abort("new PSemaphore: %s", strerror(e));
 }
@@ -373,14 +375,14 @@ static void* execute_every_proc( void* data )
 	double now = ::now();
 	do { waitUntil( now += x->delay ); } while( x->fu(x->arg) );
 	delete x;
-	return NULL;
+	return nullptr;
 }
 
 pthread_t executeEvery( double delay, bool(*fu)(void*), void* arg )
 {
 	pthread_t thread;
 	exec_every_t* spawn_data = new exec_every_t(fu,arg,delay);
-	int e = pthread_create( &thread, NULL /*attr*/, execute_every_proc, spawn_data );
+	int e = pthread_create( &thread, nullptr /*attr*/, execute_every_proc, spawn_data );
 	if(e) abort("executeEvery: %s", strerror(e));
 	return thread;
 }
@@ -390,14 +392,14 @@ static void* execute_with_delay_proc( void* arg )
 	exec_every_t* x = static_cast<exec_every_t*>(arg);
 	do { waitUntil( now() + x->delay ); } while( x->fu(x->arg) );
 	delete x;
-	return NULL;
+	return nullptr;
 }
 
 pthread_t executeWithDelay( double delay, bool(*fu)(void*), void* arg )
 {
 	pthread_t thread;
 	exec_every_t* spawn_data = new exec_every_t(fu,arg,delay);
-	int e = pthread_create( &thread, NULL /*attr*/, execute_with_delay_proc, spawn_data );
+	int e = pthread_create( &thread, nullptr /*attr*/, execute_with_delay_proc, spawn_data );
 	if(e) abort("executeWithDelay: %s", strerror(e));
 	return thread;
 }
@@ -431,14 +433,14 @@ static void* execute_at_proc( void* arg )
 		else		    x->time = d;			// time returned
 	}
 	delete x;
-	return NULL;
+	return nullptr;
 }
 
 pthread_t executeAt( double time, double(*fu)(void*), void* arg )
 {
 	pthread_t thread;
 	exec_at_t* spawn_data = new exec_at_t(fu,arg,time);
-	int e = pthread_create( &thread, NULL /*attr*/, execute_at_proc, spawn_data );
+	int e = pthread_create( &thread, nullptr /*attr*/, execute_at_proc, spawn_data );
 	if(e) abort("executeAt: %s", strerror(e));
 	return thread;
 }
