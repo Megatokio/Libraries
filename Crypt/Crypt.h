@@ -37,8 +37,10 @@
 class Crypt : public MersenneTwister64
 {
 
-    str 	encrypt_path(cstr path);
-    str 	decrypt_path(cstr path);
+    str 	encrypt_path(str path);
+    str 	decrypt_path(str path);
+    str 	encrypt_path(cstr path)                 { return encrypt_path(dupstr(path)); }
+    str 	decrypt_path(cstr path)                 { return decrypt_path(dupstr(path)); }
     void	crypt(uint8 bu[], uint sz);
     Crypt*	spread_key2();
 
