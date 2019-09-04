@@ -931,7 +931,7 @@ void create_hardlinked_copy(char const* zpath, char const* qpath) THF
     catch(file_error& e)
     {
         logline("create_hardlinked_copy dir size = %u, dir = %s", dir.count(),qpath);
-        throw std::move(e);
+        throw e;
     }
 }
 

@@ -23,7 +23,7 @@
 
 #include "kio/kio.h"
 
-typedef uchar md5byte;
+typedef uchar md5byte, *md5bytePtr;
 
 struct MD5Context
 {
