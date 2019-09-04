@@ -130,7 +130,7 @@ extern void	waitUntil			( double time );
 	fu() is called exactly in the defined interval independently how long fu() runs itself.
 	the created thread is returned in case the caller needs it.
 */
-extern pthread_t executeEvery		( double delay, bool(*fu)(void*), void* arg = NULL );
+extern pthread_t executeEvery		( double delay, bool(*fu)(void*), void* arg = nullptr );
 
 
 /*	in a loop, wait 'delay' and execute function fu() until fu() returns false.
@@ -138,7 +138,7 @@ extern pthread_t executeEvery		( double delay, bool(*fu)(void*), void* arg = NUL
 	fu() is re-scheduled with 'delay' after fu() returns, not in exact intervals.
 	the created thread is returned in case the caller needs it.
 */
-extern pthread_t executeWithDelay 	( double delay, bool(*fu)(void*), void* arg = NULL );
+extern pthread_t executeWithDelay 	( double delay, bool(*fu)(void*), void* arg = nullptr );
 
 
 /*	wait until 'time' and then execute fu().
@@ -146,7 +146,7 @@ extern pthread_t executeWithDelay 	( double delay, bool(*fu)(void*), void* arg =
 	else wait until the returned time or wait the returned delay (auto-detected)
 	and call fu() again until it returns ≤ 0.0.
 */
-extern pthread_t executeAt          ( double time,  double(*fu)(void*), void* arg = NULL );
+extern pthread_t executeAt          ( double time,  double(*fu)(void*), void* arg = nullptr );
 
 
 /*	wait 'delay' and then execute fu().
@@ -154,7 +154,7 @@ extern pthread_t executeAt          ( double time,  double(*fu)(void*), void* ar
 	else wait until the returned time or wait the returned delay (auto-detected)
 	and call fu() again until it returns ≤ 0.0.
 */
-extern pthread_t executeAfter       ( double delay, double(*fu)(void*), void* arg = NULL );
+extern pthread_t executeAfter       ( double delay, double(*fu)(void*), void* arg = nullptr );
 
 
 

@@ -85,14 +85,14 @@ class NVPtr
 	NVPtr&	operator=	(NVPtr const&)		= delete;
 
 public:
-			NVPtr		()					:p(NULL) {}
-			NVPtr		(NVPtr&& q)			:p(q.p) { q.p=NULL; }
+			NVPtr		()					:p(nullptr) {}
+			NVPtr		(NVPtr&& q)			:p(q.p) { q.p=nullptr; }
 //			NVPtr		(RCPtr<vT>& q)		:p(const_cast<T*>(q.p)) { lock(); }
 			NVPtr		(vT* p)      		:p(const_cast<T*>(p))  { lock(); }
 			NVPtr		(vT& q)      		:p(const_cast<T*>(&q)) { lock(); }
 			~NVPtr		()					{ unlock(); }
 
-	NVPtr&	operator=	(NVPtr&& q)			{ assert(this!=&q); unlock(); p=q.p; q.p=NULL; return *this; }
+	NVPtr&	operator=	(NVPtr&& q)			{ assert(this!=&q); unlock(); p=q.p; q.p=nullptr; return *this; }
 //	NVPtr&	operator=	(RCPtr<vT>& q)		{ if(p!=q.p) { unlock(); p=q.p; lock(); } return *this; }
 	NVPtr&	operator=	(vT* q)				{ if(p!=q)   { unlock(); p=q;   lock(); } return *this; }
 	NVPtr&	operator=	(ptr p)				{ assert(p==nullptr); unlock(); p=nullptr; return *this; }
@@ -117,8 +117,8 @@ public:
 	uint	refcnt		()					{ return p ? p->refcnt() : 0; }
 	void	swap		(NVPtr& q)			{ T* z=p; p=q.p; q.p=z; }
 
-	bool	isNotNull	() const			{ return p!=NULL; }
-	bool	isNull		() const			{ return p==NULL; }
+	bool	isNotNull	() const			{ return p!=nullptr; }
+	bool	isNull		() const			{ return p==nullptr; }
 	operator bool		() const			{ return p; }
 //	bool	operator==	(const T* p) const	{ return p == this->p; }		ohne geht's besser
 
@@ -145,7 +145,7 @@ void NVPtr<T>::print( FD& fd, cstr indent ) const
 template<class T>
 void NVPtr<T>::writeToFile(FD& fd, void* data) const THF
 {
-	fd.write_uint8(p!=NULL);
+	fd.write_uint8(p!=nullptr);
 	if(p) p->writeToFile(fd,data);
 }
 

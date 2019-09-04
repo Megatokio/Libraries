@@ -170,8 +170,8 @@ void test_base85()
     assert(sizeAfterBase85Encoding(4)==5);
     assert(sizeAfterBase85Encoding(5)==7);
 
-    encodeBase85(NULL,0,NULL,0);
-    decodeBase85(NULL,0,NULL,0);
+    encodeBase85(nullptr,0,nullptr,0);
+    decodeBase85(nullptr,0,nullptr,0);
 
     cstr q = "1234567890ß´^qwertzuiopü+asdfghjklöä#<yxcvbnm,.-°!§$%&/()=?`QWERTZUIOPÜ*ASDFGHJKLÖÄ'YXCVBNM;:_~º∆∫®∂√Ω€t!\n&)(/B)";
     str  z = tempstr(sizeAfterBase85Encoding((uint)strlen(q)));

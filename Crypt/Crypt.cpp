@@ -156,7 +156,7 @@ void Crypt::crypt(uint8 bu[], uint sz)
 */
 str Crypt::encrypt(cstr q) const
 {
-    if(q==NULL||*q==0) return tempstr(0);
+    if(q==nullptr||*q==0) return tempstr(0);
 
     // Create copy of data:
     uint   zlen = strLen(q);
@@ -179,10 +179,10 @@ str	Crypt::decrypt(cstr q) const
     // Decode Base85:
     uint qlen = strLen(q);
     uint zlen = sizeAfterBase85Decoding(qlen);
-    if(zlen<2) return zlen==0 ? tempstr(0) : NULL;
+    if(zlen<2) return zlen==0 ? tempstr(0) : nullptr;
     str  z  = tempstr(zlen);
     int err = decodeBase85((uptr)q,qlen,(uptr)z,zlen);
-    if(err) return NULL;
+    if(err) return nullptr;
 
     // Decrypt in place:
     Crypt(*this,peek2Z(z)).decrypt((uptr)z+2,zlen-2);

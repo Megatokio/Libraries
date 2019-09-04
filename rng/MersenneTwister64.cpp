@@ -111,7 +111,7 @@ void MersenneTwister64::init( uint64 seed[], uint seed_length )
 */
 void MersenneTwister64::init(cstr qstr)
 {
-    if(qstr==NULL||*qstr==0) { init(uint64(0)); return; }
+    if(qstr==nullptr||*qstr==0) { init(uint64(0)); return; }
 
     uint qlen = uint(strlen(qstr));
     uint zlen = (qlen+7)/8;
@@ -212,7 +212,7 @@ void MersenneTwister64::next_table()
 //MersenneTwister64* MersenneTwister64::apply_key2(cstr qstr)
 //{
 ////	xlogline("apply key2 = \"%s\"",qstr);
-//	if(qstr==NULL)
+//	if(qstr==nullptr)
 //		log("");
 //
 //	if(qstr&&*qstr)
@@ -296,7 +296,7 @@ void MersenneTwister64::next_table()
 //	uint zlen = sizeAfterBase85Decoding(qlen);
 //	str  z  = tempstr(zlen);
 //	int err = decodeBase85((uptr)q,qlen,(uptr)z,zlen);
-//	if(err) return NULL;
+//	if(err) return nullptr;
 //
 //	// Decrypt in place:
 //	decrypt((uptr)z,zlen);
@@ -312,7 +312,7 @@ void MersenneTwister64::next_table()
 //{
 //	mti = mti0;
 //	ptr p = strchr(qpath,'/');
-//	if(p==NULL) return encrypt(qpath);
+//	if(p==nullptr) return encrypt(qpath);
 //
 //	*p=0;
 //	char* zpath = encrypt(qpath);
@@ -334,7 +334,7 @@ void MersenneTwister64::next_table()
 //{
 //	mti = mti0;
 //	ptr p = strchr(qpath,'/');
-//	if(p==NULL) return decrypt(qpath);
+//	if(p==nullptr) return decrypt(qpath);
 //
 //	*p=0;
 //	char* zpath = decrypt(qpath);

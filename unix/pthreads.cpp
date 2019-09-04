@@ -55,8 +55,8 @@ static void setup(void)
 	e |= pthread_mutexattr_settype(mutex_attr+PLock::errorcheck,PTHREAD_MUTEX_ERRORCHECK);
 
 #if 0
-	e |= pthread_mutex_init( &wait_lock, NULL );
-	e |= pthread_cond_init( &wait_cond, NULL );
+	e |= pthread_mutex_init( &wait_lock, nullptr );
+	e |= pthread_cond_init( &wait_cond, nullptr );
 #endif
 
 	assert(!e);
@@ -84,7 +84,7 @@ static void setup(void)
 double now ( )		// moved to LogFile.cpp
 {
 	struct timeval tv;
-	gettimeofday ( &tv, NULL );
+	gettimeofday ( &tv, nullptr );
 	return tv.tv_sec + tv.tv_usec * 1e-6;
 }
 #endif
@@ -110,8 +110,8 @@ PLock::PLock ( Attr a )
 //	sema = 0;		// sema<=0 -> free; sema>0 -> locked
 //	//who = 0;		// id of blocking thread
 //	name = "";
-//	if( (e = pthread_mutex_init( &mutex, NULL )) ) goto x;
-//	if( (e = pthread_cond_init(  &cond, NULL )) ) goto x;
+//	if( (e = pthread_mutex_init( &mutex, nullptr )) ) goto x;
+//	if( (e = pthread_cond_init(  &cond, nullptr )) ) goto x;
 //	return;
 //
 //x:	Abort("PSema:PSema::",errorstr(e),"\n");
@@ -124,8 +124,8 @@ PLock::PLock ( Attr a )
 //	sema = 0;		// sema<=0 -> free; sema>0 -> locked
 //	//who = 0;		// id of blocking thread
 //	name = s;
-//	if( (e = pthread_mutex_init( &mutex, NULL )) ) goto x;
-//	if( (e = pthread_cond_init(  &cond, NULL )) ) goto x;
+//	if( (e = pthread_mutex_init( &mutex, nullptr )) ) goto x;
+//	if( (e = pthread_cond_init(  &cond, nullptr )) ) goto x;
 //	return;
 //
 //x:	Abort("PSema:PSema:",catstr(name,":"),errorstr(e));
