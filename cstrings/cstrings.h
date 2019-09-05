@@ -2,17 +2,19 @@
 /*	Copyright  (c)	Günter Woigk 1995 - 2019
 					mailto:kio@little-bat.de
 
-	This file is free software
-	License: BSD-2-Clause, see https://opensource.org/licenses/BSD-2-Clause
+	This file is free software.
 
-	c-string library
+ 	Permission to use, copy, modify, distribute, and sell this software
+ 	and its documentation for any purpose is hereby granted without fee,
+ 	provided that the above copyright notice appears in all copies and
+ 	that both that copyright notice, this permission notice and the
+ 	following disclaimer appear in supporting documentation.
 
-	• this library provides string manipulation for c-style strings.
-	• results are typically stored in thread-safe tempMem buffers
-	  and are valid until the current TempMemPool is deallocated.
-	• they are intended for immediate use,
-	  e.g. for printing, intermediate values in string expressions
-	  and for returning result strings.
+	THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT ANY WARRANTY, NOT EVEN THE
+	IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
+	AND IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DAMAGES
+	ARISING FROM THE USE OF THIS SOFTWARE,
+	TO THE EXTENT PERMITTED BY APPLICABLE LAW.
 */
 
 #include "kio/kio.h"

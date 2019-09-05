@@ -1,51 +1,20 @@
 /*	Copyright  (c)	Günter Woigk   2001 - 2019
 					mailto:kio@little-bat.de
 
-	This file is free software
+	This file is free software.
 
- 	This program is distributed in the hope that it will be useful,
- 	but WITHOUT ANY WARRANTY; without even the implied warranty of
- 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ 	Permission to use, copy, modify, distribute, and sell this software
+ 	and its documentation for any purpose is hereby granted without fee,
+ 	provided that the above copyright notice appears in all copies and
+ 	that both that copyright notice, this permission notice and the
+ 	following disclaimer appear in supporting documentation.
 
-	Redistribution and use in source and binary forms, with or without
-	modification, are permitted provided that the following conditions are met:
+	THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT ANY WARRANTY, NOT EVEN THE
+	IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
+	AND IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DAMAGES
+	ARISING FROM THE USE OF THIS SOFTWARE,
+	TO THE EXTENT PERMITTED BY APPLICABLE LAW.
 
-	• Redistributions of source code must retain the above copyright notice,
-	  this list of conditions and the following disclaimer.
-	• Redistributions in binary form must reproduce the above copyright notice,
-	  this list of conditions and the following disclaimer in the documentation
-	  and/or other materials provided with the distribution.
-
-	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-	AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-	THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-	PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
-	CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-	EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-	PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-	OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-	WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
-	OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
-	ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-	08.aug.2001	kio	started work on this file
-	27.oct.2001 kio finished 2nd rework
-	31.oct.2001 kio started test suite; fixed union bug
-	04.nov.2001	kio finished test suite, documentation
-	21.nov.2001 kio list().array now array of Var* ... again.
-	2002-03-21 kio	fixed bug in InsertItems() if !XXXSAFE
-	2002-04-01 kio	fixed bug in AppendList()
-	2002-04-05 kio	enhanced operators on lists, lots of changes
-	2002-04-07 kio	fixed bug in operator> et.al. for lists
-	2002-05-20 kio	trap for sizeof(Double)>12
-	2003-08-05 kio	ToList() new, ToString() new, changed ToNumber() for isVoid
-	2003-08-21 kio	eliminated isVoid
-	2003-08-23 kio	operator>>=() and operator<<=() now use ldexp() => now left operand may be non-int
-	2003-09-08 kio	ToString() now includes item names and (optionally) skips procs in lists
-	2003-10-12 kio	fixed handling of nullptr in lists for string concatenation
-	2003-10-18 kio	fixed list-, list size-, and nullptr in list-related issues
-	2004-05-28 kio	Umstellung auf NameHandles
-	2004-06-29 kio	added variable and data locking
 
 	---------
 	Class Var

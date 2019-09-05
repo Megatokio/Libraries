@@ -2,45 +2,26 @@
 /*	Copyright  (c)	Günter Woigk 1996 - 2019
 					mailto:kio@little-bat.de
 
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+	This file is free software.
 
-	Permission to use, copy, modify, distribute, and sell this software and
-	its documentation for any purpose is hereby granted without fee, provided
-	that the above copyright notice appear in all copies and that both that
-	copyright notice and this permission notice appear in supporting
-	documentation, and that the name of the copyright holder not be used
-	in advertising or publicity pertaining to distribution of the software
-	without specific, written prior permission.  The copyright holder makes no
-	representations about the suitability of this software for any purpose.
-	It is provided "as is" without express or implied warranty.
+ 	Permission to use, copy, modify, distribute, and sell this software
+ 	and its documentation for any purpose is hereby granted without fee,
+ 	provided that the above copyright notice appears in all copies and
+ 	that both that copyright notice, this permission notice and the
+ 	following disclaimer appear in supporting documentation.
 
-	THE COPYRIGHT HOLDER DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
-	INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
-	EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY SPECIAL, INDIRECT OR
-	CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
-	DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
-	TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-	PERFORMANCE OF THIS SOFTWARE.
+	THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT ANY WARRANTY, NOT EVEN THE
+	IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
+	AND IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DAMAGES
+	ARISING FROM THE USE OF THIS SOFTWARE,
+	TO THE EXTENT PERMITTED BY APPLICABLE LAW.
 
-	Z80 cpu emulation version 2.3.0
+
+	Z80 cpu emulation
 */
 
 #include "Item.h"			// note: copy template into your project
 #include "Z80options.h"		// note: copy template into your project
-
-#ifndef BYTE_ORDER
-# ifdef HAVE_MACHINE_ENDIAN_H
-#  include <machine/endian.h>
-# else
-#  ifdef HAVE_ENDIAN_H
-#   include <endian.h>
-#  else
-#   include <unistd.h>
-#  endif
-# endif
-#endif
 
 
 #define	CPU_PAGESIZE	(1<<CPU_PAGEBITS)
@@ -51,10 +32,11 @@
 
 // ----	helper ----
 
-#if BYTE_ORDER == BIG_ENDIAN  // m68k, ppc
+#include "kio/detect_configuration.h"
+#ifdef _BIG_ENDIAN  // m68k, ppc
 static inline uint8& lowbyte(CoreByte& n) noexcept { return *(((uint8*)&n)+(sizeof(CoreByte)-1)); }
 #endif
-#if BYTE_ORDER == LITTLE_ENDIAN // i386
+#ifdef _LITTLE_ENDIAN // i386
 static inline uint8& lowbyte(CoreByte& n) noexcept { return (uint8&)n; }
 #endif
 

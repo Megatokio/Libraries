@@ -1,57 +1,23 @@
 /*	Copyright  (c)	Günter Woigk 1996 - 2019
 					mailto:kio@little-bat.de
 
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+	This file is free software.
 
-	Permission to use, copy, modify, distribute, and sell this software and
-	its documentation for any purpose is hereby granted without fee, provided
-	that the above copyright notice appear in all copies and that both that
-	copyright notice and this permission notice appear in supporting
-	documentation, and that the name of the copyright holder not be used
-	in advertising or publicity pertaining to distribution of the software
-	without specific, written prior permission.  The copyright holder makes no
-	representations about the suitability of this software for any purpose.
-	It is provided "as is" without express or implied warranty.
+ 	Permission to use, copy, modify, distribute, and sell this software
+ 	and its documentation for any purpose is hereby granted without fee,
+ 	provided that the above copyright notice appears in all copies and
+ 	that both that copyright notice, this permission notice and the
+ 	following disclaimer appear in supporting documentation.
 
-	THE COPYRIGHT HOLDER DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
-	INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
-	EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY SPECIAL, INDIRECT OR
-	CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
-	DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
-	TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-	PERFORMANCE OF THIS SOFTWARE.
+	THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT ANY WARRANTY, NOT EVEN THE
+	IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
+	AND IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DAMAGES
+	ARISING FROM THE USE OF THIS SOFTWARE,
+	TO THE EXTENT PERMITTED BY APPLICABLE LAW.
 
 
-	Z80 Emulator	version 2.3.0
+	Z80 Emulator	version
 					initially based on fMSX; Copyright (C) Marat Fayzullin 1994,1995
-
-	1995-03-28 kio	Started work on C version
-	1995-04-01 kio	Finished, yee it works!
-	1995-04-06 kio	Removed "final bug": im2 interrupt handling
-	1995-06-12 kio	revised EI_WITH_DELAY handling
-	1995-06-12 kio	all Info-Calls and profiling added
-	1995-06-12 kio	exact r register emulation completed
-	1995-06-13 kio	All opcodes covered, no unsupported opcodes!
-	1995-11-01 kio	Paged memory supported
-	1995-11-26 kio	Engine now completely hardware independent!
-	1996-03-28 kio	Core2Core() works even if src and dest block overlap at both ends
-	1996-03-28 kio	removed option to switch off latency of 'EI' instruction
-	1996-05-02 kio	LOAD_CC after IN and OUT added to make extra wait states possible
-	1998-12-24 kio	started port to linux, rework for c++
-	2000-02-12 kio	removed bug in LDDR emulation
-	2002-02-06 kio	started work on cocoa version
-	2004-11-08 kio	cleaned up source. removed 'class cpu' overhead and disfunct stuff
-	2004-11-11 kio	wait cycle management and crt video callback finished
-	2005-01-16 kio	wait testing cpu cycles validated against the real machine
-	2006-10-06 kio	removed the 'class Cpu' layer, as it contained a lot of Z80 stuff...
-	2008-06-09 kio	reworked run loop and exit codes; added instruction counting exit condition
-	2008-06-14 kio	copyRamToBuffer(), ReadRamFromFile(), saveToFile() and vice versa functions
-	2008-06-22 kio	korr: im=0 after reset
-	2009-05-28 kio	Qt support, #defines for some classes, UnmapMem(), new initialization model
-	2013-06-12 kio	added bits 3 and 5 to zlog_table[]  ((thanks to Rob Probin for the hint))
-	2015-06-05 kio	stripped complications and made a sample project to be used a starter for own projects
 */
 
 #define	 Z80_SOURCE			// -> include other class header files or typedefs only

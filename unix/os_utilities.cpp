@@ -1,75 +1,56 @@
 /*	Copyright  (c)	Günter Woigk 2001 - 2019
                     mailto:kio@little-bat.de
 
-    This file is free software
+	This file is free software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ 	Permission to use, copy, modify, distribute, and sell this software
+ 	and its documentation for any purpose is hereby granted without fee,
+ 	provided that the above copyright notice appears in all copies and
+ 	that both that copyright notice, this permission notice and the
+ 	following disclaimer appear in supporting documentation.
 
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are met:
-
-    • Redistributions of source code must retain the above copyright notice,
-      this list of conditions and the following disclaimer.
-    • Redistributions in binary form must reproduce the above copyright notice,
-      this list of conditions and the following disclaimer in the documentation
-      and/or other materials provided with the distribution.
-
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-    THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-    PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
-    CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-    EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-    PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-    OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-    WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
-    OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
-    ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-    2003-08-08 kio	enhanced SysLoad() for all (?) platforms
-    2003-08-09 kio	ExecCmd()
-    2003-11-25 kio	save&restore stdin/stderr settings
-    2011-01-17 kio	rewritten some procs for sysctl()
-    2011-06-19 kio	modifications for LINUX
+	THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT ANY WARRANTY, NOT EVEN THE
+	IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
+	AND IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DAMAGES
+	ARISING FROM THE USE OF THIS SOFTWARE,
+	TO THE EXTENT PERMITTED BY APPLICABLE LAW.
 */
 
 
 #include <thread>
-#include	"../kio/kio.h"
+#include "kio/kio.h"
 
 #ifdef HAVE_TIME_H
-#include	<time.h>
+#include <time.h>
 #endif
 
 #ifdef HAVE_SYS_TIME_H
-#include	<sys/time.h>
+#include <sys/time.h>
 #endif
 
-#include	<sys/param.h>
-#include	<sys/resource.h>
-#include	<termios.h>
-#include	<pwd.h>
+#include <sys/param.h>
+#include <sys/resource.h>
+#include <termios.h>
+#include <pwd.h>
 
 #ifdef HAVE_MACHINE_VMPARAM_H
-#include	<machine/vmparam.h>
+#include <machine/vmparam.h>
 #endif
 
 #ifdef HAVE_NETDB_H
-#include	<netdb.h>
+#include <netdb.h>
 #endif
 
 #ifdef HAVE_SYS_SYSCTL_H
-#include	<sys/sysctl.h>
+#include <sys/sysctl.h>
 #endif
 
 #ifdef HAVE_SYS_LOADAVG_H
-#include	<sys/loadavg.h>
+#include <sys/loadavg.h>
 #endif
 
 #ifdef HAVE_SYS_WAIT_H
-#include	<sys/wait.h>
+#include <sys/wait.h>
 #endif
 
 #ifdef _MACOSX
@@ -79,7 +60,7 @@
 #undef panic
 #endif
 
-#include	"os_utilities.h"
+#include "os_utilities.h"
 
 
 
