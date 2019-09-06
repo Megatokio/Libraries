@@ -101,7 +101,7 @@
 
 // stat() file
 //
-static int stat( cstr path, struct stat* buf, bool follow_symlink )
+static int stat( cstr path, struct stat* buf, bool follow_symlink ) noexcept
 {
     return follow_symlink ? stat(path,buf) : lstat(path,buf);
 }
@@ -309,11 +309,21 @@ str effmodestr( mode_t mode, gid_t file_grp, uid_t file_usr )
 }
 
 
-cstr quick_fullpath( cstr path )
+cstr quick_fullpath( cstr path ) noexcept
 {
-    if(path[0]=='~' && path[1]=='/') { cstr h=homedirpath(); if(h) path = catstr(h,path+1); }
-    if(path[0]!='/')				 { path = catstr(workingdirpath(),"/",path); }
-    return path;
+	if (path[0]=='~' && path[1]=='/')
+	{
+		cstr h = homedirpath();
+		if (h) path = catstr(h, path+1);
+	}
+
+	if (path[0] != '/')
+	{
+		char bu[MAXPATHLEN+1];
+		path = catstr(getcwd(bu,sizeof(bu)), "/", path);
+	}
+
+	return path;
 }
 
 
@@ -496,18 +506,20 @@ void change_working_dir( cstr path )
     if(errno==ok) {int r = chdir(path); (void)r; }	// will probably fail again
 }
 
-// get working directory or nullptr
-cstr workingdirpath()
+cstr workingdirpath() noexcept
 {
+	// get working directory path
+	// or nullptr if path length exceeds MAXPATHLEN (should never happen)
+
 	char s[MAXPATHLEN+1];
-	s[MAXPATHLEN] = 0;
-	return dupstr( getcwd(s,MAXPATHLEN) );
+	return dupstr( getcwd(s,MAXPATHLEN+1) );
 }
 
-// get user home directory or nullptr
-cstr homedirpath()
+cstr homedirpath() noexcept
 {
-    return getenv("HOME");
+	// get user home directory or nullptr
+
+	return getenv("HOME");
 }
 
 // get temp directory or nullptr			2016-01-27
@@ -557,7 +569,7 @@ cstr tempfilepath( cstr file )
 // ----------------------------------------------------------------------
 
 
-s_type classify_file ( cstr path, bool follow_symlink )
+s_type classify_file ( cstr path, bool follow_symlink ) noexcept
 {
     if (!path) path="";		// --> ENOENT
     struct stat fs;
@@ -568,7 +580,7 @@ s_type classify_file ( cstr path, bool follow_symlink )
 
 /* ---- modification date of file ------------------
 */
-time_t file_mtime( cstr path, bool follow_symlink )
+time_t file_mtime( cstr path, bool follow_symlink ) noexcept
 {
     struct stat fs;
     stat(path,&fs,follow_symlink);
@@ -578,7 +590,7 @@ time_t file_mtime( cstr path, bool follow_symlink )
 
 /* ---- last access date of file ------------------
 */
-time_t file_atime( cstr path, bool follow_symlink )
+time_t file_atime( cstr path, bool follow_symlink ) noexcept
 {
     struct stat fs;
     stat(path,&fs,follow_symlink);
@@ -588,7 +600,7 @@ time_t file_atime( cstr path, bool follow_symlink )
 
 /* ---- last status change time of file ------------------
 */
-time_t file_ctime( cstr path, bool follow_symlink )
+time_t file_ctime( cstr path, bool follow_symlink ) noexcept
 {
     struct stat fs;
     stat(path,&fs,follow_symlink);
@@ -596,7 +608,7 @@ time_t file_ctime( cstr path, bool follow_symlink )
 }
 
 
-off_t file_size( cstr path, bool follow_symlink )
+off_t file_size( cstr path, bool follow_symlink ) noexcept
 {
     struct stat fs;
     if (!path||!*path) return -1;
@@ -610,8 +622,10 @@ off_t file_size( cstr path, bool follow_symlink )
 	on success: returns 0-terminated list of groups allocated with malloc()
 	sets errno
 */
-gid_t* get_groups(uid_t uid)
+gid_t* get_groups (uid_t uid) noexcept
 {
+// TODO: rework using getgroups() which uses uid instead of user name
+
 //	pwd.h:
 //	int getpwuid_r( uid_t uid, struct passwd *pwd, char *buf, size_t buflen, struct passwd **result);
 //	struct passwd {			 /* LINUX! BSD has more fields! */
@@ -637,7 +651,12 @@ a:	int err; char bu[size];
 
 	int ngroups = 50;
 	gid_t* groups = nullptr;
-	do { free(groups); groups = (gid_t*)malloc((ngroups+1)*sizeof(int)); }
+	do
+	{
+		free(groups);
+		groups = (gid_t*)malloc((ngroups+1)*sizeof(int));
+		if (groups == nullptr) { errno = ENOMEM; return nullptr; }
+	}
 #ifdef _MACOSX
 	while( getgrouplist(pwd.pw_name, pwd.pw_gid, (int*)groups, &ngroups) == -1 );
 	static_assert(sizeof(gid_t)==sizeof(int),"sizeof(gid_t)==sizeof(int)");
@@ -785,7 +804,7 @@ bool is_executable( cstr path, bool resolve_last_symlink, bool for_user )
 // ----------------------------------------------------------------------
 
 
-void create_file(cstr path, int mode) THF
+void create_file(cstr path, mode_t mode) THF
 {
     FD(path,O_CREAT,mode);
 }
@@ -797,7 +816,7 @@ void create_file(cstr path, int mode) THF
              ENOTDIR	encountered non-directory
              ELOOP		infinite symlink loop
 */
-void create_dir( cstr path, int mode, bool autocreatedirs ) THF
+void create_dir( cstr path, mode_t mode, bool autocreatedirs ) THF
 {
     while(path&&lastchar(path)=='/') path = substr(path,strchr(path,0)-1);
 
@@ -824,7 +843,7 @@ void create_dir( cstr path, int mode, bool autocreatedirs ) THF
              ENOTDIR	encountered non-directory
              ELOOP		infinite symlink loop
 */
-void create_pipe( cstr path, int mode ) THF
+void create_pipe( cstr path, mode_t mode ) THF
 {
     path = fullpath(path,yes/*follow_symlink*/);
 
@@ -861,41 +880,58 @@ x:	throw file_error(path,errno, "create symlink");
 }
 
 
-/* ---- create hard link ------------------------------------------
-        create another hard link to 'dest' at position 'path'
-        overwrites old link, if present
-        in:	 path, dest
-        throws on error
-*/
 void create_hardlink( cstr zpath, cstr qpath ) THF
 {
-    zpath = fullpath(zpath,no);
-    if(errno==ok) errno = EEXIST;						// node exists?
-    if(errno==ENOENT && link(qpath,zpath)==0) return;	// ok
+	// create hard link to file
+	// create another hard link to 'zpath' at position 'qpath'
+	// in:	 dest path, source
+	// throws on error
+	// hard linked files have same owner, group and permissions
 
-    throw file_error(zpath,errno,"create hardlink");
+    zpath = fullpath(zpath,no);
+	if (errno == ENOENT && link(qpath,zpath) == 0) return;	// ok
+
+	if (errno == ok) errno = EEXIST;		// node exists
+	throw file_error(zpath, errno, "create hardlink");
 }
 
 
-/*	create copy of directory tree
-        files are hard linked
-        symlinks are copied
-        directories are copied
-        other node types are ignored
-*/
-void create_hardlinked_copy(char const* zpath, char const* qpath) THF
+void create_hardlinked_copy( cstr zpath, cstr qpath, bool copy_dir_owner) THF
 {
-    TempMemPool z;
+	// create copy of directory tree
+	// files are hard linked
+	// symlinks are copied
+	// directories are copied
+	// other node types are ignored
+	// if copy_dir_owner is set, then owner and group of folders are preserved,
+	// else the current effective uid and guid  are used.
+
+	TempMemPool z;
     MyFileInfoArray dir;
 
     try
     {
-        if(lastchar(zpath)!='/') zpath = catstr(zpath,"/");
-        if(lastchar(qpath)!='/') qpath = catstr(qpath,"/");
+        if (lastchar(zpath) != '/') zpath = catstr(zpath,"/");
+        if (lastchar(qpath) != '/') qpath = catstr(qpath,"/");
 
         read_dir(qpath,dir,no);
 
         create_dir(zpath);
+
+		if (copy_dir_owner)
+		{
+			struct stat fs;
+			int err = stat(qpath,&fs);
+			if (err != ok)
+				logline("failed to stat \"%s\"", qpath);
+			else
+			{
+				err = chown(zpath,fs.st_uid,fs.st_gid);
+				if (err != ok) logline("failed to set owner and group of \"%s\"", zpath);
+				err = chmod(zpath,fs.st_mode);
+				if (err != ok) logline("failed to set mode bits of \"%s\"", zpath);
+			}
+		}
 
         for(uint i=0;i<dir.count();i++)
         {
@@ -1133,16 +1169,16 @@ void read_file(cstr path, StrArray& a, uint32 maxsize) THF
 /* ----	create regular file ---------------------------------------
         in: flags = 'n'=new, 'w'=write or 'a'=append or combination of O_WRONLY, O_CREAT, O_APPEND etc.
 */
-void write_file( cstr path, cptr data, uint32 cnt, int flags, int mode ) THF
+void write_file (cstr path, cptr data, uint32 cnt, int flags, mode_t perm) THF
 {
-    FD fd(path,flags,mode);
+    FD fd(path,flags,perm);
     fd.write_bytes(data,cnt);
     fd.close_file();
 }
 
-void write_file(cstr path, Array<str>& a, int flags, int mode) THF
+void write_file (cstr path, Array<str>& a, int flags, mode_t perm) THF
 {
-    FD fd(path,flags,mode);
+    FD fd(path,flags,perm);
     fd.write_file(a);
     fd.close_file();
 }
@@ -1190,6 +1226,28 @@ int set_file_permissions(cstr path, mode_t who, mode_t what, bool deref_last_sym
 }
 #endif
 
+int set_owner_and_group (cstr path, uid_t uid, gid_t gid, bool deref_last_symlink) noexcept
+{
+	// set owner and group of node
+	// a final symlink is dereferenced (default)
+	// uid or gid may be -1 to not change
+
+	path = quick_fullpath(path);
+	return (deref_last_symlink?lchown:chown)(path, uid, gid) == 0 ? ok : errno;
+}
+
+int get_owner_and_group (cstr path, uid_t& uid, gid_t& gid, bool deref_last_symlink) noexcept
+{
+	path = quick_fullpath(path);
+
+	struct stat fs;
+	int err = stat(path, &fs, deref_last_symlink);
+	if (err) return err;
+
+	uid = fs.st_uid;
+	gid = fs.st_gid;
+	return ok;
+}
 
 
 // ----------------------------------------------------------------------

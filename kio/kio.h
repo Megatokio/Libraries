@@ -342,6 +342,16 @@ uint   random(uint n)	{ return (uint32(n) * uint16(random())) >> 16; } // 16 bit
 
 
 
+#if __cplusplus >= 201700
+#define FALLTHROUGH [[fallthrough]]
+#elif defined(_GCC)
+// oder [[gnu::fallthrough]] in c++11 und c++14
+#define FALLTHROUGH __attribute__((fallthrough))
+#elif defined(_CLANG)
+#define FALLTHROUGH [[clang::fallthrough]]
+#else
+#define FALLTHROUGH
+#endif
 
 
 

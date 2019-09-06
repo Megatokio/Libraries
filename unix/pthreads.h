@@ -86,25 +86,25 @@ class PSemaphore
 	pthread_mutex_t	mutex;
 	pthread_cond_t	cond;
 
-					PSemaphore	(PSemaphore const&);    // prohibit
-	PSemaphore&     operator=   (PSemaphore const&);    // prohibit
+					PSemaphore	(const PSemaphore&) = delete;
+	PSemaphore&     operator=   (const PSemaphore&) = delete;
 
 public:				PSemaphore	(cstr static_name_str="", uint32 _avail = 0);
 					~PSemaphore	();
 
-	uint32			clear		()					{ return request(0,~0u); }
-	void			request		(uint32 n = 1);
-	uint32			request		(uint32 min, uint32 max);
-	uint32			requestAll	()					{ return request(1,~0u); }
-	bool			tryRequest	();					// return 1  =>  got it
-	bool			tryRequest	(double timeout);	// return 1  =>  got it
+	uint32			clear		() noexcept			{ return request(0,~0u); }
+	void			request		(uint32 n = 1) noexcept;
+	uint32			request		(uint32 min, uint32 max) noexcept;
+	uint32			requestAll	() noexcept			{ return request(1,~0u); }
+	bool			tryRequest	() noexcept;				// return 1  =>  got it
+	bool			tryRequest	(double timeout) noexcept;	// return 1  =>  got it
 
-	void			release		();
-	void			release		(uint32 n);
+	void			release		() noexcept;
+	void			release		(uint32 n) noexcept;
 
-	bool			isAvailable	() const			{ return avail; }
-	uint32			available	() const			{ return avail; }
-	cstr			getName		() const			{ return name; }
+	bool			isAvailable	() const noexcept	{ return avail; }
+	uint32			available	() const noexcept	{ return avail; }
+	cstr			getName		() const noexcept	{ return name; }
 };
 
 

@@ -325,7 +325,7 @@ inline void unlock() { pthread_mutex_unlock(&mutex); }
 static uint quick_id()
 {
 	if(logrotate_when==0.0) return 0;
-	LogFile* logfile = static_cast<LogFile*> (pthread_getspecific( logfile_key ));
+	LogFile* logfile = reinterpret_cast<LogFile*> (pthread_getspecific( logfile_key ));
 	return logfile ? logfile->thread_id : logfiles_cnt;
 }
 
@@ -357,7 +357,7 @@ static LogFile* getLogfile(double now)
 						 timestamp_with_date, timestamp_with_msec);
 	}
 
-	LogFile* logfile = static_cast<LogFile*> (pthread_getspecific( logfile_key ));
+	LogFile* logfile = reinterpret_cast<LogFile*> (pthread_getspecific( logfile_key ));
 	return logfile ? logfile : new LogFile();
 }
 
@@ -521,7 +521,7 @@ void abort( int error )			// __attribute__((__noreturn__));
 //
 static void delete_logfile(void* logfile)
 {
-	delete static_cast<LogFile*> (logfile);
+	delete reinterpret_cast<LogFile*> (logfile);
 }
 
 

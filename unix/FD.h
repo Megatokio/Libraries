@@ -62,7 +62,7 @@ public:
 
 // c'tor and d'tor:
 			FD				()											noexcept	:fd(-1),fpath(nullptr) {}
-			FD				(cstr path, int flags='r', int perm=0664) 	THF	:fd(-1),fpath(nullptr) { open_file(path,flags,perm); }
+			FD				(cstr path, int flags='r', mode_t perm=0664) THF		:fd(-1),fpath(nullptr) { open_file(path,flags,perm); }
 			FD				(int fd, cstr fname)						noexcept	:fd(fd),fpath(newcopy(fname)){}
 			~FD				()											noexcept;
 
@@ -75,12 +75,12 @@ public:
 // mode can be found in fnctl.h
 // most frequently used: O_RDONLY, O_WRONLY, O_RDWR, O_CREAT, O_EXCL, O_APPEND, O_TRUNC
 
-	int 	open_file		(cstr path, int mode, int perm=0664) THF;
+	int 	open_file		(cstr path, int mode, mode_t perm=0664) THF;
 	void	open_file_r		(cstr path)						THF		{ open_file(path, 'r', 0664); }		// must exist.
-	void	open_file_w		(cstr path, int perm=0664)		THF		{ open_file(path, 'w', perm); }		// truncates file!
-	void	open_file_a		(cstr path, int perm=0664)		THF		{ open_file(path, 'a', perm); }		// append mode.
-	void	open_file_n		(cstr path, int perm=0664)		THF		{ open_file(path, 'n', perm); }		// new: must not exist.
-	void	open_file_m		(cstr path, int perm=0664)		THF		{ open_file(path, 'm', perm); }		// modify: r&w
+	void	open_file_w		(cstr path, mode_t perm=0664)	THF		{ open_file(path, 'w', perm); }		// truncates file!
+	void	open_file_a		(cstr path, mode_t perm=0664)	THF		{ open_file(path, 'a', perm); }		// append mode.
+	void	open_file_n		(cstr path, mode_t perm=0664)	THF		{ open_file(path, 'n', perm); }		// new: must not exist.
+	void	open_file_m		(cstr path, mode_t perm=0664)	THF		{ open_file(path, 'm', perm); }		// modify: r&w
 	void	open_tempfile	() 								THF;	// tempfile open for r/w. will vanish after close
 
 	void	set_file_id		(int fd, cstr fpath)			noexcept;	// deprecated

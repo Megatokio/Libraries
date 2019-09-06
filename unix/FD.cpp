@@ -74,7 +74,7 @@ FD FD::stderr(2,"STDERR");
 //	error:
 //	• throws file_error
 //
-int FD::open_file( cstr path, int mode, int perm ) THF
+int FD::open_file( cstr path, int mode, mode_t perm ) THF
 {
 	assert(path!=nullptr);
 	assert(fd==-1);
@@ -102,12 +102,6 @@ a:	fd = open(path, mode, perm);
 	if(errno==EINTR) goto a;					// WebDAV
 	THROW_FILE_ERROR("fd108");
 }
-
-//void FD::open_file_r ( cstr path )			THF	{ open_file(path, 'r', 0664); }
-//void FD::open_file_rw( cstr path )			THF	{ open_file(path, O_RDWR, 0664); }
-//void FD::open_file_w ( cstr path, int mode )	THF	{ open_file(path, 'w', mode); }
-//void FD::open_file_a ( cstr path, int mode )	THF	{ open_file(path, 'a', mode); }
-//void FD::open_file_n ( cstr path, int mode )	THF	{ open_file(path, 'n', mode); }
 
 
 // create temp file in $TMPDIR or "/tmp/"

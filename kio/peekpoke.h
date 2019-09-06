@@ -69,6 +69,8 @@
 	inline void   poke2Z (void* p, uint16 n)	noexcept { *u16ptr(p) = n; }
 	inline void   poke4Z (void* p, uint32 n)	noexcept { *u32ptr(p) = n; }
 	inline void   poke8Z (void* p, uint64 n)	noexcept { *u64ptr(p) = n; }
+	inline void   poke4Z (void* p, int32 n)		noexcept { *i32ptr(p) = n; }
+	inline void   poke8Z (void* p, int64 n)		noexcept { *i64ptr(p) = n; }
 #else
 	inline uint8  peek1Z (void const* p)		noexcept { return								 P(0); }
 	inline uint16 peek2Z (void const* p)		noexcept { return					   P(1)<<8 | P(0); }

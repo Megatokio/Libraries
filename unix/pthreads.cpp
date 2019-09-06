@@ -235,7 +235,7 @@ PSemaphore::~PSemaphore()
 }
 
 
-void PSemaphore::release( uint32 n )
+void PSemaphore::release( uint32 n ) noexcept
 {
 	int e = pthread_mutex_lock(&mutex);
 	avail += n;
@@ -246,7 +246,7 @@ void PSemaphore::release( uint32 n )
 }
 
 
-void PSemaphore::release()
+void PSemaphore::release() noexcept
 {
 	int e = pthread_mutex_lock(&mutex);
 	avail += 1;
@@ -257,7 +257,7 @@ void PSemaphore::release()
 }
 
 
-void PSemaphore::request(uint32 n)
+void PSemaphore::request(uint32 n) noexcept
 {
 	int e = pthread_mutex_lock(&mutex);
 	// check predicate - go to sleep - recheck predicate on awakening
@@ -269,7 +269,7 @@ void PSemaphore::request(uint32 n)
 }
 
 
-uint32 PSemaphore::request(uint32 n_min, uint32 n_max)
+uint32 PSemaphore::request(uint32 n_min, uint32 n_max) noexcept
 {
 	int e = pthread_mutex_lock(&mutex);
 	// check predicate - go to sleep - recheck predicate on awakening
@@ -282,7 +282,7 @@ uint32 PSemaphore::request(uint32 n_min, uint32 n_max)
 }
 
 
-bool PSemaphore::tryRequest()
+bool PSemaphore::tryRequest() noexcept
 {
 	if( avail==0 ) return no;
 	int  e = pthread_mutex_lock(&mutex);
@@ -295,7 +295,7 @@ bool PSemaphore::tryRequest()
 }
 
 
-bool PSemaphore::tryRequest( double timeout )
+bool PSemaphore::tryRequest( double timeout ) noexcept
 {
 	timeout += now();
 	double time_fract, time_int; time_fract = modf(timeout,&time_int);
@@ -361,7 +361,7 @@ struct exec_every_t
 
 static void* execute_every_proc( void* data )
 {
-	exec_every_t* x = static_cast<exec_every_t*>(data);
+	exec_every_t* x = reinterpret_cast<exec_every_t*>(data);
 	double now = ::now();
 	do { waitUntil( now += x->delay ); } while( x->fu(x->arg) );
 	delete x;
@@ -379,7 +379,7 @@ pthread_t executeEvery( double delay, bool(*fu)(void*), void* arg )
 
 static void* execute_with_delay_proc( void* arg )
 {
-	exec_every_t* x = static_cast<exec_every_t*>(arg);
+	exec_every_t* x = reinterpret_cast<exec_every_t*>(arg);
 	do { waitUntil( now() + x->delay ); } while( x->fu(x->arg) );
 	delete x;
 	return nullptr;
@@ -411,7 +411,7 @@ struct exec_at_t
 
 static void* execute_at_proc( void* arg )
 {
-	exec_at_t* x = static_cast<exec_at_t*>(arg);
+	exec_at_t* x = reinterpret_cast<exec_at_t*>(arg);
 
 	for(;;)
 	{

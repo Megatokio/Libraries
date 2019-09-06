@@ -77,6 +77,11 @@ public:
 };
 
 
+inline off_t encrypted_file_length (off_t n, bool is_encrypted)
+{
+    return is_encrypted ? n + (n+BSIZE-16-1)/(BSIZE-16) * 16 : n;
+}
+
 
 
 
