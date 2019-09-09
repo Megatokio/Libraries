@@ -24,6 +24,10 @@
 #include "kio/kio.h"
 
 
+// pthread_t is int or ptr on some systems
+static const pthread_t NO_THREAD = pthread_t(0);
+
+
 // =====================================================================
 // simple lock
 // lock can only be released by lock owner
@@ -110,7 +114,7 @@ public:				PSemaphore	(cstr static_name_str="", uint32 _avail = 0);
 
 
 // Timer
-extern double now				();					// was: currentTime()
+extern double now () noexcept;		// was: currentTime()
 
 extern void waitDelay			( double delay );
 extern void	waitUntil			( double time );

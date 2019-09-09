@@ -159,8 +159,12 @@ extern	str	 charstr	(char,char,char,char) noexcept;
 extern	str	 charstr	(char,char,char,char,char) noexcept;
 
 extern	str	 datestr	(time_t secs)		noexcept; // returned string is in local time
+inline	str	 datestr	(double secs)		noexcept  { return datestr(time_t(secs)); }
 extern	str	 timestr	(time_t secs)		noexcept; // returned string is in local time
+inline	str	 timestr	(double secs)		noexcept  { return timestr(time_t(secs)); }
+inline	str	 timestr	(float secs)		noexcept  { return timestr(time_t(secs)); }
 extern	str	 datetimestr (time_t secs)		noexcept; // returned string is in local time
+inline	str	 datetimestr (double secs)		noexcept  { return datetimestr(time_t(secs)); }
 extern	time_t dateval	 (cstr localtimestr) noexcept;
 extern	str	 durationstr (time_t secs)		noexcept;
 inline	str	 durationstr (int secs)			noexcept { return durationstr(time_t(secs)); }

@@ -270,7 +270,7 @@ extern void abort( int error_number )	  __attribute__((__noreturn__));
 /*	get current time in seconds since epoche
 	defined in kio/kio.cpp
 */
-extern double now();
+extern double now() noexcept;
 extern void waitDelay (double seconds);
 extern void waitUntil (double seconds_since_epoche);
 

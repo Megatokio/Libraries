@@ -46,8 +46,8 @@
 	#endif
 
 	typedef char const *cstr;
-	extern cstr errorstr(int err);	// in kio.h: get error string for system or custom error number
-	inline cstr errorstr() { return errorstr(errno); }
+	extern cstr errorstr(int err) noexcept;	// in kio.h: get error string for system or custom error number
+	inline cstr errorstr() noexcept { return errorstr(errno); }
 
 	#define EMAC(A,B)	A
 	enum {

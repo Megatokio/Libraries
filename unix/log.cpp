@@ -100,7 +100,7 @@ static void panic(cstr where, int err)
 	create missing directories
 	return normalized path
 */
-static cstr create_path( cstr path )
+static cstr create_path( cstr path ) noexcept
 {
 	if (!path||!*path)
 	{
@@ -270,7 +270,7 @@ static pthread_mutex_t mutex;				// access lock
 	forward references:
 */
 static void write2log(uint thread_id, double when, uint indent, cstr msg);
-static void init();
+static void init() noexcept;
 
 
 
@@ -294,7 +294,7 @@ public:
 	void		print_repetitions();
 	void		print_pending();
 
-				LogFile();
+				LogFile() noexcept;
 				~LogFile();
 
     __printflike(3,0)
@@ -311,11 +311,11 @@ public:
 */
 
 #ifndef NDEBUG
-static void lock()   { int e = pthread_mutex_lock(&mutex);	if(e) panic("LogFile:lock failed");   }
-static void unlock() { int e = pthread_mutex_unlock(&mutex);if(e) panic("LogFile:unlock failed"); }
+static void lock()   noexcept { int e = pthread_mutex_lock(&mutex);	if(e) panic("LogFile:lock failed");   }
+static void unlock() noexcept { int e = pthread_mutex_unlock(&mutex);if(e) panic("LogFile:unlock failed"); }
 #else
-inline void lock()   { pthread_mutex_lock(&mutex);	 }
-inline void unlock() { pthread_mutex_unlock(&mutex); }
+inline void lock()   noexcept { pthread_mutex_lock(&mutex);	 }
+inline void unlock() noexcept { pthread_mutex_unlock(&mutex); }
 #endif
 
 // get (the best guess of) the current thread id
@@ -419,7 +419,7 @@ static void write2log(uint thread_id, double when, uint indent, cstr msg)
 	{
 		for (uint i=0; i<sz;)
 		{
-			int n = int(write(fd,sbu+i,sz-i));
+			int n = int(write(fd,sbu+i,sz-i));		// <-- cancellation point => throw
 			if (n >= 0) { i += uint(n); continue; }
 			if (errno == EINTR) continue;
 			close(fd); fd=-1;
@@ -574,7 +574,7 @@ static void init_once(void)
 // calls init_once() only once
 // global functions should call "if(logrotate_when==0) init();" before doing anything else
 //
-static void init()
+static void init() noexcept
 {
 	// initialize:
 	static pthread_once_t once_control = PTHREAD_ONCE_INIT;
@@ -588,7 +588,7 @@ static void init()
 	c'tor, d'tor
 */
 
-LogFile::LogFile()
+LogFile::LogFile() noexcept
 :
 	indent(0),
 	when(0.0),

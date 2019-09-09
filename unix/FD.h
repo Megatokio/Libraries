@@ -46,8 +46,8 @@ class FD
 {
 // ==== data member ======================================
 
-	int 	fd;				// unix file descriptor
-	cstr   	fpath;			// allocated copy
+	int 	fd		= -1;			// unix file descriptor
+	cstr   	fpath	= nullptr;		// allocated copy
 
 
 // ==== private member functions =========================
@@ -61,9 +61,9 @@ class FD
 public:
 
 // c'tor and d'tor:
-			FD				()											noexcept	:fd(-1),fpath(nullptr) {}
-			FD				(cstr path, int flags='r', mode_t perm=0664) THF		:fd(-1),fpath(nullptr) { open_file(path,flags,perm); }
-			FD				(int fd, cstr fname)						noexcept	:fd(fd),fpath(newcopy(fname)){}
+			FD				()											noexcept {}
+			FD				(cstr path, int flags='r', mode_t perm=0664) throws  { open_file(path,flags,perm); }
+			FD				(int fd, cstr fname)						noexcept : fd(fd), fpath(newcopy(fname)) {}
 			~FD				()											noexcept;
 
 // standard input and output:
@@ -122,6 +122,7 @@ public:
 	bool	is_dir			() const					noexcept	{ return classify_file()==s_dir; }
 	bool	is_tty			() const					noexcept	{ return classify_file()==s_tty; }
 	cstr	filepath		() const					noexcept	{ return fpath; }
+	cstr	filename		() const					noexcept	{ cstr p = fpath; if (p) p = strrchr(fpath,'/');  return p ? p+1 : fpath; }
 	int		file_id			() const					noexcept	{ return fd; }
 	bool	is_valid		() const					noexcept	{ return fd>=0; }
 

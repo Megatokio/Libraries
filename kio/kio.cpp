@@ -25,7 +25,7 @@
 
 /*	get error string for system or custom error number:
 */
-cstr errorstr( int err )
+cstr errorstr (int err) noexcept
 {
 	// custom error texts:
 	static const cstr ETEXT[] =
@@ -47,7 +47,7 @@ cstr errorstr( int err )
 	  Since 2006-07-14 23:58:24 precision is 256ns.
 	  Since 2043-01-25 23:56:49 precision is 512ns.
 */
-double now()
+double now() noexcept
 {
 #if 0
 	// C++14:

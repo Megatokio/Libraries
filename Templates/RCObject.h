@@ -18,7 +18,7 @@
 */
 
 #include "kio/kio.h"
-#include "../unix/FD.h"
+#include "unix/FD.h"
 #ifdef USE_THREADS
 #include "cpp/cppthreads.h"
 #endif
@@ -58,7 +58,7 @@ class RCObject
 	template<class T> friend class NVPtr;
 
 protected:
-	mutable uint cnt;
+	mutable uint cnt = 0;
 
 	void	retain () const 				noexcept { ++cnt; }
 	void	release () const				noexcept { if (--cnt == 0) delete this; }
@@ -73,9 +73,9 @@ protected:
 
 
 public:
-	RCObject ()								noexcept :cnt(0){}
-	explicit RCObject (RCObject const&)		noexcept :cnt(0){}
-	RCObject (RCObject&&)					noexcept :cnt(0){}
+	RCObject ()								noexcept {}
+	explicit RCObject (RCObject const&)		noexcept {}
+	RCObject (RCObject&&)					noexcept {}
 	virtual	~RCObject ()					noexcept { assert(cnt==0); }
 
 	RCObject& operator= (RCObject const&)	noexcept { return *this; }

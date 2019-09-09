@@ -74,9 +74,9 @@ uint sizeAfterBase85Encoding(uint qlen)
 
 void encodeBase85( cuptr q, uint qlen, uptr z, uint zlen )
 {
-    assert(zlen>=sizeAfterBase85Encoding(qlen));
+    assert(zlen>=sizeAfterBase85Encoding(qlen)); (void)zlen;
 
-    uint8 const* e = q + (qlen & ~3);
+    uint8 const* e = q + (qlen & ~3u);
 
     while(q<e)
     {
@@ -111,7 +111,7 @@ int decodeBase85( cuptr q, uint qlen, uptr z, uint zlen )
 
     if(qlen%5==1) return error;			// error: impossible length
 
-    uptr e = z + (zlen & ~3);
+    uptr e = z + (zlen & ~3u);
     uint c1,c2,c3,c4,c5;
 
     while(z<e)
