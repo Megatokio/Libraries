@@ -1,13 +1,13 @@
 /*	Copyright  (c)	Günter Woigk 2001 - 2019
-                    mailto:kio@little-bat.de
+					mailto:kio@little-bat.de
 
 	This file is free software.
 
- 	Permission to use, copy, modify, distribute, and sell this software
- 	and its documentation for any purpose is hereby granted without fee,
- 	provided that the above copyright notice appears in all copies and
- 	that both that copyright notice, this permission notice and the
- 	following disclaimer appear in supporting documentation.
+	Permission to use, copy, modify, distribute, and sell this software
+	and its documentation for any purpose is hereby granted without fee,
+	provided that the above copyright notice appears in all copies and
+	that both that copyright notice, this permission notice and the
+	following disclaimer appear in supporting documentation.
 
 	THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT ANY WARRANTY, NOT EVEN THE
 	IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
@@ -70,41 +70,41 @@ extern char **environ;					// was required by: Mac OSX (pre 10.5 ?)
 
 cstr getUser()
 {
-    struct passwd* p = getpwuid(getuid());
-    return p ? p->pw_name : nullptr;
+	struct passwd* p = getpwuid(getuid());
+	return p ? p->pw_name : nullptr;
 }
 
 cstr getEffUser()
 {
-    struct passwd* p = getpwuid(geteuid());
-    return p ? p->pw_name : nullptr;
+	struct passwd* p = getpwuid(geteuid());
+	return p ? p->pw_name : nullptr;
 }
 
 
 /* ===========================================================
-        machine information
-            for more sysctl calls see:
-            <sys/sysctl.h>
-            man sysctl
+		machine information
+			for more sysctl calls see:
+			<sys/sysctl.h>
+			man sysctl
    ========================================================= */
 
 
 cstr hostName()
 {
 #ifdef _BSD
-    char s[MAXHOSTNAMELEN];
-    size_t size = MAXHOSTNAMELEN;
-    int mib[4] = { CTL_KERN, KERN_HOSTNAME };
-    sysctl( mib, 2, s, &size, nullptr, 0);
-    return dupstr(s);
+	char s[MAXHOSTNAMELEN];
+	size_t size = MAXHOSTNAMELEN;
+	int mib[4] = { CTL_KERN, KERN_HOSTNAME };
+	sysctl( mib, 2, s, &size, nullptr, 0);
+	return dupstr(s);
 
 #else
   #if !defined(MAXHOSTNAMELEN)
-    #define MAXHOSTNAMELEN 256
+	#define MAXHOSTNAMELEN 256
   #endif
-    char s[MAXHOSTNAMELEN];
-    gethostname(s,MAXHOSTNAMELEN);
-    return dupstr(s);
+	char s[MAXHOSTNAMELEN];
+	gethostname(s,MAXHOSTNAMELEN);
+	return dupstr(s);
 #endif
 }
 
@@ -115,21 +115,21 @@ uint numCPUs()
 	return n?n:1;
 #else
 #ifdef _BSD
-    int    n;
-    size_t size = sizeof(n);
-    int mib[4] = { CTL_HW, HW_AVAILCPU };
-    sysctl( mib, 2, &n, &size, NULL, 0);
-    if(n>=1) return n;
+	int    n;
+	size_t size = sizeof(n);
+	int mib[4] = { CTL_HW, HW_AVAILCPU };
+	sysctl( mib, 2, &n, &size, NULL, 0);
+	if(n>=1) return n;
 
-    mib[1] = HW_NCPU;
-    sysctl( mib, NELEM(mib), &n, &size, NULL, 0 );
+	mib[1] = HW_NCPU;
+	sysctl( mib, NELEM(mib), &n, &size, NULL, 0 );
 
-    return n>=1 ? n : 1;
+	return n>=1 ? n : 1;
 
 #elif defined(_LINUX)||defined(_SOLARIS)
-    return sysconf(_SC_NPROCESSORS_ONLN);
+	return sysconf(_SC_NPROCESSORS_ONLN);
 #else
-    #fixme!
+	#fixme!
 #endif
 #endif
 }
@@ -146,9 +146,9 @@ void sysLoad ( double load[3] )
 	int n = getloadavg(load, 3);
 	if(n<3)
 	{
-        if(n<1) load[0] = 1.0;
-        if(n<2) load[1] = load[0];
-                load[2] = load[1];
+		if(n<1) load[0] = 1.0;
+		if(n<2) load[1] = load[0];
+				load[2] = load[1];
 	}
 #ifdef _MACOSX
 	static bool fixit = true;
@@ -170,13 +170,13 @@ double cpuLoad()
 	static double old_busy  = 0;
 	static double old_total = 0;
 
-    natural_t num_cpus;
-    processor_info_array_t cpu_info;
-    mach_msg_type_number_t info_cnt;
+	natural_t num_cpus;
+	processor_info_array_t cpu_info;
+	mach_msg_type_number_t info_cnt;
 	kern_return_t err;
 
-    err = host_processor_info(mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &num_cpus, &cpu_info, &info_cnt);
-    if(err != KERN_SUCCESS) { logline("host_processor_info returned %u", uint(err)); return 0; }
+	err = host_processor_info(mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &num_cpus, &cpu_info, &info_cnt);
+	if(err != KERN_SUCCESS) { logline("host_processor_info returned %u", uint(err)); return 0; }
 
 	double new_busy  = 0;
 	double new_total = 0;
@@ -217,28 +217,28 @@ time_t intCurrentTime()
 time_t bootTime ( )
 {
 #ifdef _BSD
-    int mib[4] = { CTL_KERN, KERN_BOOTTIME };
-    struct timeval data;
-    size_t size = sizeof(data);
-    sysctl ( mib, 2, &data, &size, nullptr, 0 );
+	int mib[4] = { CTL_KERN, KERN_BOOTTIME };
+	struct timeval data;
+	size_t size = sizeof(data);
+	sysctl ( mib, 2, &data, &size, nullptr, 0 );
 
-    return data.tv_sec;
+	return data.tv_sec;
 
 #elif defined(_LINUX)
-    // Better way to do is use jiffies or get_cycles function
-    // time being will read /proc/uptime
-    FILE *fp;
-    long ut;
-    if((fp=fopen("/proc/uptime","r"))==NULL)
-    {
-        printf("Cannot open file /proc/uptime\n");	// -> FILE Stdout
-        return(-1);
-    }
-    fscanf(fp,"%ld",&ut);
-    fclose(fp);
-    return intCurrentTime()-ut;
+	// Better way to do is use jiffies or get_cycles function
+	// time being will read /proc/uptime
+	FILE *fp;
+	long ut;
+	if((fp=fopen("/proc/uptime","r"))==NULL)
+	{
+		printf("Cannot open file /proc/uptime\n");	// -> FILE Stdout
+		return(-1);
+	}
+	fscanf(fp,"%ld",&ut);
+	fclose(fp);
+	return intCurrentTime()-ut;
 #else
-    #fixme!
+	#fixme!
 #endif
 }
 
@@ -267,41 +267,41 @@ time_t bootTime ( )
 size_t memoryUsage (bool resident)
 {
 #if defined(_LINUX)
-    // Ugh, getrusage doesn't work well on Linux.  Try grabbing info
-    // directly from the /proc pseudo-filesystem.  Reading from
-    // /proc/self/statm gives info on your own process, as one line of
-    // numbers that are: virtual mem program size, resident set size,
-    // shared pages, text/code, data/stack, library, dirty pages.  The
-    // mem sizes should all be multiplied by the page size.
-    //
-    FILE* file = fopen("/proc/self/statm", "r");
-    if (!file) return 0;
+	// Ugh, getrusage doesn't work well on Linux.  Try grabbing info
+	// directly from the /proc pseudo-filesystem.  Reading from
+	// /proc/self/statm gives info on your own process, as one line of
+	// numbers that are: virtual mem program size, resident set size,
+	// shared pages, text/code, data/stack, library, dirty pages.  The
+	// mem sizes should all be multiplied by the page size.
+	//
+	FILE* file = fopen("/proc/self/statm", "r");
+	if (!file) return 0;
 
-    unsigned long vm = 0;
-    fscanf (file, "%ul", &vm);  // Just need the first num: vm size
-    fclose (file);
-    return (size_t)vm * getpagesize();
+	unsigned long vm = 0;
+	fscanf (file, "%ul", &vm);  // Just need the first num: vm size
+	fclose (file);
+	return (size_t)vm * getpagesize();
 
 #elif defined(_BSD)
-    // Inspired by:
-    // http://miknight.blogspot.com/2005/11/resident-set-size-in-mac-os-x.html
-    //
-    struct task_basic_info t_info;
-    mach_msg_type_number_t t_info_count = TASK_BASIC_INFO_COUNT;
-    task_info(current_task(), TASK_BASIC_INFO, (task_info_t)&t_info, &t_info_count);
-    return (resident ? t_info.resident_size : t_info.virtual_size);
+	// Inspired by:
+	// http://miknight.blogspot.com/2005/11/resident-set-size-in-mac-os-x.html
+	//
+	struct task_basic_info t_info;
+	mach_msg_type_number_t t_info_count = TASK_BASIC_INFO_COUNT;
+	task_info(current_task(), TASK_BASIC_INFO, (task_info_t)&t_info, &t_info_count);
+	return (resident ? t_info.resident_size : t_info.virtual_size);
 
 #elif defined(_WINDOWS)
-    // According to MSDN...
-    // see msdn.microsoft.com/en-us/library/ms683219(VS.85).aspx and the linked example
-    //
-    PROCESS_MEMORY_COUNTERS counters;
-    if (GetProcessMemoryInfo (GetCurrentProcess(), &counters, sizeof (counters)))
-        return counters.PagefileUsage;
-    else return 0;
+	// According to MSDN...
+	// see msdn.microsoft.com/en-us/library/ms683219(VS.85).aspx and the linked example
+	//
+	PROCESS_MEMORY_COUNTERS counters;
+	if (GetProcessMemoryInfo (GetCurrentProcess(), &counters, sizeof (counters)))
+		return counters.PagefileUsage;
+	else return 0;
 
 #else
-    #fixme!
+	#fixme!
 #endif
 }
 
@@ -317,186 +317,186 @@ size_t memoryUsage (bool resident)
 /* ==== Execute External Command File ===========================
 */
 /* ----	execute external command ----------------------------
-        argv[]  must be a 0-terminated list
-        argv[0]	hard path to command
-        envv[]  is either NULL or a 0-terminated list of environment variables
-                in case of NULL the current global environ[] list is passed
-        returns	stdout output of command called
-                returned string must be delete[]ed
-                output to stderr is still printed to stderr
-                return code is passed implicitely in errno
-        returns NULL if exec failed
-                then errno is set
-        errno:	noerr: ok
-                errno: exec() failed
-                childreturnederror:		 returned error code is part of custom ErrorText()
-                childterminatedbysignal: signal number is part of custom ErrorText()
+		argv[]  must be a 0-terminated list
+		argv[0]	hard path to command
+		envv[]  is either NULL or a 0-terminated list of environment variables
+				in case of NULL the current global environ[] list is passed
+		returns	stdout output of command called
+				returned string must be delete[]ed
+				output to stderr is still printed to stderr
+				return code is passed implicitely in errno
+		returns NULL if exec failed
+				then errno is set
+		errno:	noerr: ok
+				errno: exec() failed
+				childreturnederror:		 returned error code is part of custom ErrorText()
+				childterminatedbysignal: signal number is part of custom ErrorText()
 */
 str execCmd ( str const argv[], str const envv[] )
 {
-    assert(argv && argv[0] && *argv[0]);
+	assert(argv && argv[0] && *argv[0]);
 
-    errno=ok;
+	errno=ok;
 
-    const int R=0,W=1;
-    int pipout[2];
-    if ( pipe(pipout) != 0 )
-    {
-        assert(errno!=ok);
-        return nullptr;
-    }
+	const int R=0,W=1;
+	int pipout[2];
+	if ( pipe(pipout) != 0 )
+	{
+		assert(errno!=ok);
+		return nullptr;
+	}
 
 // preset result to "nothing"
-    char* result = nullptr;
+	char* result = nullptr;
 
 // it seems, that the child can mess up the stdin stream settings
 // (and maybe stderr too) especially if execve() fails
 // so save them here and restore them afterwards							kio 2003-11-25
-    struct termios old_stderr_termios;
-    struct termios old_stdin_termios;
-    bool restore_stdin  = tcgetattr(0,&old_stdin_termios ) != -1;
-    bool restore_stderr = tcgetattr(2,&old_stderr_termios) != -1;
+	struct termios old_stderr_termios;
+	struct termios old_stdin_termios;
+	bool restore_stdin  = tcgetattr(0,&old_stdin_termios ) != -1;
+	bool restore_stderr = tcgetattr(2,&old_stderr_termios) != -1;
 
-    // TODO: ExecCmd() should search for cmd file prior to spawning
+	// TODO: ExecCmd() should search for cmd file prior to spawning
 
 // *** DOIT ***
-    pid_t child_id = fork();
-    switch ( child_id )
-    {
-    case -1:// error happened:
-            close(pipout[R]);
-            close(pipout[W]);
-            assert(errno!=ok);
-            break;
+	pid_t child_id = fork();
+	switch ( child_id )
+	{
+	case -1:// error happened:
+			close(pipout[R]);
+			close(pipout[W]);
+			assert(errno!=ok);
+			break;
 
-    case 0:	// child process:
-        {
-            close(pipout[R]);	// close unused fd
-            close(1);			// close stdout
-            dup(pipout[W]);		// becomes lowest unused fileid: stdout
-            close(pipout[W]);	// close unused dup
+	case 0:	// child process:
+		{
+			close(pipout[R]);	// close unused fd
+			close(1);			// close stdout
+			dup(pipout[W]);		// becomes lowest unused fileid: stdout
+			close(pipout[W]);	// close unused dup
 
-            // call cmd:
-            xlogline("ExecCmd(): exec %s",argv[0]);
-            execve(argv[0],argv,envv?envv:(str const *)environ);
+			// call cmd:
+			xlogline("ExecCmd(): exec %s",argv[0]);
+			execve(argv[0],argv,envv?envv:(str const *)environ);
 
-            // call failed. try path completion
-            str path = getenv("PATH");
-            if (path&&*argv[0]!='/')
-            {
-                for(;;)
-                {
-                    while(*path==':') path++;
-                    char* dp = strchr(path,':');
-                    if (!dp) dp = strchr(path,0);
-                    if(dp==path) break;						// end of env.PATH reached: finally no success
+			// call failed. try path completion
+			str path = getenv("PATH");
+			if (path&&*argv[0]!='/')
+			{
+				for(;;)
+				{
+					while(*path==':') path++;
+					char* dp = strchr(path,':');
+					if (!dp) dp = strchr(path,0);
+					if(dp==path) break;						// end of env.PATH reached: finally no success
 
-                    str cmd = catstr(substr(path,dp),"/",argv[0]);
-                    xlogline("ExecCmd(): exec %s",cmd);
-                    execve(cmd,argv,envv?envv:(str const *)environ);	// no return if success
-                    path = dp;
-                }
-            }
+					str cmd = catstr(substr(path,dp),"/",argv[0]);
+					xlogline("ExecCmd(): exec %s",cmd);
+					execve(cmd,argv,envv?envv:(str const *)environ);	// no return if success
+					path = dp;
+				}
+			}
 
-            xlogline( "ExecCmd(%s) failed: %s", quotedstr(argv[0]), strerror(errno) );
-            if(errno==EFAULT) {xlogline("ExecCmd(): HINT: make shure the argv[] is NULL terminated!");}	// kio 2013-03-31
-            exit(errno);
-        }
+			xlogline( "ExecCmd(%s) failed: %s", quotedstr(argv[0]), strerror(errno) );
+			if(errno==EFAULT) {xlogline("ExecCmd(): HINT: make shure the argv[] is NULL terminated!");}	// kio 2013-03-31
+			exit(errno);
+		}
 
-    default:// parent process
-        {
-            close(pipout[W]);	// close unused fd
+	default:// parent process
+		{
+			close(pipout[W]);	// close unused fd
 
-            ssize_t result_size = 0;
-            ssize_t result_used = 0;
-            int		status;
+			ssize_t result_size = 0;
+			ssize_t result_used = 0;
+			int		status;
 
-            for(;;)
-            {
-                if (result_used+100>result_size)
-                {
-                    result_size += result_size/8 + 4000;
-                    char* newbu = newstr(int(result_size));
-                    memcpy ( newbu,result,result_used );
-                    delete[] result;
-                    result = newbu;
-                }
+			for(;;)
+			{
+				if (result_used+100>result_size)
+				{
+					result_size += result_size/8 + 4000;
+					char* newbu = newstr(int(result_size));
+					memcpy ( newbu,result,result_used );
+					delete[] result;
+					result = newbu;
+				}
 
-                ssize_t n = read ( pipout[R], result+result_used, result_size-result_used-1 ); //log("[%i]",int(n));
+				ssize_t n = read ( pipout[R], result+result_used, result_size-result_used-1 ); //log("[%i]",int(n));
 
-                if(n>0)		  { result_used += n; }
-                else if(n==0) { if(waitpid(child_id,&status,0)==child_id) { errno=ok; break; } }
-                else		  { if (errno!=EINTR&&errno!=EAGAIN) break; }
-            }
+				if(n>0)		  { result_used += n; }
+				else if(n==0) { if(waitpid(child_id,&status,0)==child_id) { errno=ok; break; } }
+				else		  { if (errno!=EINTR&&errno!=EAGAIN) break; }
+			}
 
-            close(pipout[R]);	// close fd
+			close(pipout[R]);	// close fd
 
-            if (errno==ok)
-            {
-                if ( WIFEXITED(status) )			// child process returned normally
-                {
-                    if ( WEXITSTATUS(status)!=0 )	// child process returned error code
-                    {
+			if (errno==ok)
+			{
+				if ( WIFEXITED(status) )			// child process returned normally
+				{
+					if ( WEXITSTATUS(status)!=0 )	// child process returned error code
+					{
 						errno = childreturnederror;
 //                        SetError
 //                        (	childreturnederror,
 //                            usingstr( "%s returned exit code %i", quotedstr(argv[0]), int(WEXITSTATUS(status)) )
 //                        );
-                    }
-                }
-                else if ( WIFSIGNALED(status) )		// child process terminated by signal
-                {
+					}
+				}
+				else if ( WIFSIGNALED(status) )		// child process terminated by signal
+				{
 						errno = childterminatedbysignal;
 //                        SetError
 //                        (	childterminatedbysignal,
 //                            usingstr( "%s terminated by signal %i", quotedstr(argv[0]), int(WTERMSIG(status)) )
 //                        );
-                }
-                else IERR();
-            }
+				}
+				else IERR();
+			}
 
-            result[result_used] = 0;
-        }
-    }
+			result[result_used] = 0;
+		}
+	}
 
 // restore stream settings
-    if (restore_stderr) { tcsetattr(2,TCSADRAIN,&old_stderr_termios); xlogline("ExecCmd(): restored stderr"); }
-    if (restore_stdin)  { tcsetattr(0,TCSADRAIN,&old_stdin_termios);  xlogline("ExecCmd(): restored stdin");  }
+	if (restore_stderr) { tcsetattr(2,TCSADRAIN,&old_stderr_termios); xlogline("ExecCmd(): restored stderr"); }
+	if (restore_stdin)  { tcsetattr(0,TCSADRAIN,&old_stdin_termios);  xlogline("ExecCmd(): restored stdin");  }
 
 // return result
-    return result;
+	return result;
 }
 
 str execCmd ( cstr cmd, ... )
 {
-    cstr* argv = new cstr[100];
-    argv[0] = cmd;
-    uint argc = 1;
+	cstr* argv = new cstr[100];
+	argv[0] = cmd;
+	uint argc = 1;
 
-    va_list va;
-    va_start(va,cmd);
+	va_list va;
+	va_start(va,cmd);
 
-    cstr arg;
-    do
-    {
-        if ((argc%100)==0)
-        {
-            cstr* newargv = new cstr[argc+100];
-            memcpy(newargv,argv,argc*sizeof(cstr));
-            delete[]argv;
-            argv=newargv;
-        }
+	cstr arg;
+	do
+	{
+		if ((argc%100)==0)
+		{
+			cstr* newargv = new cstr[argc+100];
+			memcpy(newargv,argv,argc*sizeof(cstr));
+			delete[]argv;
+			argv=newargv;
+		}
 
-        arg = va_arg(va,cstr);
-        argv[argc++] = arg;
-    }
-    while (arg);
+		arg = va_arg(va,cstr);
+		argv[argc++] = arg;
+	}
+	while (arg);
 
-    va_end(va);
+	va_end(va);
 
-    str result = execCmd((char*const*)argv);
-    delete[]argv;
-    return result;
+	str result = execCmd((char*const*)argv);
+	delete[]argv;
+	return result;
 }
 
 

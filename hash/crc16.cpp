@@ -24,7 +24,7 @@ unsigned short crc16( const unsigned char* q, unsigned int count )
 			crc = (crc^data) & 1 ? (crc >> 1) ^ POLY : crc >> 1;
 		}
 	}
-	
+
 	crc = ~crc;
 	return (crc << 8) | (crc >> 8 & 0xff);
 }

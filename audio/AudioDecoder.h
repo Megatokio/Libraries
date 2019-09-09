@@ -4,11 +4,11 @@
 
 	This file is free software.
 
- 	Permission to use, copy, modify, distribute, and sell this software
- 	and its documentation for any purpose is hereby granted without fee,
- 	provided that the above copyright notice appears in all copies and
- 	that both that copyright notice, this permission notice and the
- 	following disclaimer appear in supporting documentation.
+	Permission to use, copy, modify, distribute, and sell this software
+	and its documentation for any purpose is hereby granted without fee,
+	provided that the above copyright notice appears in all copies and
+	that both that copyright notice, this permission notice and the
+	following disclaimer appear in supporting documentation.
 
 	THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT ANY WARRANTY, NOT EVEN THE
 	IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
@@ -54,9 +54,9 @@ class AudioDecoder : public RCObject
 	uint	num_channels;			// number of channels in file
 	uint	sizeof_sample;			// sample size in file (2=int16, 4=float32)
 
-    ExtAudioFileRef	audiofile;		// OSX handle for audio file
-    CAStreamBasicDescription file_format;	// file format data
-    CAStreamBasicDescription client_format;	// client format data
+	ExtAudioFileRef	audiofile;		// OSX handle for audio file
+	CAStreamBasicDescription file_format;	// file format data
+	CAStreamBasicDescription client_format;	// client format data
 
 	uint32	frame_position;			// current play position in file [samples]
 

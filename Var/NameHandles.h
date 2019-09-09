@@ -3,11 +3,11 @@
 
 	This file is free software.
 
- 	Permission to use, copy, modify, distribute, and sell this software
- 	and its documentation for any purpose is hereby granted without fee,
- 	provided that the above copyright notice appears in all copies and
- 	that both that copyright notice, this permission notice and the
- 	following disclaimer appear in supporting documentation.
+	Permission to use, copy, modify, distribute, and sell this software
+	and its documentation for any purpose is hereby granted without fee,
+	provided that the above copyright notice appears in all copies and
+	that both that copyright notice, this permission notice and the
+	following disclaimer appear in supporting documentation.
 
 	THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT ANY WARRANTY, NOT EVEN THE
 	IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
@@ -16,11 +16,11 @@
 	TO THE EXTENT PERMITTED BY APPLICABLE LAW.
 
 
-    ----------------------------------------------------------------------------
+	----------------------------------------------------------------------------
 
 			Name Handles
 
-    ----------------------------------------------------------------------------
+	----------------------------------------------------------------------------
 
 
 	Dieses Modul speichert beliebige Texte bzw. Namen und gibt dafür ein Handle zurück.
@@ -66,7 +66,7 @@ NameHandle	FindNameHandle		( cString& name );
 
 //	Das Handle einmal verriegeln bzw. entriegeln.
 //	Sobald die Aufrufe für Lock() und Unlock() sich entsprechen, wird das Handle ungültig.
-void		LockNameHandle		( NameHandle );
+void 		LockNameHandle		( NameHandle );
 void		UnlockNameHandle	( NameHandle );
 
 

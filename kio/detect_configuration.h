@@ -1,15 +1,15 @@
 #pragma once
 
-/*	Copyright (c) Günter Woigk 1994 - 2019
-	mailto:kio@little-bat.de
+/*	Copyright  (c)	Günter Woigk 1994 - 2019
+					mailto:kio@little-bat.de
 
 	This file is free software.
 
- 	Permission to use, copy, modify, distribute, and sell this software
- 	and its documentation for any purpose is hereby granted without fee,
- 	provided that the above copyright notice appears in all copies and
- 	that both that copyright notice, this permission notice and the
- 	following disclaimer appear in supporting documentation.
+	Permission to use, copy, modify, distribute, and sell this software
+	and its documentation for any purpose is hereby granted without fee,
+	provided that the above copyright notice appears in all copies and
+	that both that copyright notice, this permission notice and the
+	following disclaimer appear in supporting documentation.
 
 	THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT ANY WARRANTY, NOT EVEN THE
 	IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
@@ -61,26 +61,26 @@
 
 #if defined(__clang__)
 	#define _CLANG
-    #define _COMPILER "clang"
+	#define _COMPILER "clang"
 
 #elif defined(__GNUC__) || defined(__GNUG__)
 	#define _GCC
-    #define _COMPILER "gcc"
+	#define _COMPILER "gcc"
 
 #elif defined(_MSC_VER)
 	#define _MSVC
-    #define _COMPILER "MSVC"
+	#define _COMPILER "MSVC"
 
 #elif defined(__IBMCPP__)
 	#define _IBMCPP
-    #define _COMPILER "IBMCPP"
+	#define _COMPILER "IBMCPP"
 
 #elif defined(_MPW_C) || defined(_MPW_CPLUS)
-    #define _MPW 1
-    #define _COMPILER "MPW"
+	#define _MPW 1
+	#define _COMPILER "MPW"
 
 #else
-    #error "can't detect compiler"
+	#error "can't detect compiler"
 
 #endif
 
@@ -99,32 +99,32 @@
 */
 
 #if defined(__FreeBSD__) || defined(_FREEBSD)
-    #define _UNIX 1
+	#define _UNIX 1
 	#define _BSD 1
-    #define _FREEBSD 1
-    #define _PLATFORM "Unix-FreeBSD"
+	#define _FREEBSD 1
+	#define _PLATFORM "Unix-FreeBSD"
 
 #elif defined(__NetBSD__) || defined(_NETBSD)
-    #define _UNIX 1
+	#define _UNIX 1
 	#define _BSD 1
-    #define _NETBSD 1
-    #define _PLATFORM "Unix-NetBSD"
+	#define _NETBSD 1
+	#define _PLATFORM "Unix-NetBSD"
 
 #elif defined(__OpenBSD__) || defined(_OPENBSD)
-    #define _UNIX 1
+	#define _UNIX 1
 	#define _BSD 1
-    #define _OPENBSD 1
-    #define _PLATFORM "Unix-OpenBSD"
+	#define _OPENBSD 1
+	#define _PLATFORM "Unix-OpenBSD"
 
 #elif (defined(__MACH__) && defined(__APPLE__)) || defined(_MACOSX)
-    #define _UNIX 1
+	#define _UNIX 1
 	#define _BSD 1
-    #define _MACOSX 1
-    #define _PLATFORM "Unix-MacOSX"
+	#define _MACOSX 1
+	#define _PLATFORM "Unix-MacOSX"
 
 #elif defined(_BSD)
-    #define _UNIX 1
-    #define _PLATFORM "Unix-BSD"
+	#define _UNIX 1
+	#define _PLATFORM "Unix-BSD"
 
 #elif defined(__linux__) || defined(_LINUX)
 	#define _UNIX 1
@@ -134,30 +134,30 @@
 #elif defined(__minix) || defined(_MINIX)
 	#define _UNIX 1
 	#define _MINIX 1
-    #define _PLATFORM "Unix-Minix"
+	#define _PLATFORM "Unix-Minix"
 
 #elif defined(__sun) || defined(_SOLARIS)
 	#define _UNIX 1
 	#define _SOLARIS 1
-    #define _PLATFORM "Unix-Solaris"
+	#define _PLATFORM "Unix-Solaris"
 
 #elif defined(unix) || defined(__unix) || defined(__unix__) || defined(_UNIX)
-    #define _UNIX 1
-    #define _PLATFORM "Unix"
+	#define _UNIX 1
+	#define _PLATFORM "Unix"
 	#error UNIX sub platform could not be autodetected: please set it in config.h file!
 
 #elif defined(_WIN64)
-    #define _WINDOWS 1
+	#define _WINDOWS 1
 	//#define WIN64
-    #define _PLATFORM "Windows64"
+	#define _PLATFORM "Windows64"
 
 #elif defined(_WIN32)
-    #define _WINDOWS 1
+	#define _WINDOWS 1
 	//#define WIN32
-    #define _PLATFORM "Windows32"
+	#define _PLATFORM "Windows32"
 
 #else
-    #error platform could not be auto-detected: please set it in config.h file!
+	#error platform could not be auto-detected: please set it in config.h file!
 
 #endif
 
@@ -297,7 +297,7 @@
 	static_assert(_MAX_ALIGNMENT == 16, "");
 
 #else
-        #error "can't detect processor"
+		#error "can't detect processor"
 #endif
 
 

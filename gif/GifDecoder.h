@@ -1,14 +1,14 @@
 #pragma once
 /*	Copyright  (c)	Günter Woigk 2007 - 2019
-  					mailto:kio@little-bat.de
+					mailto:kio@little-bat.de
 
 	This file is free software.
 
- 	Permission to use, copy, modify, distribute, and sell this software
- 	and its documentation for any purpose is hereby granted without fee,
- 	provided that the above copyright notice appears in all copies and
- 	that both that copyright notice, this permission notice and the
- 	following disclaimer appear in supporting documentation.
+	Permission to use, copy, modify, distribute, and sell this software
+	and its documentation for any purpose is hereby granted without fee,
+	provided that the above copyright notice appears in all copies and
+	that both that copyright notice, this permission notice and the
+	following disclaimer appear in supporting documentation.
 
 	THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT ANY WARRANTY, NOT EVEN THE
 	IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
@@ -46,11 +46,11 @@ class GifDecoder
 	int		depth, clear_code, eof_code, running_code, running_bits,
 			max_code_plus_one, prev_code, stack_ptr, shift_state,
 			file_state, position, bufsize;
-    uint32	shift_data, pixel_count;
-    uchar	buf[256];
-    uchar	stack[LZ_MAX_CODE+1];
-    uchar	suffix[LZ_MAX_CODE+1];
-    uint	prefix[LZ_MAX_CODE+1];
+	uint32	shift_data, pixel_count;
+	uchar	buf[256];
+	uchar	stack[LZ_MAX_CODE+1];
+	uchar	suffix[LZ_MAX_CODE+1];
+	uint	prefix[LZ_MAX_CODE+1];
 
 	int		read_gif_code		();
 	uchar	read_gif_byte		();

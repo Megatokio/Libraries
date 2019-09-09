@@ -3,11 +3,11 @@
 
 	This file is free software.
 
- 	Permission to use, copy, modify, distribute, and sell this software
- 	and its documentation for any purpose is hereby granted without fee,
- 	provided that the above copyright notice appears in all copies and
- 	that both that copyright notice, this permission notice and the
- 	following disclaimer appear in supporting documentation.
+	Permission to use, copy, modify, distribute, and sell this software
+	and its documentation for any purpose is hereby granted without fee,
+	provided that the above copyright notice appears in all copies and
+	that both that copyright notice, this permission notice and the
+	following disclaimer appear in supporting documentation.
 
 	THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT ANY WARRANTY, NOT EVEN THE
 	IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
@@ -78,14 +78,14 @@ void AudioDecoder::open(cstr filename) noexcept(false)
 	xlogIn("AudioDecoder::open(%s)", filename);
 
 	// close existing file if open
-    OSStatus err = close(); (void)err;
+	OSStatus err = close(); (void)err;
 
-    // open the audio file
-    CFStringRef urlStr = CFStringCreateWithCString(kCFAllocatorDefault, filename, kCFStringEncodingUTF8);
-    CFURLRef urlRef = CFURLCreateWithFileSystemPath(NULL, urlStr, kCFURLPOSIXPathStyle, false);
-    err = ExtAudioFileOpenURL(urlRef, &audiofile);
-    CFRelease(urlStr);
-    CFRelease(urlRef);
+	// open the audio file
+	CFStringRef urlStr = CFStringCreateWithCString(kCFAllocatorDefault, filename, kCFStringEncodingUTF8);
+	CFURLRef urlRef = CFURLCreateWithFileSystemPath(NULL, urlStr, kCFURLPOSIXPathStyle, false);
+	err = ExtAudioFileOpenURL(urlRef, &audiofile);
+	CFRelease(urlStr);
+	CFRelease(urlRef);
 	if(err) { audiofile=NULL; throw any_error("AudioDecoder: Error opening file."); }
 	this->filename = newcopy(filename);
 	frame_position = 0;
@@ -112,9 +112,9 @@ void AudioDecoder::open(cstr filename) noexcept(false)
 */
 void AudioDecoder::seekSamplePosition(uint32 frameposition) noexcept(false)
 {
-    OSStatus err = ExtAudioFileSeek(audiofile, frameposition);
+	OSStatus err = ExtAudioFileSeek(audiofile, frameposition);
 	if(err) throw any_error("AudioDecoder: seek(%u) failed: %i",uint(frameposition), int(err));
-    frame_position = frameposition;
+	frame_position = frameposition;
 }
 
 
@@ -195,7 +195,7 @@ uint32 AudioDecoder::read(int16* bu, uint32 maxframes, uint numchannels) noexcep
 		}
 	}
 	else					// requested and file's num channels match; or
-	  						// stereo|surround to stereo|surround: default behaviour is ok; or
+							// stereo|surround to stereo|surround: default behaviour is ok; or
 	{						// mono to stereo|surround: manually copy left to right channel
 		for(count=0; count<maxframes; count+=n)		// frames read
 		{
@@ -250,7 +250,7 @@ uint32 AudioDecoder::read(float32* bu, uint32 maxframes, uint numchannels) noexc
 		}
 	}
 	else					// requested and file's num channels match; or
-	  						// stereo|surround to stereo|surround: default behaviour is ok; or
+							// stereo|surround to stereo|surround: default behaviour is ok; or
 	{						// mono to stereo|surround: manually copy left to right channel
 		for(count=0; count<maxframes; count+=n)			// frames read
 		{

@@ -3,11 +3,11 @@
 
 	This file is free software.
 
- 	Permission to use, copy, modify, distribute, and sell this software
- 	and its documentation for any purpose is hereby granted without fee,
- 	provided that the above copyright notice appears in all copies and
- 	that both that copyright notice, this permission notice and the
- 	following disclaimer appear in supporting documentation.
+	Permission to use, copy, modify, distribute, and sell this software
+	and its documentation for any purpose is hereby granted without fee,
+	provided that the above copyright notice appears in all copies and
+	that both that copyright notice, this permission notice and the
+	following disclaimer appear in supporting documentation.
 
 	THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT ANY WARRANTY, NOT EVEN THE
 	IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
@@ -240,16 +240,16 @@ bool isupperstr	(cstr s) noexcept
 {
 	// Test if string is all upper case
 
-    if(s) while(*s) { if(to_upper(*s)!=*s) return no; else s++; }
-    return yes;
+	if(s) while(*s) { if(to_upper(*s)!=*s) return no; else s++; }
+	return yes;
 }
 
 bool islowerstr	(cstr s) noexcept
 {
 	// Test if string is all lower case
 
-    if(s) while(*s) { if(to_lower(*s)!=*s) return no; else s++; }
-    return yes;
+	if(s) while(*s) { if(to_lower(*s)!=*s) return no; else s++; }
+	return yes;
 }
 
 str mulstr (cstr q, uint n) throws // limit_error
@@ -1007,19 +1007,19 @@ str unbase64str (cstr s0) noexcept
 
 bool startswith (cstr a, cstr b) noexcept
 {
-    if(!b) return yes;		// leerer suchstring
+	if(!b) return yes;		// leerer suchstring
 	if(!a) return !*b;		// leeres target? => nur ok wenn leerer suchstring
 
 	while(*b)
 	{
-        if(*a++ != *b++) return no;
+		if(*a++ != *b++) return no;
 	}
-    return yes;
+	return yes;
 }
 
 bool endswith (cstr a, cstr b) noexcept
 {
-    if(!b) return yes;		// leerer suchstring
+	if(!b) return yes;		// leerer suchstring
 	if(!a) return !*b;		// leeres target? => nur ok wenn leerer suchstring
 
 	cstr b0 = b;

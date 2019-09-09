@@ -1,13 +1,13 @@
 /*	Copyright  (c)	Günter Woigk 2004 - 2019
-                    mailto:kio@little-bat.de
+					mailto:kio@little-bat.de
 
 	This file is free software.
 
- 	Permission to use, copy, modify, distribute, and sell this software
- 	and its documentation for any purpose is hereby granted without fee,
- 	provided that the above copyright notice appears in all copies and
- 	that both that copyright notice, this permission notice and the
- 	following disclaimer appear in supporting documentation.
+	Permission to use, copy, modify, distribute, and sell this software
+	and its documentation for any purpose is hereby granted without fee,
+	provided that the above copyright notice appears in all copies and
+	that both that copyright notice, this permission notice and the
+	following disclaimer appear in supporting documentation.
 
 	THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT ANY WARRANTY, NOT EVEN THE
 	IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
@@ -31,10 +31,10 @@ const  std::thread::id		main_thread = std::this_thread::get_id();
 */
 PSemaphore::PSemaphore( cstr name, uint32 avail )
 :
-    name(name),
-    avail(avail),
-    mutex(),		// can throw std::system_error
-    cond()			// can throw std::system_error
+	name(name),
+	avail(avail),
+	mutex(),		// can throw std::system_error
+	cond()			// can throw std::system_error
 {}
 
 
@@ -70,18 +70,18 @@ uint32 PSemaphore::request(uint32 n_min, uint32 n_max)
 {
 	std::unique_lock<std::mutex> lock(mutex);
 	cond.wait(lock, [=]{return avail >= n_min;});
-    uint32 n = min(avail,n_max);
-    avail -= n;
-    return n;
+	uint32 n = min(avail,n_max);
+	avail -= n;
+	return n;
 }
 
 bool PSemaphore::tryRequest()
 {
-    if( avail==0 ) return false;
+	if( avail==0 ) return false;
 	std::lock_guard<std::mutex> l(mutex);
 	if(avail==0) return false;
-    avail -= 1;
-    return true;
+	avail -= 1;
+	return true;
 }
 
 bool PSemaphore::tryRequest( double timeout )
@@ -90,8 +90,8 @@ bool PSemaphore::tryRequest( double timeout )
 //	cond.wait_for(lock, std::chrono::nanoseconds(int64(timeout/1000000000.0)), [=]{return avail;});
 	cond.wait_for(lock, std::chrono::duration<double>(timeout), [=]{return avail;});
 	if(avail==0) return false;
-    avail -= 1;
-    return true;
+	avail -= 1;
+	return true;
 }
 
 
@@ -128,46 +128,46 @@ void waitUntil ( double time )
 
 struct exec_every_t
 {
-    bool(*fu)(void*);
-    void*	arg;
-    double  delay;
+	bool(*fu)(void*);
+	void*	arg;
+	double  delay;
 
-    exec_every_t( bool(*fu)(void*), void* arg, double delay )		:fu(fu),arg(arg),delay(delay){}
+	exec_every_t( bool(*fu)(void*), void* arg, double delay )		:fu(fu),arg(arg),delay(delay){}
 };
 
 static void* execute_every_proc( void* data )
 {
-    exec_every_t* x = static_cast<exec_every_t*>(data);
-    double now = ::now();
-    do { waitUntil( now += x->delay ); } while( x->fu(x->arg) );
-    delete x;
-    return NULL;
+	exec_every_t* x = static_cast<exec_every_t*>(data);
+	double now = ::now();
+	do { waitUntil( now += x->delay ); } while( x->fu(x->arg) );
+	delete x;
+	return NULL;
 }
 
 pthread_t executeEvery( double delay, bool(*fu)(void*), void* arg )
 {
-    pthread_t thread;
-    exec_every_t* spawn_data = new exec_every_t(fu,arg,delay);
-    int e = pthread_create( &thread, NULL /*attr*/, execute_every_proc, spawn_data );
-    if(e) abort("executeEvery: %s", strerror(e));
-    return thread;
+	pthread_t thread;
+	exec_every_t* spawn_data = new exec_every_t(fu,arg,delay);
+	int e = pthread_create( &thread, NULL /*attr*/, execute_every_proc, spawn_data );
+	if(e) abort("executeEvery: %s", strerror(e));
+	return thread;
 }
 
 static void* execute_with_delay_proc( void* arg )
 {
-    exec_every_t* x = static_cast<exec_every_t*>(arg);
-    do { waitUntil( now() + x->delay ); } while( x->fu(x->arg) );
-    delete x;
-    return NULL;
+	exec_every_t* x = static_cast<exec_every_t*>(arg);
+	do { waitUntil( now() + x->delay ); } while( x->fu(x->arg) );
+	delete x;
+	return NULL;
 }
 
 pthread_t executeWithDelay( double delay, bool(*fu)(void*), void* arg )
 {
-    pthread_t thread;
-    exec_every_t* spawn_data = new exec_every_t(fu,arg,delay);
-    int e = pthread_create( &thread, NULL /*attr*/, execute_with_delay_proc, spawn_data );
-    if(e) abort("executeWithDelay: %s", strerror(e));
-    return thread;
+	pthread_t thread;
+	exec_every_t* spawn_data = new exec_every_t(fu,arg,delay);
+	int e = pthread_create( &thread, NULL /*attr*/, execute_with_delay_proc, spawn_data );
+	if(e) abort("executeWithDelay: %s", strerror(e));
+	return thread;
 }
 
 
@@ -178,42 +178,42 @@ pthread_t executeWithDelay( double delay, bool(*fu)(void*), void* arg )
 
 struct exec_at_t
 {
-    double(*fu)(void*);
-    void*	arg;
-    double  time;
+	double(*fu)(void*);
+	void*	arg;
+	double  time;
 
-    exec_at_t( double(*fu)(void*), void* arg, double time )		:fu(fu),arg(arg),time(time){}
+	exec_at_t( double(*fu)(void*), void* arg, double time )		:fu(fu),arg(arg),time(time){}
 };
 
 static void* execute_at_proc( void* arg )
 {
-    exec_at_t* x = static_cast<exec_at_t*>(arg);
+	exec_at_t* x = static_cast<exec_at_t*>(arg);
 
-    for(;;)
-    {
-        waitUntil( x->time );
-        double d = x->fu(x->arg);
+	for(;;)
+	{
+		waitUntil( x->time );
+		double d = x->fu(x->arg);
 
-        if(d<=0) break;							// exit
-        if(d<x->time/2) x->time = now() + d;	// duration returned
-        else		    x->time = d;			// time returned
-    }
-    delete x;
-    return NULL;
+		if(d<=0) break;							// exit
+		if(d<x->time/2) x->time = now() + d;	// duration returned
+		else		    x->time = d;			// time returned
+	}
+	delete x;
+	return NULL;
 }
 
 pthread_t executeAt( double time, double(*fu)(void*), void* arg )
 {
-    pthread_t thread;
-    exec_at_t* spawn_data = new exec_at_t(fu,arg,time);
-    int e = pthread_create( &thread, NULL /*attr*/, execute_at_proc, spawn_data );
-    if(e) abort("executeAt: %s", strerror(e));
-    return thread;
+	pthread_t thread;
+	exec_at_t* spawn_data = new exec_at_t(fu,arg,time);
+	int e = pthread_create( &thread, NULL /*attr*/, execute_at_proc, spawn_data );
+	if(e) abort("executeAt: %s", strerror(e));
+	return thread;
 }
 
 pthread_t executeAfter( double delay, double(*fu)(void*), void* arg )
 {
-    return executeAt( now()+delay, fu, arg );
+	return executeAt( now()+delay, fu, arg );
 }
 
 #endif

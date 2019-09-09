@@ -1,13 +1,13 @@
 /*	Copyright  (c)	Günter Woigk 2007 - 2019
-  					mailto:kio@little-bat.de
+					mailto:kio@little-bat.de
 
 	This file is free software.
 
- 	Permission to use, copy, modify, distribute, and sell this software
- 	and its documentation for any purpose is hereby granted without fee,
- 	provided that the above copyright notice appears in all copies and
- 	that both that copyright notice, this permission notice and the
- 	following disclaimer appear in supporting documentation.
+	Permission to use, copy, modify, distribute, and sell this software
+	and its documentation for any purpose is hereby granted without fee,
+	provided that the above copyright notice appears in all copies and
+	that both that copyright notice, this permission notice and the
+	following disclaimer appear in supporting documentation.
 
 	THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT ANY WARRANTY, NOT EVEN THE
 	IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
@@ -183,7 +183,7 @@ void GifEncoder::write_gif_code( int code ) THF
 	// Note: codes above 4095 are for signalling.
 	if( running_code >= max_code_plus_one && code <= 4095 )
 	{
-    		max_code_plus_one = 1 << ++running_bits;
+			max_code_plus_one = 1 << ++running_bits;
 	}
 }
 
@@ -226,14 +226,14 @@ void GifEncoder::writePixelRow( cuptr pixel, uint length ) THF
 	xxlogIn("GifEncoder:WritePixelRow(px,n)");
 
 	int   new_code;
-    uint32 new_key;
-    uchar pixval;
+	uint32 new_key;
+	uchar pixval;
 	uint  i = 0;
 
 	int current_code = this->current_code == FIRST_CODE ? pixel[i++] : this->current_code;
 
-    while( i < length )
-    {
+	while( i < length )
+	{
 		pixval = pixel[i++]; // Fetch next pixel from stream
 
 		// Form a new unique key to search hash table for the code
@@ -268,10 +268,10 @@ void GifEncoder::writePixelRow( cuptr pixel, uint length ) THF
 				add_hash_key( new_key, this->running_code++ );
 			}
 		}
-    }
+	}
 
-    // Preserve the current state of the compressor:
-    this->current_code = current_code;
+	// Preserve the current state of the compressor:
+	this->current_code = current_code;
 }
 
 

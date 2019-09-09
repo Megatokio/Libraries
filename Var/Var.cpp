@@ -3,11 +3,11 @@
 
 	This file is free software.
 
- 	Permission to use, copy, modify, distribute, and sell this software
- 	and its documentation for any purpose is hereby granted without fee,
- 	provided that the above copyright notice appears in all copies and
- 	that both that copyright notice, this permission notice and the
- 	following disclaimer appear in supporting documentation.
+	Permission to use, copy, modify, distribute, and sell this software
+	and its documentation for any purpose is hereby granted without fee,
+	provided that the above copyright notice appears in all copies and
+	that both that copyright notice, this permission notice and the
+	following disclaimer appear in supporting documentation.
 
 	THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT ANY WARRANTY, NOT EVEN THE
 	IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
@@ -413,7 +413,7 @@ void Var::init_list ( cVek& q )
 	uint n = q.used;
 	if (n==0)
 	{
-	 	init_list();
+		init_list();
 	}
 	else
 	{
@@ -431,7 +431,7 @@ void Var::init_list ( cVek& q )
 			}
 		}
 		while (n>0);
-  	}
+	}
 }
 
 
@@ -1382,7 +1382,7 @@ void Var::AppendItems ( Var* a, Var* b, Var* c, Var* d )
 	assert(IsList());
 	xxassert(
 		!d || !d->IsStream() || (d->GetStream()->InputEncoding()>=ucs1 && d->GetStream()->InputEncoding()<=utf8 &&
-							     d->GetStream()->OutputEncoding()>=ucs1 && d->GetStream()->OutputEncoding()<=utf8) );
+								 d->GetStream()->OutputEncoding()>=ucs1 && d->GetStream()->OutputEncoding()<=utf8) );
 
 	if(data_is_locked())
 	{
@@ -1406,7 +1406,7 @@ void Var::AppendItems ( Var* a, Var* b, Var* c, Var* d )
 
 	xxassert(
 		!d || !d->IsStream() || (d->GetStream()->InputEncoding()>=ucs1 && d->GetStream()->InputEncoding()<= utf8 &&
-							     d->GetStream()->OutputEncoding()>=ucs1 && d->GetStream()->OutputEncoding()<=utf8));
+								 d->GetStream()->OutputEncoding()>=ucs1 && d->GetStream()->OutputEncoding()<=utf8));
 }
 
 void Var::AppendItems ( Var* a, Var* b, Var* c, Var* d, Var* e, Var* f, Var* g, Var* h )

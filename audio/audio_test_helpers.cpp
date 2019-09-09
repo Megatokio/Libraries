@@ -3,11 +3,11 @@
 
 	This file is free software.
 
- 	Permission to use, copy, modify, distribute, and sell this software
- 	and its documentation for any purpose is hereby granted without fee,
- 	provided that the above copyright notice appears in all copies and
- 	that both that copyright notice, this permission notice and the
- 	following disclaimer appear in supporting documentation.
+	Permission to use, copy, modify, distribute, and sell this software
+	and its documentation for any purpose is hereby granted without fee,
+	provided that the above copyright notice appears in all copies and
+	that both that copyright notice, this permission notice and the
+	following disclaimer appear in supporting documentation.
 
 	THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT ANY WARRANTY, NOT EVEN THE
 	IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
@@ -35,12 +35,12 @@ int8 ALaw_Encode(int16 number)
 
    if (number < 0)
    {
-      number = -number;
-      sign = 0x80;
+	  number = -number;
+	  sign = 0x80;
    }
    if (number > ALAW_MAX)
    {
-      number = ALAW_MAX;
+	  number = ALAW_MAX;
    }
    for (; ((number & mask) != mask && position >= 5); mask >>= 1, position--);
    lsb = (number >> ((position == 4) ? (1) : (position - 4))) & 0x0f;
@@ -56,18 +56,18 @@ int16 ALaw_Decode(int8 number)
    number^=0x55;
    if(number&0x80)
    {
-      number&=~(1<<7);
-      sign = -1;
+	  number&=~(1<<7);
+	  sign = -1;
    }
    position = ((number & 0xF0) >>4) + 4;
    if(position!=4)
    {
-      decoded = ((1<<position)|((number&0x0F)<<(position-4))
-                |(1<<(position-5)));
+	  decoded = ((1<<position)|((number&0x0F)<<(position-4))
+				|(1<<(position-5)));
    }
    else
    {
-      decoded = (number<<1)|1;
+	  decoded = (number<<1)|1;
    }
    return (sign==0)?(decoded):(-decoded);
 }
@@ -83,16 +83,16 @@ int8 MuLaw_Encode(int16 number)
 
    if (number < 0)
    {
-      number = -number;
-      sign = 0x80;
+	  number = -number;
+	  sign = 0x80;
    }
    number += MULAW_BIAS;
    if (number > MULAW_MAX)
    {
-      number = MULAW_MAX;
+	  number = MULAW_MAX;
    }
    for (; ((number & mask) != mask && position >= 5); mask >>= 1, position--)
-        ;
+		;
    lsb = (number >> (position - 4)) & 0x0f;
    return (~(sign | ((position - 5) << 4) | lsb));
 }
@@ -106,12 +106,12 @@ int16 MuLaw_Decode(int8 number)
    number = ~number;
    if (number & 0x80)
    {
-      number &= ~(1 << 7);
-      sign = -1;
+	  number &= ~(1 << 7);
+	  sign = -1;
    }
    position = ((number & 0xF0) >> 4) + 5;
    decoded = ((1 << position) | ((number & 0x0F) << (position - 4))
-             | (1 << (position - 5))) - MULAW_BIAS;
+			 | (1 << (position - 5))) - MULAW_BIAS;
    return (sign == 0) ? (decoded) : (-(decoded));
 }
 

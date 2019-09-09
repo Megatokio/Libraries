@@ -1,14 +1,14 @@
 #pragma once
 /*	Copyright  (c)	Günter Woigk 2001 - 2019
-  					mailto:kio@little-bat.de
+					mailto:kio@little-bat.de
 
 	This file is free software.
 
- 	Permission to use, copy, modify, distribute, and sell this software
- 	and its documentation for any purpose is hereby granted without fee,
- 	provided that the above copyright notice appears in all copies and
- 	that both that copyright notice, this permission notice and the
- 	following disclaimer appear in supporting documentation.
+	Permission to use, copy, modify, distribute, and sell this software
+	and its documentation for any purpose is hereby granted without fee,
+	provided that the above copyright notice appears in all copies and
+	that both that copyright notice, this permission notice and the
+	following disclaimer appear in supporting documentation.
 
 	THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT ANY WARRANTY, NOT EVEN THE
 	IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
@@ -166,32 +166,32 @@ EXT	uint64	get_volume_free		(cstr path);			// BSD
 class MyVolumeInfo
 {
 public:
-    bool	valid;
+	bool	valid;
 
 // info from struct statfs:
-    uint32	blocksize;		// fs.f_bsize			fundamental file system block size
-    uint32	bestiosize;		// fs.f_iosize			optimal transfer block size
-    uint64	totalblocks;	// fs.f_blocks			total data blocks in file system
-    uint64	blocksfree_su;	// fs.f_bfree			free blocks in fs
-    uint64	blocksfree;		// fs.f_bavail			free blocks avail to non-superuser
-    uint64	totalfiles;		// fs.f_files			total file nodes in file system
-    uint64	filesfree;		// fs.f_ffree			free file nodes in fs
-    fsid_t	fsid;			// fs.f_fsid 			file system id 					???
-    uid_t	owner;			// fs.f_owner			user that mounted the filesystem
-    uint	fstype;			// fs.f_type			type of filesystem				number
-    uint32	flags;			// fs.f_flags			copy of mount exported flags: 	e.g. MNT_RDONLY
-    uint32	fs_subtype;		// fs.f_fssubtype		fs sub-type (flavor)
-    cstr	fstypename;		// fs.f_fstypename[MFSTYPENAMELEN]	fs type name
-    cstr	mountpoint;		// fs.f_mntonname[MAXPATHLEN]		directory on which mounted
-    cstr	volumename;		// fs.f_mntfromname[MAXPATHLEN]		mounted filesystem
+	uint32	blocksize;		// fs.f_bsize			fundamental file system block size
+	uint32	bestiosize;		// fs.f_iosize			optimal transfer block size
+	uint64	totalblocks;	// fs.f_blocks			total data blocks in file system
+	uint64	blocksfree_su;	// fs.f_bfree			free blocks in fs
+	uint64	blocksfree;		// fs.f_bavail			free blocks avail to non-superuser
+	uint64	totalfiles;		// fs.f_files			total file nodes in file system
+	uint64	filesfree;		// fs.f_ffree			free file nodes in fs
+	fsid_t	fsid;			// fs.f_fsid 			file system id 					???
+	uid_t	owner;			// fs.f_owner			user that mounted the filesystem
+	uint	fstype;			// fs.f_type			type of filesystem				number
+	uint32	flags;			// fs.f_flags			copy of mount exported flags: 	e.g. MNT_RDONLY
+	uint32	fs_subtype;		// fs.f_fssubtype		fs sub-type (flavor)
+	cstr	fstypename;		// fs.f_fstypename[MFSTYPENAMELEN]	fs type name
+	cstr	mountpoint;		// fs.f_mntonname[MAXPATHLEN]		directory on which mounted
+	cstr	volumename;		// fs.f_mntfromname[MAXPATHLEN]		mounted filesystem
 
 public:		MyVolumeInfo	(struct statfs& fs);        // BSD etc.
-            MyVolumeInfo    (struct mntent* mntent);    // Linux
-            ~MyVolumeInfo	();
+			MyVolumeInfo    (struct mntent* mntent);    // Linux
+			~MyVolumeInfo	();
 
-    uint64	totalbytes		()	const 	{ return blocksize * totalblocks; }		// number: blocksize * blocks
-    uint64	bytesfree		()	const 	{ return blocksize * blocksfree; }		// number: blocksize * blocksfree
-    uint64	bytesfree_su	()	const 	{ return blocksize * blocksfree_su; }	// number: blocksize * blocksfree_su
+	uint64	totalbytes		()	const 	{ return blocksize * totalblocks; }		// number: blocksize * blocks
+	uint64	bytesfree		()	const 	{ return blocksize * blocksfree; }		// number: blocksize * blocksfree
+	uint64	bytesfree_su	()	const 	{ return blocksize * blocksfree_su; }	// number: blocksize * blocksfree_su
 };
 
 

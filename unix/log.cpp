@@ -4,11 +4,11 @@
 
 	This file is free software.
 
- 	Permission to use, copy, modify, distribute, and sell this software
- 	and its documentation for any purpose is hereby granted without fee,
- 	provided that the above copyright notice appears in all copies and
- 	that both that copyright notice, this permission notice and the
- 	following disclaimer appear in supporting documentation.
+	Permission to use, copy, modify, distribute, and sell this software
+	and its documentation for any purpose is hereby granted without fee,
+	provided that the above copyright notice appears in all copies and
+	that both that copyright notice, this permission notice and the
+	following disclaimer appear in supporting documentation.
 
 	THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT ANY WARRANTY, NOT EVEN THE
 	IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
@@ -297,9 +297,9 @@ public:
 				LogFile() noexcept;
 				~LogFile();
 
-    __printflike(3,0)
+	__printflike(3,0)
 	void		valog(double now, cstr fmt, va_list);	// log line with timestamp etc.
-    __printflike(2,0)
+	__printflike(2,0)
 	void		vaadd(cstr fmt, va_list);				// compose log line
 	void		nl(double now);							// finalize and print composed log line
 };
@@ -409,11 +409,11 @@ static void write2log(uint thread_id, double when, uint indent, cstr msg)
 
 	uint sz = uint(snprintf(sbu, NELEM(sbu), "[%u] %s%s  %s\n", thread_id, timestamp, indentstr(indent), msg));
 	if (sz >= NELEM(sbu))
-    {
-        assert(int(sz) >= 0);
-        sz = NELEM(sbu);
-        sbu[sz-1] = '\n';
-    }
+	{
+		assert(int(sz) >= 0);
+		sz = NELEM(sbu);
+		sbu[sz-1] = '\n';
+	}
 
 	if (fd != -1)  // write to file
 	{
@@ -695,10 +695,10 @@ void LogFile::vaadd(cstr format, va_list va)
 	lock();
 
 		if (repetitions) print_repetitions();
-        int num_added = vsnprintf(msg+composition, NELEM(msg)-composition, format, va);
-        assert(num_added >= 0);
-        if (num_added < 0) num_added = snprintf(msg+composition, NELEM(msg)-composition, "[[printf format error]]");
-        composition += uint(num_added);
+		int num_added = vsnprintf(msg+composition, NELEM(msg)-composition, format, va);
+		assert(num_added >= 0);
+		if (num_added < 0) num_added = snprintf(msg+composition, NELEM(msg)-composition, "[[printf format error]]");
+		composition += uint(num_added);
 		if (composition >= NELEM(msg)) composition = NELEM(msg);
 
 	unlock();

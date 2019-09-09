@@ -1,13 +1,13 @@
 /*	Copyright  (c)	Günter Woigk 2007 - 2012
-  					mailto:kio@little-bat.de
+					mailto:kio@little-bat.de
 
 	This file is free software.
 
- 	Permission to use, copy, modify, distribute, and sell this software
- 	and its documentation for any purpose is hereby granted without fee,
- 	provided that the above copyright notice appears in all copies and
- 	that both that copyright notice, this permission notice and the
- 	following disclaimer appear in supporting documentation.
+	Permission to use, copy, modify, distribute, and sell this software
+	and its documentation for any purpose is hereby granted without fee,
+	provided that the above copyright notice appears in all copies and
+	that both that copyright notice, this permission notice and the
+	following disclaimer appear in supporting documentation.
 
 	THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT ANY WARRANTY, NOT EVEN THE
 	IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
@@ -58,8 +58,8 @@ void GifDecoder::Initialize(cstr filepath)
 	pixel_count			= 0;
 //	buf[0]				= 0;
 	memset(buf,0,sizeof(buf));			// nötig?
-    memset(stack,0,sizeof(stack));		// nötig?
-    memset(suffix,0,sizeof(suffix));	// nötig?
+	memset(stack,0,sizeof(stack));		// nötig?
+	memset(suffix,0,sizeof(suffix));	// nötig?
 
 	for( int i=0; i<=LZ_MAX_CODE; i++ ) { prefix[i] = NO_SUCH_CODE; }
 }
@@ -163,17 +163,17 @@ inline int trace_prefix( uint* prefix, int code, int clear_code )
 void GifDecoder::ReadScanline ( uchar* line, int length )
 {
 	int	stack_ptr	= this->stack_ptr;
-    int	eof_code	= this->eof_code;
-    int	clear_code	= this->clear_code;
+	int	eof_code	= this->eof_code;
+	int	clear_code	= this->clear_code;
 	int	prev_code	= this->prev_code;
 	int	current_code;
 	int	current_prefix;
 
-    int i = 0;
+	int i = 0;
 	while( stack_ptr!=0 && i<length ) { line[i++] = stack[--stack_ptr]; }	// Pop the stack
 
-    while( i<length )
-    {
+	while( i<length )
+	{
 		current_code = this->read_gif_code();
 
 		if( current_code == eof_code )			// unexpected EOF
@@ -256,10 +256,10 @@ void GifDecoder::ReadScanline ( uchar* line, int length )
 			}
 		}
 		prev_code = current_code;
-    }
+	}
 
-    this->prev_code = prev_code;
-    this->stack_ptr = stack_ptr;
+	this->prev_code = prev_code;
+	this->stack_ptr = stack_ptr;
 }
 
 
