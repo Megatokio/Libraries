@@ -949,8 +949,6 @@ void create_hardlinked_copy( cstr zpath, cstr qpath, bool copy_dir_owner) THF
 		logline("create_hardlinked_copy dir size = %u, dir = %s", dir.count(),qpath);
 		throw e;
 	}
-
-	sync();
 }
 
 
