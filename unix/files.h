@@ -51,6 +51,7 @@ EXT	cstr	filename_from_path		(cstr path) noexcept;	// "…/name.ext" --> "name.e
 EXT	cstr	extension_from_path		(cstr path) noexcept;	// "….ext"		--> ".ext"		"…"  -> ""
 EXT	cstr	basename_from_path		(cstr path) noexcept;	// "…/name.ext"	--> "name"
 EXT	cstr	directory_from_path		(cstr path) noexcept;	// "path/…"		--> "path/"		"…"	 -> "./"
+EXT	cstr	parent_directory_from_path(cstr path) noexcept;	// "path/name/"	--> "path/"		"path/name"	--> "path/"		"…"	 -> "./"
 EXT	cstr	last_component_from_path(cstr path) noexcept;	// "…/name.ext"	--> "name.ext"	"…/dir/" -> "dir/"
 
 EXT	str		modestr					(mode_t);
@@ -99,9 +100,9 @@ EXT	bool	is_executable	(cstr path, bool resolve_last_symlink=1, bool for_user=0)
 EXT	void	create_file		(cstr path, mode_t perm=0660)							THF;
 EXT	void	create_dir		(cstr path, mode_t perm=0777, bool autocreatedirs=no)	THF;
 EXT	void	create_pipe		(cstr path, mode_t perm=0660)							THF;
-EXT	void	create_link		(cstr path, cstr qpath)									THF;
-EXT	void	create_hardlink	(cstr path, cstr qpath)									THF;
-EXT	void 	create_hardlinked_copy(cstr path, cstr qpath, bool copy_dir_owner=no)	THF;
+EXT	void	create_symlink	(cstr linkpath, cstr destpath)							THF;
+EXT	void	create_hardlink	(cstr newpath, cstr oldpath)							THF;
+EXT	void 	create_hardlinked_copy(cstr newdir, cstr olddir, bool copy_dir_owner=no) THF;
 
 EXT int		set_owner_and_group(cstr path, uid_t=-1, gid_t=-1, bool deref_last_symlink=yes) noexcept;
 EXT int		get_owner_and_group(cstr path, uid_t&, gid_t&, bool deref_last_symlink=yes) noexcept;

@@ -268,6 +268,18 @@ cstr directory_from_path( cstr path ) noexcept
 }
 
 
+/* ----	separate directory path from path ------------------------------
+		returns string in cstring pool
+		returned string includes final '/'
+		returns "./" instead of "" if passed path contains no '/'
+*/
+cstr parent_directory_from_path (cstr path) noexcept
+{
+	path = substr( path, last_component_from_path(path) );
+	return *path ? path : "./";
+}
+
+
 /* ----	separate filename or last directory from path ---------------------
 		returned string points into passed path argument  ((guaranteed!))
 */
@@ -857,46 +869,44 @@ void create_pipe( cstr path, mode_t mode ) THF
 
 
 /* ---- create symbolic link ------------------------------------------
-		create a symbolic link to 'dest' at position 'path'
+		create a symbolic link to 'oldpath' at position 'linkpath'
 		overwrites old link, if present
 		in:	 path, dest
 		throws on error
 */
-void create_link( cstr path, cstr dest ) THF
+void create_symlink (cstr linkpath, cstr destpath) THF
 {
-	path = fullpath(path,no);
-	if(errno && errno!=ENOENT) goto x;
+	linkpath = fullpath(linkpath,no);
+	if (errno && errno!=ENOENT) goto x;
 
-	if(errno==ok)	// node exists?
+	if (errno==ok)	// node exists?
 	{
 		struct stat fs;
-		if( lstat(path,&fs)==0 && S_ISLNK(fs.st_mode) ) if(unlink(path)) goto x;
+		if (lstat(linkpath,&fs)==0 && S_ISLNK(fs.st_mode)) unlink(linkpath);
 	}
 
-	if(symlink(dest,path)==0)	// may fail if node still exists (e.g. dir or file)
-		return;	// ok
-
-x:	throw file_error(path,errno, "create symlink");
+	if (symlink(destpath,linkpath)==0) return; // OK
+x:	throw file_error(linkpath, errno, "create symlink");
 }
 
 
-void create_hardlink( cstr zpath, cstr qpath ) THF
+void create_hardlink (cstr newpath, cstr oldpath) THF
 {
 	// create hard link to file
-	// create another hard link to 'zpath' at position 'qpath'
+	// create another hard link to 'oldpath' at position 'newpath'
 	// in:	 dest path, source
 	// throws on error
 	// hard linked files have same owner, group and permissions
 
-	zpath = fullpath(zpath,no);
-	if (errno == ENOENT && link(qpath,zpath) == 0) return;	// ok
+	newpath = fullpath(newpath,no);
+	if (errno == ENOENT && link(oldpath,newpath) == 0) return;	// ok
 
 	if (errno == ok) errno = EEXIST;		// node exists
-	throw file_error(zpath, errno, "create hardlink");
+	throw file_error(newpath, errno, "create hardlink");
 }
 
 
-void create_hardlinked_copy( cstr zpath, cstr qpath, bool copy_dir_owner) THF
+void create_hardlinked_copy (cstr newdir, cstr olddir, bool copy_dir_owner) THF
 {
 	// create copy of directory tree
 	// files are hard linked
@@ -911,42 +921,42 @@ void create_hardlinked_copy( cstr zpath, cstr qpath, bool copy_dir_owner) THF
 
 	try
 	{
-		if (lastchar(zpath) != '/') zpath = catstr(zpath,"/");
-		if (lastchar(qpath) != '/') qpath = catstr(qpath,"/");
+		if (lastchar(newdir) != '/') newdir = catstr(newdir,"/");
+		if (lastchar(olddir) != '/') olddir = catstr(olddir,"/");
 
-		read_dir(qpath,dir,no);
+		read_dir(olddir,dir,no);
 
-		create_dir(zpath);
+		create_dir(newdir);
 
 		if (copy_dir_owner)
 		{
 			struct stat fs;
-			int err = stat(qpath,&fs);
+			int err = stat(olddir,&fs);
 			if (err != ok)
-				logline("failed to stat \"%s\"", qpath);
+				logline("failed to stat \"%s\"", olddir);
 			else
 			{
-				err = chown(zpath,fs.st_uid,fs.st_gid);
-				if (err != ok) logline("failed to set owner and group of \"%s\"", zpath);
-				err = chmod(zpath,fs.st_mode);
-				if (err != ok) logline("failed to set mode bits of \"%s\"", zpath);
+				err = chown(newdir,fs.st_uid,fs.st_gid);
+				if (err != ok) logline("failed to set owner and group of \"%s\"", newdir);
+				err = chmod(newdir,fs.st_mode);
+				if (err != ok) logline("failed to set mode bits of \"%s\"", newdir);
 			}
 		}
 
 		for (uint i=0; i<dir.count(); i++)
 		{
 			MyFileInfo& fi = dir[i];
-			cstr q = catstr(qpath,fi.fname());
-			cstr z = catstr(zpath,fi.fname());
-			if (fi.is_dir())  { create_hardlinked_copy(z,q); continue; }
-			if (fi.is_file()) { create_hardlink(z,q); continue; }
-			if (fi.is_link()) { create_link(z,read_link(q)); }
+			cstr old = catstr(olddir,fi.fname());
+			cstr nju = catstr(newdir,fi.fname());
+			if (fi.is_dir())  { create_hardlinked_copy(nju,old,copy_dir_owner); continue; }
+			if (fi.is_file()) { create_hardlink(nju,old); continue; }
+			if (fi.is_link()) { create_symlink(nju,read_link(old)); }
 			// else: ignore
 		}
 	}
 	catch(file_error& e)
 	{
-		logline("create_hardlinked_copy dir size = %u, dir = %s", dir.count(),qpath);
+		logline("create_hardlinked_copy dir size = %u, dir = %s", dir.count(),olddir);
 		throw e;
 	}
 }
