@@ -86,7 +86,7 @@ void MersenneTwister64::init( uint64 seed[], uint seed_length )
 	uint64 j = 0;
 	uint64 k = min(uint(NN),seed_length);
 
-	for(; k; k--)
+	for (; k; k--)
 	{
 		mt[i] = (mt[i] ^ ((mt[i-1] ^ (mt[i-1] >> 62)) * INT64_C(3935559000370003845U))) + seed[j] + j; /* non linear */
 		i++; j++;
@@ -94,7 +94,7 @@ void MersenneTwister64::init( uint64 seed[], uint seed_length )
 		if (j>=seed_length) j=0;
 	}
 
-	for(k=NN-1; k; k--)
+	for (k=NN-1; k; k--)
 	{
 		mt[i] = (mt[i] ^ ((mt[i-1] ^ (mt[i-1] >> 62)) * INT64_C(2862933555777941757U))) - i; /* non linear */
 		i++;
@@ -111,7 +111,7 @@ void MersenneTwister64::init( uint64 seed[], uint seed_length )
 */
 void MersenneTwister64::init(cstr qstr)
 {
-	if(qstr==nullptr||*qstr==0) { init(uint64(0)); return; }
+	if (qstr==nullptr||*qstr==0) { init(uint64(0)); return; }
 
 	uint qlen = uint(strlen(qstr));
 	uint zlen = (qlen+7)/8;
@@ -136,7 +136,7 @@ void MersenneTwister64::init( uint32 seed )
 */
 void MersenneTwister64::init( uint64 seed )
 {
-	while(!seed) seed = random64();
+	while (!seed) seed = random64();
 
 	mt[0] = seed;
 	for (mti=1; mti<NN; mti++)
@@ -153,13 +153,13 @@ void MersenneTwister64::next_table()
 	int i;
 	uint64 x;
 
-	for(i=0;i<NN-MM;i++)
+	for (i=0;i<NN-MM;i++)
 	{
 		x = (mt[i]&UM) | (mt[i+1]&LM);
 		mt[i] = mt[i+MM] ^ (x>>1) ^ mag01[int(x)&1];
 	}
 
-	for(;i<NN-1;i++)
+	for (;i<NN-1;i++)
 	{
 		x = (mt[i]&UM) | (mt[i+1]&LM);
 		mt[i] = mt[i+(MM-NN)] ^ (x>>1) ^ mag01[int(x)&1];
@@ -212,21 +212,21 @@ void MersenneTwister64::next_table()
 //MersenneTwister64* MersenneTwister64::apply_key2(cstr qstr)
 //{
 ////	xlogline("apply key2 = \"%s\"",qstr);
-//	if(qstr==nullptr)
+//	if (qstr==nullptr)
 //		log("");
 //
-//	if(qstr&&*qstr)
+//	if (qstr&&*qstr)
 //	{
 //		uint qlen = (uint)strlen(qstr);
 //		uint zlen = qlen/8;
 //
 //		XXASSERT(zlen<NN);
 //
-//		for(uint i=0;i<zlen; i++)
+//		for (uint i=0;i<zlen; i++)
 //		{
 //			mt[i] ^= ((uint64*)qstr)[i];
 //		}
-//		for(uint i=qlen; i-->zlen*8; )
+//		for (uint i=qlen; i-->zlen*8; )
 //		{
 //			((ptr)mt)[i] ^= qstr[i];
 //		}
@@ -236,8 +236,8 @@ void MersenneTwister64::next_table()
 //
 //MersenneTwister64* MersenneTwister64::apply_key2(uint64 key2[], uint32 count)
 //{
-//	if(count>NN) count = NN;
-//	for(uint i=0;i<count;i++) mt[i] ^= key2[i];
+//	if (count>NN) count = NN;
+//	for (uint i=0;i<count;i++) mt[i] ^= key2[i];
 //	return spread_key2();
 //}
 
@@ -250,15 +250,15 @@ void MersenneTwister64::next_table()
 //*/
 //void MersenneTwister64::crypt(uint8 bu[], uint sz)
 //{
-//	for(uint64* p = ((uint64*)bu)+(sz>>3); (uptr)p>bu;)
+//	for (uint64* p = ((uint64*)bu)+(sz>>3); (uptr)p>bu;)
 //	{
 //		*--p ^= this->random64();
 //	}
 //
-//	if(sz&7)
+//	if (sz&7)
 //	{
 //		uint64 q = this->random64();
-//		while(sz&7) { --sz; bu[sz] ^= ((uptr)&q)[sz&7]; }
+//		while (sz&7) { --sz; bu[sz] ^= ((uptr)&q)[sz&7]; }
 //	}
 //}
 //
@@ -296,7 +296,7 @@ void MersenneTwister64::next_table()
 //	uint zlen = sizeAfterBase85Decoding(qlen);
 //	str  z  = tempstr(zlen);
 //	int err = decodeBase85((uptr)q,qlen,(uptr)z,zlen);
-//	if(err) return nullptr;
+//	if (err) return nullptr;
 //
 //	// Decrypt in place:
 //	decrypt((uptr)z,zlen);
@@ -312,7 +312,7 @@ void MersenneTwister64::next_table()
 //{
 //	mti = mti0;
 //	ptr p = strchr(qpath,'/');
-//	if(p==nullptr) return encrypt(qpath);
+//	if (p==nullptr) return encrypt(qpath);
 //
 //	*p=0;
 //	char* zpath = encrypt(qpath);
@@ -334,7 +334,7 @@ void MersenneTwister64::next_table()
 //{
 //	mti = mti0;
 //	ptr p = strchr(qpath,'/');
-//	if(p==nullptr) return decrypt(qpath);
+//	if (p==nullptr) return decrypt(qpath);
 //
 //	*p=0;
 //	char* zpath = decrypt(qpath);

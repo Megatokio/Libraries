@@ -144,7 +144,7 @@ static uint find_index(ucs4char n, const ucs4char table[], uint e) noexcept
 	// helper: get index in table of code ranges
 	//	e = initial end value = NELEM(table)
 
-	uint a = 0; do { uint i=(a+e)/2; if(n<table[i]) e=i; else a=i; } while (a+1 < e);
+	uint a = 0; do { uint i=(a+e)/2; if (n<table[i]) e=i; else a=i; } while (a+1 < e);
 	return a;
 }
 
@@ -163,7 +163,7 @@ GeneralCategory general_category (ucs4char n) noexcept
 */
 bool _is_printable (ucs4char n) noexcept
 {
-//	if( n < 0x700 ) return n!=0x7f && (n&~0x80)>=0x20;
+//	if ( n < 0x700 ) return n!=0x7f && (n&~0x80)>=0x20;
 
 	GeneralCategory m = general_category(n);
 	return m >= GcLetter /* && m <= GcSpaceSeparator */
@@ -232,7 +232,7 @@ static uint find_numval_index(ucs4char n) noexcept
 	// helper: get index in numval_table[]
 
 	uint e = NELEM(numval_table);
-	uint a = 0; do { uint i=(a+e)/2; if(n<numval_table[i].start) e=i; else a=i; } while (a+1 < e);
+	uint a = 0; do { uint i=(a+e)/2; if (n<numval_table[i].start) e=i; else a=i; } while (a+1 < e);
 	return a;
 }
 
@@ -306,12 +306,12 @@ Script script_property (ucs4char n) noexcept
 
 inline int find_EA_index (ucs2char n, int e) noexcept
 {
-	int a=0; do { int i=(a+e)/2; if( n<UCS2_EA_Table[i].startcode ) e=i; else a=i; } while (a<e-1);
+	int a=0; do { int i=(a+e)/2; if ( n<UCS2_EA_Table[i].startcode ) e=i; else a=i; } while (a<e-1);
 	return a;
 }
 inline int find_EA_index (ucs4char n, int e) noexcept
 {
-	int a=0; do { int i=(a+e)/2; if( n<UCS4_EA_Table[i].startcode ) e=i; else a=i; } while (a<e-1);
+	int a=0; do { int i=(a+e)/2; if ( n<UCS4_EA_Table[i].startcode ) e=i; else a=i; } while (a<e-1);
 	return a;
 }
 

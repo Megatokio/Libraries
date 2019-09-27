@@ -146,7 +146,7 @@ public:
 
 inline uint64 MersenneTwister64::random64()
 {
-    if(mti >= NN) next_table();
+    if (mti >= NN) next_table();
     uint64 x = mt[mti++];
 
     x ^= (x >> 29) & INT64_C(0x5555555555555555U);

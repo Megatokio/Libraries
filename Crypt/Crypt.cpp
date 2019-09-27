@@ -25,18 +25,18 @@
 uint16 hash( cstr q )
 {
 //	uint32 h = 0x0ff0;
-//	while(*s)
+//	while (*s)
 //	{
 //		h = (h<<5) ^ *s++;
-//		while(h>0x10000) { if(h&1) h ^= 0x8408; h=h>>1; }
+//		while (h>0x10000) { if (h&1) h ^= 0x8408; h=h>>1; }
 //	}
 //	return h;
 
 	uint n = 0xffff, c;
 
-	while((c = *(uptr)q++))
+	while ((c = *(uptr)q++))
 	{
-		for(c += 0x0100; c > 1; c >>= 1)
+		for (c += 0x0100; c > 1; c >>= 1)
 		{
 			n = (n^c) & 1 ? (n >> 1) ^ 0x8408 : n >> 1;
 		}
@@ -50,7 +50,7 @@ uint16 hash( cstr q )
 */
 Crypt* Crypt::spread_key2()
 {
-	for(int i=1; i<NN; i++)
+	for (int i=1; i<NN; i++)
 	{
 		mt[i] ^= (INT64_C(6364136223846793005U) * (mt[i-1] ^ (mt[i-1] >> 62)) + i);
 	}
@@ -86,18 +86,18 @@ Crypt* Crypt::apply_key2(uint16 key2)
 */
 Crypt* Crypt::apply_key2(cstr qstr)
 {
-	if(qstr&&*qstr)
+	if (qstr&&*qstr)
 	{
 		uint qlen = (uint)strlen(qstr);
 		uint zlen = qlen/8;
 
 		assert(zlen<NN);
 
-		for(uint i=0;i<zlen; i++)
+		for (uint i=0;i<zlen; i++)
 		{
 			mt[i] ^= ((uint64*)qstr)[i];
 		}
-		for(uint i=qlen; i-->zlen*8; )
+		for (uint i=qlen; i-->zlen*8; )
 		{
 			((ptr)mt)[i] ^= qstr[i];
 		}
@@ -107,8 +107,8 @@ Crypt* Crypt::apply_key2(cstr qstr)
 
 Crypt* Crypt::apply_key2(uint64 key2[], uint32 count)
 {
-	if(count>NN) count = NN;
-	for(uint i=0;i<count;i++) mt[i] ^= key2[i];
+	if (count>NN) count = NN;
+	for (uint i=0;i<count;i++) mt[i] ^= key2[i];
 	return spread_key2();
 }
 
@@ -119,15 +119,15 @@ Crypt* Crypt::apply_key2(uint64 key2[], uint32 count)
 */
 void Crypt::crypt(uint8 bu[], uint sz)
 {
-	for(uint64* p = ((uint64*)bu)+(sz>>3); (uptr)p>bu;)
+	for (uint64* p = ((uint64*)bu)+(sz>>3); (uptr)p>bu;)
 	{
 		*--p ^= this->random64();
 	}
 
-	if(sz&7)
+	if (sz&7)
 	{
 		uint64 q = this->random64();
-		while(sz&7) { --sz; bu[sz] ^= ((uptr)&q)[sz&7]; }
+		while (sz&7) { --sz; bu[sz] ^= ((uptr)&q)[sz&7]; }
 	}
 }
 
@@ -143,7 +143,7 @@ void Crypt::crypt(uint8 bu[], uint sz)
 */
 str Crypt::encrypt(cstr q) const
 {
-	if(q==nullptr||*q==0) return tempstr(0);
+	if (q==nullptr||*q==0) return tempstr(0);
 
 	// Create copy of data:
 	uint   zlen = strLen(q);
@@ -166,10 +166,10 @@ str	Crypt::decrypt(cstr q) const
 	// Decode Base85:
 	uint qlen = strLen(q);
 	uint zlen = sizeAfterBase85Decoding(qlen);
-	if(zlen<2) return zlen==0 ? tempstr(0) : nullptr;
+	if (zlen<2) return zlen==0 ? tempstr(0) : nullptr;
 	str  z  = tempstr(zlen);
 	int err = decodeBase85((uptr)q,qlen,(uptr)z,zlen);
-	if(err) return nullptr;
+	if (err) return nullptr;
 
 	// Decrypt in place:
 	Crypt(*this,peek2Z(z)).decrypt((uptr)z+2,zlen-2);
@@ -185,7 +185,7 @@ str Crypt::encrypt_path(str qpath)
 {
 	mti = 0;
 	ptr p = strchr(qpath,'/');
-	if(p==nullptr) return encrypt(qpath);
+	if (p==nullptr) return encrypt(qpath);
 
 	*p=0;
 	char* zpath = encrypt(qpath);
@@ -207,7 +207,7 @@ str Crypt::decrypt_path(str qpath)
 {
 	mti = 0;
 	ptr p = strchr(qpath,'/');
-	if(p==nullptr) return decrypt(qpath);
+	if (p==nullptr) return decrypt(qpath);
 
 	*p=0;
 	char* zpath = decrypt(qpath);

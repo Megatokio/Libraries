@@ -101,8 +101,8 @@ extern	str  leftstr 	(cstr, int n)		noexcept;
 extern	str  rightstr 	(cstr, int n)		noexcept;
 inline char	 lastchar	(cstr s)			noexcept { return s&&*s ? s[strlen(s)-1] : 0; }
 
-inline	void toupper	(str s)				noexcept { if(s) for( ;*s;s++ ) *s = to_upper(*s); }
-inline	void tolower	(str s)				noexcept { if(s) for( ;*s;s++ ) *s = to_lower(*s); }
+inline	void toupper	(str s)				noexcept { if (s) for ( ;*s;s++ ) *s = to_upper(*s); }
+inline	void tolower	(str s)				noexcept { if (s) for ( ;*s;s++ ) *s = to_lower(*s); }
 extern	str	 upperstr	(cstr)				noexcept;
 extern	str	 lowerstr	(cstr)				noexcept;
 extern	str	 replacedstr(cstr, char oldchar, char newchar) noexcept;

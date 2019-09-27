@@ -104,7 +104,7 @@ cptr find (cstr target, cstr search) noexcept
 	{
 		cptr s = search;
 		cptr t = target+i;
-		while(*s && *s==*t) { s++; t++; }
+		while (*s && *s==*t) { s++; t++; }
 		if (*s==0) return target+i;
 	}
 
@@ -240,7 +240,7 @@ bool isupperstr	(cstr s) noexcept
 {
 	// Test if string is all upper case
 
-	if(s) while(*s) { if(to_upper(*s)!=*s) return no; else s++; }
+	if (s) while (*s) { if (to_upper(*s)!=*s) return no; else s++; }
 	return yes;
 }
 
@@ -248,7 +248,7 @@ bool islowerstr	(cstr s) noexcept
 {
 	// Test if string is all lower case
 
-	if(s) while(*s) { if(to_lower(*s)!=*s) return no; else s++; }
+	if (s) while (*s) { if (to_lower(*s)!=*s) return no; else s++; }
 	return yes;
 }
 
@@ -259,7 +259,7 @@ str mulstr (cstr q, uint n) throws // limit_error
 	if (!q || !*q || !n) return emptystr;
 
 	size_t len = strlen(q);
-	if(len*n > 0xFFFFFFu) throw limit_error("mulstr()",len*n,0xFFFFFFu);	// 16 MB
+	if (len*n > 0xFFFFFFu) throw limit_error("mulstr()",len*n,0xFFFFFFu);	// 16 MB
 	str s = tempstr(uint(len*n));
 	ptr z = s;
 
@@ -301,7 +301,7 @@ str hexstr (uint32 n, uint digits) noexcept
 	static const char hex[] = "0123456789ABCDEF";
 	str c = tempstr(digits);
 
-	while(digits)
+	while (digits)
 	{
 		c[--digits] = hex[n&0x0f];
 		n >>= 4;
@@ -316,7 +316,7 @@ str hexstr (uint64 n, uint digits) noexcept
 	static const char hex[] = "0123456789ABCDEF";
 	char* c = tempstr(digits);
 
-	while(digits)
+	while (digits)
 	{
 		c[--digits] = hex[n&0x0f];
 		n >>= 4;
@@ -545,17 +545,17 @@ str	unescapedstr (cstr s0) noexcept  // sets errno
 {
 	char c, *q, *z;
 
-	if(!s0||!*s0) return emptystr;
+	if (!s0||!*s0) return emptystr;
 	str s = dupstr(s0);
 
 	q = z = strchr(s,'\\');
 
-	if(q) for(;;)
+	if (q) for(;;)
 	{
-		while((c=*q++)!='\\')
+		while ((c=*q++)!='\\')
 		{
 			*z++ = c;
-			if(!c) return s;
+			if (!c) return s;
 		}
 
 		c = *q++;					// c = next char after '\'
@@ -628,7 +628,7 @@ str	unquotedstr (cstr s0) noexcept // sets errno
 
 	n = uint(strlen(s));
 	c = s[0];
-	if( n>=2 && (c=='"'||c=='\'') && s[n-1]==c )
+	if ( n>=2 && (c=='"'||c=='\'') && s[n-1]==c )
 	{
 		// wir ignorieren, dass das schließende Zeichen fehlerhafterweise escaped sein könnte.
 		// unescapedstr() will set errno.
@@ -654,12 +654,12 @@ cstr fromhtmlstr (cstr s0) noexcept
 	str  s = dupstr(s0);
 	ptr  z = s + (q-s0);
 
-	for (;;)
+	for(;;)
 	{
 		char c;
 		while ((c=*q++) != '&')
 		{
-			if(c=='<' && *str_comp("br>", q)==0) { *z++ = '\n'; q+=3; continue; }
+			if (c=='<' && *str_comp("br>", q)==0) { *z++ = '\n'; q+=3; continue; }
 			*z++ = c;
 			if (!c) return s;
 		}
@@ -701,15 +701,15 @@ str toutf8str (cstr qstr) noexcept
 	if (qstr==nullptr || *qstr==0) return nullptr;
 
 	int	zlen = 0;
-	cptr q=qstr; while(*q) zlen += utf8_no_7bit(*q++); zlen += q-qstr;
+	cptr q=qstr; while (*q) zlen += utf8_no_7bit(*q++); zlen += q-qstr;
 	str	zstr = tempstr(zlen);
 	ptr z = zstr;
 	q = qstr;
 
-	while(*q)
+	while (*q)
 	{
 		char c = *q++;
-		if(utf8_is_7bit(c)) { *z++ = c; continue; }	// 7-bit ascii
+		if (utf8_is_7bit(c)) { *z++ = c; continue; }	// 7-bit ascii
 		*z++ = char(0xC0 + (uchar(c)>>6));		// 2-char utf8 code
 		*z++ = char(0x80 + (c&0x3f));
 	}
@@ -803,7 +803,7 @@ bool lt (cptr a, cptr b) noexcept
 {
 	if (a && b)
 	{
-		while(*a == *b && *a) { a++; b++; }
+		while (*a == *b && *a) { a++; b++; }
 		return *a < *b;
 	}
 	else
@@ -816,7 +816,7 @@ bool gt (cptr a, cptr b) noexcept
 {
 	if (a && b)
 	{
-		while(*a == *b && *a) { a++; b++; }
+		while (*a == *b && *a) { a++; b++; }
 		return *a > *b;
 	}
 	else
@@ -827,7 +827,7 @@ bool gt (cptr a, cptr b) noexcept
 
 bool gt_tolower (cptr a, cptr b) noexcept
 {
-	while(*a && to_lower(*a)==to_lower(*b)) { a++; b++; }
+	while (*a && to_lower(*a)==to_lower(*b)) { a++; b++; }
 	return to_lower(*a) > to_lower(*b);
 }
 
@@ -863,7 +863,7 @@ str hexstr (cptr s, uint n) noexcept
 
 	ptr z = tempstr(n*2) + n*2;
 	s += n;
-	while(n--) { char c = *--s; *--z = hexchar(c); *--z = hexchar(c>>4); }
+	while (n--) { char c = *--s; *--z = hexchar(c); *--z = hexchar(c>>4); }
 	return z;
 }
 
@@ -874,7 +874,7 @@ str unhexstr (cstr s) noexcept
 	if (!s) return nullptr;
 
 	int n = int(strlen(s));
-	if(n&1) return nullptr;
+	if (n&1) return nullptr;
 	n = n/2;
 	str z = tempstr(n);
 	while (*s)
@@ -928,7 +928,7 @@ str base64str (cstr s0) noexcept
 	{
 		uint32 c = *s++;
 		bool   f = *s;
-		c = c<<8; if(f) c += *s++;
+		c = c<<8; if (f) c += *s++;
 		c = c<<8;
 
 		*z++ =     base64[ c>>18    ];
@@ -947,7 +947,7 @@ str unbase64str (cstr s0) noexcept
 	if (!s0) return nullptr;
 
 	int slen = int(strlen(s0));
-	if(slen%4) return nullptr;
+	if (slen%4) return nullptr;
 
 	int padd = s0[slen-1] != '=' ? 0 : s0[slen-2] != '=' ? 1 : 2;
 	int zlen = slen/4*3-padd;
@@ -979,7 +979,7 @@ str unbase64str (cstr s0) noexcept
 
 	assert((*s==0)==(padd==0));
 
-	if(padd)
+	if (padd)
 	{
 		uint c1 = *s++;
 		uint c2 = *s++;
@@ -1007,28 +1007,28 @@ str unbase64str (cstr s0) noexcept
 
 bool startswith (cstr a, cstr b) noexcept
 {
-	if(!b) return yes;		// leerer suchstring
-	if(!a) return !*b;		// leeres target? => nur ok wenn leerer suchstring
+	if (!b) return yes;		// leerer suchstring
+	if (!a) return !*b;		// leeres target? => nur ok wenn leerer suchstring
 
-	while(*b)
+	while (*b)
 	{
-		if(*a++ != *b++) return no;
+		if (*a++ != *b++) return no;
 	}
 	return yes;
 }
 
 bool endswith (cstr a, cstr b) noexcept
 {
-	if(!b) return yes;		// leerer suchstring
-	if(!a) return !*b;		// leeres target? => nur ok wenn leerer suchstring
+	if (!b) return yes;		// leerer suchstring
+	if (!a) return !*b;		// leeres target? => nur ok wenn leerer suchstring
 
 	cstr b0 = b;
 	a = strchr(a,0);
 	b = strchr(b,0);
 
-	while(b>b0)
+	while (b>b0)
 	{
-		if(*--a != *--b) return false;
+		if (*--a != *--b) return false;
 	}
 	return true;
 }
@@ -1047,7 +1047,7 @@ void _split (Array<str>& array, ptr a, ptr e) throws
 
 	static const int line_separators = 0x3411; // 0b0011010000010001;
 
-	while(a<e)
+	while (a<e)
 	{
 		// append not-yet-0-delimited string:
 		array.append(a);
@@ -1076,14 +1076,14 @@ void _split (Array<str>& array, ptr a, ptr e, char c) throws
 	assert(a!=nullptr);
 	array.purge();
 
-	while(a<e)
+	while (a<e)
 	{
 		// append not-yet-0-delimited string:
 		array.append(a);
 
 		// search for line end:
 		a = ptr(memchr(a,c,size_t(e-a)));
-		if(!a) a = e;
+		if (!a) a = e;
 
 		// poke cstring delimiter at string end:
 		*a++ = 0;
@@ -1188,11 +1188,11 @@ uint strcpy (ptr z, cptr q, uint sz) noexcept
 	// The string is always delimited with a 0 character unless sz = 0.
 
 	assert(z||sz==0);
-	if(!q) q = "";
+	if (!q) q = "";
 
 	ptr za = z, ze = za+sz;
-	while(z<ze) { if((*z++=*q++)==0) return uint(--z-za); }
-	if(sz) *--z = 0;
+	while (z<ze) { if ((*z++=*q++)==0) return uint(--z-za); }
+	if (sz) *--z = 0;
 	return sz;
 }
 
@@ -1206,7 +1206,7 @@ uint strcat (ptr z, cptr q, uint sz) noexcept
 	// Note: you can blindly concatenate multiple strings with strcat, it will not overflow!
 
 	assert(z||sz==0);
-	if(!q) q = "";
+	if (!q) q = "";
 
 	ptr za = z, ze = za+sz;
 	while (z<ze && *z) z++;
@@ -1243,14 +1243,14 @@ cstr detabstr (cstr s, uint tabstops) noexcept
 		if (c != '\t')		{ *z++ = c; continue; }
 
 		uint n = tabstops - (z-z0)%tabstops;
-		if(qe-q > zstr+zlen-(z+n))
+		if (qe-q > zstr+zlen-(z+n))
 		{
 			zlen += tabstops*4;
 			cstr zalt = zstr;
 			zstr = tempstr(zlen); strcpy(zstr,zalt);
 			z0 += zstr-zalt; z += zstr-zalt;
 		}
-		while(n--) *z++ = ' ';
+		while (n--) *z++ = ' ';
 	}
 
 	*z = 0;
@@ -1264,7 +1264,7 @@ char NextChar ( char const *& p )
 {	char c;
 	c = *p++; if (c!='\\') return c;	// plain char
 	c = *p++;
-	if( (c-'0')&~7 )					// no octal digit
+	if ( (c-'0')&~7 )					// no octal digit
 	{
 		cptr q = strchr(ec,c);
 		if (c==0) p--;					// dont advance text pointer if "\" at end of text

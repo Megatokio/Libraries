@@ -46,7 +46,7 @@ static volatile bool  virgin	   = 1;				// for faster init test
 static void create_key (void)
 {
 	int err = pthread_key_create( &tempmem_key, deallocate_pool );
-	if(err) abort( "init TempMemPool: %s", strerror(err) );
+	if (err) abort( "init TempMemPool: %s", strerror(err) );
 }
 
 static void init () noexcept
@@ -69,14 +69,14 @@ TempMemPool::TempMemPool() noexcept
 {
 	xlogIn("new TempMemPool");
 
-	if(virgin) init();
+	if (virgin) init();
 
 	prev = reinterpret_cast<TempMemPool*>(pthread_getspecific( tempmem_key ));
 	xxlogline("  prev pool = %lx",(ulong)prev);
 	xxlogline("  this pool = %lx",(ulong)this);
 	//int err =
 	pthread_setspecific( tempmem_key, this );				// may fail with ENOMEM (utmost unlikely)
-	//if(err) { Abort("new TempMemPool: ",strerror(err)); }	// in which case this pool is not registered
+	//if (err) { Abort("new TempMemPool: ",strerror(err)); }	// in which case this pool is not registered
 }															// and GetPool() keeps using the outer pool
 
 
@@ -88,7 +88,7 @@ TempMemPool::~TempMemPool() noexcept
 
 	purge();
 	int err = pthread_setspecific( tempmem_key, prev );		// may fail with ENOMEM (utmost unlikely)
-	if(err) { abort("delete TempMemPool: %s",strerror(err)); }
+	if (err) { abort("delete TempMemPool: %s",strerror(err)); }
 }
 
 
@@ -130,7 +130,7 @@ char* TempMemPool::alloc (uint bytes) noexcept
 		TempMemData* newdata = reinterpret_cast<TempMemData*>(new char[ sizeof(TempMemData) + bytes ]);
 		xxlogline("tempmem new data = $%lx", ulong(newdata));
 		assert( (uintptr_t(newdata) & ALIGNMENT_MASK) == 0 );
-		if(data)
+		if (data)
 		{
 			newdata->prev = data->prev;		// neuen Block 'unterheben'
 			data->prev = newdata;
@@ -149,7 +149,7 @@ char* TempMemPool::alloc (uint bytes) noexcept
 char* TempMemPool::allocMem (uint bytes) noexcept
 {
 	char* p = alloc(bytes);
-	if( data->prev && p == data->prev->data )	// wurde "large request" 'untergehoben' ?
+	if ( data->prev && p == data->prev->data )	// wurde "large request" 'untergehoben' ?
 	{
 		return p;
 	}
@@ -167,7 +167,7 @@ char* TempMemPool::allocMem (uint bytes) noexcept
 */
 TempMemPool* TempMemPool::getPool() noexcept
 {
-	if(virgin) init();
+	if (virgin) init();
 	TempMemPool* pool = reinterpret_cast<TempMemPool*>(pthread_getspecific( tempmem_key ));
 	return pool ? pool : new TempMemPool();
 }
@@ -181,7 +181,7 @@ TempMemPool* TempMemPool::getXPool() noexcept
 {
 	TempMemPool* pool = getPool();
 	TempMemPool* prev = pool->prev;
-	if( !prev )
+	if ( !prev )
 	{
 		prev = new TempMemPool();					// automatically create 'outer' pool
 		prev->prev = nullptr;						// 'outer' pool 'unterheben'.

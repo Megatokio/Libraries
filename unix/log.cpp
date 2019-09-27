@@ -107,20 +107,20 @@ static cstr create_path( cstr path ) noexcept
 		errno = ENOTDIR;
 		return "";
 	}
-	if(lastchar(path) != '/')			// directory path must end with '/'
+	if (lastchar(path) != '/')			// directory path must end with '/'
 	{
 		path = catstr(path,"/");
 	}
-	if(path[0]=='~' && path[1]=='/')	// home dir
+	if (path[0]=='~' && path[1]=='/')	// home dir
 	{
 		cstr h = getenv("HOME");
-		if(h) path = catstr(h, path+1);
+		if (h) path = catstr(h, path+1);
 	}
-	if(path[0]!='/')					// relative path
+	if (path[0]!='/')					// relative path
 	{
 		char bu[MAXPATHLEN];
 		cstr wd = getcwd(bu,MAXPATHLEN);
-		if(!wd) { if(errno==ENOENT) errno=ENOTDIR; return path; }
+		if (!wd) { if (errno==ENOENT) errno=ENOTDIR; return path; }
 		assert(wd[0]=='/' || wd[0]==0);
 		path = catstr(wd, "/", path);
 	}
@@ -129,27 +129,27 @@ static cstr create_path( cstr path ) noexcept
 
 	struct stat fs;
 	int err = lstat(path, &fs);		// lstat(): follow last symlink
-	if(!err && (fs.st_mode >> 12) == DT_DIR) return path;
+	if (!err && (fs.st_mode >> 12) == DT_DIR) return path;
 
 	// normalize "./" and "../" and create directories:
-	for(uint a=0;;)
+	for (uint a=0;;)
 	{
-		cptr p = strchr(path+a+1,'/'); if(p==nullptr) break;
+		cptr p = strchr(path+a+1,'/'); if (p==nullptr) break;
 		uint e = uint(p-path);
 
-		if(e-a==1)						// --> "//"
+		if (e-a==1)						// --> "//"
 		{
 			path = catstr(substr(path,p-1),p);
 			continue;
 		}
-		if(e-a==2 && path[e-1]=='.')	// --> "./"
+		if (e-a==2 && path[e-1]=='.')	// --> "./"
 		{
 			path = catstr(substr(path,p-2),p);
 			continue;
 		}
-		if(e-a==3 && path[e-1]=='.' && path[e-2]=='.')	// --> "../"
+		if (e-a==3 && path[e-1]=='.' && path[e-2]=='.')	// --> "../"
 		{
-			if(a>0) while(path[--a] != '/') {}
+			if (a>0) while (path[--a] != '/') {}
 			path = catstr(substr(path,path+a), path+e);
 			continue;
 		}
@@ -157,12 +157,12 @@ static cstr create_path( cstr path ) noexcept
 		a = e;
 
 		int err = lstat(substr(path,p),&fs);
-		if(err || (fs.st_mode >> 12) != DT_DIR)
+		if (err || (fs.st_mode >> 12) != DT_DIR)
 		{
 			mode_t z = umask(0);
 			err = mkdir(path,0777);
 			umask(z);
-			if(err) return substr(path,p+1);	// errno set
+			if (err) return substr(path,p+1);	// errno set
 		}
 	}
 
@@ -311,8 +311,8 @@ public:
 */
 
 #ifndef NDEBUG
-static void lock()   noexcept { int e = pthread_mutex_lock(&mutex);	if(e) panic("LogFile:lock failed");   }
-static void unlock() noexcept { int e = pthread_mutex_unlock(&mutex);if(e) panic("LogFile:unlock failed"); }
+static void lock()   noexcept { int e = pthread_mutex_lock(&mutex);	if (e) panic("LogFile:lock failed");   }
+static void unlock() noexcept { int e = pthread_mutex_unlock(&mutex);if (e) panic("LogFile:unlock failed"); }
 #else
 inline void lock()   noexcept { pthread_mutex_lock(&mutex);	 }
 inline void unlock() noexcept { pthread_mutex_unlock(&mutex); }
@@ -324,7 +324,7 @@ inline void unlock() noexcept { pthread_mutex_unlock(&mutex); }
 //
 static uint quick_id()
 {
-	if(logrotate_when==0.0) return 0;
+	if (logrotate_when==0.0) return 0;
 	LogFile* logfile = reinterpret_cast<LogFile*> (pthread_getspecific( logfile_key ));
 	return logfile ? logfile->thread_id : logfiles_cnt;
 }
@@ -334,9 +334,9 @@ static uint quick_id()
 //
 static void flush_logfiles()
 {
-	for(uint i=0; i<logfiles_cnt; i++)
+	for (uint i=0; i<logfiles_cnt; i++)
 	{
-		if(logfiles[i]) logfiles[i]->print_pending();
+		if (logfiles[i]) logfiles[i]->print_pending();
 	}
 }
 
@@ -349,10 +349,10 @@ static void flush_logfiles()
 //
 static LogFile* getLogfile(double now)
 {
-	if(now >= logrotate_when)	// => init or rotate log
+	if (now >= logrotate_when)	// => init or rotate log
 	{
-		if(logrotate_when==0.0) init();									// first call
-		else if(logrotate==NEVER) logrotate_when = 1e99;				// should never happen
+		if (logrotate_when==0.0) init();									// first call
+		else if (logrotate==NEVER) logrotate_when = 1e99;				// should never happen
 		else openLogfile(logdir, logrotate, max_logfiles, log2console,	// rotate log
 						 timestamp_with_date, timestamp_with_msec);
 	}
@@ -373,7 +373,7 @@ static void write2log(uint thread_id, double when, uint indent, cstr msg)
 {
 	char sbu[260+MAXINDENT+40];
 
-	for(cptr nl; (nl = strchr(msg,'\n')); msg = nl+1)
+	for (cptr nl; (nl = strchr(msg,'\n')); msg = nl+1)
 	{
 		strcpy(sbu, msg, min(uint(NELEM(sbu)), uint(nl-msg+1)));
 		write2log(thread_id,when,indent,sbu);
@@ -381,7 +381,7 @@ static void write2log(uint thread_id, double when, uint indent, cstr msg)
 
 	char timestamp[40];
 
-	if(timestamp_with_date)
+	if (timestamp_with_date)
 	{
 		time_t sec = time_t(when);
 		tm dt; gmtime_r(&sec,&dt);
@@ -390,7 +390,7 @@ static void write2log(uint thread_id, double when, uint indent, cstr msg)
 		uint m = uint(dt.tm_mon+1);
 		uint d = uint(dt.tm_mday);
 
-		if(timestamp_with_msec)
+		if (timestamp_with_msec)
 			sprintf(timestamp, fmt11, y, m, d, dt.tm_hour, dt.tm_min, dt.tm_sec, uint((when-sec)*1000));
 		else
 			sprintf(timestamp, fmt10, y, m, d, dt.tm_hour, dt.tm_min, dt.tm_sec);
@@ -401,7 +401,7 @@ static void write2log(uint thread_id, double when, uint indent, cstr msg)
 		uint   minu = uint(sec/60);
 		uint   hour = uint(minu/60);
 
-		if(timestamp_with_msec)
+		if (timestamp_with_msec)
 			sprintf(timestamp, fmt01, hour%24, minu%60, uint(sec%60), uint((when-sec)*1000));
 		else
 			sprintf(timestamp, fmt00, hour%24, minu%60, uint(sec%60));
@@ -455,7 +455,7 @@ __attribute__((__noreturn__))
 void panic(cstr fmt, va_list va)
 {
 	static bool repeat = no;
-	if(repeat) _exit(PANIC_REPEATED);
+	if (repeat) _exit(PANIC_REPEATED);
 	repeat = yes;
 
 	pthread_mutex_trylock(&mutex);
@@ -464,9 +464,9 @@ void panic(cstr fmt, va_list va)
 	char msg[308];	snprintf (msg, NELEM(msg), "%s: Panic: %s", APPL_NAME, zbu);
 
 	log2console = yes;
-	if(fd==-1)
+	if (fd==-1)
 	{
-		if(fd>2) close(fd);
+		if (fd>2) close(fd);
 		mode_t z = umask(0);
 		// note: wg. macos SIERRA: umask(0): else write permission is removed from passed permission flags
 		// note: wg. macos SIERRA: 0666: must be writable for all, else user1 can't write to logfile created by user2
@@ -534,7 +534,7 @@ static void atexit_actions()
 	lock();
 
 		flush_logfiles();
-		if(fd!=-1) write2log(quick_id(),now(),0,"\nExit: Logfile closed\n");
+		if (fd!=-1) write2log(quick_id(),now(),0,"\nExit: Logfile closed\n");
 
 	unlock();
 }
@@ -548,11 +548,11 @@ static void atexit_actions()
 static void init_once(void)
 {
 	int e = pthread_mutex_init(&mutex,nullptr);
-	if(e) panic("init_mutex", e);
+	if (e) panic("init_mutex", e);
 
 	// create key:
 	e = pthread_key_create( &logfile_key, delete_logfile );
-	if(e) panic("create_key", e);
+	if (e) panic("create_key", e);
 
 	// set flag to non-zero: initialized
 	logrotate_when = 1e99;
@@ -561,7 +561,7 @@ static void init_once(void)
 	atexit(atexit_actions);
 
 // open logfile if set in settings.h:
-	if(LOGFILE_ROTATION != NEVER)
+	if (LOGFILE_ROTATION != NEVER)
 	{
 		openLogfile(
 			nullptr/*dirpath*/, LOGFILE_ROTATION, LOGFILE_MAX_LOGFILES, LOGFILE_LOG_TO_CONSOLE,
@@ -572,14 +572,14 @@ static void init_once(void)
 
 // initialize
 // calls init_once() only once
-// global functions should call "if(logrotate_when==0) init();" before doing anything else
+// global functions should call "if (logrotate_when==0) init();" before doing anything else
 //
 static void init() noexcept
 {
 	// initialize:
 	static pthread_once_t once_control = PTHREAD_ONCE_INIT;
 	int e = pthread_once( &once_control, init_once );
-	if(e) panic("init once", e);
+	if (e) panic("init once", e);
 }
 
 
@@ -601,13 +601,13 @@ LogFile::LogFile() noexcept
 
 		// find a free slot / thread_id:
 		uint i=0;
-		while(i<logfiles_cnt && logfiles[i]!=nullptr) i++;
+		while (i<logfiles_cnt && logfiles[i]!=nullptr) i++;
 
 		// no free slot => append at end of list
-		if(i==logfiles_cnt)
+		if (i==logfiles_cnt)
 		{
 			// list full => grow list
-			if(logfiles_cnt==logfiles_max)
+			if (logfiles_cnt==logfiles_max)
 			{
 				logfiles_max += 20;
 				LogFile** z = new LogFile*[logfiles_max];
@@ -623,7 +623,7 @@ LogFile::LogFile() noexcept
 	unlock();
 
 	int e = pthread_setspecific(logfile_key, this);
-	if(e) panic("new",e);
+	if (e) panic("new",e);
 }
 
 
@@ -662,7 +662,7 @@ void LogFile::print_repetitions()
 	assert(repetitions);
 	assert(!composition);
 
-	if(repetitions>1) sprintf(msg, "last msg repeated %u times", repetitions);
+	if (repetitions>1) sprintf(msg, "last msg repeated %u times", repetitions);
 	write2log(msg);
 	repetitions = 0;
 	msg[0] = 0;		// avoid that first msg in the new logfile is a repetition msg
@@ -675,8 +675,8 @@ void LogFile::print_repetitions()
 //
 void LogFile::print_pending()
 {
-	if(repetitions) print_repetitions(); else
-	if(composition)
+	if (repetitions) print_repetitions(); else
+	if (composition)
 	{
 		when = now();
 		write2log(msg);
@@ -715,7 +715,7 @@ void LogFile::valog(double now, cstr format, va_list va)
 {
 	lock();
 
-		if(composition)		// finalize and print a composed message
+		if (composition)		// finalize and print a composed message
 		{
 			vsnprintf(msg+composition, NELEM(msg)-composition, format, va);
 			composition = 0;
@@ -724,13 +724,13 @@ void LogFile::valog(double now, cstr format, va_list va)
 		{
 			char z[NELEM(msg)];
 			vsnprintf(z, NELEM(z), format, va);
-			if(strcmp(msg,z)==0)	// message repeats:
+			if (strcmp(msg,z)==0)	// message repeats:
 			{
 				when = now;			// timestamp of last repetition
 				repetitions++;
 				goto x;
 			}
-			if(repetitions) print_repetitions();
+			if (repetitions) print_repetitions();
 			strcpy(msg,z);
 		}
 
@@ -749,13 +749,13 @@ void LogFile::nl(double now)
 {
 	lock();
 
-		if(composition)		// finalize and print composed message
+		if (composition)		// finalize and print composed message
 		{
 			composition = 0;
 		}
 		else
 		{
-			if(repetitions) print_repetitions();
+			if (repetitions) print_repetitions();
 			msg[0] = 0;
 		}
 
@@ -783,7 +783,7 @@ static void purge_old_logfiles(cstr fname)
 	assert(*(strchr(logdir,0)-1)=='/');  // must end with '/'
 
 	DIR* dir = opendir(logdir);             // note: sets sporadic errors
-	if(!dir) { logline("LogFile:purge_old_logfiles: %s",strerror(errno)); return; }
+	if (!dir) { logline("LogFile:purge_old_logfiles: %s",strerror(errno)); return; }
 
 	// collect old log files:
 	uint v_cnt = 0;
@@ -798,7 +798,7 @@ static void purge_old_logfiles(cstr fname)
 	for(;;)
 	{
 		dirent* direntry = readdir(dir);
-		if(direntry==nullptr) break;			// end of dir
+		if (direntry==nullptr) break;			// end of dir
 
 		cstr filename = direntry->d_name;
 		#ifdef _BSD
@@ -808,15 +808,15 @@ static void purge_old_logfiles(cstr fname)
 		#endif
 		assert(filename[filenamelen]==0);
 
-		if(filenamelen!=fnamelen) continue;				// filename does not match
-		if(!startswith(filename, APPL_NAME)) continue;	// filename does not match
+		if (filenamelen!=fnamelen) continue;				// filename does not match
+		if (!startswith(filename, APPL_NAME)) continue;	// filename does not match
 
 		strcpy(filepath+logdirlen,filename);
 		struct stat filestat;
-		if(lstat(filepath,&filestat)) continue;			// skip on error
-		if(!S_ISREG(filestat.st_mode)) continue;		// not a regular file
+		if (lstat(filepath,&filestat)) continue;			// skip on error
+		if (!S_ISREG(filestat.st_mode)) continue;		// not a regular file
 
-		if(v_cnt==v_max)
+		if (v_cnt==v_max)
 		{
 			v_max *= 2;
 			cstr* z = new cstr[v_max];
@@ -828,11 +828,11 @@ static void purge_old_logfiles(cstr fname)
 	}
 
 	// delete old logfiles until max_logfiles remain:
-	if(v_cnt>max_logfiles)
+	if (v_cnt>max_logfiles)
 	{
 		sort(v,v+v_cnt);
 
-		for(uint i=0; i < v_cnt - max_logfiles; i++)
+		for (uint i=0; i < v_cnt - max_logfiles; i++)
 		{
 			assert(startswith(v[i],APPL_NAME));
 			strcpy(filepath+logdirlen,v[i]);
@@ -840,7 +840,7 @@ static void purge_old_logfiles(cstr fname)
 		}
 	}
 
-	for(uint i=0;i<v_cnt;i++) delete[] v[i];
+	for (uint i=0;i<v_cnt;i++) delete[] v[i];
 	delete[] v;
 	closedir(dir);
 }
@@ -858,12 +858,12 @@ void openLogfile(cstr dirpath, LogRotation logrotate, uint max_logfiles, bool lo
 
 void openLogfile(cstr dirpath, LogRotation logrotate, uint max_logfiles, bool log2console, bool with_date, bool with_msec)
 {
-	if(logrotate_when==0.0) init();
+	if (logrotate_when==0.0) init();
 
 	dirpath = create_path(dirpath);
-	if(errno) dirpath = create_path(LOGFILE_BASE_DIRECTORY APPL_NAME "/");
-	if(errno) dirpath = create_path(LOGFILE_AUX_DIRECTORY APPL_NAME "/");
-	if(errno) panic("could not create log dir",errno);
+	if (errno) dirpath = create_path(LOGFILE_BASE_DIRECTORY APPL_NAME "/");
+	if (errno) dirpath = create_path(LOGFILE_AUX_DIRECTORY APPL_NAME "/");
+	if (errno) panic("could not create log dir",errno);
 
 	char filepath[1024];
 	lock();
@@ -871,10 +871,10 @@ void openLogfile(cstr dirpath, LogRotation logrotate, uint max_logfiles, bool lo
 		IFDEBUG( write2log(quick_id(),now(),0,"+++openLogfile+++"); )
 
 		// flush repetitions:
-		for(uint i=0; i<logfiles_cnt; i++)
+		for (uint i=0; i<logfiles_cnt; i++)
 		{
 			LogFile* l = logfiles[i];
-			if(l && l->repetitions) l->print_repetitions();
+			if (l && l->repetitions) l->print_repetitions();
 		}
 
 		::max_logfiles = max_logfiles;
@@ -882,7 +882,7 @@ void openLogfile(cstr dirpath, LogRotation logrotate, uint max_logfiles, bool lo
 		::log2console  = log2console;
 		timestamp_with_msec = with_msec;
 		timestamp_with_date = with_date;
-		if(logdir!=dirpath) { delete[] logdir; logdir = new char[strlen(dirpath)+1]; strcpy(ptr(logdir),dirpath); }
+		if (logdir!=dirpath) { delete[] logdir; logdir = new char[strlen(dirpath)+1]; strcpy(ptr(logdir),dirpath); }
 
 		// calculate current logfile filename
 		// and when to rotate log:
@@ -932,9 +932,9 @@ void openLogfile(cstr dirpath, LogRotation logrotate, uint max_logfiles, bool lo
 			when -= dow * seconds_per_day;					// start of week
 			dt.tm_yday -= dow;
 
-			if(dt.tm_yday<-3)								// week is accounted for last year
+			if (dt.tm_yday<-3)								// week is accounted for last year
 				{ gmtime_r(&when,&dt); dow=0; }				// recalculate tm_yday: dep. on. leap year
-			else if(dt.tm_mon==11 && dt.tm_mday-dow>=32-3)	// week is accounted for next year
+			else if (dt.tm_mon==11 && dt.tm_mday-dow>=32-3)	// week is accounted for next year
 				{ dt.tm_year+=1; dt.tm_yday=0; }			//
 
 			snprintf( filepath, NELEM(filepath), "%s%s-%04u-week-%02u.log",
@@ -944,7 +944,7 @@ void openLogfile(cstr dirpath, LogRotation logrotate, uint max_logfiles, bool lo
 		  }
 		}
 
-		if(fd>2) close(fd);
+		if (fd>2) close(fd);
 
 		// note: wg. macos SIERRA: umask(0): else write permission is removed from passed permission flags
 		// note: wg. macos SIERRA: 0666: must be writable for all, else user1 can't write to logfile created by user2
@@ -952,13 +952,13 @@ void openLogfile(cstr dirpath, LogRotation logrotate, uint max_logfiles, bool lo
 		fd = open(filepath, O_WRONLY|O_CREAT|O_APPEND,0666);
 		umask(z);
 
-		if(fd==-1) panic("open logfile \"%s\" failed: %s", filepath, strerror(errno));
+		if (fd==-1) panic("open logfile \"%s\" failed: %s", filepath, strerror(errno));
 
 	unlock();
 
 	logline("------------------------------------\nLogfile opened\n");
 
-	if(logrotate!=NEVER && max_logfiles) purge_old_logfiles(filepath+strlen(dirpath));
+	if (logrotate!=NEVER && max_logfiles) purge_old_logfiles(filepath+strlen(dirpath));
 }
 
 
@@ -1010,7 +1010,7 @@ LogIndent::LogIndent( cstr format, ... )
 		double now = ::now();
 		LogFile* l = getLogfile(now);
 		l->valog(now, format, va);
-		if(l->repetitions || l->composition) { lock(); l->print_pending(); unlock(); }
+		if (l->repetitions || l->composition) { lock(); l->print_pending(); unlock(); }
 		l->indent += 2;
 	va_end(va);
 }
@@ -1021,7 +1021,7 @@ LogIndent::LogIndent( cstr format, ... )
 LogIndent::~LogIndent()
 {
 	LogFile* l = reinterpret_cast<LogFile*>(pthread_getspecific(logfile_key));
-	if(l->repetitions || l->composition) { lock(); l->print_pending(); unlock(); }
+	if (l->repetitions || l->composition) { lock(); l->print_pending(); unlock(); }
 	l->indent -= 2;
 }
 

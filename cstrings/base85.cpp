@@ -78,7 +78,7 @@ void encodeBase85( cuptr q, uint qlen, uptr z, uint zlen )
 
 	uint8 const* e = q + (qlen & ~3u);
 
-	while(q<e)
+	while (q<e)
 	{
 		uint32 c = peek4Z(q); q+=4;		// first char -> low byte
 		*z++ = base85[c%85]; c /= 85;
@@ -87,16 +87,16 @@ void encodeBase85( cuptr q, uint qlen, uptr z, uint zlen )
 		*z++ = base85[c%85]; c /= 85;
 		*z++ = base85[c%85]; c /= 85;
 	}
-	if((qlen&=3))	// rest von 1, 2 oder 3 char?
+	if ((qlen&=3))	// rest von 1, 2 oder 3 char?
 	{
 		uint32 c = q[0];
-		if(qlen>1) c |= q[1]<<8;
-		if(qlen>2) c |= q[2]<<16;
+		if (qlen>1) c |= q[1]<<8;
+		if (qlen>2) c |= q[2]<<16;
 
 		*z++ = base85[c%85]; c /= 85;
 		*z++ = base85[c%85]; c /= 85;
-		if(qlen>1) { *z++ = base85[c%85]; c /= 85;
-		if(qlen>2) { *z++ = base85[c%85]; c /= 85; }}
+		if (qlen>1) { *z++ = base85[c%85]; c /= 85;
+		if (qlen>2) { *z++ = base85[c%85]; c /= 85; }}
 	}
 }
 
@@ -109,12 +109,12 @@ int decodeBase85( cuptr q, uint qlen, uptr z, uint zlen )
 {
 	assert(zlen>=sizeAfterBase85Decoding(qlen));
 
-	if(qlen%5==1) return error;			// error: impossible length
+	if (qlen%5==1) return error;			// error: impossible length
 
 	uptr e = z + (zlen & ~3u);
 	uint c1,c2,c3,c4,c5;
 
-	while(z<e)
+	while (z<e)
 	{
 		c5 = unbase85[*q++];
 		c4 = unbase85[*q++];
@@ -122,27 +122,27 @@ int decodeBase85( cuptr q, uint qlen, uptr z, uint zlen )
 		c2 = unbase85[*q++];
 		c1 = unbase85[*q++];
 
-		if((c1|c2|c3|c4|c5)&0x80) return error;			// error: ill. byte in base85 buffer
+		if ((c1|c2|c3|c4|c5)&0x80) return error;			// error: ill. byte in base85 buffer
 
 		poke4Z(z, (((c1*85+c2)*85+c3)*85+c4)*85+c5);	// read low byte first, store low byte first
 		z += 4;
 	}
 
 	uint rest = zlen&3;
-	if(rest)
+	if (rest)
 	{
 		c5 = unbase85[q[0]];
 		c4 = unbase85[q[1]];
 		c3 = rest>1 ? unbase85[q[2]] : 0;
 		c2 = rest>2 ? unbase85[q[3]] : 0;
 
-		if((c2|c3|c4|c5)&0x80) return error;
+		if ((c2|c3|c4|c5)&0x80) return error;
 
 		uint32 c = ((c2*85+c3)*85+c4)*85+c5;
 
 		*z++ = c;
-		if(rest>1) *z++ = c>>8;
-		if(rest>2) *z++ = c>>16;
+		if (rest>1) *z++ = c>>8;
+		if (rest>2) *z++ = c>>16;
 	}
 
 	return ok;
@@ -164,7 +164,7 @@ void test_base85()
 	str  z = tempstr(sizeAfterBase85Encoding((uint)strlen(q)));
 	str  r = dupstr(q);
 
-	while(*q)
+	while (*q)
 	{
 		uint qlen = (uint)strlen(q)+1;
 		uint zlen = sizeAfterBase85Encoding(qlen);

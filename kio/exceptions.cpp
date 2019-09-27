@@ -177,7 +177,7 @@ file_error::~file_error () noexcept
 
 cstr file_error::what() const noexcept
 {
-	if(text) return usingstr("%s in file \"%s\" (%s)",errorstr(error),filepath,text);
+	if (text) return usingstr("%s in file \"%s\" (%s)",errorstr(error),filepath,text);
 	else	 return usingstr("%s in file \"%s\"",     errorstr(error),filepath);
 }
 

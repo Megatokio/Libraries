@@ -175,7 +175,7 @@ struct on_init { on_init(void(*f)()){f();} };
   #undef  debugstr
   #define debugstr(FMT,...)	 vfprintf(stderr,FMT,__VA_ARGS__)
   #undef  assert
-  #define assert(X)  do{ if(unlikely(!(X))) abort("%s:%u: assert failed: %s\n",__FILE__, __LINE__, #X); }while(0)
+  #define assert(X)  do{ if (unlikely(!(X))) abort("%s:%u: assert failed: %s\n",__FILE__, __LINE__, #X); }while(0)
 #endif
 
 #if SAFETY >= 1
@@ -282,7 +282,7 @@ template <class T> inline T max (T a, T b)				{ return a>b ? a : b; }
 template <class T> inline int sign ( T a )				{ return int(a>0) - int(a<0); }
 //template <class T> inline T abs ( T a )				{ return a<0 ? -a : a; }
 template <class T> inline T	minmax ( T a, T n, T e )	{ return n<=a ? a : n>=e ? e : n;  }
-template <class T> inline void limit ( T a, T& n, T e )	{ if(n<a) n=a; else if(n>e) n=e; }
+template <class T> inline void limit ( T a, T& n, T e )	{ if (n<a) n=a; else if (n>e) n=e; }
 
 namespace kio
 {
@@ -299,7 +299,7 @@ inline void revert_bytes(void* p, uint sz)
 {
 	ptr a = ptr(p);
 	ptr e = a+(sz-1);
-	while(a<e) { std::swap(*a++,*e--); }
+	while (a<e) { std::swap(*a++,*e--); }
 }
 
 

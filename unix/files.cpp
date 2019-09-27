@@ -143,8 +143,8 @@ cstr latin1str( cstr filename )
 	for(;;)
 	{
 		signed char c = *q++;
-		if(c>0)  continue;
-		if(c==0) return nullptr;				// no non-ascii letters found
+		if (c>0)  continue;
+		if (c==0) return nullptr;				// no non-ascii letters found
 		else	 break;						// non-acii letter found
 	}
 
@@ -152,7 +152,7 @@ cstr latin1str( cstr filename )
 // if filename contains utf-8 character codes >= 256 --> give up
 // if filename contains broken utf-8 itself --> give up
 // if filename contains illegal overlong encoding --> give up
-	while(*q) q++;							// find string end
+	while (*q) q++;							// find string end
 	str file = tempstr(q-filename);			// temp string
 	ptr z = file;
 	q = filename;
@@ -190,7 +190,7 @@ cstr latin1str( cstr filename )
 // 		in lib-kio/ustring/sstring.cp
 // 		re-implemented to avoid dependency on class String.
 	z = file;
-	for (;;)
+	for(;;)
 	{
 		uint32 c0 = uchar(*z++);
 		if ((signed char)c0>0) continue;					// ascii
@@ -202,7 +202,7 @@ cstr latin1str( cstr filename )
 		uint32 n = 0;		// UCS-4 char code akku
 		uint  i = 0;		// UTF-8 character size
 
-		while( c0 & (0x80u>>(++i)) )
+		while ( c0 & (0x80u>>(++i)) )
 		{
 			uint32 c1 = uchar(*z++);
 			if ((signed char)c1 >= (signed char)0xc0) return file;// no fup: truncated char (end of text or non-fup)
@@ -242,7 +242,7 @@ cstr extension_from_path( cstr path ) noexcept
 	path = filename_from_path(path);
 	cstr dot = strrchr(path,'.');
 	cstr spc = strrchr(path,' ');
-	if( dot>spc ) return dot; else return strchr(path,0);
+	if ( dot>spc ) return dot; else return strchr(path,0);
 }
 
 
@@ -287,7 +287,7 @@ cstr last_component_from_path( cstr path ) noexcept
 {
 	assert(path);
 	cstr p = strchr(path,0) -2;
-	while( p>=path && *p!='/' ) { p--; }
+	while ( p>=path && *p!='/' ) { p--; }
 	return p>=path ? p+1 : path;
 }
 
@@ -368,18 +368,18 @@ str fullpath( cstr _path, bool resolve_last_symlink, bool auto_create_path )
 	str path = dupstr(_path);
 
 	// path starts with '~'  -->  prepend home directory
-	if( path[0]=='~' && (path[1]==0||path[1]=='/') )
+	if ( path[0]=='~' && (path[1]==0||path[1]=='/') )
 	{
 		cstr home = getenv("HOME");
-		if(home) path = catstr(home,path+1);
+		if (home) path = catstr(home,path+1);
 	}
 
 	// not an absolute path  -->  prepend local directory
-	if( path[0]!='/' )
+	if ( path[0]!='/' )
 	{
 		char bu[MAXPATHLEN];
 		cstr wd = getcwd(bu,MAXPATHLEN);
-		if(!wd) { if(errno==ENOENT) errno=ENOTDIR; return path; }	// failed. errno set
+		if (!wd) { if (errno==ENOENT) errno=ENOTDIR; return path; }	// failed. errno set
 		assert(wd[0]=='/');
 		path = lastchar(wd)!='/' ? catstr(wd,"/",path) : catstr(wd,path);
 	}
@@ -396,21 +396,21 @@ str fullpath( cstr _path, bool resolve_last_symlink, bool auto_create_path )
 	{
 		p = strchr(path+i+1,'/');
 
-		if(p)		// path component:		check for // ./ and ../
+		if (p)		// path component:		check for // ./ and ../
 		{
 			j = int(p-path);		// j=index of next '/'
 
 		// discard "//"
-			if(j==i+1) { memmove(p,p+1,strlen(p)); continue; }
+			if (j==i+1) { memmove(p,p+1,strlen(p)); continue; }
 
 		// discard "./"
-			if(j==i+2 && path[i+1]=='.') { memmove(p-1,p+1,strlen(p)); continue; }
+			if (j==i+2 && path[i+1]=='.') { memmove(p-1,p+1,strlen(p)); continue; }
 
 		// "../" -> backup one directory
-			if( j==i+3 && path[i+1]=='.' && path[i+2]=='.' )
+			if ( j==i+3 && path[i+1]=='.' && path[i+2]=='.' )
 			{
-				if(i==0) { errno=ENOTDIR; return path; }	// for security reasons: fail!
-				do{i--;}while(path[i]!='/');
+				if (i==0) { errno=ENOTDIR; return path; }	// for security reasons: fail!
+				do{i--;}while (path[i]!='/');
 				memmove(path+i,p,strlen(p)+1); continue;
 			}
 		}
@@ -418,12 +418,12 @@ str fullpath( cstr _path, bool resolve_last_symlink, bool auto_create_path )
 		{
 			p = strchr(path+i,0);
 			j = int(p-path);
-			if(j==i+1) return path;							// path ends on "/"
-			if(j==i+2 && path[i+1]=='.') { path[i+1]=0; return path; }	// path ended on "/."
-			if(j==i+3 && path[i+1]=='.' && path[i+2]=='.')	// path ended on "/.."
+			if (j==i+1) return path;							// path ends on "/"
+			if (j==i+2 && path[i+1]=='.') { path[i+1]=0; return path; }	// path ended on "/."
+			if (j==i+3 && path[i+1]=='.' && path[i+2]=='.')	// path ended on "/.."
 			{
-				if(i==0) { errno=ENOTDIR; return path; }	// for security reasons: fail!
-				do{i--;}while(path[i]!='/');
+				if (i==0) { errno=ENOTDIR; return path; }	// for security reasons: fail!
+				do{i--;}while (path[i]!='/');
 				path[i+1]=0; return path;
 			}
 		}
@@ -437,9 +437,9 @@ str fullpath( cstr _path, bool resolve_last_symlink, bool auto_create_path )
 		errno = ok;
 		lstat(path,&statdata);
 
-		if(errno)
+		if (errno)
 		{
-			if(errno!=ENOENT) return path;			// other error
+			if (errno!=ENOENT) return path;			// other error
 
 #ifdef USE_LATIN1_PATH
 			cstr l1path = Latin1(path+i);			// try iso-latin-1
@@ -447,37 +447,37 @@ str fullpath( cstr _path, bool resolve_last_symlink, bool auto_create_path )
 			{
 				path[i]=0; l1path = catstr(path,l1path); path[i]='/';
 				errno=ok; lstat(l1path,&statdata);	// success? => use latin1 path
-				if(errno==ok) { *p=c; path = catstr(l1path,p); continue; }
+				if (errno==ok) { *p=c; path = catstr(l1path,p); continue; }
 			}
-			if(errno==ENOENT)
+			if (errno==ENOENT)
 #endif
 			{
-				if(c==0) return path;				// final component
-				if(!auto_create_path) { errno=ENOTDIR; return path; }
+				if (c==0) return path;				// final component
+				if (!auto_create_path) { errno=ENOTDIR; return path; }
 				errno=ok; mkdir(path,0777);
-				if(errno) { if(errno==ENOENT) errno=ENOTDIR; return path; }
+				if (errno) { if (errno==ENOENT) errno=ENOTDIR; return path; }
 				i=j; *p=c; continue;
 			}
 		}
 
 	// handle directory:
-		if(S_ISDIR(statdata.st_mode)) { if(c) { i=j; *p=c; continue; } else { return catstr(path,"/"); } }
+		if (S_ISDIR(statdata.st_mode)) { if (c) { i=j; *p=c; continue; } else { return catstr(path,"/"); } }
 
 	// handle link:
-		if(S_ISLNK(statdata.st_mode))
+		if (S_ISLNK(statdata.st_mode))
 		{
-			if(c==0 && !resolve_last_symlink) return path;	// path resolves to symlink
+			if (c==0 && !resolve_last_symlink) return path;	// path resolves to symlink
 			if (--lc==0) { errno=ELOOP; return path; }		// too many recursions
 			char bu[MAXPATHLEN+1];
 			int n = int(readlink(path, bu, MAXPATHLEN));
-			if (n<0) { if(errno==ENOENT) errno=ENOTDIR; return path; }	// error
+			if (n<0) { if (errno==ENOENT) errno=ENOTDIR; return path; }	// error
 			bu[n]=0; *p=c;
-			if(bu[0]=='/') { path=catstr(bu,p); i=0; continue; }
+			if (bu[0]=='/') { path=catstr(bu,p); i=0; continue; }
 			else { path[i+1]=0; path=catstr(path,bu,p); continue; }
 		}
 
 	// handle regular file ((or pipe et.al.))
-		if(c) errno=ENOTDIR;
+		if (c) errno=ENOTDIR;
 		return path;
 	}
 }
@@ -490,16 +490,16 @@ str fullpath( cstr _path, bool resolve_last_symlink, bool auto_create_path )
 cstr find_executable( cstr name )
 {
 	cstr s = quick_fullpath(name);			// full or partial path?
-	if(is_file(s) && is_executable(s)) return s;
+	if (is_file(s) && is_executable(s)) return s;
 
-	if(!strchr(name,'/'))					// just the name?
+	if (!strchr(name,'/'))					// just the name?
 	{										// -> search in $PATH
 		Array<str> ss;
 		split(ss, getenv("PATH"), ':');
-		for(uint i=0; i<ss.count(); i++)
+		for (uint i=0; i<ss.count(); i++)
 		{
 			cstr s = catstr(ss[i],"/",name);
-			if(is_file(s) && is_executable(s)) return s;
+			if (is_file(s) && is_executable(s)) return s;
 		}
 	}
 
@@ -511,11 +511,11 @@ cstr find_executable( cstr name )
 */
 void change_working_dir( cstr path )
 {
-	if(!path||!*path)       { errno=ENOTDIR; return; }
-//	if(lastchar(path)!='/') { errno=ENOTDIR; return; }
-	if(chdir(path)) return;     // errno set
+	if (!path||!*path)       { errno=ENOTDIR; return; }
+//	if (lastchar(path)!='/') { errno=ENOTDIR; return; }
+	if (chdir(path)) return;     // errno set
 	path = fullpath(path);
-	if(errno==ok) {int r = chdir(path); (void)r; }	// will probably fail again
+	if (errno==ok) {int r = chdir(path); (void)r; }	// will probably fail again
 }
 
 cstr workingdirpath() noexcept
@@ -542,13 +542,13 @@ cstr tempdirpath()
 	//	TMPDIR, TMP, TEMP, TEMPDIR. If none of these are found, "/tmp".
 	static cstr envnames[] = { "TMPDIR", "TMP", "TEMP", "TEMPDIR" };
 
-	for(uint i=0;i<7;i++)
+	for (uint i=0;i<7;i++)
 	{
 		cstr tmpdir = i<4 ? getenv(envnames[i])		// one of the well-known env variables
 					: i<5 ? "/tmp"					// last chance for a temp dir
 					: i<6 ? homedirpath()			// last chance for any dir
 					:       workingdirpath();		// even try to use the cwd…
-		if(tmpdir && is_dir(tmpdir) && is_writable(tmpdir)) return tmpdir;
+		if (tmpdir && is_dir(tmpdir) && is_writable(tmpdir)) return tmpdir;
 	}
 
 	xlogline("tempdirpath(): no tempdir found!");
@@ -563,12 +563,12 @@ cstr tempfilepath( cstr file )
 {
 	assert( file!=nullptr );
 
-	if(file[0]!='/') file=quick_fullpath(file);
+	if (file[0]!='/') file=quick_fullpath(file);
 
-	for(uint n=0;;n++)
+	for (uint n=0;;n++)
 	{
 		cstr zfile = catstr(file,".temp",tostr(n));
-		if(exists_node(zfile,no)) continue;
+		if (exists_node(zfile,no)) continue;
 		else return zfile;
 	}
 }
@@ -585,7 +585,7 @@ s_type classify_file ( cstr path, bool follow_symlink ) noexcept
 {
 	if (!path) path="";		// --> ENOENT
 	struct stat fs;
-	if( stat(path,&fs,follow_symlink) ) return s_none;		// errno set!
+	if ( stat(path,&fs,follow_symlink) ) return s_none;		// errno set!
 	else return classify_file(fs.st_mode);
 }
 
@@ -653,10 +653,10 @@ gid_t* get_groups (uid_t uid) noexcept
 	struct passwd pwd, *pwdptr;
 	uint size = 400;
 a:	int err; char bu[size];
-	do { err = getpwuid_r(uid,&pwd,bu,size,&pwdptr); } while(err==EINTR);
-	if(err==ERANGE) { if(size>8000) { errno=ERANGE; return nullptr; } else { size*=2; goto a; } }
-	if(err) return nullptr;
-	if(pwdptr==nullptr) { errno=ENOENT; return nullptr; }	// zu dieser UID gibt es keinen Eintrag
+	do { err = getpwuid_r(uid,&pwd,bu,size,&pwdptr); } while (err==EINTR);
+	if (err==ERANGE) { if (size>8000) { errno=ERANGE; return nullptr; } else { size*=2; goto a; } }
+	if (err) return nullptr;
+	if (pwdptr==nullptr) { errno=ENOENT; return nullptr; }	// zu dieser UID gibt es keinen Eintrag
 
 //	grp.h:
 //	int getgrouplist(const char *user, gid_t group, gid_t *groups, int *ngroups);
@@ -670,10 +670,10 @@ a:	int err; char bu[size];
 		if (groups == nullptr) { errno = ENOMEM; return nullptr; }
 	}
 #ifdef _MACOSX
-	while( getgrouplist(pwd.pw_name, pwd.pw_gid, (int*)groups, &ngroups) == -1 );
+	while ( getgrouplist(pwd.pw_name, pwd.pw_gid, (int*)groups, &ngroups) == -1 );
 	static_assert(sizeof(gid_t)==sizeof(int),"sizeof(gid_t)==sizeof(int)");
 #else	// _LINUX, _BSD
-	while( getgrouplist(pwd.pw_name, pwd.pw_gid, groups, &ngroups) == -1 );
+	while ( getgrouplist(pwd.pw_name, pwd.pw_gid, groups, &ngroups) == -1 );
 #endif
 	groups[ngroups] = 0;
 	errno = ok;
@@ -698,16 +698,16 @@ static bool is_in_group(uid_t uid, gid_t gid)
 	static gid_t* s_gids = nullptr;	// cached groups[]
 	static time_t s_when = 0;		// when groups[] was retrieved
 
-	if(uid!=s_uid || s_gids==nullptr || time(nullptr)>=s_when+5)
+	if (uid!=s_uid || s_gids==nullptr || time(nullptr)>=s_when+5)
 	{
 		free(s_gids);
 		s_gids = nullptr;
 		s_uid  = uid;
 		s_when = time(nullptr);
-		s_gids = get_groups(uid); if(s_gids==nullptr) goto x0;
+		s_gids = get_groups(uid); if (s_gids==nullptr) goto x0;
 	}
 
-	for(gid_t* p=s_gids; *p; p++) { if(*p==gid) goto x1; }
+	for (gid_t* p=s_gids; *p; p++) { if (*p==gid) goto x1; }
 	goto x0;
 
 x0:	f = no;
@@ -756,7 +756,7 @@ inline bool is_writable( mode_t mode, gid_t gid, uid_t uid)
 bool is_writable( cstr path, bool resolve_last_symlink )
 {
 	struct stat data;
-	if( stat(path, &data, resolve_last_symlink) ) return no;	// error
+	if ( stat(path, &data, resolve_last_symlink) ) return no;	// error
 	else return is_writable(data.st_mode, data.st_gid, data.st_uid);
 }
 
@@ -778,7 +778,7 @@ inline bool is_readable( mode_t mode, gid_t gid, uid_t uid)
 bool is_readable( cstr path, bool resolve_last_symlink )
 {
 	struct stat data;
-	if( stat(path, &data, resolve_last_symlink) ) return no;	// error
+	if ( stat(path, &data, resolve_last_symlink) ) return no;	// error
 	else return is_readable(data.st_mode, data.st_gid, data.st_uid);
 }
 
@@ -805,8 +805,8 @@ inline bool is_executable( mode_t mode, gid_t gid, uid_t uid)
 bool is_executable( cstr path, bool resolve_last_symlink, bool for_user )
 {
 	struct stat data;
-	if( stat(path, &data, resolve_last_symlink) ) return no;	// error
-	if(for_user) return data.st_mode & (S_IXOTH|S_IXGRP|S_IXUSR);
+	if ( stat(path, &data, resolve_last_symlink) ) return no;	// error
+	if (for_user) return data.st_mode & (S_IXOTH|S_IXGRP|S_IXUSR);
 	return is_executable(data.st_mode, data.st_gid, data.st_uid);
 }
 
@@ -830,18 +830,18 @@ void create_file(cstr path, mode_t mode) THF
 */
 void create_dir( cstr path, mode_t mode, bool autocreatedirs ) THF
 {
-	while(path&&lastchar(path)=='/') path = substr(path,strchr(path,0)-1);
+	while (path&&lastchar(path)=='/') path = substr(path,strchr(path,0)-1);
 
 	path = fullpath(path,yes/*follow_symlink*/,autocreatedirs);
 
-	if(errno==ok)						// node exists
+	if (errno==ok)						// node exists
 	{
-		if(is_dir(path,yes)) return;	// dir already exists
+		if (is_dir(path,yes)) return;	// dir already exists
 		else errno = ENOTDIR;			// exists, but not a dir
 	}
-	else if(errno==ENOENT)				// final path component does not exist
+	else if (errno==ENOENT)				// final path component does not exist
 	{
-		if(mkdir(path,mode)==0) return;	// create dir or
+		if (mkdir(path,mode)==0) return;	// create dir or
 	}
 
 	throw file_error(path,errno, "create dir");
@@ -859,9 +859,9 @@ void create_pipe( cstr path, mode_t mode ) THF
 {
 	path = fullpath(path,yes/*follow_symlink*/);
 
-	if(errno==ok || errno==ENOENT)
+	if (errno==ok || errno==ENOENT)
 	{
-		if(mkfifo(path,mode)==0) return; // ok
+		if (mkfifo(path,mode)==0) return; // ok
 	}
 
 	throw file_error(path,errno,"create pipe");
@@ -954,7 +954,7 @@ void create_hardlinked_copy (cstr newdir, cstr olddir, bool copy_dir_owner) THF
 			// else: ignore
 		}
 	}
-	catch(file_error& e)
+	catch (file_error& e)
 	{
 		logline("create_hardlinked_copy dir size = %u, dir = %s", dir.count(),olddir);
 		throw e;
@@ -967,15 +967,15 @@ void create_hardlinked_copy (cstr newdir, cstr olddir, bool copy_dir_owner) THF
 void delete_node( cstr path, bool follow_symlink, s_type typ ) THF
 {
 	path = fullpath(path,follow_symlink);
-	if(errno) goto x;
+	if (errno) goto x;
 
-	if(typ!=s_any)
+	if (typ!=s_any)
 	{
 		s_type t = classify_file(path,no);
-		if(t==s_none) goto x;
-		if(t!=typ) { errno=wrongfiletype; goto x; }
+		if (t==s_none) goto x;
+		if (t!=typ) { errno=wrongfiletype; goto x; }
 	}
-	if(remove(path)==0) return;
+	if (remove(path)==0) return;
 
 x:	throw file_error(path,errno,"delete node");
 }
@@ -995,20 +995,20 @@ static int remove_tree( cstr dpath )
 
 	struct dirent* direntry;
 	int rval = 0;
-	if(lastchar(dpath)!='/') dpath = catstr(dpath,"/");
+	if (lastchar(dpath)!='/') dpath = catstr(dpath,"/");
 
-	while( (direntry=readdir(dir)) )
+	while ( (direntry=readdir(dir)) )
 	{
 		cstr fname = direntry->d_name;
-		cptr p = fname; if(*p++=='.') { if(p[*p=='.']==0) continue; }	// skip "." and ".."
+		cptr p = fname; if (*p++=='.') { if (p[*p=='.']==0) continue; }	// skip "." and ".."
 
 		struct stat fstat;
 		cstr fpath = catstr(dpath,fname);
-		if( lstat(fpath,&fstat) ) { rval=-1; continue; }
+		if ( lstat(fpath,&fstat) ) { rval=-1; continue; }
 		rval |= S_ISDIR(fstat.st_mode) ? remove_tree(fpath) : remove(fpath);
 	}
 	closedir(dir);
-	if(rval==0) rval = rmdir(dpath);
+	if (rval==0) rval = rmdir(dpath);
 	return rval;
 }
 
@@ -1019,11 +1019,11 @@ static int remove_tree( cstr dpath )
 void delete_dir( cstr path, bool fulltree ) THF
 {
 	path = fullpath(path,yes/*follow_symlink*/);
-	if(errno) goto x;
+	if (errno) goto x;
 
-	if(path[0]=='/' && path[1]==0) { errno=EPERM; goto x; }
+	if (path[0]=='/' && path[1]==0) { errno=EPERM; goto x; }
 
-	if(rmdir(path)==0 || (errno==ENOTEMPTY && fulltree && remove_tree(path)==0) ) return; // ok
+	if (rmdir(path)==0 || (errno==ENOTEMPTY && fulltree && remove_tree(path)==0) ) return; // ok
 
 x:	throw file_error(path,errno,"delete dir");
 }
@@ -1040,13 +1040,13 @@ x:	throw file_error(path,errno,"delete dir");
 void rename_node( cstr oldpath, cstr newpath, bool overwrite ) THF
 {
 	oldpath = fullpath(oldpath,no/*!follow_symlink*/);
-	if(errno) goto x;
+	if (errno) goto x;
 
 	newpath = fullpath(newpath,no/*!follow_symlink*/,/*create_path*/yes);
-	if(errno==ok && !overwrite) { errno=EEXIST; goto x; }
+	if (errno==ok && !overwrite) { errno=EEXIST; goto x; }
 
-	if(errno==ok || errno==ENOENT)
-		if(rename(oldpath,newpath)==0) return;			// renames files, dirs and symlinks!
+	if (errno==ok || errno==ENOENT)
+		if (rename(oldpath,newpath)==0) return;			// renames files, dirs and symlinks!
 
 x:	throw file_error(oldpath,errno,usingstr("rename to \"%s\"",newpath));
 }
@@ -1057,12 +1057,12 @@ x:	throw file_error(oldpath,errno,usingstr("rename to \"%s\"",newpath));
 */
 void swap_files( cstr path1, cstr path2 ) THF
 {
-	path1 = fullpath(path1,1);	if(errno) goto x;
-	path2 = fullpath(path2,1);	if(errno) goto x;
+	path1 = fullpath(path1,1);	if (errno) goto x;
+	path2 = fullpath(path2,1);	if (errno) goto x;
 
 	{	cstr zpath = tempfilepath(path2); assert(errno==ok);		// must work
-		rename(path1,zpath);		if(errno) goto x;				//failed
-		rename(path2,path1);		if(errno) { int e=errno; rename(zpath,path1); errno=e; goto x; }	// failed
+		rename(path1,zpath);		if (errno) goto x;				//failed
+		rename(path2,path1);		if (errno) { int e=errno; rename(zpath,path1); errno=e; goto x; }	// failed
 		rename(zpath,path2);    	assert(errno==ok);			// must work
 		return; // ok
 	}
@@ -1081,7 +1081,7 @@ void read_dir( cstr path, MyFileInfoArray& v, bool resolve_symlinks ) THF
 {
 	v.purge();
 	path = fullpath(path,yes);
-	if(errno && errno!=ENOENT)
+	if (errno && errno!=ENOENT)
 	{
 		x: throw file_error(path,errno, "read dir");
 	}
@@ -1095,7 +1095,7 @@ void read_dir( cstr path, MyFileInfoArray& v, bool resolve_symlinks ) THF
 	}
 
 	DIR* dir = opendir(path);	  				// note: sets sporadic errors
-	if(!dir) goto x; 							// error
+	if (!dir) goto x; 							// error
 
 	uint pathlen = uint(strlen(path));
 	str filepath = tempstr(pathlen+1024);
@@ -1105,25 +1105,25 @@ void read_dir( cstr path, MyFileInfoArray& v, bool resolve_symlinks ) THF
 	{
 		errno = ok;
 		dirent* direntry = readdir(dir);
-		if(direntry==nullptr) break;
+		if (direntry==nullptr) break;
 
 		cstr filename = direntry->d_name;
-		if(filename[0]=='.' && ( filename[1]==0 || (filename[1]=='.' && filename[2]==0) )) continue;	// "." or ".."
-		if(pattern && fnmatch(pattern,filename,FNM_NOESCAPE)) continue;									// pattern does not match
+		if (filename[0]=='.' && ( filename[1]==0 || (filename[1]=='.' && filename[2]==0) )) continue;	// "." or ".."
+		if (pattern && fnmatch(pattern,filename,FNM_NOESCAPE)) continue;									// pattern does not match
 		uint filenamelen = uint(strlen(filename));
-		if(filenamelen>1024) continue;				// fail safe		((cannot happen on DARWIN machines))
+		if (filenamelen>1024) continue;				// fail safe		((cannot happen on DARWIN machines))
 
 		memcpy(filepath+pathlen,filename,filenamelen+1);
 		struct stat filestat;
-		if(lstat(filepath,&filestat)) continue; 	// skip on error
+		if (lstat(filepath,&filestat)) continue; 	// skip on error
 
-		if(S_ISLNK(filestat.st_mode) && resolve_symlinks)
+		if (S_ISLNK(filestat.st_mode) && resolve_symlinks)
 		{
-			if(stat(filepath,&filestat))			// get info about derefed file
+			if (stat(filepath,&filestat))			// get info about derefed file
 				lstat(filepath,&filestat);			// on error (dead link) fallback on link itself
 		}
 
-//		if(S_ISDIR(filestat.st_mode)) filename = catstr(filename,"/");
+//		if (S_ISDIR(filestat.st_mode)) filename = catstr(filename,"/");
 
 		v.grow();
 		MyFileInfo& w = v[v.count()-1];
@@ -1150,13 +1150,13 @@ void read_dir( cstr path, MyFileInfoArray& v, bool resolve_symlinks ) THF
 str read_link( cstr path )
 {
 	path = fullpath(path,no,no);
-	if(errno) return nullptr;
+	if (errno) return nullptr;
 
-	if(is_link(path))
+	if (is_link(path))
 	{
 		char bu[MAXPATHLEN];
 		int n = int(readlink( path, bu, MAXPATHLEN ));
-		if(n>=0) { str s=tempstr(n); memcpy(s,bu,uint(n)); return s; }		// filesystem encoding
+		if (n>=0) { str s=tempstr(n); memcpy(s,bu,uint(n)); return s; }		// filesystem encoding
 	}
 	else errno = EINVAL;
 	return nullptr;
@@ -1209,12 +1209,12 @@ int set_file_permissions(cstr path, mode_t who, mode_t what)
 
 	struct stat fs;
 	int err = stat(path,&fs);
-	if(err) return errno;
+	if (err) return errno;
 
 	mode_t mode = fs.st_mode & ~what;
 	mode |= who & what;
 
-	if(mode==fs.st_mode) return ok;
+	if (mode==fs.st_mode) return ok;
 	err = chmod(path,mode);
 	return err ? errno : ok;
 }
@@ -1225,12 +1225,12 @@ int set_file_permissions(cstr path, mode_t who, mode_t what, bool deref_last_sym
 
 	struct stat fs;
 	int err = deref_last_symlink ? stat(path,&fs) : lstat(path,&fs);
-	if(err) return errno;
+	if (err) return errno;
 
 	mode_t mode = fs.st_mode & ~what;
 	mode |= who & what;
 
-	if(mode==fs.st_mode) return ok;
+	if (mode==fs.st_mode) return ok;
 	err = deref_last_symlink ? chmod(path,mode) : lchmod(path,mode);
 	return err ? errno : ok;
 }
@@ -1271,14 +1271,14 @@ uint get_volume_flags( cstr path )
 {
 	struct statfs fs;
 	int n = statfs(fullpath(path,1,0),&fs);
-	if(n) return vol_wprot;						// error: errno set
+	if (n) return vol_wprot;						// error: errno set
 
 	uint rval = 0;
-	if(  fs.f_flags & MNT_RDONLY							  ) rval |= vol_wprot;
+	if (  fs.f_flags & MNT_RDONLY							  ) rval |= vol_wprot;
 #ifdef MNT_NODEV
-	if( (fs.f_flags & MNT_NOSUID) && (fs.f_flags & MNT_NODEV) ) rval |= vol_ejectable;
+	if ( (fs.f_flags & MNT_NOSUID) && (fs.f_flags & MNT_NODEV) ) rval |= vol_ejectable;
 #endif
-	if(  fs.f_blocks>0										  ) rval |= vol_mounted;
+	if (  fs.f_blocks>0										  ) rval |= vol_mounted;
 	errno = noerror;
 	return rval;
 }
@@ -1287,7 +1287,7 @@ uint64 get_volume_free( cstr path )
 {
 	struct statfs fs;
 	int n = statfs(fullpath(path,1,0),&fs);
-	if(n) return 0;		// errno set
+	if (n) return 0;		// errno set
 	errno = noerror;
 	return (uint64)fs.f_bsize * (uint64)fs.f_bavail;
 }
@@ -1311,13 +1311,13 @@ MyVolumeInfo::MyVolumeInfo(struct statfs& fs)
 	mountpoint(nullptr),
 	volumename(nullptr)
 {
-	if( fs.f_files+fs.f_ffree==0 ) return;			// special: volfs, free automount slots
+	if ( fs.f_files+fs.f_ffree==0 ) return;			// special: volfs, free automount slots
 
 	cstr mpath = fs.f_mntonname;					// directory on which mounted
 	cstr mdev  = fs.f_mntfromname;					// mounted filesystem
 
-	if(eq(mpath,"/dev")) return;					// devfs, fdesc
-	if(strchr(mdev,'/')==nullptr) return;				// "none", "usbdevfs", etc.
+	if (eq(mpath,"/dev")) return;					// devfs, fdesc
+	if (strchr(mdev,'/')==nullptr) return;				// "none", "usbdevfs", etc.
 
 // info from struct statfs:
 	this->blocksize 	= fs.f_bsize;
@@ -1349,10 +1349,10 @@ MyVolumeInfoArray::MyVolumeInfoArray()
 	struct statfs* info;
 	int n = getmntinfo(&info, 1?MNT_WAIT:MNT_NOWAIT);
 
-	for(int i=0;i<n;i++)
+	for (int i=0;i<n;i++)
 	{
 		MyVolumeInfo* vi = new MyVolumeInfo(info[i]);
-		if(vi->valid) append(vi);
+		if (vi->valid) append(vi);
 		else delete vi;
 	}
 }
@@ -1364,13 +1364,13 @@ MyVolumeInfoArray::MyVolumeInfoArray()
 {
 	FILE* file = setmntent("/etc/mtab", "r");
 
-	while(!feof(file) && !ferror(file))
+	while (!feof(file) && !ferror(file))
 	{
 		struct mntent* mntent = getmntent(file);
-		if(mntent==nullptr) break;
+		if (mntent==nullptr) break;
 
 		MyVolumeInfo* vi = new MyVolumeInfo(mntent);
-		if(vi->valid) append(vi);
+		if (vi->valid) append(vi);
 	}
 
 	endmntent(file);
@@ -1386,11 +1386,11 @@ MyVolumeInfo::MyVolumeInfo(struct mntent* mntent)
 	cstr mpath = mntent->mnt_dir;					// directory on which mounted
 	cstr mdev  = mntent->mnt_fsname;                // mounted filesystem
 
-	if(eq(mpath,"/dev")) return;					// devfs, fdesc
-	if(strchr(mdev,'/')==nullptr) return;				// "none", "usbdevfs", etc.
+	if (eq(mpath,"/dev")) return;					// devfs, fdesc
+	if (strchr(mdev,'/')==nullptr) return;				// "none", "usbdevfs", etc.
 
 	struct statfs info;
-	if(statfs(mntent->mnt_dir,&info)) return;
+	if (statfs(mntent->mnt_dir,&info)) return;
 
 //  mntent:
 //        char* mnt_fsname;		/* Device or server for filesystem.  */
@@ -1414,7 +1414,7 @@ MyVolumeInfo::MyVolumeInfo(struct mntent* mntent)
 //    __fsword_t    f_flags;
 //    __fsword_t    f_spare[4];
 
-	if( info.f_files+info.f_ffree==0 ) return;			// special: volfs, free automount slots
+	if ( info.f_files+info.f_ffree==0 ) return;			// special: volfs, free automount slots
 
 // info from struct statfs:
 	this->blocksize 	= uint(info.f_bsize);		// fundamental device block size

@@ -34,9 +34,9 @@ cstr errorstr (int err) noexcept
 	#include "errors.h"
 	};
 
-	if(err==0)						return "no error";
-//	if(err==-1)						return "unknown error (-1)";	strerror: "Unknown error: -1"
-	if(uint(err-EBAS)<NELEM(ETEXT)) return ETEXT[err-EBAS];
+	if (err==0)						return "no error";
+//	if (err==-1)						return "unknown error (-1)";	strerror: "Unknown error: -1"
+	if (uint(err-EBAS)<NELEM(ETEXT)) return ETEXT[err-EBAS];
 	else							return strerror(err);
 }
 
@@ -182,7 +182,7 @@ void waitUntil (double time)	// seconds since epoche
 void waitDelay (double delay)	// seconds
 {
 	using namespace std::chrono;
-	if (delay > 0) std::this_thread::sleep_for(nanoseconds(int64(delay*1e9)));
+	if (delay > 0) std::this_thread::sleep_for (nanoseconds(int64(delay*1e9)));
 }
 
 void waitUntil (double time)	// seconds since epoche
@@ -260,7 +260,7 @@ LogIndent::~LogIndent()
 
 void abort(cstr fmt, va_list va) // __attribute__((__noreturn__));
 {
-	if(lastchar(fmt)!='\n') fmt = catstr(fmt,"\n");
+	if (lastchar(fmt)!='\n') fmt = catstr(fmt,"\n");
 	vfprintf(stderr, fmt, va);
 	fprintf(stderr, "aborted.\n");
 	_Exit(ABORTED);

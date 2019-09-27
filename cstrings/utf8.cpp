@@ -76,7 +76,7 @@ uint charcount (cstr q) noexcept
 	// the "Golden Rule": every non-fup makes a char
 
 	uint rval = 0;
-	if(q) while (char c = *q++)
+	if (q) while (char c = *q++)
 	{
 		if (no_fup(c)) rval++;
 	}
@@ -86,7 +86,7 @@ uint max_csz (cstr q) noexcept
 {
 	// calculate required character size (ucs1, ucs2 or ucs4) to store utf-8 string
 
-	if(q) while (char c = *q++)
+	if (q) while (char c = *q++)
 	{
 		if (uchar(c) <= 0xC3) continue;
 		if (uchar(c) >= 0xF0) return 4;
@@ -104,7 +104,7 @@ bool fits_in_ucs1 (cstr q) noexcept
 	// note: if q contains broken characters then these will be replaced with '?' not $FFFD
 	//       and thus will not break the result of this function
 
-	if(q) while (char c = *q++)
+	if (q) while (char c = *q++)
 	{
 		if (uchar(c) > 0xC3) return no;
 	}
@@ -114,7 +114,7 @@ bool fits_in_ucs2 (cstr q) noexcept
 {
 	// test whether utf-8 string q can be encoded to ucs2
 
-	if(q) while (char c = *q++)
+	if (q) while (char c = *q++)
 	{
 		if (uchar(c) >= 0xF0) return no;
 	}
@@ -126,9 +126,9 @@ uint utf8strlen (ucs1char const* q, uint cnt) noexcept
 	// calculate required size for an utf-8 string to store ucs1 string
 
 	uint rval = cnt;
-	while(cnt--)
+	while (cnt--)
 	{
-		if(*q++ >= 0x80) rval++;
+		if (*q++ >= 0x80) rval++;
 	}
 	return rval;
 }
@@ -137,10 +137,10 @@ uint utf8strlen (ucs2char const* q, uint cnt) noexcept
 	// calculate required size for an utf-8 string to store ucs2 string
 
 	uint rval = cnt;
-	while(cnt--)
+	while (cnt--)
 	{
 		uint16 c = *q++;
-		if(c < 0x80) continue;
+		if (c < 0x80) continue;
 		rval += c<0x800 ? 1 : 2;
 	}
 	return rval;
@@ -150,10 +150,10 @@ uint utf8strlen (ucs4char const* q, uint cnt) noexcept
 	// calculate required size for an utf-8 string to store ucs4 string
 
 	uint rval = cnt;
-	while(cnt--)
+	while (cnt--)
 	{
 		uint32 c = *q++;
-		if(c < 0x80) continue;
+		if (c < 0x80) continue;
 		rval += c<0x800 ? 1 : c<0x10000 ? 2 : c<0x200000 ? 3 : c<0x4000000 ? 4 : 5;
 	}
 	return rval;
@@ -185,7 +185,7 @@ char* ucs2_to_utf8 (ucs2char const* q, uint qcnt, char* z) noexcept
 	// if $00 is part of the source data it will be encoded as 2 non-zero bytes
 	// return: ptr -> chr0 at end of utf8 text
 
-	while(qcnt--)
+	while (qcnt--)
 	{
 		uint c = *q++;
 		if (c && c <  0x80) { *z++ = char(c); continue; }
@@ -250,7 +250,7 @@ ptr ucs4_to_utf8 (const ucs4char* q, uint qcnt, ptr z) noexcept
 
 ucs4char utf8_to_ucs4char (cptr q) noexcept
 {
-	if(!q) return 0;
+	if (!q) return 0;
 
 	uint32 c = *cuptr(q++);
 	if (c < 0x80) { return c; }
@@ -276,7 +276,7 @@ ucs4char utf8_to_ucs4char (cptr q) noexcept
 			break;
 		}
 	}
-	while(--n);
+	while (--n);
 
 	return c;
 }
@@ -295,7 +295,7 @@ ucs4char* utf8_to_ucs4 (cptr q, ucs4char* z) noexcept
 	// • precalculate required size of buffer[] with char_count()
 	// • provide buffer[strlen(q)] and truncate at size returned by this function
 
-	if(q) while (uint32 c = *cuptr(q++))
+	if (q) while (uint32 c = *cuptr(q++))
 	{
 		uint n;
 		if (c < 0x80) { *z++ = c; continue; }
@@ -320,7 +320,7 @@ ucs4char* utf8_to_ucs4 (cptr q, ucs4char* z) noexcept
 				break;
 			}
 		}
-		while(--n);
+		while (--n);
 
 		*z++ = c;
 	}
@@ -335,7 +335,7 @@ ucs2char* utf8_to_ucs2 (cptr q, ucs2char* z) noexcept
 	// • illegal overlong encodings are not trapped
 	// • combining characters etc. are not handled
 
-	if(q) while (uint c = *cuptr(q++))
+	if (q) while (uint c = *cuptr(q++))
 	{
 		uint n;
 		if (c < 0x80) { *z++ = ucs2char(c); continue; }
@@ -352,7 +352,7 @@ ucs2char* utf8_to_ucs2 (cptr q, ucs2char* z) noexcept
 			continue;
 		}
 
-		while(n--)
+		while (n--)
 		{
 			if (is_fup(*q))
 			{
@@ -377,7 +377,7 @@ ucs1char* utf8_to_ucs1 (cptr q, ucs1char* z) noexcept
 	// decode utf-8 string into ucs1 buffer
 	// the buffer must be large enough to hold the decoded text
 
-	if(q) while (uint c = *cuptr(q++))
+	if (q) while (uint c = *cuptr(q++))
 	{
 		if (c <= 0x7F) { *z++ = ucs1char(c); continue; }
 		if (c <= 0xBF) { errno = unexpectedfup; continue; }
@@ -472,17 +472,17 @@ cstr fromhtmlstr (cstr s0) throws
 
 	cptr q = strchr(s0,'&');
 	cptr q2 = find(s0,"<br>");
-	if(q2 && (q==nullptr || q2<q) ) q = q2;
+	if (q2 && (q==nullptr || q2<q) ) q = q2;
 	if (q==nullptr) return s0;
 	str  s = dupstr(s0);
 	ptr  z = s + (q-s0);
 
-	for (;;)
+	for(;;)
 	{
 		char c;
 		while ((c=*q++) != '&')
 		{
-			if(c=='<' && *str_comp("br>", q)==0) { *z++ = '\n'; q+=3; continue; }
+			if (c=='<' && *str_comp("br>", q)==0) { *z++ = '\n'; q+=3; continue; }
 			*z++ = c;
 			if (!c) return s;
 		}
@@ -493,12 +493,12 @@ cstr fromhtmlstr (cstr s0) throws
 		if (*str_comp("quot;",q)==0) { *z++ = '"'; q+=5; continue; }
 		//if (*str_comp("apos;",q)==0) { *z++ = '\''; q+=5; continue; }	// XML
 
-		if(*q=='#')		// &#1234;  or  &#x1234;
+		if (*q=='#')		// &#1234;  or  &#x1234;
 		{
 			uint32 n = 0;
 			cptr p = q+1;
 
-			if(*p == 'x')
+			if (*p == 'x')
 			{
 				p++;
 				while (p<q+6 && *p && *p!=';' && ::is_hex_digit(*p))
@@ -559,14 +559,14 @@ cstr detabstr (cstr s, uint tabs) noexcept
 		if (c != '\t')		{ *z++ = c; continue; }
 
 		uint n = tabs - (z-z0)%tabs;
-		if(qe-q > zstr+zlen-(z+n))
+		if (qe-q > zstr+zlen-(z+n))
 		{
 			zlen += tabs*4;
 			cstr zalt = zstr;
 			zstr = tempstr(zlen); strcpy(zstr,zalt);
 			z0 += zstr-zalt; z += zstr-zalt;
 		}
-		while(n--) *z++ = ' ';
+		while (n--) *z++ = ' ';
 	}
 
 	*z = 0;
@@ -582,13 +582,13 @@ str whitestr (cstr q, char c) noexcept
 	str rval = dupstr(q);
 	for (ptr p = rval; *p; p++)
 	{
-		if(*p >= 0)
+		if (*p >= 0)
 		{
 			if (*p > ' ') *p = c;
 			continue;
 		}
 
-		ptr z; for(z=p; *p; p++)
+		ptr z; for (z=p; *p; p++)
 		{
 			if (no_fup(*p))
 			{
@@ -611,7 +611,7 @@ str unescapedstr (cstr s0) noexcept  // sets errno
 
 	q = z = strchr(s,'\\');
 
-	if(q) for(;;)
+	if (q) for(;;)
 	{
 		while ((c=*q++)!='\\')
 		{

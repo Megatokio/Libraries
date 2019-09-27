@@ -69,14 +69,14 @@ public:
 	// see https://stackoverflow.com/questions/11562/how-to-overload-stdswap
 	static void swap (Array& a, Array& b)	noexcept {std::swap(a.cnt,b.cnt);std::swap(a.max,b.max);std::swap(a.data,b.data);}
 
-	~Array ()								noexcept { for(uint i=0;i<cnt;i++) data[i].~T(); deallocate(data); }
+	~Array ()								noexcept { for (uint i=0;i<cnt;i++) data[i].~T(); deallocate(data); }
 	Array ()								noexcept :max(0),cnt(0),data(nullptr){}
 	Array (Array&& q)						noexcept :max(q.max),cnt(q.cnt),data(q.data){q.max=q.cnt=0;q.data=nullptr;}
 	Array (Array const& q)					throws;
 	Array& operator= (Array&& q)			noexcept { swap(*this,q); return *this; }
 	Array& operator= (Array const& q)		throws   { return operator=(Array(q)); }
 	explicit Array (uint cnt, uint max=0)	throws;
-	Array (T const* q, uint n)				throws	 :Array(0u,n) { for(uint i=0;i<n;i++) new(data+i)T(*q++); cnt=n; }
+	Array (T const* q, uint n)				throws	 :Array(0u,n) { for (uint i=0;i<n;i++) new(data+i)T(*q++); cnt=n; }
 
 	Array	copyofrange	(uint a, uint e) const throws;
 
@@ -109,11 +109,11 @@ public:
 	void	resize		(uint newcnt)		throws	 { grow(newcnt); shrink(newcnt); }
 	void	drop		()					noexcept { assert(cnt); data[--cnt].~T(); }
 	T		pop			()					noexcept { assert(cnt); return std::move(data[--cnt]); }
-	void	purge		()					noexcept { for(uint i=0;i<cnt;i++) data[i].~T(); deallocate(data); max=cnt=0; data=nullptr; }
+	void	purge		()					noexcept { for (uint i=0;i<cnt;i++) data[i].~T(); deallocate(data); max=cnt=0; data=nullptr; }
 	void	append		(T q)				throws	 { growmax(cnt+1); new(&data[cnt++])T(std::move(q)); }
-	void	appendifnew	(T q)				throws	 { if(!contains(q)) append(std::move(q)); }	// uses eq()
+	void	appendifnew	(T q)				throws	 { if (!contains(q)) append(std::move(q)); }	// uses eq()
 	Array&	operator<<	(T q)				throws	 { append(std::move(q)); return *this; }
-	void	append		(T const* q, uint n) throws	 { growmax(cnt+n); for(uint i=0;i<n;i++) new(&data[cnt+i])T(*q++); cnt += n; }
+	void	append		(T const* q, uint n) throws	 { growmax(cnt+n); for (uint i=0;i<n;i++) new(&data[cnt+i])T(*q++); cnt += n; }
 	void	append		(Array const& q)	throws   { assert(this!=&q); append(q.data, q.cnt); }
 
 	void	remove		(uint idx, bool fast=0)	noexcept;
@@ -130,17 +130,17 @@ public:
 	void 	rol		(uint a, uint e)		noexcept; // roll left  range  [a..[e
 	void 	ror		(uint a, uint e)		noexcept; // roll right range  [a..[e
 	void 	shuffle	(uint a, uint e)		noexcept; // shuffle range [a..[e
-	void 	sort	(uint a, uint e)		noexcept { if(e>cnt) e=cnt; if(a<e) ::sort(data+a, data+e); }
-	void 	rsort	(uint a, uint e)		noexcept { if(e>cnt) e=cnt; if(a<e) ::rsort(data+a, data+e); }
-	void 	sort	(uint a, uint e, COMPARATOR(T) gt) noexcept { if(e>cnt) e=cnt; if(a<e) ::sort(data+a,data+e,gt); }
+	void 	sort	(uint a, uint e)		noexcept { if (e>cnt) e=cnt; if (a<e) ::sort(data+a, data+e); }
+	void 	rsort	(uint a, uint e)		noexcept { if (e>cnt) e=cnt; if (a<e) ::rsort(data+a, data+e); }
+	void 	sort	(uint a, uint e, COMPARATOR(T) gt) noexcept { if (e>cnt) e=cnt; if (a<e) ::sort(data+a,data+e,gt); }
 
 	void 	revert	()						noexcept { revert(0,cnt); }
 	void 	rol		()						noexcept { rol(0,cnt); }
 	void 	ror		()						noexcept { ror(0,cnt); }
 	void 	shuffle	()						noexcept { shuffle(0,cnt); }
-	void 	sort	()						noexcept { if(cnt) ::sort(data, data+cnt); }	// uses gt()
-	void 	rsort	()						noexcept { if(cnt) ::rsort(data, data+cnt); }	// uses gt()
-	void 	sort	(COMPARATOR(T) gt)		noexcept { if(cnt) ::sort(data, data+cnt, gt); }
+	void 	sort	()						noexcept { if (cnt) ::sort(data, data+cnt); }	// uses gt()
+	void 	rsort	()						noexcept { if (cnt) ::rsort(data, data+cnt); }	// uses gt()
+	void 	sort	(COMPARATOR(T) gt)		noexcept { if (cnt) ::sort(data, data+cnt, gt); }
 
 	static const uint16 MAGIC = 0x3343;
 	static const uint16 BYTESWAPPED_MAGIC = 0x4333;
@@ -158,7 +158,7 @@ public:
 template<typename T>
 T* Array<T>::allocate (uint n) throws
 {
-	if(n <= maxCount) return n ? reinterpret_cast<T*>(new char[n*sizeof(T)]) : nullptr;
+	if (n <= maxCount) return n ? reinterpret_cast<T*>(new char[n*sizeof(T)]) : nullptr;
 	throw limit_error("Array<T>", n, maxCount);
 }
 
@@ -167,7 +167,7 @@ Array<T>::Array (Array const& q) throws
 : Array()
 {
 	data = allocate(q.cnt);
-	for(uint i=0;i<q.cnt;i++) new(data+i)T(q.data[i]);
+	for (uint i=0;i<q.cnt;i++) new(data+i)T(q.data[i]);
 	cnt = max = q.cnt;
 }
 
@@ -175,7 +175,7 @@ template<typename T>
 Array<T>::Array (uint cnt, uint max) throws
 : Array()
 {
-	if(max<cnt) max=cnt;
+	if (max<cnt) max=cnt;
 	data = allocate(max);
 	memclr(0,cnt);
 	this->cnt = cnt;
@@ -198,10 +198,10 @@ bool Array<T>::operator== (Array<T> const& q) const noexcept
 {
 	// compare arrays
 
-	if(cnt != q.cnt) return false;
-	for(uint i=cnt; i--;)
+	if (cnt != q.cnt) return false;
+	for (uint i=cnt; i--;)
 	{
-		if(ne(data[i],q.data[i])) return false;
+		if (ne(data[i],q.data[i])) return false;
 	}
 	return true;
 }
@@ -211,10 +211,10 @@ bool Array<T>::operator!= (Array<T> const& q) const noexcept
 {
 	// compare arrays
 
-	if(cnt != q.cnt) return true;
-	for(uint i=cnt; i--;)
+	if (cnt != q.cnt) return true;
+	for (uint i=cnt; i--;)
 	{
-		if(ne(data[i],q.data[i])) return true;
+		if (ne(data[i],q.data[i])) return true;
 	}
 	return false;
 }
@@ -222,7 +222,7 @@ bool Array<T>::operator!= (Array<T> const& q) const noexcept
 template<typename T>
 bool Array<T>::operator< (Array const& q) const noexcept	// uses eq() and lt()
 {
-	static int f=0; if(!f) logline("TODO: TEST Array<T>::operator< (Array const& q)"); f=1;
+	static int f=0; if (!f) logline("TODO: TEST Array<T>::operator< (Array const& q)"); f=1;
 
 	uint end = min(cnt,q.cnt);
 	uint i = 0;
@@ -234,7 +234,7 @@ bool Array<T>::operator< (Array const& q) const noexcept	// uses eq() and lt()
 template<typename T>
 bool Array<T>::operator> (Array const& q) const noexcept	// uses eq() and gt()
 {
-	static int f=0; if(!f) logline("TODO: TEST Array<T>::operator> (Array const& q)"); f=1;
+	static int f=0; if (!f) logline("TODO: TEST Array<T>::operator> (Array const& q)"); f=1;
 
 	uint end = min(cnt,q.cnt);
 	uint i = 0;
@@ -246,9 +246,9 @@ bool Array<T>::operator> (Array const& q) const noexcept	// uses eq() and gt()
 template<typename T>
 bool Array<T>::contains (REForVALUE(T) item) const noexcept
 {
-	for(uint i=cnt; i;)
+	for (uint i=cnt; i;)
 	{
-		if(eq(data[--i],item)) return true;
+		if (eq(data[--i],item)) return true;
 	}
 	return false;
 }
@@ -259,9 +259,9 @@ uint Array<T>::indexof (REForVALUE(T) item) const noexcept
 	// find first occurance
 	// or return ~0u
 
-	for(uint i=0; i<cnt; i++)
+	for (uint i=0; i<cnt; i++)
 	{
-		if(eq(data[i],item)) return i;
+		if (eq(data[i],item)) return i;
 	}
 	return ~0u;
 }
@@ -356,7 +356,7 @@ void Array<T>::shrink(uint newcnt) noexcept
 			data = newdata;
 			max = newcnt;
 		}
-		catch(std::bad_alloc&) {}
+		catch (std::bad_alloc&) {}
 	}
 }
 
@@ -367,9 +367,9 @@ void Array<T>::removeitem (REForVALUE(T) item, bool fast) noexcept
 	// items are compared using eq()
 	// therefore strings are compared by contents
 
-	for(uint i=0; i<cnt; i++)
+	for (uint i=0; i<cnt; i++)
 	{
-		if(eq(data[i],item))
+		if (eq(data[i],item))
 		{
 			remove(i,fast);
 			return;
@@ -388,7 +388,7 @@ void Array<T>::remove (uint idx, bool fast) noexcept
 	data[idx].~T();
 	if (--cnt == idx) return;
 
-	if(fast) { new(data+idx)T(std::move(data[cnt])); }
+	if (fast) { new(data+idx)T(std::move(data[cnt])); }
 	else { memmove(idx, idx+1, cnt-idx); }
 }
 
@@ -397,10 +397,10 @@ void Array<T>::removerange (uint a, uint e) noexcept
 {
 	// remove range of data
 
-	if(e > cnt) e = cnt;
-	if(a >= e) return;
+	if (e > cnt) e = cnt;
+	if (a >= e) return;
 
-	for(uint i=a;i<e;i++) data[i].~T();
+	for (uint i=a;i<e;i++) data[i].~T();
 	memmove(a, e, cnt-e);
 	cnt -= e-a;
 }
@@ -429,7 +429,7 @@ void Array<T>::insertat (uint idx, T const* q, uint n) throws
 
 	growmax(cnt+n);
 	memmove(idx+n,idx,cnt-idx); cnt += n;
-	for(uint i=0;i<n;i++) new(data+idx+i)T(*q++);
+	for (uint i=0;i<n;i++) new(data+idx+i)T(*q++);
 }
 
 template<typename T>
@@ -450,7 +450,7 @@ void Array<T>::insertrange (uint a, uint e) throws
 	// a ≤ cnt
 
 	assert(a <= cnt);
-	if(a >= e) return;
+	if (a >= e) return;
 
 	growmax(cnt+(e-a));
 	memmove(e, a, cnt-a); cnt += e-a;
@@ -461,7 +461,7 @@ template<typename T>
 void Array<T>::insertsorted (T q) throws
 {
 	uint i = cnt;
-	while(i-- && gt(data[i],q)) {}
+	while (i-- && gt(data[i],q)) {}
 	insertat(i+1, std::move(q));
 }
 
@@ -470,13 +470,13 @@ void Array<T>::revert (uint a, uint e) noexcept
 {
 	// revert order of items in data[]
 
-	if(e > cnt) e = cnt;
-	if(a >= e) return;
+	if (e > cnt) e = cnt;
+	if (a >= e) return;
 
 	T* pa = data+a;
 	T* pe = data+e-1;
 
-	do { std::swap(*pa,*pe); } while(++pa < --pe);
+	do { std::swap(*pa,*pe); } while (++pa < --pe);
 }
 
 template<typename T>
@@ -485,8 +485,8 @@ void Array<T>::rol (uint a, uint e) noexcept
 	// roll left range [a..[e
 	// e ≤ cnt
 
-	if(e > cnt) e = cnt;
-	if(a >= e) return;
+	if (e > cnt) e = cnt;
+	if (a >= e) return;
 
 	T z(std::move(data[a]));
 	memmove(a, a+1, e-a-1);
@@ -500,8 +500,8 @@ void Array<T>::ror(uint a, uint e) noexcept
 	// e ≤ cnt
 	// moves items in a way which also works for RCArray<T> and other sub clases
 
-	if(e > cnt) e = cnt;
-	if(a >= e) return;
+	if (e > cnt) e = cnt;
+	if (a >= e) return;
 
 	T z(std::move(data[e-1]));
 	memmove(a+1, a, e-a-1);
@@ -514,13 +514,13 @@ void Array<T>::shuffle(uint a, uint e) noexcept
 	// shuffle data in range [a..[e
 	// moves items in a way which also works for RCArray<T> and other sub clases
 
-	if(e > cnt) e = cnt;
-	if(a >= e) return;
+	if (e > cnt) e = cnt;
+	if (a >= e) return;
 
 	T* p = data+a;
 	uint n = e-a;
 
-	for(uint i = 0; i<n; i++)
+	for (uint i = 0; i<n; i++)
 	{
 		std::swap(p[i],p[random()%n]);
 	}
@@ -641,7 +641,7 @@ inline void Array<cstr>::serialize (FD& fd) const throws
 
 	fd.write_uint16_z(MAGIC);
 	fd.write_uint32_z(cnt);
-	for(uint i=0; i<cnt; i++) fd.write_nstr(data[i]);
+	for (uint i=0; i<cnt; i++) fd.write_nstr(data[i]);
 }
 
 template<>
@@ -652,7 +652,7 @@ inline void Array<str>::serialize (FD& fd) const throws
 
 	fd.write_uint16_z(MAGIC);
 	fd.write_uint32_z(cnt);
-	for(uint i=0; i<cnt; i++) fd.write_nstr(data[i]);
+	for (uint i=0; i<cnt; i++) fd.write_nstr(data[i]);
 }
 
 // ____ deserialize() ____
