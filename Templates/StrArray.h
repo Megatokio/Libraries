@@ -57,6 +57,7 @@ public:
 	StrArray copyofrange (uint a, uint e) const throws;
 
 // access data members:
+	using SUPER::data;
 	using SUPER::count;
 	using SUPER::getData;
 	using SUPER::operator[];
@@ -93,8 +94,8 @@ public:
 	void	drop		()					noexcept { assert(cnt); release(--cnt); }
 	str 	pop			()					noexcept { assert(cnt); return data[--cnt]; }	// returns ownership
 	void	purge		()					noexcept { release_all(); SUPER::purge(); }
-	void	append		(cstr q)			throws	 { grow() = newcopy(q); }
-	//void	append		(str&& q)			throws	 { grow() = q; q = nullptr; }	 BUMMER: source may be a tempstr!
+	str 	append		(cstr q)			throws	 { return grow() = newcopy(q); }
+	str 	append		(str q) 			throws	 { return grow() = newcopy(q); }
 	void	appendifnew	(cstr q)			throws	 { if(!contains(q)) append(q); }		// uses eq()
 	StrArray& operator<< (cstr q)			throws	 { append(q); return *this; }
 	StrArray& operator<< (int n)			throws	 { return operator<<(tostr(n)); }		// for StrArray.test.cpp
