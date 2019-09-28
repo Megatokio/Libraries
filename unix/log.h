@@ -15,17 +15,11 @@
 	AND IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DAMAGES
 	ARISING FROM THE USE OF THIS SOFTWARE,
 	TO THE EXTENT PERMITTED BY APPLICABLE LAW.
-
-
-	log to logfile or stderr
-
-	this file is included from kio/kio.h
 */
 
-
-//	–––––––––––––––––––––––––––––––––––––––––––––––––––
-//	Logfile:
-//	–––––––––––––––––––––––––––––––––––––––––––––––––––
+/*	log to logfile or stderr
+	kio/kio.h #includes log.h if #defined LOGFILE e.g. in settings.h
+*/
 
 #include "kio/kio.h"
 #ifndef LOGFILE
@@ -33,6 +27,8 @@
 // else don't include log.h/log.cpp and logging will be done in kio.cpp
 #endif
 
+// required settings in settings.h:
+//	 APPL_NAME: #define or const char* e.g. from argv[0]
 
 // the following #defines can be set in settings.h:
 //   #define LOGFILE_ROTATION				default: NEVER

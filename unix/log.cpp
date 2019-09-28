@@ -46,7 +46,7 @@
 #include <pthread.h>
 #include <sys/param.h>
 #include <unistd.h>
-#include "../Templates/sort.h"
+#include "Templates/sort.h"
 
 #ifndef LOGFILE
 #error define LOGFILE in settings.h if you include log.cpp
@@ -861,8 +861,8 @@ void openLogfile(cstr dirpath, LogRotation logrotate, uint max_logfiles, bool lo
 	if (logrotate_when==0.0) init();
 
 	dirpath = create_path(dirpath);
-	if (errno) dirpath = create_path(LOGFILE_BASE_DIRECTORY APPL_NAME "/");
-	if (errno) dirpath = create_path(LOGFILE_AUX_DIRECTORY APPL_NAME "/");
+	if (errno) dirpath = create_path(catstr(LOGFILE_BASE_DIRECTORY,APPL_NAME));
+	if (errno) dirpath = create_path(catstr(LOGFILE_AUX_DIRECTORY,APPL_NAME));
 	if (errno) panic("could not create log dir",errno);
 
 	char filepath[1024];
