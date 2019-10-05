@@ -341,7 +341,7 @@ uint   random(uint n)	{ return (uint32(n) * uint16(random())) >> 16; } // 16 bit
 */
 
 
-
+#if 0
 #if __cplusplus >= 201700
 #define FALLTHROUGH [[fallthrough]]
 #elif defined(_GCC)
@@ -352,7 +352,12 @@ uint   random(uint n)	{ return (uint32(n) * uint16(random())) >> 16; } // 16 bit
 #else
 #define FALLTHROUGH
 #endif
+#endif
 
+// this is the most portable way to define a FALLTHROUGH annotation
+// only disadvantage: you must not write a ';' after it
+#undef FALLTHROUGH
+#define FALLTHROUGH goto CAT(label,__LINE__); CAT(label,__LINE__):
 
 
 

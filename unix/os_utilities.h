@@ -31,7 +31,7 @@ extern	size_t 	memoryUsage		(bool resident = true);
 extern	double	cpuLoad			();
 
 extern	time_t	intCurrentTime	();
-extern	double	now				();		// was: floatCurrentTime
+//extern double	now				();		// was: floatCurrentTime() .. now in kio.cpp
 inline	time_t	upTime			()		{ return intCurrentTime()-bootTime(); }
 
 #ifdef _UNIX
@@ -44,7 +44,7 @@ extern	cstr	getUser			( );
 extern	cstr	getEffUser		( );
 
 
-extern	str		execCmd			( /* cmd = argv[0] */ str const argv[], str const envv[]=NULL );
+extern	str		execCmd			( /* cmd = argv[0] */ str const argv[], str const envv[]=nullptr );
 extern	str		execCmd			( cstr cmd, ... /* argv[1] ... NULL */ );
 
 

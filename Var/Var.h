@@ -560,6 +560,7 @@ explicit		Var				( Stream* s )			{ init_name(); init_link(); init_data_and_lock(
 
 	cDouble&	Value			( )	const				{ xassert(IsNumber()); return value(); }
 	Double&		Value			( )						{ xassert(IsNumber()); return value(); }
+	float		FloatValue		( )	const				{ return float(Value()); }
 	int32		LongValue		( )	const				{ return int32(Value()); }
 	int64		LLongValue		( )	const				{ return int64(Value()); }
 

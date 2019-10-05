@@ -1390,9 +1390,9 @@ void Var::AppendItems ( Var* a, Var* b, Var* c, Var* d )
 	}
 	else
 	{
-#define APPEND(V)													\
-	if(V) { xassert(!V->Contains(this)); xassert(!V->is_linked());		\
-			V->kill_link_nop(); V->init_link(this,n++); V->lock(); }
+#define APPEND(V)															\
+	do if (V) { xassert(!V->Contains(this)); xassert(!V->is_linked());		\
+				V->kill_link_nop(); V->init_link(this,n++); V->lock(); } while(0)
 
 		uint n = list().used;
 		grow_list(n+4);
@@ -1554,7 +1554,7 @@ Double Var::compare ( cVar& q ) const
 		{
 			Double a = value();
 			Double b = q.value();
-			return a>b ?  1 : a<b ? -1 : a==b ? 0 : NAN;
+			return a>b ?  1 : a<b ? -1 : a==b ? 0 : Double(NAN);
 		}
 
 		case isProc:	return ssize_t( proc().ip - q.proc().ip);
@@ -1567,7 +1567,7 @@ Double Var::compare ( cVar& q ) const
 				Var* a = list().array[i];	if (!a) a=zero;
 				Var* b = q.list().array[i];	if (!b) b=zero;
 				Double r = a->compare(*b);
-				if (r==0) continue;
+				if (r == 0.0) continue;
 			//	if(errno&&errno!=typemismatch) ClearError();	// ***TODO*** setzen NANs errno ?
 				return r;		// >, <, or unsortable
 			}
@@ -1859,7 +1859,7 @@ Double Var::ToNumber ( ) const
 {
 	if (IsNumber())	 	  return value();
 	if (IsText())   	  return text().NumVal();
-	errno = notanumber; return NAN;
+	errno = notanumber; return Double(NAN);
 }
 
 void Var::ConvertToNumber ( )
@@ -1870,7 +1870,7 @@ void Var::ConvertToNumber ( )
 	}
 	switch(get_type())
 	{
-	default:		set_data(NAN); errno = notanumber; break;
+	default:		set_data(Double(NAN)); errno = notanumber; break;
 	case isText:	set_data(text().NumVal()); break;
 	case isNumber: 	break;
 	}
@@ -1900,12 +1900,12 @@ String Var::ToString ( bool quotestring, DisassProcPtr disass ) const
 	case isNumber:	return NumString(value());			// isNumber
 	case isText:	return quotestring ? text().ToQuoted() : text();
 	case isVarRef:	return varptr()->ToString(quotestring,disass);
-	case isStream:	if(!disass) return "stream<>";
-	case isIrpt:	if(!disass) return "irpt<>";
-	case isSema:	if(!disass) return "sema<>";
-	case isProc:	if(!disass) return "proc()";
-	default: 		if(!disass) return "void<>";
-					return (*disass)(*this);
+	case isStream:	return disass ? (*disass)(*this) : "stream<>";
+	case isIrpt:	return disass ? (*disass)(*this) : "irpt<>";
+	case isSema:	return disass ? (*disass)(*this) : "sema<>";
+	case isProc:	return disass ? (*disass)(*this) : "proc()";
+	default: 		return disass ? (*disass)(*this) : "void<>";
+
 	case isList:
 		xlogIn("Var::ToString(List)");
 		String s = '{', sep = ' ', sep2 = ", ";
@@ -2502,13 +2502,11 @@ bool Var::operator|| ( cVar& q ) const
 
 
 
-extern cstr* environ;
-
 Var* NewEnvironmentVar ( bool lowercase )
 {
 	Var* env = new Var(isList);
 
-	for ( cstr* s=environ; *s; s++ )
+	for ( str* s=environ; *s; s++ )
 	{
 		cptr t  = strchr(*s,'='); if (!t) continue;
 		str name = substr(*s,t); if(lowercase) ToLower(name);

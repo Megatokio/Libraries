@@ -206,13 +206,6 @@ time_t intCurrentTime()
 	return tv.tv_sec;
 }
 
-//double now()			now in log.cpp
-//{
-//    struct timeval tv;
-//    gettimeofday ( &tv, NULL );
-//    return tv.tv_sec + tv.tv_usec/1000000.0;
-//}
-
 
 time_t bootTime ( )
 {
@@ -229,7 +222,7 @@ time_t bootTime ( )
 	// time being will read /proc/uptime
 	FILE *fp;
 	long ut;
-	if((fp=fopen("/proc/uptime","r"))==NULL)
+	if((fp=fopen("/proc/uptime","r"))==nullptr)
 	{
 		printf("Cannot open file /proc/uptime\n");	// -> FILE Stdout
 		return(-1);
@@ -273,14 +266,16 @@ size_t memoryUsage (bool resident)
 	// numbers that are: virtual mem program size, resident set size,
 	// shared pages, text/code, data/stack, library, dirty pages.  The
 	// mem sizes should all be multiplied by the page size.
-	//
+
+	(void)resident;	// silence warning
+
 	FILE* file = fopen("/proc/self/statm", "r");
 	if (!file) return 0;
 
 	unsigned long vm = 0;
 	fscanf (file, "%ul", &vm);  // Just need the first num: vm size
 	fclose (file);
-	return (size_t)vm * getpagesize();
+	return size_t(vm) * size_t(getpagesize());
 
 #elif defined(_BSD)
 	// Inspired by:

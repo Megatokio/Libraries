@@ -109,8 +109,8 @@ public:
 
 	// for convenience, these are also declared volatile:
 	// the result is unreliable and must be checked again after locking.
-	bool	isNotNull () volatile const	noexcept __attribute__((deprecated)); // use is(0);
-	bool	isNull () volatile const	noexcept __attribute__((deprecated)); // use isnot(0);
+	bool	isNotNull () volatile const	noexcept __attribute__((deprecated)); // use isnot(nullptr);
+	bool	isNull () volatile const	noexcept __attribute__((deprecated)); // use is(nullptr);
 	bool	is	  (T const* b ) volatile const	noexcept { return p == b; }
 	bool	isnot (T const* b ) volatile const	noexcept { return p != b; }
 	operator bool () volatile const		noexcept { return p != nullptr; }

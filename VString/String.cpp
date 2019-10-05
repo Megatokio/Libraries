@@ -211,6 +211,7 @@ void UCSCopy (CharSize zcsz, void* z, CharSize qcsz, const void* q, int32 n )
 			case csz2: ucs1_from_ucs2(z,q,n); return;
 			case csz4: ucs1_from_ucs4(z,q,n); return;
 		}
+	FALLTHROUGH
 	case csz2:
 		switch(qcsz)
 		{
@@ -218,6 +219,7 @@ void UCSCopy (CharSize zcsz, void* z, CharSize qcsz, const void* q, int32 n )
 			case csz2: ucs2_from_ucs2(z,q,n); return;
 			case csz4: ucs2_from_ucs4(z,q,n); return;
 		}
+	FALLTHROUGH
 	case csz4:
 		switch(qcsz)
 		{
@@ -305,14 +307,14 @@ static ucs1char* ucs1_from_utf8 ( ucs1char* z, cstr a, cstr e, bool latin_1 = no
 {
 	// convert utf-8 to ucs-1
 
-	uchar c1,c2;
+	char c1,c2;
 
-	while(a<e)
+	while (a<e)
 	{
-		if( utf8::is_7bit(c1=*a++) )					{ *z++ = c1; continue; }
-		if( utf8::is_fup(c1) )						{ continue; }
-		if( a>=e||utf8::no_fup(c2=*a)||c1>=0xc4 )	{ *z++ = latin_1 ? c1 : '?'; continue; }
-		a++; *z++ = (c1<<6) + (c2&0x3f);
+		if (utf8::is_7bit(c1=*a++))		{ *z++ = ucs1char(c1); continue; }
+		if (utf8::is_fup(c1))			{ continue; }
+		if (a>=e || utf8::no_fup(c2=*a) || uchar(c1)>=0xc4 )	{ *z++ = latin_1 ? ucs1char(c1) : '?'; continue; }
+		a++; *z++ = ucs1char((c1<<6) + (c2&0x3f));
 	}
 	return z;
 }
@@ -321,17 +323,17 @@ static ucs2char* ucs2_from_utf8 ( ucs2char* z, cstr a, cstr e, bool latin_1 = no
 {
 	// convert utf-8 to ucs-2
 
-	uchar c1,c2,c3;
+	char c1,c2,c3;
 
 	while(a<e)
 	{
-		if( utf8::is_7bit(c1=*a++) )		{ *z++=c1; continue; }	// 7-bit ascii
-		if( utf8::is_fup(c1) )			{ continue; }			// unexpected fup
-		if( a>=e||utf8::no_fup(c2=*a) )	{ goto x; }
-		a++; c2 &= 0x3f; if (c1<0xe0)	{ *z++ = (uint16(c1&0x1f)<<6) + c2; continue; }
-		if( a>=e||utf8::no_fup(c3=*a) )	{ goto x; }
-		a++; c3 &= 0x3f; if (c1<0xf0)	{ *z++ = (uint16(c1)<<12) + (uint16(c2)<<6) + c3; continue; }
-x:		*z++ = latin_1 ? c1 : '?';
+		if (utf8::is_7bit(c1=*a++))			{ *z++ = ucs1char(c1); continue; }	// 7-bit ascii
+		if (utf8::is_fup(c1))				{ continue; }			// unexpected fup
+		if (a>=e || utf8::no_fup(c2=*a))	{ goto x; }
+		a++; c2 &= 0x3f; if(uchar(c1)<0xe0)	{ *z++ = ucs2char(((c1&0x1f)<<6) + uchar(c2)); continue; }
+		if (a>=e || utf8::no_fup(c3=*a))	{ goto x; }
+		a++; c3 &= 0x3f; if(uchar(c1)<0xf0)	{ *z++ = ucs2char(((c1)<<12) + ((c2)<<6) + uchar(c3)); continue; }
+x:		*z++ = latin_1 ? ucs2char(c1) : '?';
 	}
 	return z;
 }
@@ -358,7 +360,7 @@ static ucs4char* ucs4_from_utf8 ( ucs4char*z, cstr a, cstr e, bool latin_1 = no 
 		while( char(c<<(++i)) < 0 )				// loop over required fups
 		{
 			if (a>=e) goto x;
-			uchar c1 = *a; if( utf8::no_fup(c1) ) goto x;
+			char c1 = *a; if( utf8::no_fup(c1) ) goto x;
 			a++; c0 = (c0<<6) + (c1&0x3F);
 		}
 
@@ -710,7 +712,7 @@ bool FNMatch ( cString& filename, cString& pattern, MatchType flags )
 			p = p_rem.LeftString(pi);  p_rem = p_rem.MidString(pi+1);
 			f = f_rem.LeftString(fi);  f_rem = f_rem.MidString(fi+1);
 
-			if (flags&&fnm_period)
+			if (flags&fnm_period)
 			{
 				bool f1 = f.Len()>=1&&f[0]=='.';
 				bool p1 = p.Len()>=1&&p[0]=='.';
@@ -723,7 +725,7 @@ bool FNMatch ( cString& filename, cString& pattern, MatchType flags )
 	}
 
 // basic match
-	if (flags&&fnm_period)
+	if (flags&fnm_period)
 	{
 		bool f1 = filename.Len()>=1&&filename[0]=='.';
 		bool p1 = pattern.Len() >=1&&pattern[0] =='.';
@@ -1241,6 +1243,7 @@ ucs4char String::operator[] ( int32 i ) const
 	case csz2: return ucs2_text[i];
 	case csz4: return ucs4_text[i];
 	}
+	IERR();
 }
 
 
@@ -1259,6 +1262,7 @@ ucs4char String::LastChar ( ) const throws
 	case csz2: return ucs2_text[i];
 	case csz4: return ucs4_text[i];
 	}
+	IERR();
 }
 
 
@@ -2059,6 +2063,8 @@ String String::ToHtml ( ) const
 			return s;
 		}
 	}
+
+	IERR();
 }
 
 
@@ -2233,6 +2239,8 @@ String String::FromHtml ( ) const
 			return s;
 		}
 	}		// case
+
+	IERR();
 }
 
 
@@ -2660,6 +2668,8 @@ String String::FromEscaped ( ucs4char leftquote ) const
 			return s;
 		}
 	}
+
+	IERR();
 }
 
 
@@ -2958,14 +2968,14 @@ String String::ToTab( int tabstops ) const
 			while(q<qe&&q<q0+tabstops)
 			{
 				ucs1char c = Ucs1(q++);
-				if (c>13)               		{ zstr.Ucs1(z++) = c; continue; }
-				if (c==13||c==10||c==0) 		{ zstr.Ucs1(z++) = c; break; }
-				if (c!='\t')            		{ zstr.Ucs1(z++) = c; continue; }
-				while(zstr.Ucs1(z-1)==' ') z--; { zstr.Ucs1(z++) = c; break; }
+				if (c>13)							{ zstr.Ucs1(z++) = c; continue; }
+				if (c==13||c==10||c==0)				{ zstr.Ucs1(z++) = c; break; }
+				if (c!='\t')						{ zstr.Ucs1(z++) = c; continue; }
+				while (zstr.Ucs1(z-1)==' ') {z--;}	{ zstr.Ucs1(z++) = c; break; }
 			}
 			if (zstr.Ucs1(z-1)==' ')
 			{
-				while (zstr.Ucs1(z-1)==' ') z--;
+				while (zstr.Ucs1(z-1)==' ') { z--; }
 				zstr.Ucs1(z++) = '\t';
 			}
 			q0 = q;
@@ -2978,14 +2988,14 @@ String String::ToTab( int tabstops ) const
 			while(q<qe&&q<q0+tabstops)
 			{
 				ucs2char c = Ucs2(q++);
-				if (c>13)               		{ zstr.Ucs2(z++) = c; continue; }
-				if (c==13||c==10||c==0) 		{ zstr.Ucs2(z++) = c; break; }
-				if (c!='\t')            		{ zstr.Ucs2(z++) = c; continue; }
-				while(zstr.Ucs2(z-1)==' ') z--; { zstr.Ucs2(z++) = c; break; }
+				if (c>13)							{ zstr.Ucs2(z++) = c; continue; }
+				if (c==13||c==10||c==0)				{ zstr.Ucs2(z++) = c; break; }
+				if (c!='\t')						{ zstr.Ucs2(z++) = c; continue; }
+				while (zstr.Ucs2(z-1)==' ') {z--;}	{ zstr.Ucs2(z++) = c; break; }
 			}
 			if (zstr.Ucs2(z-1)==' ')
 			{
-				while (zstr.Ucs2(z-1)==' ') z--;
+				while (zstr.Ucs2(z-1)==' ') { z--; }
 				zstr.Ucs2(z++) = '\t';
 			}
 			q0 = q;
@@ -2998,10 +3008,10 @@ String String::ToTab( int tabstops ) const
 			while(q<qe&&q<q0+tabstops)
 			{
 				ucs4char c = Ucs4(q++);
-				if (c>13)               		{ zstr.Ucs4(z++) = c; continue; }
-				if (c==13||c==10||c==0) 		{ zstr.Ucs4(z++) = c; break; }
-				if (c!='\t')            		{ zstr.Ucs4(z++) = c; continue; }
-				while(zstr.Ucs4(z-1)==' ') z--; { zstr.Ucs4(z++) = c; break; }
+				if (c>13)							{ zstr.Ucs4(z++) = c; continue; }
+				if (c==13||c==10||c==0)				{ zstr.Ucs4(z++) = c; break; }
+				if (c!='\t')						{ zstr.Ucs4(z++) = c; continue; }
+				while (zstr.Ucs4(z-1)==' ') {z--;}	{ zstr.Ucs4(z++) = c; break; }
 			}
 			if (zstr.Ucs4(z-1)==' ')
 			{
