@@ -251,7 +251,7 @@ friend	void	TestStringClass	(uint&,uint&);
 static	void	PurgeCaches		( );
 };
 
-extern void		TestStringClass	( );
+extern void		TestStringClass	(uint&,uint&);
 
 
 

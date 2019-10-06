@@ -17,7 +17,7 @@
 	TO THE EXTENT PERMITTED BY APPLICABLE LAW.
 */
 
-#include "../kio/kio.h"
+#include "kio/kio.h"
 #include "relational_operators.h"
 
 

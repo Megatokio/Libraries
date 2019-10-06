@@ -17,8 +17,8 @@
 	TO THE EXTENT PERMITTED BY APPLICABLE LAW.
 */
 
-#include "Libraries/kio/kio.h"
-#include "Libraries/cstrings/cstrings.h"
+#include "kio/kio.h"
+#include "cstrings/cstrings.h"
 
 
 /*

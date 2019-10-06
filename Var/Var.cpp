@@ -31,6 +31,7 @@
 #include	<math.h>
 #include	"Var.h"
 #include	"Templates/Stack.h"
+DEBUG_INIT_MSG
 
 // serrors.cpp:
 inline	String	ErrorString	( int/*OSErr*/ e )				{ return errorstr(e); }
@@ -46,7 +47,6 @@ extern	void	PrependToError	( cString& msg );
 const Double NAN = 0.0/0.0;
 #endif
 
-INIT_MSG
 
 inline double random(double r)	{ return ldexp(random() * r, -31); }
 

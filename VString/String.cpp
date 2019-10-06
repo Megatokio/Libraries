@@ -56,6 +56,7 @@
 #include "String.h"
 #include "cstrings/utf8.h"
 #include "cstrings/legacy_charsets.h"
+DEBUG_INIT_MSG;
 
 
 #ifdef NDEBUG
@@ -68,7 +69,6 @@
 #define	 RMASK(n)		(~(0xFFFFFFFF<<(n)))				// mask to select n bits from the right
 
 
-INIT_MSG;
 
 
 #ifndef NAN

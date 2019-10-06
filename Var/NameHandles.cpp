@@ -21,8 +21,7 @@
 
 #include "cstrings/cstrings.h"
 #include "NameHandles.h"
-
-INIT_MSG
+DEBUG_INIT_MSG
 
 
 

@@ -20,7 +20,7 @@
 #define SAFETY 2
 #define LOGLEVEL 1
 #include <time.h>
-#include "Libraries/kio/kio.h"
+#include "kio/kio.h"
 #undef  assert
 #define assert(X) do{ if(X){}else{throw internal_error(__FILE__, __LINE__, "FAILED: " #X);} }while(0)
 
@@ -98,7 +98,7 @@ void TestStringClass(uint& num_tests, uint& num_errors)
 		TRAP( a.Len()!=1 );
 		TRAP( a[0]!=0x10030 );
 		//TRAP( a.NotWritable() );
-		for (ulong i=0x10000;i<0xF0000000;i+=i/2001)
+		for (ucs4char i=0x10000;i<0xF0000000;i+=i/2001)
 		{
 			String b(i);
 			TRAP( b.Csz()!=4 );
@@ -764,17 +764,17 @@ void TestStringClass(uint& num_tests, uint& num_errors)
 		TRAP(NumVal("%10101010222")!=0xAA);
 		TRAP(NumVal("-%00010010001101000101011001111000")!=-0x12345678);
 		TRAP(NumVal("-%0001001000110100.0101011001111000")!=-(0x1234+1.0*0x5678/0x10000));
-		TRAP(NumVal("%1")!=0x1);
-		TRAP(NumVal("+%1")!=0x1);
+		TRAP(NumVal("%1") != 1.0);
+		TRAP(NumVal("+%1") != 1.0);
 		f = NumVal("+%");	TRAP(errno!=notanumber);
 		errno=0;			TRAP(f==f);
 
 		String s="xyz123";
-		TRAP(NumVal(s.MidString(3))!=123);
+		TRAP(NumVal(s.MidString(3)) != 123.0);
 		s="x€z123";
-		TRAP(NumVal(s.MidString(3))!=123);
-		TRAP(NumVal("  +123")!=123);
-		TRAP(NumVal("  +123€")!=123);
+		TRAP(NumVal(s.MidString(3)) != 123.0);
+		TRAP(NumVal("  +123") != 123.0);
+		TRAP(NumVal("  +123€") != 123.0);
 	END
 
 	TRY // Find(UCS4Char,long)

@@ -1,4 +1,6 @@
 #pragma once
+#ifndef KIO_H		// the syntax checker has a problem with #pragma once for this file
+#define KIO_H
 
 /*	Copyright  (c)  Günter Woigk 1994 - 2019
 					mailto:kio@little-bat.de
@@ -24,7 +26,6 @@
 	must exist, may be empty:
 	- settings.h	project settings
 */
-
 
 #ifndef __cplusplus
 #error c++ ahead
@@ -54,6 +55,7 @@
 #include <climits>
 #include <utility>
 #include <ctime>
+extern char **environ;		// was required by: Mac OSX (pre 10.5 ?)
 
 #include "standard_types.h"
 
@@ -140,9 +142,9 @@ struct on_init { on_init(void(*f)()){f();} };
 
 // log filename during statics initialization
 #ifndef NDEBUG
-  #define INIT_MSG  ON_INIT( []{logline( "%s:", strrchr("/" __FILE__, '/')+1);} );
+  #define DEBUG_INIT_MSG  ON_INIT( []{logline( "%s:", strrchr("/" __FILE__, '/')+1);} );
 #else
-  #define INIT_MSG
+  #define DEBUG_INIT_MSG
 #endif
 
 
@@ -359,7 +361,7 @@ uint   random(uint n)	{ return (uint32(n) * uint16(random())) >> 16; } // 16 bit
 #undef FALLTHROUGH
 #define FALLTHROUGH goto CAT(label,__LINE__); CAT(label,__LINE__):
 
-
+#endif
 
 
 
