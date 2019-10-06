@@ -1,1 +1,0 @@
-gcc -O1 -fsigned-char -Wall -Wno-multichar -I ../.. main.cpp ../var.cp ../var_test_suite.cp ../../ustring/sstring.cp ../../cstrings/cstrings.cp ../../kio/abort.cp ../../kio/log.cp -lm -lstdc++
