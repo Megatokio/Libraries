@@ -335,7 +335,7 @@ str binstr (uint value, cstr b0, cstr b1) noexcept
 
 	while (n--)
 	{
-		if (b0[n] == b1[n]) n--;
+		if (b0[n] == b1[n]) continue;
 		if (value & 1) s[n] = b1[n];
 		value = value >> 1;
 	}

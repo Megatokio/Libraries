@@ -390,6 +390,8 @@ void test_cstrings(uint& num_tests, uint& num_errors)
 		assert(eq(binstr(0x2345),"01000101"));
 		assert(eq(binstr(0x2345,"abcdefghijkl","ABCDEFGHIJKL"),"abCDeFghiJkL"));
 		assert(eq(binstr(0x2345,"0000.0000.0000","1111.1111.1111"),"0011.0100.0101"));
+		// 2019-10-06: binstr failed if b0str and b1str started with same char:
+		assert(eq(binstr(0x5a,"0b00000000","0b11111111"),"0b01011010"));
 	END
 
 	TRY
