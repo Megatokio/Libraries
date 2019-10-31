@@ -86,6 +86,8 @@ public:
 	T*		 getData	()					noexcept { return data; }
 	T const& operator[]	(uint i) const		noexcept { assert(i<cnt); return data[i]; }
 	T&		 operator[]	(uint i)			noexcept { assert(i<cnt); return data[i]; }
+	T const& operator[]	(int i) const		noexcept { assert(uint(i)<cnt); return data[i]; }
+	T&		 operator[]	(int i)				noexcept { assert(uint(i)<cnt); return data[i]; }
 	T const& first		() const			noexcept { assert(cnt); return data[0]; }
 	T&		 first		()					noexcept { assert(cnt); return data[0]; }
 	T const& last		() const			noexcept { assert(cnt); return data[cnt-1]; }

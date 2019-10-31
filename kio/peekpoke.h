@@ -19,8 +19,8 @@
 
 	byte order independent and unaligned peek & poke
 
-	PeekX => 'abcd' == *(uint32*)"abcd"	--> access data written by m68k, ppc, ...	<-- this is the internet order
-	PeekZ => 'abcd' == *(uint32*)"dcba"	--> access data written by i386, z80, ...	<-- avoid if possible
+	peekX => 'abcd' == *(uint32*)"abcd"	--> access data written by m68k, ppc, ...	<-- big endian:    IBM, internet byte order
+	peekZ => 'abcd' == *(uint32*)"dcba"	--> access data written by i386, z80, ...	<-- little endian: Intel
 	peek  =>  machine order, unaligned. --> glue for machines which don't support unaligned memory access.
 */
 

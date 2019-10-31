@@ -76,9 +76,9 @@ static const int ok			= 0;
 //static const int success	= 0;
 static const int error  	= -1;
 
-#define	kB		*0x400
-#define MB		*0x100000
-#define GB		*0x40000000
+#define	kB		*0x400u
+#define MB		*0x100000u
+#define GB		*0x40000000ul
 
 
 /* directory separator

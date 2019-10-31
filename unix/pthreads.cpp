@@ -23,7 +23,7 @@
 #endif
 #include "pthreads.h"
 
-INIT_MSG
+DEBUG_INIT_MSG
 
 const  pthread_t			main_thread = pthread_self();
 

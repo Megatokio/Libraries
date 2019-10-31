@@ -29,15 +29,15 @@
 
 		note: template does not work correctly because i don't know how to cast a signed type to a same-sized unsigned type
 */
-//INL int msbnibble	( uint8 n )	 { return (n>7) + (n>3) + (n>1); }										// 0 ..  3
-INL int	msbit		( uint8 n )	 { int b=0,i=4; do{ if(n>>i){n>>=i;b+=i;} }while((i>>=1)); return b; } 	// 0 ..  7
-INL int	msbit		( uint16 n ) { int b=0,i=8; do{ if(n>>i){n>>=i;b+=i;} }while((i>>=1)); return b; } 	// 0 .. 15
-INL int	msbit		( uint32 n ) { int b=0,i=16;do{ if(n>>i){n>>=i;b+=i;} }while((i>>=1)); return b; } 	// 0 .. 31
-INL int	msbit		( uint64 n ) { int b=0,i=32;do{ if(n>>i){n>>=i;b+=i;} }while((i>>=1)); return b; } 	// 0 .. 63
-INL int	msbit		( int8 n )	 { return msbit(uint8(n));  }
-INL int	msbit		( int16 n )	 { return msbit(uint16(n)); }
-INL int	msbit		( int32 n )	 { return msbit(uint32(n)); }
-INL int	msbit		( int64 n )	 { return msbit(uint64(n)); }
+//INL int msbnibble	( uint8 n )	{ return (n>7) + (n>3) + (n>1); }										// 0 ..  3
+inline int	msbit ( uint8 n )	{ int b=0,i=4; do{ if(n>>i){n>>=i;b+=i;} }while((i>>=1)); return b; } 	// 0 ..  7
+inline int	msbit ( uint16 n )	{ int b=0,i=8; do{ if(n>>i){n>>=i;b+=i;} }while((i>>=1)); return b; } 	// 0 .. 15
+inline int	msbit ( uint32 n )	{ int b=0,i=16;do{ if(n>>i){n>>=i;b+=i;} }while((i>>=1)); return b; } 	// 0 .. 31
+inline int	msbit ( uint64 n )	{ int b=0,i=32;do{ if(n>>i){n>>=i;b+=i;} }while((i>>=1)); return b; } 	// 0 .. 63
+inline int	msbit ( int8 n )	{ return msbit(uint8(n));  }
+inline int	msbit ( int16 n )	{ return msbit(uint16(n)); }
+inline int	msbit ( int32 n )	{ return msbit(uint32(n)); }
+inline int	msbit ( int64 n )	{ return msbit(uint64(n)); }
 
 
 /* ----	Calculate the number of digits required to print a number:
@@ -45,8 +45,8 @@ INL int	msbit		( int64 n )	 { return msbit(uint64(n)); }
 				binaryDigits(n=0) = 1
 				binaryDigits(n>0) = ceil(msbit(n+1))
 */
-template <class T> INL int	binaryDigits ( T number )	 { return msbit(number)  +1; }	// result >= 1
-template <class T> INL int	hexDigits	 ( T number )	 { return msbit(number)/4+1; }	// result >= 1
+template <class T> inline int	binaryDigits ( T number )	 { return msbit(number)  +1; }	// result >= 1
+template <class T> inline int	hexDigits	 ( T number )	 { return msbit(number)/4+1; }	// result >= 1
 
 
 /* ----	Calculate the number of digits required to store a numbers of a given range:
@@ -56,9 +56,9 @@ template <class T> INL int	hexDigits	 ( T number )	 { return msbit(number)/4+1; 
 		note:	reqBits(1) = ceil(msbit(1)) = 0
 		caveat:	reqBits(0) = ceil(msbit(0)) = 0		// illegal range!
 */
-template <class T> INL int	reqBits		( T count )	{ return count>1 ? msbit(count-1)  +1 : 0; }
-template <class T> INL int	reqNibbles	( T count )	{ return count>1 ? msbit(count-1)/4+1 : 0; }
-template <class T> INL int	reqBytes	( T count )	{ return count>1 ? msbit(count-1)/8+1 : 0; }
+//template <class T> inline int	reqBits		( T count )	{ return count>1 ? msbit(count-1)  +1 : 0; }		TEST NEEDED!
+//template <class T> inline int	reqNibbles	( T count )	{ return count>1 ? msbit(count-1)/4+1 : 0; }		TEST NEEDED!
+//template <class T> inline int	reqBytes	( T count )	{ return count>1 ? msbit(count-1)/8+1 : 0; }		TEST NEEDED!
 
 
 

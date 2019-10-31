@@ -279,7 +279,7 @@ void HashMap<KEY,ITEM>::resizemap(uint newsize) throws
 	xlogline("HashMap: grow map to %i",newsize);
 
 	assert(newsize >= items.count());
-	assert(newsize == 1 << msbit(newsize));
+	assert(newsize == 1u << msbit(newsize));
 	assert(newsize <= min(uint(BIT31), uint(ArrayMAX/sizeof(map[0]))));	// also catches size=0
 
 	mask = newsize-1;

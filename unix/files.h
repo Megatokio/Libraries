@@ -104,7 +104,7 @@ EXT	void	create_symlink	(cstr linkpath, cstr destpath)							THF;
 EXT	void	create_hardlink	(cstr newpath, cstr oldpath)							THF;
 EXT	void 	create_hardlinked_copy(cstr newdir, cstr olddir, bool copy_dir_owner=no) THF;
 
-EXT int		set_owner_and_group(cstr path, uid_t=-1, gid_t=-1, bool deref_last_symlink=yes) noexcept;
+EXT int		set_owner_and_group(cstr path, uid_t=uid_t(-1), gid_t=gid_t(-1), bool deref_last_symlink=yes) noexcept;
 EXT int		get_owner_and_group(cstr path, uid_t&, gid_t&, bool deref_last_symlink=yes) noexcept;
 
 EXT	void	delete_node		(cstr path, bool resolve_last_symlink, s_type typ=s_any)THF;
@@ -116,7 +116,7 @@ EXT	void	swap_files		(cstr path1, cstr path2)								THF;
 EXT	void	read_dir		(cstr path, MyFileInfoArray&, bool resolve_symlinks)	THF;	// Attn.: no trailing "/" for dir names!
 EXT	str		read_link		(cstr path);
 EXT	void 	read_file		(cstr path, Array<str>& a, uint32 maxsize=1<<28) 		THF;
-INL	void 	read_file		(cstr path, Array<cstr>& a, uint32 maxsize=1<<28) 		THF	{ read_file(path,(Array<str>&)a,maxsize); }
+INL	void 	read_file		(cstr path, Array<cstr>& a, uint32 maxsize=1<<28) 		THF	{ read_file(path,reinterpret_cast<Array<str>&>(a),maxsize); }
 EXT	void 	read_file		(cstr path, class StrArray& a, uint32 maxsize=1<<28) 	THF;
 
 EXT	void	write_file		(cstr path, cptr data, uint32 len, int flags='w'/*overwrite*/, mode_t=0660)	THF;
