@@ -16,6 +16,7 @@ INCLUDEPATH +=  \
 
 
 SOURCES += \
+	Libraries/Templates/relational_operators.test.cpp \
 	Source/main.cpp \
 	Libraries/kio/kio.cpp \
 	Libraries/kio/exceptions.cpp \
@@ -41,6 +42,7 @@ SOURCES += \
 	Libraries/VString/String.cpp
 
 HEADERS += \
+	Source/main.h \
 	Source/settings.h \
 	Source/custom_errors.h \
 	Libraries/unix/FD.h \

@@ -18,19 +18,9 @@
 
 
 #include <iostream>
-#include "kio/kio.h"
+#include "main.h"
 #include "Templates/RCPtr.h"
 #include "Templates/RCObject.h"
-
-
-extern void test_tempmem(uint& num_tests, uint& num_errors);
-extern void test_cstrings(uint& num_tests, uint& num_errors);
-extern void test_sort(uint& num_tests, uint& num_errors);
-extern void test_Array(uint& num_tests, uint& num_errors);
-extern void test_hashmap(uint& num_tests, uint& num_errors);
-extern void test_StrArray(uint& num_tests, uint& num_errors);
-extern void test_RCArray(uint& num_tests, uint& num_errors);
-extern void TestStringClass(uint& num_tests, uint& num_errors);
 
 
 int main(int, const char**)
@@ -40,6 +30,7 @@ int main(int, const char**)
 
 	test_tempmem(num_tests, num_errors);
 	test_cstrings(num_tests, num_errors);
+	test_relational_operators(num_tests, num_errors);
 	test_Array(num_tests, num_errors);
 	test_StrArray(num_tests, num_errors);
 	test_RCArray(num_tests, num_errors);

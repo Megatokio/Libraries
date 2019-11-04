@@ -195,13 +195,14 @@ extern str join (Array<cstr> const& q) throws;
 extern str join (Array<cstr> const& q, char, bool final=false) throws;
 extern str join (Array<cstr> const& q, cstr, bool final=false) throws;
 
+template<class T>
+inline str numstr (T n) throws { return tostr(n); }
+
+
 // _________________________________________________________________________
 //
 
 extern	str	 speakingNumberStr (double) throws __attribute__((deprecated)); // define in appl which needs this
-
-template<class T> inline str numstr (T n) throws __attribute__((deprecated));	// use tostr()
-template<class T> inline str numstr (T n) throws { return tostr(n); }			// use tostr()
 
 inline	bool sameStr (cstr a, cstr b) noexcept  __attribute__((deprecated));	// use eq()
 inline	bool sameStr (cstr a, cstr b) noexcept { return eq(a,b); }				// use eq()

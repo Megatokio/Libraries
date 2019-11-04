@@ -17,21 +17,12 @@
 */
 
 
-
 #undef NDEBUG
 #define SAFETY 2
 #define LOGLEVEL 1
-#include "kio/kio.h"
-#undef  assert
-#define assert(X) do{ if(X){}else{throw internal_error(__FILE__, __LINE__, "FAILED: " #X);} }while(0)
 #include "unix/FD.h"
 #include "Templates/sort.h"
-
-
-#define TRY num_tests++; try{
-#define END }catch(std::exception& e){num_errors++; logline("%s",e.what());}
-#define EXPECT(X) num_errors++; logline("%s line %i: FAILED: did not throw",__FILE__,__LINE__);}catch(X&){}\
-  catch(std::exception&){num_errors++;logline("%s line %i: FAILED: wrong type of exception thrown",__FILE__,__LINE__);}
+#include "main.h"
 
 
 static int bu[1000];		static int cnt;
@@ -254,8 +245,14 @@ static void test_sort_ptr_to_object (uint& /*num_tests*/, uint& /*num_errors*/)
 	{
 		int a,b;
 		Foo(int a,int b):a(a),b(b){}
-		bool operator > (const Foo& q) const { return a != q.a ? a>q.a : b>q.b; }
-		bool operator != (const Foo& q) const { return a != q.a || b != q.b; }
+		bool operator > (const Foo& q) const
+		{
+			return a != q.a ? a>q.a : b>q.b;
+		}
+		bool operator != (const Foo& q) const
+		{
+			return a != q.a || b != q.b;
+		}
 	};
 
 	Array<Foo*> array(0u,100*100);

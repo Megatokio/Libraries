@@ -19,18 +19,10 @@
 #undef NDEBUG
 #define SAFETY 2
 #define LOGLEVEL 1
-#include "kio/kio.h"
-#undef  assert
-#define assert(X) do{ if(X){}else{throw internal_error(__FILE__, __LINE__, "FAILED: " #X);} }while(0)
 #include "unix/FD.h"
 #include "tempmem.h"
 #include "hash/sdbm_hash.h"
-
-
-#define TRY num_tests++; try{
-#define END }catch(std::exception& e){num_errors++; logline("%s",e.what());}
-#define EXPECT(X) num_errors++; logline("%s line %i: FAILED: did not throw",__FILE__,__LINE__);}catch(X&){}\
-  catch(std::exception&){num_errors++;logline("%s line %i: FAILED: wrong type of exception thrown",__FILE__,__LINE__);}
+#include "main.h"
 
 
 static uint random(uint n) { return (uint32(n) * uint16(random())) >> 16; }

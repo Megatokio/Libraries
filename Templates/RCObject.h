@@ -76,7 +76,7 @@ public:
 	RCObject ()								noexcept {}
 	explicit RCObject (RCObject const&)		noexcept {}
 	RCObject (RCObject&&)					noexcept {}
-	virtual	~RCObject ()					noexcept { assert(cnt==0); }
+	virtual	~RCObject ()					noexcept { if (unlikely(cnt!=0)) abort("~RCObject(): cnt=%i\n",cnt); }
 
 	RCObject& operator= (RCObject const&)	noexcept { return *this; }
 	RCObject& operator= (RCObject&&)		noexcept { return *this; }

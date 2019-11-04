@@ -20,19 +20,11 @@
 #undef NDEBUG
 #define SAFETY 2
 #define LOGLEVEL 1
-#include "kio/kio.h"
-#undef  assert
-#define assert(X) do{ if(X){}else{throw internal_error(__FILE__, __LINE__, "FAILED: " #X);} }while(0)
 #include "unix/FD.h"
 #include "Templates/Array.h"
 #include "Templates/HashMap.h"
 #include "unix/tempmem.h"
-
-
-#define TRY num_tests++; try{
-#define END }catch(std::exception& e){num_errors++; logline("%s",e.what());}
-#define EXPECT(X) num_errors++; logline("%s line %i: FAILED: did not throw",__FILE__,__LINE__);}catch(X&){}\
-  catch(std::exception&){num_errors++;logline("%s line %i: FAILED: wrong type of exception thrown",__FILE__,__LINE__);}
+#include "main.h"
 
 
 static const int FREE = -1;
@@ -258,7 +250,7 @@ static void test2(uint& num_tests, uint& num_errors)
 			uint ai = random() % a.count();
 			map.remove(a[ai]);
 			r.append(a[ai]);
-			a.remove(ai);
+			a.removeat(ai);
 		}
 		else
 		{
@@ -266,7 +258,7 @@ static void test2(uint& num_tests, uint& num_errors)
 			uint ri = random() % r.count();
 			map.add(r[ri],r[ri]^1);
 			a.append(r[ri]);
-			r.remove(ri);
+			r.removeat(ri);
 		}
 		assert(map.count()==a.count());
 
@@ -339,7 +331,7 @@ static void test3(uint& num_tests, uint& num_errors)
 			uint ai = random() % a.count();
 			map.remove(a[ai]);
 			r.append(a[ai]);
-			a.remove(ai);
+			a.removeat(ai);
 		}
 		else
 		{
@@ -347,7 +339,7 @@ static void test3(uint& num_tests, uint& num_errors)
 			uint ri = random() % r.count();
 			map.add(r[ri],nullptr);
 			a.append(r[ri]);
-			r.remove(ri);
+			r.removeat(ri);
 		}
 		assert(map.count()==a.count());
 

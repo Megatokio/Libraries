@@ -99,8 +99,9 @@ public:
 	bool operator>	(Array const& q) const	noexcept;	// uses eq() and gt()
 	bool operator>=	(Array const& q) const	noexcept { return !operator<(q); }
 	bool operator<=	(Array const& q) const	noexcept { return !operator>(q); }
-	bool	contains	(REForVALUE(T) item) const	noexcept;	// uses eq()
-	uint	indexof		(REForVALUE(T) item) const	noexcept;	// uses eq()
+
+	uint	indexof		(REForVALUE(T) item) const	noexcept; // compare using '==' except str/cstr: 'eq'
+	bool	contains	(REForVALUE(T) item) const	noexcept { return indexof(item) != ~0u; }  // uses indexof()
 
 // resize:
 	void	growmax		(uint newmax)		throws;
@@ -113,14 +114,27 @@ public:
 	T		pop			()					noexcept { assert(cnt); return std::move(data[--cnt]); }
 	void	purge		()					noexcept { for (uint i=0;i<cnt;i++) data[i].~T(); deallocate(data); max=cnt=0; data=nullptr; }
 	void	append		(T q)				throws	 { growmax(cnt+1); new(&data[cnt++])T(std::move(q)); }
-	void	appendifnew	(T q)				throws	 { if (!contains(q)) append(std::move(q)); }	// uses eq()
+	void	appendifnew	(T q)				throws	 { if (!contains(q)) append(std::move(q)); }  // uses indexof()
 	Array&	operator<<	(T q)				throws	 { append(std::move(q)); return *this; }
 	void	append		(T const* q, uint n) throws	 { growmax(cnt+n); for (uint i=0;i<n;i++) new(&data[cnt+i])T(*q++); cnt += n; }
 	void	append		(Array const& q)	throws   { assert(this!=&q); append(q.data, q.cnt); }
 
-	void	remove		(uint idx, bool fast=0)	noexcept;
+	void	removeitem	(REForVALUE(T) item, bool fast=0) noexcept  // uses indexof()
+													 { uint i = indexof(item); if (i != ~0u) removeat(i,fast); }
+	void	removeat	(uint idx, bool fast=0)	noexcept;
 	void	removerange	(uint a, uint e)	noexcept;
-	void	removeitem	(REForVALUE(T) item, bool fast=0) noexcept;	// uses eq()
+
+	// define overloaded remove() for item and idx:
+	//	 void remove (item, bool);
+	//	 void remove (idx, bool);
+	// for fundamental types this is ambiguous and cannot even be defined for T=uint
+	// we cannot make the definitions optional, based on type T
+	//   -> make unusable definitions for fundamental types!
+	//   -> make usable definitions for non_fundamental types!
+	struct Foo1{Foo1()=delete;};
+	struct Foo2{Foo2()=delete;};
+	void	remove		(typename kio::select_type<std::is_fundamental<T>::value,Foo1,REForVALUE(T)>::type item, bool fast=0) noexcept { removeitem(item,fast); }
+	void	remove		(typename kio::select_type<std::is_fundamental<T>::value,Foo2,uint>::type idx, bool fast=0)	noexcept { removeat(idx,fast); }
 
 	void	insertat	(uint idx, T)		throws;
 	void	insertat	(uint idx, T const* q, uint n) throws;
@@ -144,12 +158,14 @@ public:
 	void 	rsort	()						noexcept { if (cnt) ::rsort(data, data+cnt); }	// uses gt()
 	void 	sort	(COMPARATOR(T) gt)		noexcept { if (cnt) ::sort(data, data+cnt, gt); }
 
+	void	swap	(uint i, uint j)		noexcept { assert(i<cnt&&j<cnt); std::swap(data[i],data[j]); }
+
 	static const uint16 MAGIC = 0x3343;
 	static const uint16 BYTESWAPPED_MAGIC = 0x4333;
 
-	void print		(FD& fd, cstr indent) const throws;
-	void serialize	(FD& fd) const		throws;
-	void deserialize (FD& fd)			throws;
+	void print		 (FD&, cstr indent) const throws;
+	void serialize	 (FD&, void* data = nullptr) const throws;
+	void deserialize (FD&, void* data = nullptr) throws;
 };
 
 
@@ -246,20 +262,24 @@ bool Array<T>::operator> (Array const& q) const noexcept	// uses eq() and gt()
 }
 
 template<typename T>
-bool Array<T>::contains (REForVALUE(T) item) const noexcept
-{
-	for (uint i=cnt; i;)
-	{
-		if (eq(data[--i],item)) return true;
-	}
-	return false;
-}
-
-template<typename T>
 uint Array<T>::indexof (REForVALUE(T) item) const noexcept
 {
 	// find first occurance
+	// using == (find pointers by identity)
 	// or return ~0u
+
+	for (uint i=0; i<cnt; i++)
+	{
+		if (data[i] == item) return i;
+	}
+	return ~0u;
+}
+
+template<>
+inline uint Array<cstr>::indexof (cstr item) const noexcept
+{
+	// specializations for str and cstr
+	// use eq() --> compare contents
 
 	for (uint i=0; i<cnt; i++)
 	{
@@ -268,6 +288,15 @@ uint Array<T>::indexof (REForVALUE(T) item) const noexcept
 	return ~0u;
 }
 
+template<>
+inline uint Array<str>::indexof (str item) const noexcept
+{
+	for (uint i=0; i<cnt; i++)
+	{
+		if (eq(data[i],item)) return i;
+	}
+	return ~0u;
+}
 template<typename T>
 void Array<T>::growmax (uint newmax) throws
 {
@@ -363,24 +392,7 @@ void Array<T>::shrink(uint newcnt) noexcept
 }
 
 template<typename T>
-void Array<T>::removeitem (REForVALUE(T) item, bool fast) noexcept
-{
-	// remove first occurance of item, if found
-	// items are compared using eq()
-	// therefore strings are compared by contents
-
-	for (uint i=0; i<cnt; i++)
-	{
-		if (eq(data[i],item))
-		{
-			remove(i,fast);
-			return;
-		}
-	}
-}
-
-template<typename T>
-void Array<T>::remove (uint idx, bool fast) noexcept
+void Array<T>::removeat(uint idx, bool fast) noexcept
 {
 	// remove item at index
 	// idx < cnt
@@ -532,11 +544,10 @@ void Array<T>::shuffle(uint a, uint e) noexcept
 // _____________________________________________________________________________________________________________
 // it seems impossible to specialize a class template's member function for a group of types with common traits.
 // therefore functionality is extracted into a global function which can templated and overloaded as needed.
-
 // https://jguegant.github.io/blogs/tech/sfinae-introduction.html
 
 template<typename T>
-str tostr(Array<T> const& array)
+inline str tostr(Array<T> const& array)
 {
 	// return 1-line description of array for debugging and logging:
 	return usingstr("Array<T>[%u]", array.count());
@@ -549,7 +560,6 @@ inline str tostr(Array<str> const& array)
 {
 	return usingstr("Array<str>[%u]", array.count());
 }
-
 
 // ____ print() ____
 
@@ -585,7 +595,7 @@ inline typename std::enable_if<!kio::has_print<T>::value,void>::type
 }
 
 template<typename T>
-void Array<T>::print (FD& fd, cstr indent) const throws
+inline void Array<T>::print (FD& fd, cstr indent) const throws
 {
 	// pretty print with indentation
 	// this template will find the above print(FD&,Array<T>const&,cstr)
@@ -596,11 +606,43 @@ void Array<T>::print (FD& fd, cstr indent) const throws
 // ____ serialize() ____
 
 template <typename T>
-typename std::enable_if<kio::has_serialize<T>::value,void>::type
-/*void*/ serialize (FD& fd, Array<T> const& array) throws
+typename std::enable_if<std::is_fundamental<T>::value,void>::type
+/*void*/ serialize (FD& fd, const Array<T>& array, void*) throws
 {
-	// serialize
-	// used if type T has member function T::serialize()
+	// used if type T is plain integer or float
+
+	fd.write_uint16(array.MAGIC);		// saved in host byte order for byte order test
+	fd.write_uint32_z(array.count());
+	fd.write_data(array.getData(),array.count());
+}
+
+template<>
+inline void Array<cstr>::serialize (FD& fd, void*) const throws
+{
+	// specialization for T = cstr
+	// strings are stored with length prefix
+
+	fd.write_uint16_z(MAGIC);
+	fd.write_uint32_z(count());
+	for (uint i=0; i<count(); i++) fd.write_nstr(data[i]);
+}
+
+template<>
+inline void Array<str>::serialize (FD& fd, void*) const throws
+{
+	// specialization for T = cstr
+	// strings are stored with length prefix
+
+	fd.write_uint16_z(MAGIC);
+	fd.write_uint32_z(count());
+	for (uint i=0; i<count(); i++) fd.write_nstr(data[i]);
+}
+
+template <typename T>
+typename std::enable_if<kio::has_serialize<T>::value && !kio::has_serialize_w_data<T,void*>::value,void>::type
+/*void*/ serialize (FD& fd, const Array<T>& array, void*) throws
+{
+	// used if type T has member function T::serialize(FD&)
 
 	fd.write_uint16_z(array.MAGIC);
 	fd.write_uint32_z(array.count());
@@ -611,80 +653,38 @@ typename std::enable_if<kio::has_serialize<T>::value,void>::type
 }
 
 template <typename T>
-typename std::enable_if<std::is_fundamental<T>::value,void>::type
-/*void*/ serialize (FD& fd, Array<T> const& array) throws
+typename std::enable_if<kio::has_serialize_w_data<T,void*>::value,void>::type
+/*void*/ serialize (FD& fd, const Array<T>& array, void* data) throws
 {
-	// serialize
-	// used if type T is plain integer or float
+	// used if type T has member function T::serialize(FD&,void*)
 
-	fd.write_uint16(array.MAGIC);		// saved in host byte order for byte order test
+	fd.write_uint16_z(array.MAGIC);
 	fd.write_uint32_z(array.count());
-	fd.write_data(array.getData(),array.count());
+	for (uint i=0; i<array.count(); i++)
+	{
+		array[i].serialize(fd,data);
+	}
 }
 
 template<typename T>
-void Array<T>::serialize (FD& fd) const throws
+inline void Array<T>::serialize (FD& fd, void* data) const throws
 {
-	// serialize -- default case
-	// this template will find the above serialize(FD&,Array<T>const&)
-	// for type T which implement T::serialize(FD&)
-	// and for fundamental types (integer and float)
-	// other types need to specialize Array<T>::serialize(FD&)
-	// as Array<cstr> and Array<str> do. see below.
+	// this template will find the above serialize(FD&,Array<T>const&, void*)
+	// for types which implement T::serialize(FD&) and
+	// for types which implement T::serialize(FD&,void*) and
+	// for fundamental types (integer and float)
+	// other types need to specialize Array<T>::serialize(FD&,void*)
+	// as Array<cstr> and Array<str> do.
 
-	::serialize(fd,*this);
-}
-
-template<>
-inline void Array<cstr>::serialize (FD& fd) const throws
-{
-	// serialize --specialization for T = cstr
-	// strings are stored with length prefix
-
-	fd.write_uint16_z(MAGIC);
-	fd.write_uint32_z(cnt);
-	for (uint i=0; i<cnt; i++) fd.write_nstr(data[i]);
-}
-
-template<>
-inline void Array<str>::serialize (FD& fd) const throws
-{
-	// serialize --specialization for T = str
-	// strings are stored with length prefix
-
-	fd.write_uint16_z(MAGIC);
-	fd.write_uint32_z(cnt);
-	for (uint i=0; i<cnt; i++) fd.write_nstr(data[i]);
+	::serialize(fd, *this, data);
 }
 
 // ____ deserialize() ____
 
 template <typename T>
-typename std::enable_if<kio::has_deserialize<T>::value,void>::type
-/*void*/ deserialize (FD& fd, Array<T>& array) throws
-{
-	// deserialize
-	// used if type T has member function T::deserialize()
-
-	array.purge();
-
-	uint m = fd.read_uint16_z();
-	if (m!=array.MAGIC) throw data_error("Array<T>: wrong magic");
-
-	uint n = fd.read_uint32_z();
-	array.grow(n,n);
-
-	for (uint i=0; i<n; i++)
-	{
-		array[i].deserialize(fd);
-	}
-}
-
-template <typename T>
 typename std::enable_if<std::is_fundamental<T>::value,void>::type
-/*void*/ deserialize(FD& fd, Array<T>& array) throws
+/*void*/ deserialize (FD& fd, Array<T>& array, void*) throws
 {
-	// deserialize
 	// used if type T is plain integer or float
 
 	array.purge();
@@ -703,23 +703,10 @@ typename std::enable_if<std::is_fundamental<T>::value,void>::type
 	}
 }
 
-template<typename T>
-void Array<T>::deserialize (FD& fd) throws
-{
-	// deserialize -- default case
-	// this template will find the above deserialize(FD&,Array<T>&)
-	// for type T which implement T::deserialize(FD&)
-	// and for fundamental types (integer and float)
-	// other types need to specialize Array<T>::deserialize(FD&)
-	// as Array<cstr> and Array<str> do. see below.
-
-	::deserialize(fd,*this);
-}
-
 template<>
-inline void Array<cstr>::deserialize(FD& fd) throws
+inline void Array<cstr>::deserialize (FD& fd, void*) throws
 {
-	// deserialize -- specialization for T = cstr
+	// specialization for T = cstr
 	// strings are stored with length prefix
 	// strings in Array<cstr> are not managed by the array
 	// strings read with deserialize() are located in TempMem!
@@ -728,18 +715,17 @@ inline void Array<cstr>::deserialize(FD& fd) throws
 	purge();
 
 	uint m = fd.read_uint16_z();
-	if (m!=MAGIC) throw data_error("Array<cstr>: wrong magic");
+	if (m != MAGIC) throw data_error("Array<cstr>: wrong magic");
 
 	uint n = fd.read_uint32_z();
-	data = allocate(n);
-	max = n;
-	while (cnt<n) { data[cnt++] = fd.read_nstr(); }
+	growmax(n);
+	while (count()<n) { append(fd.read_nstr()); }
 }
 
 template<>
-inline void Array<str>::deserialize(FD& fd) throws
+inline void Array<str>::deserialize (FD& fd, void*) throws
 {
-	// deserialize -- specialization for T = str
+	// specialization for T = str
 	// strings are stored with length prefix
 	// strings in Array<str> are not managed by the array
 	// strings read with deserialize() are located in TempMem!
@@ -748,13 +734,67 @@ inline void Array<str>::deserialize(FD& fd) throws
 	purge();
 
 	uint m = fd.read_uint16_z();
-	if (m!=MAGIC) throw data_error("Array<str>: wrong magic");
+	if (m != MAGIC) throw data_error("Array<str>: wrong magic");
 
 	uint n = fd.read_uint32_z();
-	data = allocate(n);
-	max = n;
-	while (cnt<n) { data[cnt++] = fd.read_nstr(); }
+	growmax(n);
+	while (count()<n) { append(fd.read_nstr()); }
 }
+
+template <typename T>
+typename std::enable_if<kio::has_deserialize<T>::value && !kio::has_deserialize_w_data<T,void*>::value,void>::type
+/*void*/ deserialize (FD& fd, Array<T>& array, void*) throws
+{
+	// used if type T has member function T::deserialize(FD&)
+
+	array.purge();
+
+	uint m = fd.read_uint16_z();
+	if (m!=array.MAGIC) throw data_error("Array<T>: wrong magic");
+
+	uint n = fd.read_uint32_z();
+	array.grow(n,n);
+
+	for (uint i=0; i<n; i++)
+	{
+		array[i].deserialize(fd);
+	}
+}
+
+template <typename T>
+typename std::enable_if<kio::has_deserialize_w_data<T,void*>::value,void>::type
+/*void*/ deserialize (FD& fd, Array<T>& array, void* data) throws
+{
+	// used if type T has member function T::deserialize(FD&,void*)
+
+	array.purge();
+
+	uint m = fd.read_uint16_z();
+	if (m!=array.MAGIC) throw data_error("Array<T>: wrong magic");
+
+	uint n = fd.read_uint32_z();
+	array.grow(n,n);
+
+	for (uint i=0; i<n; i++)
+	{
+		array[i].deserialize(fd,data);
+	}
+}
+
+template<typename T>
+inline void Array<T>::deserialize (FD& fd, void* data) throws
+{
+	// this template will find the above deserialize(FD&,Array<T>&,void*)
+	// for types which implement T::deserialize(FD&) and
+	// for types which implement T::deserialize(FD&,void*) and
+	// for fundamental types (integer and float)
+	// other types need to specialize Array<T>::deserialize(FD&,void*)
+	// as Array<cstr> and Array<str> do.
+
+	::deserialize(fd, *this, data);
+}
+
+
 
 
 

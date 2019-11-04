@@ -20,19 +20,9 @@
 #undef NDEBUG
 #define SAFETY 2
 #define LOGLEVEL 1
-#include "Libraries/kio/kio.h"
-#undef  assert
-#define assert(X) do{ if(X){}else{throw internal_error(__FILE__, __LINE__, "FAILED: " #X);} }while(0)
-#undef IERR
-#define IERR()		throw internal_error(__FILE__, __LINE__,internalerror)
-#include "Libraries/unix/FD.h"
+#include "unix/FD.h"
 #include "Templates/StrArray.h"
-
-
-#define TRY num_tests++; try{
-#define END }catch(std::exception& e){num_errors++; logline("%s",e.what());}
-#define EXPECT(X) num_errors++; logline("%s line %i: FAILED: did not throw",__FILE__,__LINE__);}catch(X&){}\
-  catch(std::exception&){num_errors++;logline("%s line %i: FAILED: wrong type of exception thrown",__FILE__,__LINE__);}
+#include "main.h"
 
 
 static bool foo_gt(str a, str b) { return a&&b&&*a&&*b ? (*a^3)>(*b^3) : a&&*a; }
@@ -214,17 +204,17 @@ static void test1(uint& num_tests, uint& num_errors)
 	END
 
 	TRY
-	array.remove(1);
+	array.removeat(1);
 	assert(array == StrArray() << "3" << "5" << "9" << "12");
 	END
 
 	TRY
-	array.remove(0);
+	array.removeat(0);
 	assert(array == StrArray() << "5" << "9" << "12");
 	END
 
 	TRY
-	array.remove(2);
+	array.removeat(2);
 	assert(array == StrArray() << "5" << "9");
 	END
 
@@ -468,12 +458,12 @@ static void test2(uint& num_tests, uint& num_errors)
 	END
 
 	TRY
-	array.removeitem("33");
+	array.remove("33");
 	assert(array.count()==3);
 	END
 
 	TRY
-	array.remove(1);
+	array.removeat(1);
 	assert(array == StrArray() << "11"<<"44");
 	END
 }

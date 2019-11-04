@@ -154,9 +154,9 @@ public:
 	bool operator!= (HashMap const& q) const noexcept { return !operator==(q); }	// uses KEY::eq() and ITEM::ne()
 
 // read / write file:
-	void print		(FD&, cstr indent)	const throws;
-	void serialize	(FD&) const			throws;
-	void deserialize (FD&)				throws;
+	void print		(FD&, cstr indent)		const throws;
+	void serialize	(FD&, void* data=nullptr) const throws;
+	void deserialize (FD&, void* data=nullptr) throws;
 };
 
 
@@ -301,7 +301,7 @@ void HashMap<KEY,ITEM>::resizemap(uint newsize) throws
 }
 
 template<class KEY,class ITEM>
-int HashMap<KEY,ITEM>::indexof(KEY key) const noexcept
+int HashMap<KEY,ITEM>::indexof(KEY key) const noexcept	// search key by value
 {
 	// search for key
 	// returns index in items[] or -1
@@ -373,7 +373,7 @@ b:	map[i&mask] = items.count() + BIT31;	// store index, set end-of-thread marker
 }
 
 template<class KEY,class ITEM>
-void HashMap<KEY,ITEM>::remove(KEY key) noexcept
+void HashMap<KEY,ITEM>::remove(KEY key) noexcept	// search key by value
 {
 	// remove key
 	// silently ignores if key does not exist
@@ -462,22 +462,22 @@ bool HashMap<KEY,TYPE>::operator== (HashMap const& q) const noexcept
 }
 
 template<class KEY,class TYPE>
-void HashMap<KEY,TYPE>::serialize (FD& fd) const throws
+void HashMap<KEY,TYPE>::serialize (FD& fd, void* data) const throws
 {
 	fd.write_uint16_z(MAGIC);
-	items.serialize(fd);
-	keys.serialize(fd);
+	items.serialize(fd,data);
+	keys.serialize(fd,data);
 }
 
 template<class KEY,class TYPE>
-void HashMap<KEY,TYPE>::deserialize (FD& fd) throws
+void HashMap<KEY,TYPE>::deserialize (FD& fd, void* data) throws
 {
 	// deserialize: supports reading back on byte swapped host. (if items support this.)
 	uint m = fd.read_uint16_z();
 	if (m != MAGIC && m != BYTESWAPPED_MAGIC) throw data_error("HashMap<T,U>: wrong magic");
 
-	items.deserialize(fd);
-	keys.deserialize(fd);
+	items.deserialize(fd,data);
+	keys.deserialize(fd,data);
 	if (items.count() != keys.count()) throw data_error("HashMap<T,U>: key/item mismatch");
 
 	uint mapsize = items.count() < 8 ? 16 : 4u << msbit(items.count()-1);	// mapsize = 2 * max!

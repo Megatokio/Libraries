@@ -19,24 +19,12 @@
 
 #include "kio/kio.h"
 #include "relational_operators.h"
+#include "template_helpers.h"
 
-
-template<bool, typename T>
-struct RefOrValue
-{
-	typedef T ArgType;
-	typedef bool(*CompareFunction)(T,T);
-};
-template<typename T>
-struct RefOrValue<true, T>
-{
-	typedef T const& ArgType;
-	typedef bool(*CompareFunction)(T const&,T const&);
-};
 
 // macro returns the type of the compare function for item type:
-#define COMPARATOR(T) typename RefOrValue<std::is_class<T>::value,T>::CompareFunction
-#define REForVALUE(T) typename RefOrValue<std::is_class<T>::value,T>::ArgType
+#define REForVALUE(T) typename kio::select_type<std::is_class<T>::value, T const&, T>::type
+#define COMPARATOR(T) typename kio::select_type<std::is_class<T>::value, bool(*)(T const&,T const&), bool(*)(T,T)>::type
 
 
 // undefine macros needed by old sort.h. TODO: remove

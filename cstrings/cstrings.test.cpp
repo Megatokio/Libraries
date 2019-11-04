@@ -20,8 +20,6 @@
 #define SAFETY 2
 #define LOGLEVEL 1
 #include "kio/kio.h"
-#undef  assert
-#define assert(X) do{ if(X){}else{throw internal_error(__FILE__, __LINE__, "FAILED: " #X);} }while(0)
 #include "unix/FD.h"
 #include "cstrings.h"
 #include "ucs1.h"
@@ -29,13 +27,7 @@
 #include "unix/tempmem.h"
 #include "Templates/Array.h"
 #include "kio/util/defines.h"
-
-
-#define TRY num_tests++; try{
-#define END }catch(std::exception& e){num_errors++; logline("%s",e.what());}
-#define EXPECT(X) num_errors++; logline("%s line %i: FAILED: did not throw",__FILE__,__LINE__);}catch(X&){}\
-  catch(std::exception&){num_errors++;logline("%s line %i: FAILED: wrong type of exception thrown",__FILE__,__LINE__);}
-
+#include "main.h"
 
 
 void test_cstrings(uint& num_tests, uint& num_errors)

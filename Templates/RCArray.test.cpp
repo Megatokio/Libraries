@@ -20,19 +20,11 @@
 #undef NDEBUG
 #define SAFETY 2
 #define LOGLEVEL 1
-#include "kio/kio.h"
-#undef  assert
-#define assert(X) do{ if(X){}else{throw internal_error(__FILE__, __LINE__, "FAILED: " #X);} }while(0)
 #include "unix/FD.h"
 #include "Templates/RCPtr.h"
 #include "Templates/Array.h"
-
-
-#define TRY num_tests++; try{
-#define END }catch(std::exception& e){num_errors++; logline("%s",e.what());}
-#define EXPECT(X) num_errors++; logline("%s line %i: FAILED: did not throw",__FILE__,__LINE__);}catch(X&){}\
-  catch(std::exception&){num_errors++;logline("%s line %i: FAILED: wrong type of exception thrown",__FILE__,__LINE__);}
-
+#include "main.h"
+#define RCObject MyRCObject
 
 
 // --------------------------------
@@ -56,7 +48,7 @@ public:
 	RCObject (uint n)						:cnt(0),value(n){num_objects++;}
 	explicit RCObject (RCObject const& q)	:cnt(0),value(q.value){num_objects++; }
 	RCObject (RCObject&& q)					:cnt(0),value(q.value){num_objects++; }
-	virtual ~RCObject ()					{ assert(cnt==0); num_objects--; }
+	virtual ~RCObject () throws				{ assert(cnt==0); num_objects--; }
 
 	virtual RCObject& operator= (RCObject const& q)	{ value=q.value; return *this; }
 	virtual RCObject& operator= (RCObject&& q)		{ value=q.value; return *this; }
@@ -68,7 +60,7 @@ public:
 
 	virtual void serialize (FD&) const;
 	virtual void deserialize (FD&);
-	static RCObject* restore (FD&);	// factory method
+	static RCObject* newFromFile (FD&);	// factory method
 
 	static void test1(uint& num_tests, uint& num_errors);
 	static void test2(uint& num_tests, uint& num_errors);
@@ -132,7 +124,7 @@ void RCObjectWithPrint::deserialize (FD& fd)
 	assert(v2==value);
 }
 
-RCObject* RCObject::restore (FD& fd)
+RCObject* RCObject::newFromFile (FD& fd)
 {
 	uint8 id = fd.read_uint8();
 	assert(id==id1a || id==id2a);
@@ -142,14 +134,10 @@ RCObject* RCObject::restore (FD& fd)
 }
 
 
-
-
 void RCObject::test1(uint& num_tests, uint& num_errors)
 {
 	typedef ::RCPtr<RCObject> RCPtr;
 	typedef Array<RCPtr> RCArray;
-	(void)num_tests;
-	(void)num_errors;
 
 	TRY
 	  {
@@ -305,12 +293,16 @@ void RCObject::test1(uint& num_tests, uint& num_errors)
 
 	TRY
 		clear();
-		RCArray a1; a1 << nullptr << new RCObject(6) << new RCObject(7) << nullptr;
-		assert(a1.contains(new RCObject(6)));
+		RCPtr o6 = new RCObject(6);
+		RCPtr o7 = new RCObject(7);
+		RCArray a1; a1 << nullptr << o6 << o7 << nullptr;
+		assert(a1.contains(o6));
 		assert(a1.contains(nullptr));
 		assert(!a1.contains(new RCObject(3)));
-		assert(a1.indexof(new RCObject(7))==2);
+		assert(!a1.contains(new RCObject(7)));
+		assert(a1.indexof(o7)==2);
 		assert(a1.indexof(new RCObject(9))==~0u);
+		assert(a1.indexof(new RCObject(7))==~0u);
 		assert(a1.indexof(nullptr)==0);
 	END
 
@@ -371,15 +363,25 @@ void RCObject::test1(uint& num_tests, uint& num_errors)
 
 	TRY
 		clear();
-		RCArray a1; a1.append(new RCObject(4));
+		RCPtr o4 = new RCObject(4);
 		assert(num_objects==1 && retained==1 && released==0);
+
+		RCArray a1; a1.append(o4);
+		assert(num_objects==1 && retained==2 && released==0);
 		assert(a1[0]->value == 4);
-		a1.appendifnew(new RCObject(4));
-		assert(num_objects==1 && retained==2 && released==1);
+
+		a1.appendifnew(o4);
+		assert(num_objects==1 && retained==3 && released==1);
+
 		a1.appendifnew(a1[0]);
-		assert(num_objects==1 && retained==3 && released==2);
+		assert(num_objects==1 && retained==4 && released==2);
+
 		a1.appendifnew(new RCObject(5));
-		assert(num_objects==2 && retained==4 && released==2);
+		assert(num_objects==2 && retained==5 && released==2);
+
+		o4 = nullptr;
+		assert(num_objects==2 && retained==5 && released==3);
+
 		assert(a1 == RCArray() << new RCObject(4) << new RCObject(5));
 	END
 
@@ -399,12 +401,12 @@ void RCObject::test1(uint& num_tests, uint& num_errors)
 		a1 << new RCObject(4) << nullptr << new RCObject(6) << new RCObject(7) << new RCObject(8) << new RCObject(9);
 		assert(num_objects==5 && retained==5 && released==0);
 
-		a1.remove(2);
+		a1.removeat(2);
 		assert(num_objects==4 && retained==5 && released==1);
 		assert(a1 == RCArray() << new RCObject(4) << nullptr << new RCObject(7) << new RCObject(8) << new RCObject(9));
 		assert(num_objects==4 && retained==9 && released==5);
 
-		a1.remove(2,yes);
+		a1.removeat(2,yes);
 		assert(num_objects==3 && retained==9 && released==6);
 		assert(a1 == RCArray() << new RCObject(4) << nullptr << new RCObject(9) << new RCObject(8));
 		assert(num_objects==3 && retained==12 && released==9);
@@ -417,15 +419,14 @@ void RCObject::test1(uint& num_tests, uint& num_errors)
 		assert(a1 == RCArray() << new RCObject(4) << nullptr << new RCObject(9) << new RCObject(2) << new RCObject(3));
 		assert(num_objects==4 && retained==19 && released==15);
 
-		a1[4]->value = 9;
 		a1.removeitem(a1[4]);
 		assert(num_objects==3 && retained==19 && released==16);
-		assert(a1 == RCArray() << new RCObject(4) << nullptr << new RCObject(2) << new RCObject(9));
+		assert(a1 == RCArray() << new RCObject(4) << nullptr << new RCObject(9) << new RCObject(2));
 		assert(num_objects==3 && retained==22 && released==19);
 
 		a1.removeitem(nullptr,yes);
 		assert(num_objects==3 && retained==22 && released==19);
-		assert(a1 == RCArray() << new RCObject(4) << new RCObject(9) << new RCObject(2));
+		assert(a1 == RCArray() << new RCObject(4) << new RCObject(2) << new RCObject(9));
 		assert(num_objects==3 && retained==25 && released==22);
 	END
 
@@ -480,7 +481,7 @@ void RCObject::test1(uint& num_tests, uint& num_errors)
 		assert(a1 == RCArray() << nullptr << new RCObject(1) << new RCObject(2) << new RCObject(3));
 		assert(num_objects==3 && retained==9 && released==6);
 
-		a1.remove(0);
+		a1.removeat(0);
 		a1.insertsorted(new RCObject(4));
 		assert(num_objects==4 && retained==10 && released==6);
 		assert(a1 == RCArray() << new RCObject(1) << new RCObject(2) << new RCObject(3) << new RCObject(4));

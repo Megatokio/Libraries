@@ -20,19 +20,9 @@
 #undef NDEBUG
 #define SAFETY 2
 #define LOGLEVEL 1
-#include "kio/kio.h"
-#undef  assert
-#define assert(X) do{ if(X){}else{throw internal_error(__FILE__, __LINE__, "FAILED: " #X);} }while(0)
-#undef IERR
-#define IERR()		throw internal_error(__FILE__, __LINE__,internalerror)
 #include "unix/FD.h"
 #include "Templates/Array.h"
-
-
-#define TRY num_tests++; try{
-#define END }catch(std::exception& e){num_errors++; logline("%s",e.what());}
-#define EXPECT(X) num_errors++; logline("%s line %i: FAILED: did not throw",__FILE__,__LINE__);}catch(X&){}\
-  catch(std::exception&){num_errors++;logline("%s line %i: FAILED: wrong type of exception thrown",__FILE__,__LINE__);}
+#include "main.h"
 
 
 static bool foo_gt(int a, int b) { return (a^3)>(b^3); }
@@ -42,89 +32,7 @@ static void test_prerequisites(uint& num_tests, uint& num_errors)
 {
 	// eq() ne() gt() lt()
 
-	TRY
-	assert(eq(22,22));
-	assert(ne(21,22));
-	assert(gt(23,22));
-	assert(lt(21,22));
-	END
-
-	TRY
-	char a=-33,b=22,c=22;
-	assert(eq(b,c));
-	assert(ne(a,b));
-	assert(gt(b,a));
-	assert(lt(a,b));
-	END
-
-	TRY
-	uint64 a=11l<<55,b=22l<<55,c=22l<<55;
-	assert(eq(b,c));
-	assert(ne(a,b));
-	assert(gt(b,a));
-	assert(lt(a,b));
-	END
-
-	TRY
-	float32 a=-3.3e-3f,b=2.2e-3f,c=2.2e-3f;
-	assert(eq(b,c));
-	assert(ne(a,b));
-	assert(gt(b,a));
-	assert(lt(a,b));
-	END
-
-	TRY
-	float64 a=-3.3e33,b=2.2e44,c=2.2e44;
-	assert(eq(b,c));
-	assert(ne(a,b));
-	assert(gt(b,a));
-	assert(lt(a,b));
-	END
-
-	TRY
-	float128 a=-3.3e33l,b=2.2e44l,c=2.2e44l;
-	assert(eq(b,c));
-	assert(ne(a,b));
-	assert(gt(b,a));
-	assert(lt(a,b));
-	END
-
-	// eq() ne() gt() lt() for str and cstr
-
-	TRY
-	cstr a="1.1e33l",b="Anton",c="anton",e=nullptr;
-	assert(eq(b,"Anton"));
-	assert(ne(b,c));
-	assert(gt(b,a));
-	assert(lt(a,b));
-	assert(gt(b,""));
-	assert(lt("",b));
-	assert(eq("",e));
-	assert(ne(e,b));
-	assert(gt(b,e));
-	assert(lt(e,b));
-	assert(!gt("",e));
-	assert(!lt("",e));
-	assert(!gt(e,""));
-	assert(!lt(e,""));
-	assert(!gt(e,e));
-	assert(!lt(e,e));
-	END
-
-	TRY
-	cstr a="Anton", b="anton";
-	str  c=dupstr(b);
-	assert(eq(b,c));
-	assert(eq(c,b));
-	assert(ne(a,c));
-	assert(ne(c,a));
-	assert(gt(c,a));
-	assert(!gt(a,c));
-	assert(lt(a,c));
-	assert(!lt(c,a));
-	assert(gt(c,""));
-	assert(lt("",c));
-	END
+	test_relational_operators(num_tests, num_errors);
 
 	// sort
 
@@ -346,17 +254,17 @@ static void test1(uint& num_tests, uint& num_errors)
 	END
 
 	TRY
-	array.remove(1);
+	array.removeat(1);
 	assert(array == Array<int>() << 3 << 5 << 9 << 12);
 	END
 
 	TRY
-	array.remove(0);
+	array.removeat(0);
 	assert(array == Array<int>() << 5 << 9 << 12);
 	END
 
 	TRY
-	array.remove(2);
+	array.removeat(2);
 	assert(array == Array<int>() << 5 << 9);
 	END
 
@@ -672,8 +580,17 @@ static void test2(uint& num_tests, uint& num_errors)
 	END
 
 	TRY
-	array.remove(1);
+	array.removeat(1);
 	assert(array == Array<cstr>() << "11"<<"44");
+	END
+
+	TRY
+	array << "foo" << "bar";
+	assert(array == Array<cstr>() << "11" << "44" << "foo" << "bar");
+	array.remove(1);
+	assert(array == Array<cstr>() << "11" << "foo" << "bar");
+	array.remove("foo");
+	assert(array == Array<cstr>() << "11" << "bar");
 	END
 }
 

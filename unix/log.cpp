@@ -778,7 +778,7 @@ static void purge_old_logfiles(cstr fname)
 	xlogIn("LogFile:purge_old_logfiles");
 
 	assert(startswith(fname,APPL_NAME));
-	assert(logdir!=NULL);
+	assert(logdir!=nullptr);
 	assert(*logdir=='/');                // must be full path. '/' must exist.
 	assert(*(strchr(logdir,0)-1)=='/');  // must end with '/'
 

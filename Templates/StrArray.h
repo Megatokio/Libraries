@@ -73,16 +73,14 @@ public:
 	//	str const&	last		() const		asserts  { assert(cnt); return data[cnt-1]; }
 	//	str&		last		()				asserts  { assert(cnt); return data[cnt-1]; }
 
-	using SUPER::operator==;	// uses ne()
-	using SUPER::operator!=;	// uses ne()
+	using SUPER::operator==;	// compare values
+	using SUPER::operator!=;	// compare values
 	bool	operator== (Array<cstr> const& q) const noexcept { return operator==(reinterpret_cast<SUPER const&>(q)); }
 	bool	operator!= (Array<cstr> const& q) const noexcept { return operator!=(reinterpret_cast<SUPER const&>(q)); }
-	bool	operator== (StrArray const& q)    const noexcept { return SUPER::operator==(q); }	// uses ne()
-	bool	operator!= (StrArray const& q)    const noexcept { return SUPER::operator!=(q); }	// uses ne()
-	bool	contains (str s) const			noexcept { return SUPER::contains(s); }				// uses eq()
-	bool	contains (cstr s) const			noexcept { return contains(const_cast<str>(s)); }	// uses eq()
-	uint	indexof (str s) const			noexcept { return SUPER::indexof(s); }				// uses eq()
-	uint	indexof (cstr s) const			noexcept { return indexof(const_cast<str>(s)); }	// uses eq()
+	bool	operator== (StrArray const& q)    const noexcept { return SUPER::operator==(q); }	// compare values
+	bool	operator!= (StrArray const& q)    const noexcept { return SUPER::operator!=(q); }	// compare values
+	bool	contains (cstr s) const			noexcept { return SUPER::contains(const_cast<str>(s)); }// compare values
+	uint	indexof (cstr s) const			noexcept { return SUPER::indexof(const_cast<str>(s)); }	// compare values
 
 // resize:
 	using SUPER::grow;
@@ -96,7 +94,7 @@ public:
 	void	purge		()					noexcept { release_all(); SUPER::purge(); }
 	str 	append		(cstr q)			throws	 { return grow() = newcopy(q); }
 	str 	append		(str q) 			throws	 { return grow() = newcopy(q); }
-	void	appendifnew	(cstr q)			throws	 { if(!contains(q)) append(q); }		// uses eq()
+	void	appendifnew	(cstr q)			throws	 { if(!contains(q)) append(q); }		// compares values
 	StrArray& operator<< (cstr q)			throws	 { append(q); return *this; }
 	StrArray& operator<< (int n)			throws	 { return operator<<(tostr(n)); }		// for StrArray.test.cpp
 	void	append		(str* q, uint n)	throws	 { append(StrArray(q,n)); }
@@ -104,9 +102,12 @@ public:
 	void	append		(StrArray&& q)		throws	 { SUPER::append(q); q.cnt=0; }
 	void	append		(StrArray const& q)	throws	 { append(StrArray(q)); }
 
-	void	remove		(uint i, bool fast=0) noexcept { assert(i<cnt); release(i); SUPER::remove(i,fast); }
+	void	remove		(cstr item, bool fast=0) noexcept { removeitem(item,fast); }
+	void	remove		(uint idx, bool fast=0)	noexcept { removeat(idx,fast); }
+
+	void	removeat	(uint i, bool fast=0) noexcept { assert(i<cnt); release(i); SUPER::removeat(i,fast); }
 	void	removerange	(uint a, uint e)	  noexcept;
-	void	removeitem	(cstr s, bool fast=0) noexcept { uint i=indexof(s); if(i!=~0u) remove(i,fast); } // uses eq()
+	void	removeitem	(cstr s, bool fast=0) noexcept { uint i=indexof(s); if(i!=~0u) removeat(i,fast); } // remove by value
 
 	void	insertat	(uint idx, cstr s)			throws;
 	void	insertat	(uint idx, cstr const* q, uint n) throws;

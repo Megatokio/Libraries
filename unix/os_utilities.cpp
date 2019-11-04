@@ -273,7 +273,7 @@ size_t memoryUsage (bool resident)
 	if (!file) return 0;
 
 	unsigned long vm = 0;
-	fscanf (file, "%ul", &vm);  // Just need the first num: vm size
+	fscanf (file, "%lu", &vm);  // Just need the first num: vm size
 	fclose (file);
 	return size_t(vm) * size_t(getpagesize());
 
