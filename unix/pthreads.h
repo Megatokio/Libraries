@@ -114,7 +114,7 @@ public:				PSemaphore	(cstr static_name_str="", uint32 _avail = 0);
 
 
 // Timer
-extern double now () noexcept;		// was: currentTime()
+template<typename T> extern T now () noexcept;	// was: currentTime()
 
 extern void waitDelay			( double delay );
 extern void	waitUntil			( double time );

@@ -272,9 +272,15 @@ extern void abort( int error_number )	  __attribute__((__noreturn__));
 /*	get current time in seconds since epoche
 	defined in kio/kio.cpp
 */
-extern double now() noexcept;
+template<typename T = double> extern T now() noexcept;
+template<> double now() noexcept;						// available specialization: double (template default)
+template<> time_t now() noexcept;						// available specialization: time_t (int64)
+template<> struct timespec now() noexcept;				// available specialization: struct timespec
+template<> struct timeval now() noexcept;				// available specialization: struct timeval ((deprecated))
+
 extern void waitDelay (double seconds);
 extern void waitUntil (double seconds_since_epoche);
+
 
 
 /*	basic maths
