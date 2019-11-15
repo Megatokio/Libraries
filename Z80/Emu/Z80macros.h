@@ -88,64 +88,64 @@
 
 // read byte from memory
 #ifndef	PEEK
-#define	PEEK(DEST,ADDR)	{ INCR_CC(3); DEST = peek(ADDR); }
+#define	PEEK(DEST,ADDR)	do{ INCR_CC(3); DEST = peek(ADDR); }while(0)
 #endif
 
 // write byte into memory
 #ifndef	POKE
-#define	POKE(ADDR,BYTE)	{ INCR_CC(3); poke(ADDR,BYTE); }
+#define	POKE(ADDR,BYTE)	do{ INCR_CC(3); poke(ADDR,BYTE); }while(0)
 #endif
 
 // read instruction byte at PC (M1 cycle)
 #ifndef	GET_INSTR
-#define	GET_INSTR(R)	{ INCR_CC(4); INCR_R(); INCR_IC(); R = peek(pc++); }
+#define	GET_INSTR(R)	do{ INCR_CC(4); INCR_R(); INCR_IC(); R = peek(pc++); }while(0)
 #endif
 
 // read 2nd instruction byte after 0xCB opcode
 #ifndef	GET_CB_OP
-#define	GET_CB_OP(R)	{ INCR_CC(4); INCR_R(); R = peek(pc++); }
+#define	GET_CB_OP(R)	do{ INCR_CC(4); INCR_R(); R = peek(pc++); }while(0)
 #endif
 
 // read 2nd instruction byte after 0xED opcode
 #ifndef	GET_ED_OP
-#define	GET_ED_OP(R)	{ INCR_CC(4); INCR_R(); R = peek(pc++); }
+#define	GET_ED_OP(R)	do{ INCR_CC(4); INCR_R(); R = peek(pc++); }while(0)
 #endif
 
 // read 2nd instruction byte after IX or IY opcode prefix
 #ifndef	GET_XY_OP
-#define	GET_XY_OP(R)	{ INCR_CC(4); INCR_R(); R = peek(pc++); }
+#define	GET_XY_OP(R)	do{ INCR_CC(4); INCR_R(); R = peek(pc++); }while(0)
 #endif
 
 // read 3rd instruction byte after IX or IY prefix and 0xCB opcode
 #ifndef	GET_XYCB_OP
-#define	GET_XYCB_OP(R)	{ INCR_CC(5); R = peek(pc++); }
+#define	GET_XYCB_OP(R)	do{ INCR_CC(5); R = peek(pc++); }while(0)
 #endif
 
 // read byte at PC
 #ifndef	GET_N
-#define	GET_N(R)		{ INCR_CC(3); R = peek(pc++); }
+#define	GET_N(R)		do{ INCR_CC(3); R = peek(pc++); }while(0)
 #endif
 
 // dummy read byte at PC
 #ifndef	SKIP_N
-#define	SKIP_N()		{ INCR_CC(3); peek(pc++); }
+#define	SKIP_N()		do{ INCR_CC(3); peek(pc++); }while(0)
 #endif
 
 // increment cpu cycle counter
 #ifndef SKIP_1CC
-#define SKIP_1CC(RR)	{ INCR_CC(1); }
+#define SKIP_1CC(RR)	INCR_CC(1)
 #endif
 #ifndef SKIP_2X1CC
-#define SKIP_2X1CC(RR)	{ INCR_CC(2); }
+#define SKIP_2X1CC(RR)	INCR_CC(2)
 #endif
 #ifndef SKIP_4X1CC
-#define SKIP_4X1CC(RR)	{ INCR_CC(4); }
+#define SKIP_4X1CC(RR)	INCR_CC(4)
 #endif
 #ifndef SKIP_5X1CC
-#define SKIP_5X1CC(RR)	{ INCR_CC(5); }
+#define SKIP_5X1CC(RR)	INCR_CC(5)
 #endif
 #ifndef SKIP_7X1CC
-#define SKIP_7X1CC(RR)	{ INCR_CC(7); }
+#define SKIP_7X1CC(RR)	INCR_CC(7)
 #endif
 
 // output byte to address
@@ -153,7 +153,7 @@
 // the default implementation of this function iterates over all other Items 'behind' the Z80.
 // #define Z80_NO_handle_output in Z80options.h to use your own implementation.
 #ifndef OUTPUT
-#define	OUTPUT(ADDR,BYTE) { INCR_CC(4); this->handle_output(cc-2,ADDR,BYTE); }
+#define	OUTPUT(ADDR,BYTE) do{ INCR_CC(4); this->handle_output(cc-2,ADDR,BYTE); }while(0)
 #endif
 
 // input byte from address
@@ -161,7 +161,7 @@
 // the default implementation of this function iterates over all other Items 'behind' the Z80.
 // #define Z80_NO_handle_input in Z80options.h to use your own implementation.
 #ifndef INPUT
-#define	INPUT(ADDR,DEST) { INCR_CC(4); DEST = this->handle_input(cc-2,ADDR); }
+#define	INPUT(ADDR,DEST) do{ INCR_CC(4); DEST = this->handle_input(cc-2,ADDR); }while(0)
 #endif
 
 // call each item's update(cc) member function.
@@ -169,7 +169,7 @@
 // the default implementation of this function iterates over all other Items 'behind' the Z80.
 // #define Z80_NO_handle_update in Z80options.h to use your own implementation.
 #ifndef UPDATE
-#define UPDATE() { cc_next_update = this->handle_update(cc, cc_exit); }
+#define UPDATE() do{ cc_next_update = this->handle_update(cc, cc_exit); }while(0)
 #endif
 
 
@@ -298,10 +298,28 @@
 //		no user serviceable parts inside.
 // --------------------------------------------------------------------
 
+#define	GET_NN(RR)		do{ GET_N(RR); GET_N(wm); RR += 256*wm; }while(0)
+#define	POP(R)			do{ PEEK(R,SP); SP++; }while(0)
+#define	PUSH(R)			do{ --SP; POKE(SP,Byte(R)); }while(0)
 
-#define	GET_NN(RR)		{ GET_N(RR); GET_N(wm); RR += 256*wm; }
-#define	POP(R)			{ PEEK(R,SP); SP++; }
-#define	PUSH(R)			{ --SP; POKE(SP,R); }
+
+#define	LOAD_REGISTERS do{ 									\
+	r		= registers.r;	/* refresh counter R		*/	\
+	cc		= this->cc;		/* cpu cycle counter		*/	\
+	cc_next_update = this->cc_next_update; \
+	pc		= registers.pc;	/* program counter PC		*/	\
+	ra		= registers.a;	/* register A				*/	\
+	rf		= registers.f;	/* register F				*/	\
+	}while(0)
+
+#define	SAVE_REGISTERS do{														\
+	registers.r		= (registers.r&0x80)|(r&0x7f);	/* refresh counter R	*/	\
+	this->cc		= cc;							/* cpu cycle counter	*/	\
+	this->cc_next_update   = cc_next_update; \
+	registers.pc	= pc;							/* program counter PC	*/	\
+	registers.a		= ra;							/* register A			*/	\
+	registers.f		= rf;							/* register F			*/	\
+	}while(0)
 
 
 /*	RLC ... SRL:	set/clr C, Z, P, S;

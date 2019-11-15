@@ -29,7 +29,6 @@
 #define	CPU_PAGES		(0x10000>>CPU_PAGEBITS)
 
 
-
 // ----	helper ----
 
 #include "kio/detect_configuration.h"
@@ -37,7 +36,7 @@
 static inline uint8& lowbyte(CoreByte& n) noexcept { return *(((uint8*)&n)+(sizeof(CoreByte)-1)); }
 #endif
 #ifdef _LITTLE_ENDIAN // i386
-static inline uint8& lowbyte(CoreByte& n) noexcept { return (uint8&)n; }
+static inline uint8& lowbyte(CoreByte& n) noexcept { return reinterpret_cast<uint8&>(n); }
 #endif
 
 
@@ -68,15 +67,22 @@ union Z80Registers
 
 class Z80 : public Item
 {
-public:			// public access to internal data
-				// in general FOR READING ONLY!
+public:
+
+	typedef int32  CpuCycle;		// cpu clock cycle
+	typedef uint16 Address;
+	typedef uint8  Byte;
+	typedef uint16 Word;
+
+	// public access to internal data
+	// in general FOR READING ONLY!
 
 	CoreByte	noreadpage[CPU_PAGESIZE];	// used for reading from unmapped addresses, default fill value is 0xFF
 	CoreByte	nowritepage[CPU_PAGESIZE];	// used for writing to unmapped addresses
 
 	PageInfo	page[CPU_PAGES];	// mapped memory
 	Z80Registers registers;			// z80 registers
-	int32		cc;					// cpu clock cycle	(inside run() a local variable cc is used!)
+	CpuCycle	cc;					// cpu clock cycle	(inside run() a local variable cc is used!)
 	uint		nmi;				// idle=0, flipflop set=1, execution pending=2
 	bool		halt;				// HALT instruction executed
 	// these are expected to be defined in class Item and reused by the Z80 here to 'collect the state':
@@ -86,13 +92,13 @@ public:			// public access to internal data
 	// bool		irpt;				// interrupt asserted
 
 private:
-				Z80				(const Z80&);		// prohibit
-	Z80&		operator=		(const Z80&);		// prohibit
+				Z80				(const Z80&) = delete; // prohibit
+	Z80&		operator=		(const Z80&) = delete; // prohibit
 
-	void		reset_registers	();
-	void		handle_output	(int32 cc, uint a, uint b);
-	uint		handle_input	(int32 cc, uint a);
-	int32		handle_update	(int32 cc, int32 cc_next);
+	void		reset_registers	() noexcept;
+	void		handle_output	(CpuCycle, Address, Byte);
+	Byte		handle_input	(CpuCycle, Address);
+	CpuCycle	handle_update	(CpuCycle, CpuCycle cc_next);
 	void		_init();
 
 
@@ -103,17 +109,17 @@ public:
 
 // Item interface:
 	virtual void	init		() override;
-	virtual void	reset		(int32 cc) override;
-	//virtual bool	input		(int32 cc, uint16 addr, uint8& byte) override;
-	//virtual bool	output		(int32 cc, uint16 addr, uint8 byte) override;
-	//virtual void	update		(int32) override;
-	virtual void	shift_cc	(int32, int32) override;
+	virtual void	reset		(CpuCycle) override;
+	//virtual bool	input		(CpuCycle, CpuAddress, Byte& byte) override;
+	//virtual bool	output		(CpuCycle, CpuAddress, Byte) override;
+	//virtual void	update		(CpuCycle) override;
+	virtual void	shift_cc	(CpuCycle, int32) override;
 
 
 // Run the Cpu:
-	int			run				(int32 cc_exit, uint options=0);
+	int			run				(CpuCycle cc_exit, uint options=0);
 
-	void		setNmi			() noexcept		{ if(nmi==0) { nmi=3; cc_next_update=cc; } nmi|=1; }
+	void		setNmi			() noexcept		{ if (nmi==0) { nmi=3; cc_next_update=cc; } nmi|=1; }
 	void		clearNmi		() noexcept		{ nmi &= ~1u; }		// clear FF.set only
 
 	// note: there is no setInterrupt() and clearInterrupt(), because the cpu
@@ -121,45 +127,43 @@ public:
 
 
 // Map/Unmap memory:
-	void		mapNoRom		(uint16 addr, uint16 size, CoreByte* data) noexcept; // map a special noreadpage[]
-	void		mapNoWom		(uint16 addr, uint16 size, CoreByte* data) noexcept; // map a special nowritepage[]
-	void		mapRom			(uint16 addr, uint16 size, CoreByte* data) noexcept;
-	void		mapWom			(uint16 addr, uint16 size, CoreByte* data) noexcept;
-	void		mapRam			(uint16 addr, uint16 size, CoreByte* data) noexcept;
-	void		mapRam			(uint16 addr, uint16 size, CoreByte* r, CoreByte* w) noexcept;
+	void		mapRom			(Address, uint16 size, CoreByte*) noexcept;
+	void		mapWom			(Address, uint16 size, CoreByte*) noexcept;
+	void		mapRam			(Address, uint16 size, CoreByte*) noexcept;
+	void		mapRam			(Address, uint16 size, CoreByte* r, CoreByte* w) noexcept;
 
-	void		unmapRom		(uint16 addr, uint16 size) noexcept;
-	void		unmapWom		(uint16 addr, uint16 size) noexcept;
-	void		unmapRam		(uint16 addr, uint16 size) noexcept;
+	void		unmapRom		(Address, uint16 size) noexcept;
+	void		unmapWom		(Address, uint16 size) noexcept;
+	void		unmapRam		(Address, uint16 size) noexcept;
 
-	void		unmapAllMemory	() noexcept				{ unmapRam(0,0); }
-	void		unmapMemory		(CoreByte* a, uint32 size) noexcept;
+	void		unmapAllMemory	() noexcept						{ unmapRam(0,0); }
+	void		unmapMemory		(CoreByte*, uint32 size) noexcept;
 
 // Access memory:
-	PageInfo&		getPage		(uint16 addr) noexcept			{ return page[addr>>CPU_PAGEBITS]; }
-	const PageInfo& getPage		(uint16 addr) const noexcept	{ return page[addr>>CPU_PAGEBITS]; }
+	PageInfo&		getPage		(Address a) noexcept			{ return page[a>>CPU_PAGEBITS]; }
+	const PageInfo& getPage		(Address a) const noexcept		{ return page[a>>CPU_PAGEBITS]; }
 
-	CoreByte*	rdPtr			(uint16 addr) noexcept			{ return getPage(addr).data_r + addr; }
-	CoreByte*	wrPtr			(uint16 addr) noexcept			{ return getPage(addr).data_w + addr; }
+	CoreByte*	rdPtr			(Address a) noexcept			{ return getPage(a).data_r + a; }
+	CoreByte*	wrPtr			(Address a) noexcept			{ return getPage(a).data_w + a; }
 
-	uint8		peek			(uint16 addr) const noexcept		{ return lowbyte(getPage(addr).data_r[addr]); }
-	void		poke			(uint16 addr, uint8 c) noexcept	{		 lowbyte(getPage(addr).data_w[addr]) = c; }
-	uint16		peek2			(uint16 addr) const noexcept;
-	void		poke2			(uint16 addr, uint16 n) noexcept;
-	uint16		pop2			() noexcept;
-	void		push2			(uint16 n) noexcept;
+	Byte		peek			(Address a) const noexcept		{ return lowbyte(getPage(a).data_r[a]); }
+	void		poke			(Address a, Byte c) noexcept	{		 lowbyte(getPage(a).data_w[a]) = c; }
+	Word		peek2			(Address) const noexcept;
+	void		poke2			(Address, Word n) noexcept;
+	Word		pop2			() noexcept;
+	void		push2			(Word n) noexcept;
 
-	void		copyBufferToRam	(uint8 const* q, uint16 z_addr, uint16 cnt) noexcept;
-	void		copyRamToBuffer	(uint16 q_addr, uint8* z, uint16 cnt) noexcept;
-	void		copyBufferToRam	(const CoreByte* q, uint16 z_addr, uint16 cnt) noexcept;
-	void		copyRamToBuffer	(uint16 q_addr, CoreByte *z, uint16 cnt) noexcept;
-	void		readRamFromFile	(class FD& fd, uint16 z_addr, uint16 cnt);
-	void		writeRamToFile	(class FD& fd, uint16 q_addr, uint16 cnt);
+	void		copyBufferToRam	(uint8 const* q, Address dest, uint16 cnt) noexcept;
+	void		copyRamToBuffer	(Address src, uint8* z, uint16 cnt) noexcept;
+	void		copyBufferToRam	(const CoreByte* q, Address dest, uint16 cnt) noexcept;
+	void		copyRamToBuffer	(Address src, CoreByte* z, uint16 cnt) noexcept;
+	void		readRamFromFile	(class FD& fd, Address dest, uint16 cnt);
+	void		writeRamToFile	(class FD& fd, Address src, uint16 cnt);
 
 
-static inline void c2b(CoreByte const* q, uint8*    z, uint n) noexcept { for(uint i=0; i<n; i++) z[i] = q[i]; }
+static inline void c2b(CoreByte const* q, uint8*    z, uint n) noexcept { for(uint i=0; i<n; i++) z[i] = uint8(q[i]); }
 static inline void b2c(uint8    const* q, CoreByte* z, uint n) noexcept { for(uint i=0; i<n; i++) lowbyte(z[i]) = q[i]; }
-static inline void c2c(CoreByte const* q, CoreByte* z, uint n) noexcept { for(uint i=0; i<n; i++) lowbyte(z[i]) = q[i]; }
+static inline void c2c(CoreByte const* q, CoreByte* z, uint n) noexcept { for(uint i=0; i<n; i++) lowbyte(z[i]) = uint8(q[i]); }
 };
 
 
