@@ -20,65 +20,48 @@
 #include <pthread.h>
 #include "tempmem.h"
 
-static pthread_key_t tempmem_key;			// key for per-thread TempMemPool
+
 #define ALIGNMENT_MASK	(_MAX_ALIGNMENT-1)
-#define MAX_REQ_SIZE	500
-#define BUFFER_SIZE		4000
+static const uint MAX_REQ_SIZE = 500;
+static const uint BUFFER_SIZE = 8000;
 
 
-/* ----	Deallocate pool ----------------------
-		called at thread termination
-		while pointer in tempmem_key is != NULL.
-		This should happen only once, for
-		the automatically created pool.
-*/
+// ----	Initialization ---------------------------------
+
+static pthread_key_t tempmem_key;	// key for per-thread TempMemPool
+
 static void deallocate_pool (void* pool)
 {
+	// note: not called for the main thread (Linux tested 2019-11)
+
+	xlogline("tempmem: delete pool");
 	delete reinterpret_cast<TempMemPool*>(pool);
 }
 
-
-/* ----	Initialization ---------------------------------
-*/
-static pthread_once_t once_control = PTHREAD_ONCE_INIT;
-static volatile bool  virgin	   = 1;				// for faster init test
-
-static void create_key (void)
+DEBUG_INIT_MSG
+ON_INIT([]
 {
+	xlogline("tempmem: create key");
 	int err = pthread_key_create( &tempmem_key, deallocate_pool );
-	if (err) abort( "init TempMemPool: %s", strerror(err) );
-}
-
-static void init () noexcept
-{
-	xlogIn("init TempMemPool");
-
-// initialize: get a pthread_key:
-	IFDEBUG( int err = ) pthread_once( &once_control, create_key );
-	assert(err==0);
-
-	virgin = false;
-}
+	if (err) abort( "tempmem: init: %s", strerror(err) );
+});
 
 
-/* ---- TempMemPool member functions --------------------
-*/
-TempMemPool::TempMemPool() noexcept
-:	size(0),
+// ---- ctor / dtor ------------------------------------
+
+TempMemPool::TempMemPool() noexcept :
+	size(0),
 	data(nullptr)
 {
 	xlogIn("new TempMemPool");
-
-	if (virgin) init();
 
 	prev = reinterpret_cast<TempMemPool*>(pthread_getspecific( tempmem_key ));
 	xxlogline("  prev pool = %lx",(ulong)prev);
 	xxlogline("  this pool = %lx",(ulong)this);
 	//int err =
 	pthread_setspecific( tempmem_key, this );				// may fail with ENOMEM (utmost unlikely)
-	//if (err) { Abort("new TempMemPool: ",strerror(err)); }	// in which case this pool is not registered
-}															// and GetPool() keeps using the outer pool
-
+	//if (err) {abort("new TempMemPool: ",strerror(err));}	// then this pool is not registered
+}															// and getPool() keeps using the outer pool
 
 TempMemPool::~TempMemPool() noexcept
 {
@@ -92,8 +75,12 @@ TempMemPool::~TempMemPool() noexcept
 }
 
 
+// ---- Member functions -------------------------------
+
 void TempMemPool::purge () noexcept		// Purge() == destroy + create pool
 {
+	// purge all memory in this pool
+
 	xlogIn("TempMemPool::Purge");
 	xxlog("  this pool = %lx ",(ulong)this);
 
@@ -107,9 +94,10 @@ void TempMemPool::purge () noexcept		// Purge() == destroy + create pool
 	xxlogline(" ok");
 }
 
-
 char* TempMemPool::alloc (uint bytes) noexcept
 {
+	// allocate memory in this pool
+
 	if (bytes <= size)					// fits in current buffer?
 	{
 		size -= bytes;
@@ -117,12 +105,12 @@ char* TempMemPool::alloc (uint bytes) noexcept
 	}
 	else if (bytes <= MAX_REQ_SIZE)		// small request?
 	{
-		TempMemData* newdata = reinterpret_cast<TempMemData*>(new char[ sizeof(TempMemData) + 4000 ]);
+		TempMemData* newdata = reinterpret_cast<TempMemData*>(new char[ sizeof(TempMemData) + BUFFER_SIZE ]);
 		xxlogline("tempmem new data = $%lx",(ulong)newdata);
 		assert( (uintptr_t(newdata) & ALIGNMENT_MASK) == 0 );
 		newdata->prev = data;
 		data = newdata;
-		size = 4000-bytes;
+		size = BUFFER_SIZE-bytes;
 		return newdata->data + size;
 	}
 	else								// large request
@@ -145,11 +133,12 @@ char* TempMemPool::alloc (uint bytes) noexcept
 	}
 }
 
-
 char* TempMemPool::allocMem (uint bytes) noexcept
 {
+	// allocate aligned memory in this pool
+
 	char* p = alloc(bytes);
-	if ( data->prev && p == data->prev->data )	// wurde "large request" 'untergehoben' ?
+	if (data->prev && p == data->prev->data)	// wurde "large request" 'untergehoben' ?
 	{
 		return p;
 	}
@@ -161,24 +150,21 @@ char* TempMemPool::allocMem (uint bytes) noexcept
 	}
 }
 
-
-/* ---- Get the current temp mem pool -------------------------
-		if there is no pool, then it is created.
-*/
 TempMemPool* TempMemPool::getPool() noexcept
 {
-	if (virgin) init();
+	// Get the current temp mem pool
+	// if there is no pool, then it is created.
+
 	TempMemPool* pool = reinterpret_cast<TempMemPool*>(pthread_getspecific( tempmem_key ));
 	return pool ? pool : new TempMemPool();
 }
 
-
-/* ---- Get the surrounding temp mem pool -------------------------
-		if there is no surrounding pool, then it is created.
-		a 'current pool' should be in place, else 2 pools are created.
-*/
 TempMemPool* TempMemPool::getXPool() noexcept
 {
+	// Get the surrounding temp mem pool
+	// if there is no surrounding pool, then it is created.
+	// If also no current pool exists, then 2 pools are created.
+
 	TempMemPool* pool = getPool();
 	TempMemPool* prev = pool->prev;
 	if ( !prev )
@@ -191,60 +177,55 @@ TempMemPool* TempMemPool::getXPool() noexcept
 	return prev;									// in which case we keep on using the outer pool
 }
 
-
-/* ---- Get a temp cstring -------------------------
-*/
-char* tempstr (uint len) noexcept
-{
-	return TempMemPool::getPool()->allocStr(len);
-}
-
-
-/* ---- Get a temp cstring -------------------------
-		from the surrounding pool
-*/
-char* xtempstr (uint len) noexcept
-{
-	return TempMemPool::getXPool()->allocStr(len);
-}
-
-
-/* ---- Get memory for temp. usage -------------------------
-*/
 char* tempmem (uint size) noexcept
 {
+	// Allocate temp memory
+	// in the thread's current tempmem pool
+
 	return TempMemPool::getPool()->allocMem(size);
 }
 
+char* tempstr (uint len) noexcept
+{
+	// Allocate a temp cstring
+	// in the thread's current tempmem pool
 
-/* ---- Get memory for temp. usage -------------------------
-		from the surrounding pool
-*/
+	return TempMemPool::getPool()->allocStr(len);
+}
+
 char* xtempmem (uint size) noexcept
 {
+	// Allocate temp memory
+	// from the surrounding pool
+
 	return TempMemPool::getXPool()->allocMem(size);
 }
 
-
-/* ---- Purge current pool -------------------------
-*/
-void purgeTempMem() noexcept
+char* xtempstr (uint len) noexcept
 {
-	TempMemPool::getPool()->purge();
+	// Allocate a temp cstring
+	// in the surrounding pool
+
+	return TempMemPool::getXPool()->allocStr(len);
 }
 
+void purgeTempMem() noexcept
+{
+	// Purge current pool
 
-
+	TempMemPool::getPool()->purge();
+}
 
 #ifndef NDEBUG
 namespace TempMemTest
 {
+	static_assert((sizeof(TempMemData)&(ALIGNMENT_MASK)) == 0, "");
+
 	static struct T
 	{
 		T()
 		{
 			// check assumptions:
-			assert( (sizeof(TempMemData)&(ALIGNMENT_MASK)) == 0 );
 			ptr p1 = new char[17], p2 = new char[15];
 			assert( (uintptr_t(p1)&ALIGNMENT_MASK)==0 );
 			assert( (uintptr_t(p2)&ALIGNMENT_MASK)==0 );
@@ -254,6 +235,33 @@ namespace TempMemTest
 	} dummy;
 }
 #endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

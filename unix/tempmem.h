@@ -20,10 +20,11 @@
 	Temporary Memory Pool
 	=====================
 
-	Provide memory for temporary strings, e.g. for return values or in expressions.
+	Provides fast memory for temporary strings, e.g. for return values or in expressions.
 	Any moderately-sized data which does not have a destructor can be stored in temp mem.
+	See cstrings/ for the main use case.
 
-	• thread safe
+	• thread local / thread safe
 	• pools can be nested
 	• automatic pool creation
 
@@ -31,9 +32,10 @@
 	Basic Usage
 	-----------
 
-	Temporary memory pools are created automatically for every thread.
+	Temporary memory pools are created automatically for every thread and purged when the thread
+	terminates or on demand with purgeTempMem().
 
-	tempstr() and tempmem() retrieve memory from the pool:
+	Use tempstr() and tempmem() to retrieve memory from the pool:
 
 	• allocation with tempstr(len)
 		• 1 byte for c-string delimiter is added and cleared to 0
@@ -41,58 +43,54 @@
 		• string is not aligned
 
 	• allocation with tempmem(size)
-		• memory is aligned to a multiple of 4
+		• memory is aligned to a multiple of MAX_ALIGNMENT (typically sizeof pointer)
 		• memory is not cleared
-
-	Purge all temporary memory of the current thread with PurgeTempMem().
 
 
 	Nested Pools
 	------------
 
-	A function can create it's own, local pool.
-	Then all subsequent temp mem allocations come from this local pool
-	until the pool is destroyed.
+	A function can create a local pool. Then all subsequent temp mem allocations come from the
+	local pool and they are purged in one go when the pool is destroyed, e.g. when the function returns.
 
 	• create a local instance of TempMemPool in the function body.
+	• use tempstr() and tempmem() as usual: memory now comes from the local pool.
+	• purgeTempMem() purges only memory in the local pool.
+	• when the function returns, the local pool is destroyed and all memory allocated in it is released.
 
-	• use tempStr() and tempMem() as usual: memory now comes from the new pool.
-
-	• PurgeTempMem() purges only memory from the current pool.
-
-	• when the function returns, the local TempMemPool instance is destroyed
-	  and all temporary memory allocated since it's creation is released.
-
-	• to return results from this function in temp mem, use TempXtStr() and TempXtMem(),
-	  which allocate memory in the surrounding TempMemPool.
+	• to return results in temp mem from this function while the local pool is alive,
+	  use xtempstr() and xtempmem(), which allocate memory in the surrounding pool.
 
 
 	Accessing Pools Directly
 	------------------------
 
-	• if you have created a local pool, then you can use AllocStr(), AllocMem() and Purge()
-	  directly with this instance.
+	• if you have created a local pool, then you can use the member functions allocStr(), allocMem()
+	  and purge() directly with this instance.
 
-	• TempMemPool::GetPool() retrieves and may create the current pool, it never returns NULL.
+	• TempMemPool::getPool() retrieves and may create the current pool, it never returns NULL.
 
-	• TempMemPool::GetXtPool() similarly retrieves and may create the current surrounding pool.
+	• TempMemPool::getXtPool() similarly retrieves and may create the current surrounding pool.
 
 
 	Cave At
 	-------
 
-	TempMemPool uses a pthread_key. This is unique within the application, but may collide with
+	TempMemPool uses a pthread_key. This is unique within the application, but might collide with
 	keys defined somewhere else. Basically this may be interrupt threads issued from the OS,
 	such as sound interrupts. Therefore you should define a local TempMemPool at each entry point
-	of external threads into your application.
+	of external threads into your application. ((evtl. this is just paranoid.))
 
-	If you catch an Exception which contains a reference to a tempstr outside the scope of it's TempMemPool,
-	then accessing the error message will crash.
-	You must then pass a copy in the surrounding pool, e.g. made with xdupstr() (see "cstrings.h")
+	Don't store tempmem cstrings in exceptions unless you are shure that the exception is caught
+	within the current tempmem pool's scope. Better use new/delete for cstrings in exceptions,
+	because you don't know how deep they will fall.
+
+	Don't store temp mem strings in objects which live longer than the current pool.
+	Don't mix storage of new-allocated and temp mem strings in the same pointer.
+	Don't pass temp strings from your pool to other threads, except you know you live longer.
 */
 
 #include "kio/kio.h"
-
 
 extern	char*	tempmem (uint size)		noexcept;
 extern	char*	tempstr (uint size)		noexcept;
@@ -107,9 +105,7 @@ inline	char*	xtempstr (int size)		noexcept { assert(size>=0); return xtempstr(ui
 extern	void	purgeTempMem ()			noexcept;
 
 
-
-/* #######################################################################
-*/
+// #######################################################################
 
 struct TempMemData
 {
@@ -141,12 +137,9 @@ static TempMemPool*	getXPool		()			noexcept;
 };
 
 
+// #######################################################################
 
-/* #######################################################################
-*/
-
-inline
-char* TempMemPool::allocStr (uint len) noexcept
+inline char* TempMemPool::allocStr (uint len) noexcept
 {
 	char* p = alloc(len+1);
 	p[len] = 0;
