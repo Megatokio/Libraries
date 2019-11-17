@@ -175,7 +175,7 @@ struct on_init { on_init(void(*f)()){f();} };
   #define IFDEBUG(X)  X
   #define IFNDEBUG(X)
   #undef  debugstr
-  #define debugstr(FMT,...)	 vfprintf(stderr,FMT,__VA_ARGS__)
+  #define debugstr(...)	 fprintf(stderr,__VA_ARGS__)
   #undef  assert
   #define assert(X)  do{ if (unlikely(!(X))) abort("%s:%u: assert failed: %s\n",__FILE__, __LINE__, #X); }while(0)
 #endif
