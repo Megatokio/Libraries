@@ -17,7 +17,6 @@
 */
 
 #include "kio/kio.h"
-#include "unix/tempmem.h"
 #include "utf8.h"
 
 

@@ -50,7 +50,6 @@
 #endif
 
 #include "Templates/Array.h"
-#include "tempmem.h"
 #include "MyFileInfo.h"
 #include "pthreads.h"
 #include "files.h"

@@ -28,8 +28,8 @@ SOURCES += \
 	Libraries/cstrings/ucs4.cpp \
 	Libraries/cstrings/legacy_charsets.cpp \
 	Libraries/unix/FD.cpp \
-	Libraries/unix/tempmem.cpp \
-	Libraries/unix/tempmem.test.cpp \
+	Libraries/cstrings/tempmem.cpp \
+	Libraries/cstrings/tempmem.test.cpp \
 	Libraries/unix/n-compress.cpp \
 	\
 	Libraries/Templates/Array.test.cpp \
@@ -46,7 +46,7 @@ HEADERS += \
 	Source/settings.h \
 	Source/custom_errors.h \
 	Libraries/unix/FD.h \
-	Libraries/unix/tempmem.h \
+	Libraries/cstrings/tempmem.h \
 	Libraries/unix/s_type.h \
 	Libraries/kio/errors.h \
 	Libraries/kio/exceptions.h \

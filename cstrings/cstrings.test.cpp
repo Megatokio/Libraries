@@ -24,7 +24,6 @@
 #include "cstrings.h"
 #include "ucs1.h"
 #include "utf8.h"
-#include "unix/tempmem.h"
 #include "Templates/Array.h"
 #include "kio/util/defines.h"
 #include "main.h"

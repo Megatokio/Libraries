@@ -28,7 +28,6 @@
 #include <sys/ioctl.h>
 #include <termios.h>
 #include "Templates/StrArray.h"
-#include "tempmem.h"
 #include "FD.h"
 #include <unistd.h>
 #include <sys/select.h>
