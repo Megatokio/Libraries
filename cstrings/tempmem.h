@@ -57,8 +57,8 @@
 	Accessing Pools Directly
 	------------------------
 
-	• if you have created a local pool, then you can use the member functions allocStr(), allocMem()
-	  and purge() directly with this instance.
+	• if you have created a local pool, then you can use the member functions alloc(), allocStr(),
+	  allocMem() and purge() directly with this instance.
 
 	• TempMemPool::getPool() retrieves and may create the current pool, it never returns NULL.
 
@@ -99,8 +99,8 @@ public:
 	TempMemPool  () noexcept;
 	~TempMemPool () noexcept;
 
-	void  purge  () noexcept;
-	char* alloc    (uint size) noexcept;	// unaligned, uncleared
+	void  purge () noexcept;
+	char* alloc (uint size) noexcept;	// unaligned, uncleared
 
 	char* allocStr (uint len) noexcept
 	{
@@ -129,7 +129,7 @@ public:
 		// get 'count' elements of type T aligned to sizeof(T)
 		// memory contents are not cleared
 
-		this->size &= ~(sizeof(T)-1);
+		this->size &= ~(sizeof(T)-1);			// align
 		return reinterpret_cast<T*>(alloc(count*sizeof(T)));
 	}
 
@@ -163,6 +163,13 @@ template<typename T> inline T* temp (uint count) noexcept
 	return TempMemPool::getPool()->alloc<T>(count);
 }
 
+template<typename T> inline T* xtemp (uint count) noexcept
+{
+	// allocate 'count' elements of type T in outer pool
+	// aligned to sizeof(T), not cleared
+
+	return TempMemPool::getXPool()->alloc<T>(count);
+}
 
 inline void __attribute((deprecated)) purgeTempMem () noexcept
 {

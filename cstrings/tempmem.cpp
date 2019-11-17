@@ -23,7 +23,7 @@
 #define PTHREADS 1
 #elif defined(TEMPMEM_USE_THREAD_LOCAL)
 #define PTHREADS 0
-elif __cplusplus < 201101
+#elif __cplusplus < 201101
 #define PTHREADS 1
 #else
 #define PTHREADS 0
@@ -34,8 +34,8 @@ elif __cplusplus < 201101
 #endif
 
 #define ALIGNMENT_MASK	(sizeof(ptr)-1u)
-#define MAX_REQUEST_SIZE 500
-#define DATA_BLOCK_SIZE	(8000)
+#define MAX_REQUEST_SIZE 1000
+#define DATA_BLOCK_SIZE	 8000
 
 
 #if PTHREADS
@@ -241,22 +241,18 @@ str dupstr (cstr s) noexcept
 {
 	// Create copy of string in tempmem
 
-	if (!s||!*s) return emptystr;
-	size_t n = strlen(s);
-	str c = tempstr(uint(n));
-	memcpy(c,s,n);
-	return c;
+	if (unlikely(!s||!*s)) return emptystr;
+	str dest = temp<char>(uint(strlen(s))+1);
+	return strcpy(dest,s);
 }
 
 str xdupstr (cstr s) noexcept
 {
 	// Create copy of string in the outer tempmem pool
 
-	if (!s||!*s) return emptystr;
-	size_t n = strlen(s);
-	str c = xtempstr(uint(n));
-	memcpy(c,s,n);
-	return c;
+	if (unlikely(!s||!*s)) return emptystr;
+	str dest = xtemp<char>(uint(strlen(s))+1);
+	return strcpy(dest,s);
 }
 
 str newstr (uint n) noexcept
@@ -276,13 +272,8 @@ str newcopy (cstr s) noexcept
 	// deallocate with delete[]
 	// returns NULL if source string is NULL
 
-	str c = nullptr;
-	if (s)
-	{
-		c = newstr(uint(strlen(s)));
-		strcpy(c,s);
-	}
-	return c;
+	if (s) return strcpy(new char[strlen(s)+1],s);
+	else return nullptr;
 }
 
 #ifndef NDEBUG
@@ -290,18 +281,23 @@ namespace TempMemTest
 {
 	static_assert((sizeof(TempMemData)&(ALIGNMENT_MASK)) == 0, "");
 
-	static struct T
+	ON_INIT([]
 	{
-		T()
-		{
-			// check assumptions:
-			ptr p1 = new char[17], p2 = new char[15];
-			assert( (uintptr_t(p1)&ALIGNMENT_MASK)==0 );
-			assert( (uintptr_t(p2)&ALIGNMENT_MASK)==0 );
-			delete[] p1;
-			delete[] p2;
-		}
-	} dummy;
+		// check assumptions:
+		ptr p1 = new char[17], p2 = new char[15];
+		assert( (uintptr_t(p1)&ALIGNMENT_MASK)==0 );
+		assert( (uintptr_t(p2)&ALIGNMENT_MASK)==0 );
+		delete[] p1;
+		delete[] p2;
+
+		char s[] = {1,2,3,4};
+		p1 = strcpy(s,"abc");
+		assert(p1 == s);		// must return dest addr
+		assert(s[3] == 0);		// must copy final '\0'
+		p2 = newcopy(p1);
+		assert(p1!=p2&&eq(p2,p1));
+		delete[] p2;
+	});
 }
 #endif
 
