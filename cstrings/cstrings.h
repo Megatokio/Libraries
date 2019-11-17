@@ -18,9 +18,8 @@
 */
 
 #include "kio/kio.h"
+#include "unix/tempmem.h"
 template<typename T> class Array;
-
-extern	str  emptystr;				// non-const version of ""
 
 
 inline	bool is_space (char c)		noexcept { return uchar(c)<=' ' && c!=0; }
@@ -72,8 +71,8 @@ extern	bool islowerstr	(cstr)				noexcept;
 
 
 // ----	allocate with new[] ----
-extern	str  newstr		(uint n)			noexcept; // allocate memory with new[]
-extern	str	 newcopy	(cstr)				noexcept; // allocate memory with new[] and copy text
+extern	str  newstr		(uint n)			noexcept; // tempmem.h: allocate memory with new[]
+extern	str	 newcopy	(cstr)				noexcept; // tempmem.h: allocate memory with new[] and copy text
 
 
 // ---- allocate in TempMemPool ----
@@ -84,11 +83,11 @@ inline	str	 tempstr	(ulong size)		noexcept { assert(size==uint(size)); return te
 inline	str	 tempstr	(long size)			noexcept { assert(size>=0); return tempstr(ulong(size)); }
 extern	ptr	 xtempmem	(uint n)			noexcept; // tempmem.h
 extern	str	 xtempstr	(uint n)			noexcept; // tempmem.h
+extern	str	 dupstr		(cstr)				noexcept; // tempmem.h
+extern	str	 xdupstr    (cstr)				noexcept; // tempmem.h
 extern	str	 spacestr	(int n, char c=' ')	noexcept;
 extern	cstr spaces		(uint n)			noexcept;
 extern	str	 whitestr	(cstr, char c=' ')	noexcept;
-extern	str	 dupstr		(cstr)				noexcept;
-extern	str	 xdupstr    (cstr)				noexcept;
 
 extern	str	 substr		(cptr a, cptr e)	noexcept;
 inline	str	 substr		(cuptr a, cuptr e)	noexcept { return substr(cptr(a),cptr(e)); }	// convenience method

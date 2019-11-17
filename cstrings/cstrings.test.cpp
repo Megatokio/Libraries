@@ -231,7 +231,8 @@ void test_cstrings(uint& num_tests, uint& num_errors)
 			TempMemPool z;
 			s2 = dupstr(s1);
 			s2 = xdupstr(s2);
-			purgeTempMem();
+			assert(TempMemPool::getPool() == &z);
+			TempMemPool::getPool()->purge();
 			(void) spacestr(66);
 		}
 		assert(eq(s1,s2));

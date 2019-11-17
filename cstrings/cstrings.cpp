@@ -32,8 +32,6 @@
 //	static const float NAN = 0.0f/0.0f;
 //#endif
 
-static char null = 0;
-str emptystr = &null;
 
 
 // statt utf8.h:
@@ -42,54 +40,6 @@ inline bool	utf8_no_7bit (char c)	{ return int8(c) < 0;  }
 inline bool utf8_is_fup	 (char c)	{ return int8(c) < int8(0xc0); }
 inline bool utf8_no_fup	 (char c)	{ return int8(c) >= int8(0xc0); }
 
-
-str newstr (uint n) noexcept
-{
-	// allocate char[]
-	// deallocate with delete[]
-	// presets terminating 0
-
-	str c = new char[n+1];
-	c[n] = 0;
-	return c;
-}
-
-str newcopy (cstr s) noexcept
-{
-	// allocate char[]
-	// deallocate with delete[]
-	// returns NULL if source string is NULL
-
-	str c = nullptr;
-	if (s)
-	{
-		c = newstr(uint(strlen(s)));
-		strcpy(c,s);
-	}
-	return c;
-}
-
-str dupstr (cstr s) noexcept
-{
-	// Create copy of string in tempmem
-
-	if (!s||!*s) return emptystr;
-	size_t n = strlen(s);
-	str c = tempstr(uint(n));
-	memcpy(c,s,n);
-	return c;
-}
-
-str xdupstr (cstr s) noexcept
-{
-	// Create copy of string in the outer tempmem pool
-
-	if (!s||!*s) return emptystr;
-	size_t n = strlen(s);
-	str c = xtempstr(uint(n));
-	memcpy(c,s,n);
-	return c;
-}
 
 cptr find (cstr target, cstr search) noexcept
 {

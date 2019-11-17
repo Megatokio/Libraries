@@ -24,42 +24,34 @@
 	Any moderately-sized data which does not have a destructor can be stored in temp mem.
 	See cstrings/ for the main use case.
 
-	• thread local / thread safe
-	• pools can be nested
-	• automatic pool creation
+	• pools are thread local and thus thread safe
+	• automatic pool creation and destruction for each thread
+	• local pools can be nested to bulk-purge local temp strings
 
 
 	Basic Usage
 	-----------
 
-	Temporary memory pools are created automatically for every thread and purged when the thread
-	terminates or on demand with purgeTempMem().
+	Temporary memory pools are created automatically for every thread and purged when the
+	thread terminates.
 
-	Use tempstr() and tempmem() to retrieve memory from the pool:
+	Local pools can be created to bulk-purge local temp strings only in the pool's dtor,
+	e.g. when a function uses cstring functions and processes large text files.
 
-	• allocation with tempstr(len)
-		• 1 byte for c-string delimiter is added and cleared to 0
-		• string is not cleared, except delimiter
-		• string is not aligned
+	Use tempstr(), tempmem() and temp<T> to retrieve memory from the pool:
 
-	• allocation with tempmem(size)
-		• memory is aligned to a multiple of MAX_ALIGNMENT (typically sizeof pointer)
-		• memory is not cleared
+	tempstr(len)
+	  • not cleared, not aligned
+	  • 1 byte for c-string delimiter is added and cleared to 0
 
+	tempmem(size)
+	  • not cleared, aligned to sizeof(ptr)
 
-	Nested Pools
-	------------
+	temp<T>(count)
+	  • not cleared, aligned to sizeof(T)
 
-	A function can create a local pool. Then all subsequent temp mem allocations come from the
-	local pool and they are purged in one go when the pool is destroyed, e.g. when the function returns.
-
-	• create a local instance of TempMemPool in the function body.
-	• use tempstr() and tempmem() as usual: memory now comes from the local pool.
-	• purgeTempMem() purges only memory in the local pool.
-	• when the function returns, the local pool is destroyed and all memory allocated in it is released.
-
-	• to return results in temp mem from this function while the local pool is alive,
-	  use xtempstr() and xtempmem(), which allocate memory in the surrounding pool.
+	You cannot return results from a function allocated in a local tempmem pool.
+	use xtempstr() and xtempmem(), which allocate memory in the surrounding pool.
 
 
 	Accessing Pools Directly
@@ -91,60 +83,122 @@
 */
 
 #include "kio/kio.h"
-
-extern	char*	tempmem (uint size)		noexcept;
-extern	char*	tempstr (uint size)		noexcept;
-inline	char*	tempmem (int size)		noexcept { assert(size>=0); return tempmem(uint(size)); }
-inline	char*	tempstr (int size)		noexcept; // cstrings.h
-
-extern	char*	xtempmem (uint size)	noexcept;
-extern	char*	xtempstr (uint size)	noexcept;
-inline	char*	xtempmem (int size)		noexcept { assert(size>=0); return xtempmem(uint(size)); }
-inline	char*	xtempstr (int size)		noexcept { assert(size>=0); return xtempstr(uint(size)); }
-
-extern	void	purgeTempMem ()			noexcept;
-
-
-// #######################################################################
-
-struct TempMemData
-{
-	TempMemData*	prev;
-	char			data[0];
-};
+struct TempMemData;
 
 
 class TempMemPool
 {
-	uint			size;
-	TempMemData*	data;
-	TempMemPool*	prev;
+	uint		 size;
+	TempMemData* data;
+	TempMemPool* prev;
 
-					TempMemPool		(TempMemPool const&) = delete;
-	void			operator=		(TempMemPool const&) = delete;
+	TempMemPool (const TempMemPool&) = delete;
+	void operator= (const TempMemPool&) = delete;
 
 public:
-					TempMemPool		()			noexcept;
-					~TempMemPool	()			noexcept;
+	TempMemPool  () noexcept;
+	~TempMemPool () noexcept;
 
-	void			purge			()			noexcept;
-	char*			alloc			(uint size)	noexcept;
-	char*			allocStr		(uint len)	noexcept;	// 0-terminated
-	char*			allocMem		(uint size)	noexcept;	// aligned to _MAX_ALIGNMENT
+	void  purge  () noexcept;
+	char* alloc    (uint size) noexcept;	// unaligned, uncleared
 
-static TempMemPool*	getPool			()			noexcept;
-static TempMemPool*	getXPool		()			noexcept;
+	char* allocStr (uint len) noexcept
+	{
+		// get a 0-terminated string with strlen len
+		// allocate 1 byte more and set it to 0
+		// string contents are not cleared
+
+		char* p = alloc(len+1);
+		p[len] = 0;
+		return p;
+	}
+
+	char* allocMem (uint bytes) noexcept
+	{
+		// allocate 'bytes' bytes of data aligned to sizeof(ptr)
+		// memory contents are not cleared
+
+		static const uint mask = sizeof(ptr)-1;
+		this->size &= ~mask;					// align what we have
+		bytes = (bytes + mask) & ~mask;			// align requested size
+		return alloc(bytes);					// now must be aligned as well
+	}
+
+	template<typename T> T* alloc (uint count) noexcept
+	{
+		// get 'count' elements of type T aligned to sizeof(T)
+		// memory contents are not cleared
+
+		this->size &= ~(sizeof(T)-1);
+		return reinterpret_cast<T*>(alloc(count*sizeof(T)));
+	}
+
+	static TempMemPool*	getPool () noexcept;
+	static TempMemPool*	getXPool () noexcept;
 };
 
 
 // #######################################################################
 
-inline char* TempMemPool::allocStr (uint len) noexcept
+extern str emptystr; // non-const version of ""
+
+extern char* tempmem (uint size) noexcept;	// allocate in current pool: aligned, not cleared
+extern char* xtempmem (uint size) noexcept;	// allocate in outer pool
+
+extern str tempstr (uint size) noexcept;	// allocate in current pool: 0-terminated, not cleared
+extern str xtempstr (uint size) noexcept;	// allocate in outer pool
+
+extern str dupstr (cstr) noexcept;			// copy string into the current pool
+extern str xdupstr (cstr) noexcept;			// copy string into the outer pool
+
+extern str newstr (uint n) noexcept;		// allocate memory with new[]
+extern str newcopy (cstr) noexcept;			// allocate memory with new[] and copy string
+
+
+template<typename T> inline T* temp (uint count) noexcept
 {
-	char* p = alloc(len+1);
-	p[len] = 0;
-	return p;
+	// allocate 'count' elements of type T in current pool
+	// aligned to sizeof(T), not cleared
+
+	return TempMemPool::getPool()->alloc<T>(count);
 }
+
+
+inline void __attribute((deprecated)) purgeTempMem () noexcept
+{
+	// Purge current pool
+	// deprecated: better create a local pool
+
+	TempMemPool::getPool()->purge();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
