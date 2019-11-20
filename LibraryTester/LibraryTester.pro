@@ -5,6 +5,8 @@ CONFIG -= qt
 CONFIG += c++11
 CONFIG += precompiled_header
 
+QMAKE_CXXFLAGS += -Wno-multichar
+
 linux-g++ {
 LIBS += -pthread
 }
@@ -19,6 +21,7 @@ SOURCES += \
 	Libraries/Templates/relational_operators.test.cpp \
 	Source/main.cpp \
 	Libraries/kio/kio.cpp \
+	Libraries/kio/kio.test.cpp \
 	Libraries/kio/exceptions.cpp \
 	Libraries/cstrings/cstrings.cpp \
 	Libraries/cstrings/cstrings.test.cpp \
@@ -42,6 +45,8 @@ SOURCES += \
 	Libraries/VString/String.cpp
 
 HEADERS += \
+	Libraries/kio/util/count1bits.h \
+	Libraries/kio/util/swap.h \
 	Source/main.h \
 	Source/settings.h \
 	Source/custom_errors.h \

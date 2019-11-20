@@ -28,6 +28,7 @@ int main(int, const char**)
 	uint num_tests=0;
 	uint num_errors=0;
 
+	test_kio_util(num_tests, num_errors);
 	test_tempmem(num_tests, num_errors);
 	test_cstrings(num_tests, num_errors);
 	test_relational_operators(num_tests, num_errors);
