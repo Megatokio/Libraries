@@ -30,11 +30,13 @@
 
 
 // gif file creator:
-// must be defined somewhere, e.g. in main.cpp:
-//
-extern cstr	appl_name;				// "zxsp"
-extern cstr	appl_version_str;		// "0.6.6"
-
+// should be #defined in settings.h:
+#ifndef APPL_NAME
+#define APPL_NAME		"GifEncoder [@kio]"
+#endif
+#ifndef APPL_VERSION_STR
+#define APPL_VERSION_STR ""
+#endif
 
 
 // ######################################################################################
@@ -341,7 +343,7 @@ void GifEncoder::closeFile() THF
 	assert(fd.is_valid());
 
 	if(file_state!=IMAGE_COMPLETE) finishImage();
-//	writeCommentBlock( usingstr("Made with %s%s",appl_name,appl_version_str) );
+	writeCommentBlock( usingstr("Made with %s %s", APPL_NAME, APPL_VERSION_STR) );
 	writeGifTrailer();
 	fd.close_file();
 }

@@ -60,7 +60,7 @@
 
 
 template<class T>
-class RCPtr final
+class RCPtr
 {
 	template<class TT> friend class RCArray;
 	template<class T1,class T2> friend class RCHashMap;

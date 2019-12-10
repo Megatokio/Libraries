@@ -22,7 +22,7 @@
 #include <thread>
 #include "cppthreads.h"
 
-INIT_MSG
+DEBUG_INIT_MSG
 
 const  std::thread::id		main_thread = std::this_thread::get_id();
 
@@ -99,7 +99,7 @@ bool PSemaphore::tryRequest( double timeout )
 
 /* ----	PTimer ----------------------------------------
 */
-
+#if 0 // --> kio.cpp
 static std::condition_variable wait_cond;	// eine condition für Wait(), die niemals getriggert wird
 static std::mutex			wait_lock;		// ihr Lock
 
@@ -117,7 +117,7 @@ void waitUntil ( double time )
 	using namespace std::chrono;
 	wait_cond.wait_until(lock, time_point<system_clock,duration<double>>(duration<double>(time)), []{return false;});
 }
-
+#endif
 
 
 

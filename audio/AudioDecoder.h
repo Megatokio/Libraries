@@ -24,8 +24,9 @@
  */
 
 #include "kio/kio.h"
-#include "RCObject.h"
+#include "Templates/RCObject.h"
 
+#ifdef _MACOSX
 #include <AudioToolbox/AudioToolbox.h>
 #include "CAStreamBasicDescription.h"
 
@@ -39,8 +40,13 @@
 #include "AudioFile.h"
 #include "AudioFormat.h"
 #endif
-
-
+#else
+// TODO
+// just make it compile
+typedef void* ExtAudioFileRef;			// OSX handle for audio file
+typedef void* CAStreamBasicDescription;	// file format data
+typedef void* CAStreamBasicDescription;	// client format data
+#endif
 
 
 
@@ -71,7 +77,7 @@ public:		AudioDecoder();
 	void open(cstr filename) noexcept(false);
 
 	// close file. you may reuse the decoder.
-	OSStatus close();
+	int/*err*/ close();
 
 	// Read a maximum of max_frames of audio into a buffer.
 	//	Samples are returned as 32-bit floats, with stereo interlacing if num_channels=2.

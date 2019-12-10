@@ -18,6 +18,7 @@
 */
 
 #include <mutex>
+#include <condition_variable>
 #include <thread>
 #include "kio/kio.h"
 
@@ -101,10 +102,10 @@ public:				PSemaphore	(cstr static_name_str="", uint32 _avail = 0);
 
 
 
-// Timer
-extern double now				();					// kio.cpp
-extern void waitDelay			(double delay);
-extern void	waitUntil			(double time);		// system time
+// Timer  --> kio.cpp
+//extern double now				();					// kio.cpp
+//extern void waitDelay			(double delay);
+//extern void	waitUntil			(double time);		// system time
 
 
 /*	in a loop, wait 'delay' and execute function fu() until fu() returns false.

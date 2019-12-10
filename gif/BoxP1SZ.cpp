@@ -16,7 +16,7 @@
 	TO THE EXTENT PERMITTED BY APPLICABLE LAW.
 */
 
-#import	"BoxP1SZ.h"
+#include "BoxP1SZ.h"
 
 
 #define x1	p1.x
