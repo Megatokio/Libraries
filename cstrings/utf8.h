@@ -1,5 +1,5 @@
 #pragma once
-/*	Copyright  (c)	Günter Woigk 2018 - 2019
+/*	Copyright  (c)	Günter Woigk 2018 - 2020
 					mailto:kio@little-bat.de
 
 	This program is distributed in the hope that it is useful.
