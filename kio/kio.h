@@ -2,7 +2,7 @@
 #ifndef KIO_H		// the syntax checker has a problem with #pragma once for this file
 #define KIO_H
 
-/*	Copyright  (c)  Günter Woigk 1994 - 2019
+/*	Copyright  (c)  Günter Woigk 1994 - 2020
 					mailto:kio@little-bat.de
 
 	This file is free software.
