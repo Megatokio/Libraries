@@ -436,6 +436,12 @@ void test_cstrings(uint& num_tests, uint& num_errors)
 		// This test fails if your timezone ist not CET:
 		assert(dateval("1970-02-01 01:45:21") == 31*24*60*60 +45*60 +21);
 
+		assert(dateval("19991231") == dateval("1999-12-31 0:0:0"));
+		assert(dateval("99-12-31") == dateval("1999-12-31 0:0"));
+		assert(dateval("20-4-7")   == dateval("2020-04-07 0"));
+		assert(dateval("'2020-04-12 12:34:56'") == dateval("2020-04-12 12:34:56"));
+		assert(dateval("day=2020-4-12, time=12:34:56") == dateval("2020-04-12 12:34:56 // foo comment"));
+
 		for(int i=0;i<99;i++)
 		{
 			time_t n = random();

@@ -669,21 +669,31 @@ str toutf8str (cstr qstr) noexcept
 /* ====	date&time =============================================
 		note: time_t is always in UTC  (seconds since 1970-1-1 0:00 GMT)
 */
-static int next_number (cptr& c, cptr e) noexcept
+static int next_number (cptr& c, cptr e, int digits=2) noexcept
 {
 	int  n = 0;
 	while (c<e && no_dec_digit(*c)) { c++; }
-	while (c<e && is_dec_digit(*c)) { n = n*10 + *c++ -'0'; }
+	while (digits-- && c<e && is_dec_digit(*c)) { n = n*10 + *c++ -'0'; }
 	return n;
 }
 
 time_t dateval (cstr datestr) noexcept
 {
+	// convert data+time string to standard unix time
+	//
 	// datestr = "year month day hour minute second" in local timezone
 	// optional from right to left
-	// separated by any non-digit
-	// year 20XX may be abbreviated as year XX
+	// optionally separated by any non-digits (required if less than 2 digits (4 for year))
+	// year 1970 to 2069 can be abbreviated as year 0 to 99
 	// month must be numeric (not a name)
+
+	// e.g.:
+	//
+	// 19991231
+	// 99-12-31
+	// 2020-04-12 12:34:56
+	// "2020-04-12 12:34:56"
+	// day=2020-04-12, time=12:34:56
 
 	// interesting reading: http://www.catb.org/esr/time-programming/
 
@@ -691,7 +701,7 @@ time_t dateval (cstr datestr) noexcept
 	cptr c = datestr;
 	cptr e = strchr(datestr,0);
 
-	int n = next_number(c,e);
+	int n = next_number(c,e,4);
 	if (n<70) n += 2000; else if (n<100) n += 1900;
 	d.tm_year = n - 1900;
 
