@@ -18,7 +18,7 @@
 
 #include "kio/kio.h"
 #include <cmath>
-#ifdef HAVE_SYS_TIME
+#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
 
