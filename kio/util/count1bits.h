@@ -59,6 +59,13 @@ inline uint count1bits (int16 z) noexcept { return count1bits(uint16(z)); }
 inline uint count1bits (int32 z) noexcept { return count1bits(uint32(z)); }
 inline uint count1bits (int64 z) noexcept { return count1bits(uint64(z)); }
 
+#ifdef _LINUX
+inline uint count1bits (long long z) noexcept { return count1bits(uint64(z)); }
+inline uint count1bits (unsigned long long z) noexcept { return count1bits(uint64(z)); }
+#else
+inline uint count1bits (long z) noexcept { return count1bits(uint64(z)); }
+inline uint count1bits (unsigned long z) noexcept { return count1bits(uint64(z)); }
+#endif
 
 // ---- count bits in arrays ----
 
