@@ -17,7 +17,7 @@
 */
 
 #include "kio/kio.h"
-#include "z80_major_opcode.h"
+#include "z80_goodies.h"
 
 
 namespace Z80	// there are some name colissions with the enum below

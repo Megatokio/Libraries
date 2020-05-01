@@ -18,7 +18,7 @@
 
 
 #include "kio/kio.h"
-#include "z80_opcode_length.h"
+#include "z80_goodies.h"
 
 
 static char const len0[65] = // opcodes 0x00 - 0x3F
@@ -76,13 +76,29 @@ static char const i8080len3[65] = // opcodes 0xC0 - 0xFF: prefixes are 0
 #endif
 
 
-
-// ----	Calculate length of instruction ------------------------------- 30.jun.95 KIO !
-//		op2 is only used if op1 is a prefix instruction
-//		IX/IY before IX/IY/ED have no effect and are reported as length 1
-//
-uint z80_opcode_length(uint8* ip)
+uint i8080_opcode_length (uint8 op) noexcept
 {
+	// Calculate length [bytes] of instruction
+
+	switch (op>>6)
+	{
+	case 0:
+		if ((op&7)==0) return 1;				// 0x00=NOP and EX AF,AF'=NOP => len=1
+		else return uint(len0[op]-'0');
+	default:
+		return 1;								// ld r,r and arith a,r
+	case 3:
+		if (len3[op-0xc0]=='0') return 3;		// prefixes are JP_NN or CALL_NN => len=3
+		else return uint(len3[op-0xc0] - '0');	// 0xD9=NOP: same length as Z80:EXX
+	}
+}
+
+uint z80_opcode_length (uint8* ip)
+{
+	// Calculate length of instruction
+	// op2 is only used if op1 is a prefix instruction
+	// IX/IY before IX/IY/ED have no effect and are reported as length 1
+
 	uint8 op = *ip++;
 
 	switch(op>>6)
@@ -115,48 +131,41 @@ uint z80_opcode_length(uint8* ip)
 	return len3[op&0x3F]-'0';			// 0xC0 - 0xFF:	no prefix:	various length
 }
 
-
-
-
-// ----	Calculate length of instruction ------------------------------- kio 2014-12-28
-//		op2 is only used if op1 is a prefix instruction
-//		IX/IY before IX/IY/ED have no effect and are reported as length 1
-//
-uint z80_opcode_length(uint8* ip, Z80Variant variant)
+uint z180_opcode_length (uint8* ip)
 {
-	uint8 op;
+	// Calculate length [bytes] of instruction
+	// op2 is only used if op1 is a prefix instruction
+	// illegal opcodes are reported as for Z80
 
+	if (*ip == 0xED)	// additional opcodes of the Z80180 all prefix 0xED
+	{
+		uint8 op2 = *(ip+1);
+		switch(op2>>6)
+		{
+		case 0:										// IN0_r_xN and OUT0_xN_r
+			return 2 + ((op2&7)<=1 && op2!=0x31);	// not shure for 0x31: ill. OUT0_xN_0 ?
+		case 1:
+			if ((op2|0x10)==0x76) return 7;			// TST_N and TSTIO_N
+			else break;
+		}
+	}
+
+	return z80_opcode_length(ip);	// all other opcodes: same as Z80
+}
+
+uint z80_opcode_length (uint8* ip, CpuID variant)
+{
 	switch(variant)
 	{
-	case isa8080:
-		op = *ip;
-		switch(op>>6)
-		{
-		case 0:										// variants of 'jr' are NOP => len=1
-			return (op&7)==0 ? 1 : len0[op]-'0';	// 0x00=NOP and EX AF,AF'=NOP => len=1
-		case 3:
-			return len3[op-0xc0]=='0' ?				// prefixes are JP_NN or CALL_NN => len=3
-				   3 : len3[op-0xc0]-'0';			// 0xD9=NOP: same length as Z80:EXX
-		}
-		return 1;									// ld r,r and arith a,r
+	case Cpu8080:
+		return i8080_opcode_length(*ip);
 
-	case isaZ180:
-		if(*ip==0xED)
-		{
-			op = *(ip+1);
-			switch(op>>6)
-			{
-			case 0:										// IN0_r_xN and OUT0_xN_r
-				return 2 + ((op&7)<=1 && op!=0x31);		// not shure for 0x31: ill. OUT0_xN_0 ?
-			case 1:
-				if((op|0x10)==0x76) return 7; break;	// TST_N and TSTIO_N
-			}
-		}
-		goto z;	// all other opcodes: same as Z80
+	case CpuZ180:
+		return z180_opcode_length(ip);
 
 	default:
-//	case isaZ80:
-z:		return z80_opcode_length(ip);
+	case CpuZ80:
+		return z80_opcode_length(ip);
 	}
 }
 
