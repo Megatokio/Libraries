@@ -9,15 +9,15 @@
 	that both that copyright notice, this permission notice and the
 	following disclaimer appear in supporting documentation.
 
-	THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT ANY WARRANTY, NOT EVEN THE
-	IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
-	AND IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DAMAGES
-	ARISING FROM THE USE OF THIS SOFTWARE,
+	THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT ANY WARRANTY,
+	NOT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR
+	A PARTICULAR PURPOSE, AND IN NO EVENT SHALL THE COPYRIGHT HOLDER
+	BE LIABLE FOR ANY DAMAGES ARISING FROM THE USE OF THIS SOFTWARE,
 	TO THE EXTENT PERMITTED BY APPLICABLE LAW.
 */
 
 #include "kio/kio.h"
-#include "z80_clock_cycles.h"
+#include "z80_goodies.h"
 
 
 /*	CBxx and XYCBxx tables are easy to compute:
@@ -33,6 +33,9 @@
 	the add-on time if they branch is stored in the upper 3 bits
 	(note: most other timing tables show execution times in opposite order)
 
+	Actually b-a-1 is stored, because the 3 high bits are used to detect branching opcodes
+	and 'jp cc,NN' takes 10cc in both cases, so the high bits would be 000 otherwise.
+
 	possible delta:						stored in bits[7…5]:
 	5	djnz; jr cc,dis; ldir etc.	-->	4
 	6	ret cc						--> 5
@@ -42,14 +45,89 @@
 #define Z(a,b)	a + (((b-a-1)&7) << 5)
 
 
-/*	normal 1-byte opcodes
-	time for PFX_IX and PFX_IY are set to 4 which is the time they take if
-	another PFX_IX, PFX_IY or PFX_ED follows.
-	PFX_ED is set to 0: the whole instruction time is given in table cc_ED
-	PFX_CB is set to 0: the whole instruction time is given in table cc_CB
-*/
-uint8 cc_normal[256] =
+static uint8 cc_8080[256] =
 {
+	// The 8080 has only 1-byte opcodes
+	// Code points marked with '**' were unused and reassigned later by the Z80
+
+	// NOP, 		LD_BC_NN,	LD_xBC_A,	INC_BC,		INC_B,		DEC_B,		LD_B_N,		RLCA,
+		4,			10,			7,			6,			4,			4,			7,			4,
+	// NOP**,		ADD_HL_BC,	LD_A_xBC,	DEC_BC,		INC_C,		DEC_C,		LD_C_N,		RRCA,
+		4,			11,			7,			6,			4,			4,			7,			4,
+	// NOP**,		LD_DE_NN,	LD_xDE_A,	INC_DE,		INC_D,		DEC_D,		LD_D_N,		RLA,
+		4,			10,			7,			6,			4,			4,			7,			4,
+	// NOP**,  		ADD_HL_DE,	LD_A_xDE,	DEC_DE,		INC_E,		DEC_E,		LD_E_N,		RRA,
+		4,			11,			7,			6,			4,			4,			7,			4,
+	// NOP**,		LD_HL_NN,	LD_xNN_HL,	INC_HL,		INC_H,		DEC_H,		LD_H_N,		DAA,
+		4,			10,			16,			6,			4,			4,			7,			4,
+	// NOP**,		ADD_HL_HL,	LD_HL_xNN,	DEC_HL,		INC_L,		DEC_L,		LD_L_N,		CPL,
+		4,			11,			16,			6,			4,			4,			7,			4,
+	// NOP**,		LD_SP_NN,	LD_xNN_A,	INC_SP,		INC_xHL,	DEC_xHL,	LD_xHL_N,	SCF,
+		4,			10,			13,			6,			11,			11,			10,			4,
+	// NOP**,		ADD_HL_SP,	LD_A_xNN,	DEC_SP,		INC_A,		DEC_A,		LD_A_N,		CCF,
+		4,			11,			13,			6,			4,			4,			7,			4,
+
+	// LD_B_B,		LD_B_C,		LD_B_D,		LD_B_E,		LD_B_H,		LD_B_L,		LD_B_xHL,	LD_B_A,
+	// LD_C_B,		LD_C_C,		LD_C_D,		LD_C_E,		LD_C_H,		LD_C_L,		LD_C_xHL,	LD_C_A,
+	// LD_D_B,		LD_D_C,		LD_D_D,		LD_D_E,		LD_D_H,		LD_D_L,		LD_D_xHL,	LD_D_A,
+	// LD_E_B,		LD_E_C,		LD_E_D,		LD_E_E,		LD_E_H,		LD_E_L,		LD_E_xHL,	LD_E_A,
+	// LD_H_B,		LD_H_C,		LD_H_D,		LD_H_E,		LD_H_H,		LD_H_L,		LD_H_xHL,	LD_H_A,
+	// LD_L_B,		LD_L_C,		LD_L_D,		LD_L_E,		LD_L_H,		LD_L_L,		LD_L_xHL,	LD_L_A,
+	// LD_xHL_B,	LD_xHL_C,	LD_xHL_D,	LD_xHL_E,	LD_xHL_H,	LD_xHL_L,	HALT,		LD_xHL_A,
+	// LD_A_B,		LD_A_C,		LD_A_D,		LD_A_E,		LD_A_H,		LD_A_L,		LD_A_xHL,	LD_A_A,
+		4,			4,			4,			4,			4,			4,			7,			4,
+		4,			4,			4,			4,			4,			4,			7,			4,
+		4,			4,			4,			4,			4,			4,			7,			4,
+		4,			4,			4,			4,			4,			4,			7,			4,
+		4,			4,			4,			4,			4,			4,			7,			4,
+		4,			4,			4,			4,			4,			4,			7,			4,
+		7,			7,			7,			7,			7,			7,			4,			7,
+		4,			4,			4,			4,			4,			4,			7,			4,
+
+	// ADD_B,		ADD_C,		ADD_D,		ADD_E,		ADD_H,		ADD_L,		ADD_xHL,	ADD_A,
+	// ADC_B,		ADC_C,		ADC_D,		ADC_E,		ADC_H,		ADC_L,		ADC_xHL,	ADC_A,
+	// SUB_B,		SUB_C,		SUB_D,		SUB_E,		SUB_H,		SUB_L,		SUB_xHL,	SUB_A,
+	// SBC_B,		SBC_C,		SBC_D,		SBC_E,		SBC_H,		SBC_L,		SBC_xHL,	SBC_A,
+	// AND_B,		AND_C,		AND_D,		AND_E,		AND_H,		AND_L,		AND_xHL,	AND_A,
+	// XOR_B,		XOR_C,		XOR_D,		XOR_E,		XOR_H,		XOR_L,		XOR_xHL,	XOR_A,
+	// OR_B,		OR_C,		OR_D,		OR_E,		OR_H,		OR_L,		OR_xHL,		OR_A,
+	// CP_B,		CP_C,		CP_D,		CP_E,		CP_H,		CP_L,		CP_xHL,		CP_A,
+		4,			4,			4,			4,			4,			4,			7,			4,
+		4,			4,			4,			4,			4,			4,			7,			4,
+		4,			4,			4,			4,			4,			4,			7,			4,
+		4,			4,			4,			4,			4,			4,			7,			4,
+		4,			4,			4,			4,			4,			4,			7,			4,
+		4,			4,			4,			4,			4,			4,			7,			4,
+		4,			4,			4,			4,			4,			4,			7,			4,
+		4,			4,			4,			4,			4,			4,			7,			4,
+
+	// RET_NZ,		POP_BC,		JP_NZ,		JP,			CALL_NZ,	PUSH_BC,	ADD_N,		RST00,
+		Z(5,11),	10,			Z(10,10),	10,			Z(10,17),	11,			7,			11,
+	// RET_Z,		RET,		JP_Z,		JP**,		CALL_Z,		CALL,		ADC_N,		RST08,
+		Z(5,11),	10,			Z(10,10),	10,			Z(10,17),	17,			7,			11,
+	// RET_NC,		POP_DE,		JP_NC,		OUTA,		CALL_NC,	PUSH_DE,	SUB_N,		RST10,
+		Z(5,11),	10,			Z(10,10),	11,			Z(10,17),	11,			7,			11,
+	// RET_C,		RET**,		JP_C,		INA,		CALL_C,		CALL*,		SBC_N,		RST18,
+		Z(5,11),	10,			Z(10,10),	11,			Z(10,17),	17,			7,			11,
+	// RET_PO,		POP_HL,		JP_PO,		EX_HL_xSP,	CALL_PO,	PUSH_HL,	AND_N,		RST20,
+		Z(5,11),	10,			Z(10,10),	19,			Z(10,17),	11,			7,			11,
+	// RET_PE,		JP_HL,		JP_PE,		EX_DE_HL,	CALL_PE,	CALL**,		XOR_N,		RST28,
+		Z(5,11),	4,			Z(10,10),	4,			Z(10,17),	17,			7,			11,
+	// RET_P,		POP_AF,		JP_P,		DI,			CALL_P,		PUSH_AF,	OR_N,		RST30,
+		Z(5,11),	10,			Z(10,10),	4,			Z(10,17),	11,			7,			11,
+	// RET_M,		LD_SP_HL,	JP_M,		EI,			CALL_M,		CALL**,		CP_N,		RST38
+		Z(5,11),	6,			Z(10,10),	4,			Z(10,17),	17,			7,			11
+};
+
+static uint8 cc_z80[256] =
+{
+	/*	normal 1-byte opcodes
+		time for PFX_IX and PFX_IY are set to 4 which is the time they take if
+		another PFX_IX, PFX_IY or PFX_ED follows.
+		PFX_ED is set to 0: the whole instruction time is given in table cc_ED
+		PFX_CB is set to 0: the whole instruction time is given in table cc_CB
+	*/
+
 	// NOP, 		LD_BC_NN,	LD_xBC_A,	INC_BC,		INC_B,		DEC_B,		LD_B_N,		RLCA,
 		4,			10,			7,			6,			4,			4,			7,			4,
 	// EX_AF_AF,	ADD_HL_BC,	LD_A_xBC,	DEC_BC,		INC_C,		DEC_C,		LD_C_N,		RRCA,
@@ -119,16 +197,16 @@ uint8 cc_normal[256] =
 		Z(5,11),	6,			Z(10,10),	4,			Z(10,17),	4,			7,			11
 };
 
-
-/*	Table for CBxx opcodes:
-	(this table is easy to compute)
-	times are stored for the entire opcode incl. CB
-	so the minimum time is 8 cycles
-	illegal opcodes are marked with **
-*/
 #if DEFINE_CB_TABLES
-uint8 cc_CB[256] =
+static uint8 cc_CB[256] =
 {
+	/*	Table for CBxx opcodes:
+		(this table is easy to compute)
+		times are stored for the entire opcode incl. CB
+		so the minimum time is 8 cycles
+		illegal opcodes are marked with **
+	*/
+
 	// RLC_B,		RLC_C,		RLC_D,		RLC_E,		RLC_H,		RLC_L,		RLC_xHL,	RLC_A,
 	// RRC_B,		RRC_C,		RRC_D,		RRC_E,		RRC_H,		RRC_L,		RRC_xHL,	RRC_A,
 	// RL_B,		RL_C,		RL_D,		RL_E,		RL_H,		RL_L,		RL_xHL,		RL_A,
@@ -199,15 +277,15 @@ uint8 cc_CB[256] =
 };
 #endif
 
-
-/*	Table for EDxx opcodes:
-	times are stored for the entire opcode incl. ED
-	so the minimum time is 8 cycles
-	useful illegal opcodes are marked with **
-	illegal NOPs are marked with their opcode
-*/
-uint8 cc_ED[256] =
+static uint8 cc_ED[256] =
 {
+	/*	Table for EDxx opcodes:
+		times are stored for the entire opcode incl. ED
+		so the minimum time is 8 cycles
+		useful illegal opcodes are marked with **
+		illegal NOPs are marked with their opcode
+	*/
+
 	// ED00,		ED01,		ED02,		ED03,		ED04,		ED05,		ED06,		ED07,
 	// ED08,		ED09,		ED0A,		ED0B,		ED0C,		ED0D,		ED0E,		ED0F,
 	// ED10,		ED11,		ED12,		ED13,		ED14,		ED15,		ED16,		ED17,
@@ -229,8 +307,8 @@ uint8 cc_ED[256] =
 	// IN_C_xC, 	OUT_xC_C,	ADC_HL_BC,	LD_BC_xNN,	NEG**,		RETI,		IM0**,		LD_R_A,
 	// IN_D_xC, 	OUT_xC_D,	SBC_HL_DE,	LD_xNN_DE,	NEG**,		RETN**,		IM_1,		LD_A_I,
 	// IN_E_xC, 	OUT_xC_E,	ADC_HL_DE,	LD_DE_xNN,	NEG**,		RETN**,		IM_2,		LD_A_R,
-	// IN_H_xC, 	OUT_xC_H,	SBC_HL_HL,	ED_xNN_HL,	NEG**,		RETN**,		IM0**,		RRD,
-	// IN_L_xC, 	OUT_xC_L,	ADC_HL_HL,	ED_HL_xNN,	NEG**,		RETN**,		IM0**,		RLD,
+	// IN_H_xC, 	OUT_xC_H,	SBC_HL_HL,	LD_xNN_HL,	NEG**,		RETN**,		IM0**,		RRD,
+	// IN_L_xC, 	OUT_xC_L,	ADC_HL_HL,	LD_HL_xNN,	NEG**,		RETN**,		IM0**,		RLD,
 	// IN_F_xC, 	OUT_xC_0,	SBC_HL_SP,	LD_xNN_SP,	NEG**,		RETN**,		IM1**,		ED77,
 	// IN_A_xC, 	OUT_xC_A,	ADC_HL_SP,	LD_SP_xNN,	NEG**,		RETN**,		IM2**,		ED7F,
 		12,			12,			15,			20,			8,			14,			8,			9,
@@ -277,17 +355,17 @@ uint8 cc_ED[256] =
 		8,			8,			8,			8,			8,			8,			8,			8
 };
 
-
-/*	Opcodes with prefix DD and FD use the IX resp. IY register instead of HL.
-	times are given for the entire opcode incl. DD/FD
-	so the minimum time for opcodes which behave different after DD/FD is 8 cycles.
-	4 indicates that the DD/FD prefix has no effect on this opcode and the preceding DD/FD
-	is effectively a NOP after which this byte starts a new opcode
-	0 for PFX_CB which combines to a DDCB…/FDCB… opcode and is covered in table cc_XYCB.
-	illegal opcodes are marked with **
-*/
-uint8 cc_XY[256] =
+static uint8 cc_XY[256] =
 {
+	/*	Opcodes with prefix DD and FD use the IX resp. IY register instead of HL.
+		times are given for the entire opcode incl. DD/FD
+		so the minimum time for opcodes which behave different after DD/FD is 8 cycles.
+		4 indicates that the DD/FD prefix has no effect on this opcode and the preceding DD/FD
+		is effectively a NOP after which this byte starts a new opcode
+		0 for PFX_CB which combines to a DDCB…/FDCB… opcode and is covered in table cc_XYCB.
+		illegal opcodes are marked with **
+	*/
+
 	// NOP, 		LD_BC_NN,	LD_xBC_A,	INC_BC,		INC_B,		DEC_B,		LD_B_N,		RLCA,
 		4,			4,			4,			4,			4,			4,			4,			4,
 	// EX_AF_AF,	ADD_HL_BC,	LD_A_xBC,	DEC_BC,		INC_C,		DEC_C,		LD_C_N,		RRCA,
@@ -357,16 +435,16 @@ uint8 cc_XY[256] =
 		4,			10,			4,			4,			4,			4,			4,			4
 };
 
-
-/*	Table for opcode after DDCB / FDCB:
-	legal ones are only those with memory access (XY+dis)
-	all other opcodes are illegal: they behave as the (XY+dis) opcode
-	but additionally store the result in the addressed register
-	timing is for all 4 opcode bytes: DD/FD, CB, dis and opcode
-*/
 #if DEFINE_CB_TABLES
-uint8 cc_XYCB[256] =
+static uint8 cc_XYCB[256] =
 {
+	/*	Table for opcode after DDCB / FDCB:
+		legal ones are only those with memory access (XY+dis)
+		all other opcodes are illegal: they behave as the (XY+dis) opcode
+		but additionally store the result in the addressed register
+		timing is for all 4 opcode bytes: DD/FD, CB, dis and opcode
+	*/
+
 	// RLC_B,		RLC_C,		RLC_D,		RLC_E,		RLC_H,		RLC_L,		RLC_xHL,	RLC_A,
 	// RRC_B,		RRC_C,		RRC_D,		RRC_E,		RRC_H,		RRC_L,		RRC_xHL,	RRC_A,
 	// RL_B,		RL_C,		RL_D,		RL_E,		RL_H,		RL_L,		RL_xHL,		RL_A,
@@ -438,24 +516,40 @@ uint8 cc_XYCB[256] =
 #endif
 
 
-
-
-/*	test whether this opcode can branch:
-	(bra cc, jp cc, ret cc, call cc, djnz, ldir, inir, …)
-	op2 is only used for ED opcodes
-*/
-bool z80_opcode_can_branch(uint8 op1, uint8 op2)
+bool i8080_opcode_can_branch(uint8 op) noexcept
 {
-	return (op1==0xED ? cc_ED[op2] : cc_normal[op1]) >= 32;
+	// test whether this opcode can branch:
+	// (jp cc, ret cc, call cc)
+	// op2 is only used for ED opcodes
+
+	//return ((op&0xC1)==0xC0) && ((op&0x07)!=0x06);
+	return cc_8080[op] >= 32;
 }
 
-/*	get execution time for opcode:
-	if opcode can branch, then this is time when it does not branch
-	op2 is only used for CB, ED, IX or IY opcodes
-	op4 is only used for IXCB or IYCB opcodes
-*/
-uint z80_clock_cycles(uint8 op1, uint8 op2, uint8 op4)
+bool z80_opcode_can_branch(uint8 op1, uint8 op2) noexcept
 {
+	// test whether this opcode can branch:
+	// (jr cc, jp cc, ret cc, call cc, djnz, ldir, inir, …)
+	// op2 is only used for ED opcodes
+
+	return (op1==0xED ? cc_ED[op2] : cc_z80[op1]) >= 32;
+}
+
+uint i8080_clock_cycles(uint8 op) noexcept
+{
+	// get execution time for opcode:
+	// if opcode can branch, then this is time when it does not branch
+
+	return cc_z80[op] & 31;
+}
+
+uint z80_clock_cycles(uint8 op1, uint8 op2, uint8 op4) noexcept
+{
+	// get execution time for opcode:
+	// if opcode can branch, then this is time when it does not branch
+	// op2 is only used for CB, ED, IX or IY opcodes
+	// op4 is only used for IXCB or IYCB opcodes
+
 	switch(op1)
 	{
 		case 0xCB:
@@ -471,21 +565,92 @@ uint z80_clock_cycles(uint8 op1, uint8 op2, uint8 op4)
 			return cc_ED[op2] & 31;
 
 		default:
-			return cc_normal[op1] & 31;
+			return cc_z80[op1] & 31;
 	}
 }
 
-/*	get execution time for branching opcode:
-	returns the time when the opcode branches.
-	op2 is only used for ED opcodes.
-	calling this for non-branching opcodes may return wrong value.
-	(mostly correct time, but not for IX, IY or CB opcodes)
-*/
-uint z80_clock_cycles_on_branch(uint8 op1, uint8 op2)
+uint i8080_clock_cycles_on_branch(uint8 op) noexcept
 {
-	uint n = (op1==0xED ? cc_ED[op2] : cc_normal[op1]);
+	// get execution time for branching opcode:
+	// returns the time when the opcode branches.
+	// return value for non-branching opcodes is void.
+
+	uint n = cc_8080[op];
 	return (n&31) + (((n>>5)+1)&7);
 }
+
+uint z80_clock_cycles_on_branch(uint8 op1, uint8 op2) noexcept
+{
+	// get execution time for branching opcode:
+	// returns the time when the opcode branches.
+	// op2 is only used for ED opcodes.
+	// return value for non-branching opcodes is void.
+
+	uint n = (op1==0xED ? cc_ED[op2] : cc_z80[op1]);
+	return (n&31) + (((n>>5)+1)&7);
+}
+
+bool z80_opcode_can_branch(uint8 op1, uint8 op2, CpuID variant) noexcept
+{
+	switch (variant)
+	{
+	case Cpu8080:
+		return i8080_opcode_can_branch(op1);
+	default:
+	case CpuZ80:
+		return z80_opcode_can_branch(op1,op2);
+	case CpuZ180:
+		return z180_opcode_can_branch(op1,op2);
+	}
+}
+
+uint z80_clock_cycles(uint8 op1, uint8 op2, uint8 op4, CpuID variant) noexcept
+{
+	switch (variant)
+	{
+	case Cpu8080:
+		return i8080_clock_cycles(op1);
+	default:
+	case CpuZ80:
+		return z80_clock_cycles(op1,op2,op4);
+	case CpuZ180:
+		return z180_clock_cycles(op1,op2,op4);
+	}
+}
+
+uint z80_clock_cycles_on_branch(uint8 op1, uint8 op2, CpuID variant) noexcept
+{
+	switch (variant)
+	{
+	case Cpu8080:
+		return i8080_clock_cycles_on_branch(op1);
+	default:
+	case CpuZ80:
+		return z80_clock_cycles_on_branch(op1,op2);
+	case CpuZ180:
+		return z180_clock_cycles_on_branch(op1,op2);
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
