@@ -556,7 +556,7 @@ void FD::read_file(StrArray& a, uint32 maxsize) THF
 	the lines are separated with '\n'
 	NULL strings are not written
 */
-void FD::write_file(Array<str>& a) THF
+void FD::write_file(const Array<str>& a) THF
 {
 	for (uint i=0;i<a.count();i++)
 	{

@@ -150,7 +150,8 @@ public:
 	void 	read_file		(Array<str>&, uint32 max=1<<28) 	THF; // temp mem
 	void 	read_file		(Array<cstr>& a, uint32 max=1<<28) 	THF {read_file(reinterpret_cast<Array<str>&>(a),max);}
 	void 	read_file		(class StrArray&, uint32 max=1<<28) THF; // new[]
-	void 	write_file		(Array<str>&)	 					THF;
+	void 	write_file		(const Array<str>&)	 				THF;
+	void 	write_file		(const Array<cstr>& a)			 	THF {write_file(reinterpret_cast<const Array<str>&>(a));}
 
 
 // read/write length-prefixed strings:
