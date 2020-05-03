@@ -331,8 +331,8 @@ enum Foo{foo};
 
 
 /*	check size of off_t is 64 bit:
-	if this fails, then probably #define _FILE_OFFSET_BITS 64 is missing in config.h
-	or kio.h (and thus config.h) is included too late (after some system header)
+	if this fails, then probably #define _FILE_OFFSET_BITS 64 is missing in auto_config.h
+	or kio.h (and thus auto_config.h) is included too late (after some system header)
 	e.g. kio.h must be included before <sys/types.h>
 */
 static_assert(sizeof(off_t)==8,"sizeof(off_t) wrong!");

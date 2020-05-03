@@ -24,7 +24,7 @@
 #define HAVE_LONG_FILE_NAMES 1	// file names longer than 14 characters supported
 #define STDC_HEADERS		1	// have the ANSI C header files
 //#define _LARGE_FILES		1	// for large files, on AIX-style hosts
-//#define _FILE_OFFSET_BITS	64	// Number of bits in a file offset
+#define _FILE_OFFSET_BITS	64	// Number of bits in a file offset --> defines sizeof off_t on 32 bit Linux
 //#define _POSIX_1_SOURCE	2	// if the system does not provide POSIX.1 features except with this define
 //#define _POSIX_SOURCE		1	// if needed for 'stat' and other things to work
 #define _GNU_SOURCE			1	// enable GNU extensions
