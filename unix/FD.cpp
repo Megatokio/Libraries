@@ -137,20 +137,49 @@ void FD::open_tempfile() THF
 }
 
 
-// Assignment operator
-// *MOVE* fd in most cases: 		set q.fd = -1
-// *COPY* stdin, stdout, stderr		q.fd untouched
-//
-void FD::operator= ( FD& q ) noexcept
+FD::FD (FD&& q) noexcept :
+	fd(q.fd),
+	fpath(q.fpath)
 {
-	assert(fd<=2);
-	assert(this!=&q);
+	q.fd    = -1;
+	q.fpath = nullptr;
+}
 
-	delete[] fpath;
-	fpath = newcopy(q.fpath);
-	fd    = q.fd;
+FD& FD::operator= (FD&& q) noexcept
+{
+	// Move assignment operator
+	// q.fd = -1
 
-	if (q.fd>2) q.fd = -1;
+	assert(this != &q);
+
+	this->~FD();
+	new(this) FD(std::move(q));
+	return *this;
+}
+
+FD::FD (const FD& q) noexcept :
+	fd(q.fd),
+	fpath(newcopy(q.fpath))
+{
+	// Copy constructor
+	// stdin, stdout, stderr only
+
+	assert (q.fd <= 2);
+}
+
+FD& FD::operator= (const FD& q) noexcept
+{
+	// Copy assignment operator
+	// stdin, stdout, stderr only
+	// this should be closed
+
+	if (this != &q)
+	{
+		this->~FD();
+		new(this) FD(q);
+	}
+
+	return *this;
 }
 
 

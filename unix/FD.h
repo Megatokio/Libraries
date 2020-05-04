@@ -50,21 +50,20 @@ class FD
 	cstr   	fpath	= nullptr;		// allocated copy
 
 
-// ==== private member functions =========================
-
-	FD&		operator= 		(FD const&);					// prohibit
-			FD				(FD const&);					// prohibit: don't pass FD by value - always pass FD by reference!
-															// for moving fd from one FD to another use operator=()
-
-
 // ==== public member functions ==========================
 public:
 
 // c'tor and d'tor:
-			FD				()											noexcept {}
-			FD				(cstr path, int flags='r', mode_t perm=0664) throws  { open_file(path,flags,perm); }
-			FD				(int fd, cstr fname)						noexcept : fd(fd), fpath(newcopy(fname)) {}
-			~FD				()											noexcept;
+			FD ()											noexcept {}
+			FD (cstr path, int flags='r', mode_t perm=0664) throws  { open_file(path,flags,perm); }
+			FD (int fd, cstr fname)							noexcept : fd(fd), fpath(newcopy(fname)) {}
+			~FD ()											noexcept;
+
+			FD (const FD&) noexcept;						// only for std i/o !
+			FD& operator= (const FD&) noexcept;				// only for std i/o !
+
+			FD (FD&&) noexcept;
+			FD& operator= (FD&&) noexcept;
 
 // standard input and output:
 	static	FD	stdin;
@@ -83,8 +82,7 @@ public:
 	void	open_file_m		(cstr path, mode_t perm=0664)	THF		{ open_file(path, 'm', perm); }		// modify: r&w
 	void	open_tempfile	() 								THF;	// tempfile open for r/w. will vanish after close
 
-	void	set_file_id		(int fd, cstr fpath)			noexcept;	// deprecated
-	void	operator= 		(FD&)							noexcept;	// *MOVE* fd: sets q.fd = -1;  except for stdin,out,err!
+	void	set_file_id		(int fd, cstr fpath) noexcept __attribute__((__deprecated__));
 
 	int     set_blocking    (bool)							noexcept;
 	int 	set_async		(bool)							noexcept;
