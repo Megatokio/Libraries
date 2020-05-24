@@ -81,21 +81,22 @@ uint charcount (cstr q) noexcept
 	}
 	return rval;
 }
-uint max_csz (cstr q) noexcept
+uint max_css (cstr q) noexcept
 {
-	// calculate required character size (ucs1, ucs2 or ucs4) to store utf-8 string
+	// calculate size shift for required character size (ucs1, ucs2 or ucs4) to store utf-8 string
+	// note: csz = 1 << css
 
 	if (q) while (char c = *q++)
 	{
 		if (uchar(c) <= 0xC3) continue;
-		if (uchar(c) >= 0xF0) return 4;
+		if (uchar(c) >= 0xF0) return 2;
 		while ((c = *q++))
 		{
-			if (uchar(c) >= 0xF0) return 4;
+			if (uchar(c) >= 0xF0) return 2;
 		}
-		return 2;
+		return 1;
 	}
-	return 1;
+	return 0;
 }
 bool fits_in_ucs1 (cstr q) noexcept
 {
