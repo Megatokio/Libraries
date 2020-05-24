@@ -212,7 +212,8 @@ inline cptr prevchar (cptr a, cptr p) noexcept { while (--p >= a && is_fup(*p)) 
 
 
 extern uint charcount (cstr)		noexcept; // count characters in utf-8 string
-extern uint max_csz	  (cstr)		noexcept; // required ucs* character size to store utf-8 string
+extern uint max_css	  (cstr)		noexcept; // character size shift required for utf-8 string
+inline uint max_csz	  (cstr s)		noexcept { return 1u << max_css(s); }
 extern bool fits_in_ucs1 (cstr)		noexcept;
 extern bool fits_in_ucs2 (cstr)		noexcept;
 
