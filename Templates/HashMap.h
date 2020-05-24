@@ -19,7 +19,7 @@
 
 #include "kio/kio.h"
 #include "Templates/Array.h"
-#include "hash/sdbm_hash.h"
+#include "hash/hash.h"
 #include "kio/util/msbit.h"
 
 
@@ -60,38 +60,6 @@
 #define ArrayMAX	0x40000000u		/* max size  ((not count)) */
 #endif
 
-
-namespace kio
-{
-	inline uint hash (cstr key)			{ return sdbm_hash(key); }
-
-	inline uint hash (uint32 key)		{ return key ^ (key>>16); }
-	inline uint hash (int32 key)		{ return hash(uint32(key)); }
-
-	inline uint hash (uint64 key)		{ return hash(uint32(key) ^ uint32(key>>32)); }
-	inline uint hash (int64 key)		{ return hash(uint64(key)); }
-
-//	inline uint hash (uint key)			{ return key ^ (key>>16); }
-//	inline uint hash (int key)			{ return hash(uint32(key)); }
-
-#ifndef _LINUX
-#if _sizeof_long == 8
-	inline uint hash (ulong key)		{ return hash(uint64(key)); }
-	inline uint hash (long key)			{ return hash(uint64(key)); }
-#elif _sizeof_long == 4
-	inline uint hash (ulong key)		{ return hash(uint32(key)); }
-	inline uint hash (long key)			{ return hash(uint32(key)); }
-#else
-	#error
-#endif
-#endif
-
-	// note: uint  == uint32
-	// but:  ulong != uint64
-	// and:  std::size_t == ulong != uint64
-	// without the definition of hash(ulong) the compiler cannot resolve a call to hash(ulong)   :-(
-	inline uint hash (void const* key)	{ return hash(std::size_t(key)); }
-}
 
 template<class KEY, class ITEM>
 class HashMap
@@ -137,8 +105,8 @@ public:
 
 // get items:
 	uint		count		() const		noexcept { return items.count(); }
-	bool		contains	(KEY key) const	noexcept { return indexof(key) != -1; }	// uses KEY::eq()
-	ITEM		get			(KEY key, ITEM dflt) const noexcept;						// uses KEY::eq()
+	bool		contains	(KEY key) const	noexcept { return indexof(key) != -1; }	// uses same(KEY,KEY)
+	ITEM		get			(KEY key, ITEM dflt) const noexcept;					// uses same(KEY,KEY)
 	ITEM&		get			(KEY key)		noexcept { int i=indexof(key); assert(i!=-1); return items[i]; } // uses KEY::eq()
 	ITEM const&	get			(KEY key) const	noexcept { int i=indexof(key); assert(i!=-1); return items[i]; } // uses KEY::eq()
 	ITEM&		operator[]	(KEY key)		noexcept { int i=indexof(key); assert(i!=-1); return items[i]; } // uses KEY::eq()
@@ -147,11 +115,12 @@ public:
 // add / remove items:
 	void		purge		()				noexcept;
 	HashMap&	add			(KEY, ITEM)		throws;		// overwrites if key already exists
+	HashMap&	add_new		(KEY, ITEM)		throws;		// key must be new
 	void		remove		(KEY)			noexcept;	// silently does nothing if key does not exist
 
 // misc:
-	bool operator== (HashMap const& q) const noexcept;							// uses KEY::eq() and ITEM::ne()
-	bool operator!= (HashMap const& q) const noexcept { return !operator==(q); }	// uses KEY::eq() and ITEM::ne()
+	bool operator== (HashMap const& q) const noexcept;							 // uses same(KEY,KEY) and ITEM::ne()
+	bool operator!= (HashMap const& q) const noexcept { return !operator==(q); } // uses same(KEY,KEY) and ITEM::ne()
 
 // read / write file:
 	void print		(FD&, cstr indent)		const throws;
@@ -314,7 +283,7 @@ int HashMap<KEY,ITEM>::indexof(KEY key) const noexcept	// search key by value
 	{
 		bool fin = idx<0;
 		idx &= ~BIT31;
-		if(eq(keys[idx],key)) return idx;	// found
+		if(kio::same(keys[idx],key)) return idx;	// found
 		if(fin) return -1;					// end of thread => not found
 		idx = map[++i&mask];
 		assert(idx!=FREE);
@@ -337,7 +306,7 @@ a:	uint mask = this->mask;					// for rapid access
 	{
 		bool fin = idx<0;
 		idx &= ~BIT31;
-		if(eq(keys[idx],key)) 				// key exists => overwrite & exit:
+		if(kio::same(keys[idx],key)) 		// key exists => overwrite & exit:
 		{
 			items[idx] = std::move(item);	// overwrite item at idx
 			keys[idx] = key;				// also overwrite key, if KEY==cstr then the key may be kept alive by it's item
@@ -347,6 +316,43 @@ a:	uint mask = this->mask;					// for rapid access
 		idx = map[++i&mask];				// inspect next map[i] / items[idx]
 		assert(idx!=FREE);					// BIT31 must be set on last entry of thread: we can't run into a free slot
 	}
+
+	// check whether it's time to grow the map[]:
+	if(items.count()*2 > mask)
+	{
+		resizemap(mask*2+2);
+		goto a;
+	}
+
+	// find free slot in map[]
+	// and clear end-of-thread markers until free slot found:
+	do { map[i&mask] &= ~BIT31; } while(map[++i&mask] != FREE);
+
+	// map[i] is free
+	// get free index in items[]:
+	// store index in map[i],
+	// store key+item in keys[] and items[]:
+
+	//map[(i-1)&mask] &= ~BIT31;  			// clear end-of-thread marker on previous index
+b:	map[i&mask] = items.count() + BIT31;	// store index, set end-of-thread marker
+	items.append(std::move(item));			// store item at index
+	keys.append(key);						// store key at index
+
+	return *this;
+}
+
+template<class KEY,class ITEM>
+HashMap<KEY,ITEM>& HashMap<KEY,ITEM>::add_new (KEY key, ITEM item) throws
+{
+	// add item for key
+	// key must be new
+
+	assert(!contains(key));
+
+a:	uint mask = this->mask;					// for rapid access
+	uint i = kio::hash(key);						// i = index in map[]
+	int  idx = map[i&mask];					// idx = index in items[]
+	if(idx==FREE) goto b;					// map[i] is free => quick action!
 
 	// check whether it's time to grow the map[]:
 	if(items.count()*2 > mask)
@@ -390,7 +396,7 @@ void HashMap<KEY,ITEM>::remove(KEY key) noexcept	// search key by value
 	{
 		fin = idx<0;						// end-of-thread marker
 		idx &= ~BIT31;						// real index
-		if(eq(keys[idx],key)) break;		// item found at map[i] / items[idx]
+		if(kio::same(keys[idx],key)) break;	// item found at map[i] / items[idx]
 		if(fin) return;						// end of thread => not found
 		idx = map[++i&mask];				// next i / idx
 	}
