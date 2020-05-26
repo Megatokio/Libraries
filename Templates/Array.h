@@ -113,7 +113,7 @@ public:
 	void	drop		()					noexcept { assert(cnt); data[--cnt].~T(); }
 	T		pop			()					noexcept { assert(cnt); return std::move(data[--cnt]); }
 	void	purge		()					noexcept { for (uint i=0;i<cnt;i++) data[i].~T(); deallocate(data); max=cnt=0; data=nullptr; }
-	void	append		(T q)				throws	 { growmax(cnt+1); new(&data[cnt++])T(std::move(q)); }
+	T&		append		(T q)				throws	 { growmax(cnt+1); return *new(&data[cnt++])T(std::move(q)); }
 	void	appendifnew	(T q)				throws	 { if (!contains(q)) append(std::move(q)); }  // uses indexof()
 	Array&	operator<<	(T q)				throws	 { append(std::move(q)); return *this; }
 	void	append		(T const* q, uint n) throws	 { growmax(cnt+n); for (uint i=0;i<n;i++) new(&data[cnt+i])T(*q++); cnt += n; }
