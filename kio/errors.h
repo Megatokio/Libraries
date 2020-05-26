@@ -27,15 +27,9 @@
 */
 
 
-#if !defined(ERRORS_H) || defined(EMAC)
-
-
 #ifndef EMAC
-	#define ERRORS_H
-	#define NO_EMAC
-
+#define EMAC(A,B)	A
 	#include <cerrno>
-	#include "settings.h"
 
 	#ifndef EBAS
 		#ifdef ELAST
@@ -49,11 +43,9 @@
 	extern cstr errorstr(int err) noexcept;	// in kio.h: get error string for system or custom error number
 	inline cstr errorstr() noexcept { return errorstr(errno); }
 
-	#define EMAC(A,B)	A
-	enum {
+	enum
 #endif
-
-
+	{
 
 // basic errors:
 	EMAC( customerror=EBAS, "custom error"				),	// kio/errors.h: custom error message
@@ -80,16 +72,7 @@
 #endif
 
 #undef EMAC
-
-#ifdef NO_EMAC
-	#undef NO_EMAC
 	};
-#endif
-
-
-#endif // include guard
-
-
 
 
 

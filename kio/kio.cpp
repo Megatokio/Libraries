@@ -29,10 +29,8 @@ cstr errorstr (int err) noexcept
 
 	// custom error texts:
 	static const cstr ETEXT[] =
-	{
 	#define  EMAC(A,B)	B
 	#include "errors.h"
-	};
 
 	if (err==0)						return "no error";
 	//if (err==-1)					return "unknown error (-1)";	strerror: "Unknown error: -1"
