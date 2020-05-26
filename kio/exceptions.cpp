@@ -95,10 +95,10 @@ cstr internal_error::what() const noexcept
 //			limit_error
 // ---------------------------------------------
 
-limit_error::limit_error (cstr where, ulong sz, ulong max) noexcept
-: any_error(limiterror)
+limit_error::limit_error (cstr where, long sz, long max) noexcept :
+	any_error(limiterror)
 {
-	text = newcopy(usingstr( "%s: size %lu exceeds maximum of %lu", where, sz, max ));
+	text = newcopy(usingstr( "%s: size %li exceeds maximum of %li", where, sz, max ));
 }
 
 
