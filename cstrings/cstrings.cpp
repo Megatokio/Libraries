@@ -209,7 +209,7 @@ str mulstr (cstr q, uint n) throws // limit_error
 	if (!q || !*q || !n) return emptystr;
 
 	size_t len = strlen(q);
-	if (len*n > 0xFFFFFFu) throw limit_error("mulstr()",len*n,0xFFFFFFu);	// 16 MB
+	if (len*n > 0xFFFFFF) throw limit_error("mulstr()",len*n,0xFFFFFF);	// 16 MB
 	str s = tempstr(uint(len*n));
 	ptr z = s;
 

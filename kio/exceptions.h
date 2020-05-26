@@ -123,7 +123,9 @@ public:
 class limit_error : public any_error
 {
 public:
-	limit_error (cstr where, ulong sz, ulong max)	noexcept;
+	limit_error (cstr where, long sz, long max)	noexcept;
+	limit_error (cstr where, ulong sz, ulong max) noexcept : limit_error(where,long(sz),long(max)){}
+	limit_error (cstr where, uint sz, uint max)	noexcept : limit_error(where,ulong(sz),ulong(max)){}
 };
 
 
