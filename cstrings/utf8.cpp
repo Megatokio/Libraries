@@ -226,7 +226,7 @@ ptr _ucs4char_to_utf8 (ucs4char c) noexcept
 	// helper: encode ucs4char to 2 .. 6 byte utf8char:
 	// supports full 32 bits
 
-	ptr z = tempmem(c<=0xffffu ? 3+1 : 6+1);
+	ptr z = tempmem(_MAX_ALIGNMENT<8 ? c<=0xffffu ? 3+1 : 6+1 : 8);
 	*_ucs4char_to_utf8(c,z) = 0;
 	return z;
 }
@@ -347,8 +347,9 @@ ucs2char* utf8_to_ucs2 (cptr q, ucs2char* z) noexcept
 		{
 			errno = notindestcharset;
 			*z++ = replacementchar;
-			n = c <= 0xF7 ? 3 : c <= 0xFB ? 4 : 5;
-			while (n-- && is_fup(*q)) { q++; }
+			//n = c <= 0xF7 ? 3 : c <= 0xFB ? 4	: 5;
+			//while (n-- && is_fup(*q)) { q++; }	no need to limit fups, we already set errno
+			while (is_fup(*q)) { q++; }
 			continue;
 		}
 
@@ -399,8 +400,9 @@ ucs1char* utf8_to_ucs1 (cptr q, ucs1char* z) noexcept
 		errno = notindestcharset;
 		*z++ = replacementchar;
 
-		uint n = c < 0xE0 ? 1 : c < 0xF0 ? 2 : c < 0xF8 ? 3 : c < 0xFC ? 4 : 5;
-		while (n-- && is_fup(*q)) { q++; }
+		//uint n = c < 0xE0 ? 1 : c < 0xF0 ? 2 : c < 0xF8 ? 3 : c < 0xFC ? 4 : 5;
+		//while (n-- && is_fup(*q)) { q++; }	no need to limit fups, we already set errno
+		while (is_fup(*q)) { q++; }
 	}
 
 	return z;

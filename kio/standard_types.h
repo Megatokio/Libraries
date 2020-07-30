@@ -72,7 +72,7 @@ typedef long double longdouble;
 
 
 // minimum width defs:
-// there are also 'int_least8_t'-style typedefs in <stdin.h>
+// there are also 'int_least8_t'-style typedefs in <stdint.h>
 
 typedef	unsigned char		uchar,	*ucharptr;			// ISO: min. sizeof(char)   =  undefined !
 typedef	unsigned short		ushort,	*ushortptr;			//		min. sizeof(short)  =  undefined !

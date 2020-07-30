@@ -276,7 +276,7 @@ str newcopy (cstr s) noexcept
 	else return nullptr;
 }
 
-#ifndef NDEBUG
+#ifdef DEBUG
 namespace TempMemTest
 {
 	static_assert((sizeof(TempMemData)&(ALIGNMENT_MASK)) == 0, "");

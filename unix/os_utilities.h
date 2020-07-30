@@ -23,7 +23,7 @@
 /* ----	system info ----------------------
 */
 extern	cstr	hostName		();
-extern	uint	numCPUs			();
+extern	uint	numCPUs			() noexcept;
 extern	time_t	bootTime		();
 
 extern	void	sysLoad			(double load[3]);			// ranges: 1, 5, and 15 minutes

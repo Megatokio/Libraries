@@ -293,7 +293,7 @@ void abort(cstr fmt, va_list va) // __attribute__((__noreturn__));
 	if (lastchar(fmt)!='\n') fmt = catstr(fmt,"\n");
 	vfprintf(stderr, fmt, va);
 	fprintf(stderr, "aborted.\n");
-	_Exit(ABORTED);
+	exit(ABORTED);
 }
 
 void abort(cstr fmt, ...) // __attribute__((__noreturn__));
