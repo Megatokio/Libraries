@@ -94,6 +94,7 @@ inline	str	 substr		(cuptr a, cuptr e)	noexcept { return substr(cptr(a),cptr(e))
 extern	str  mulstr 	(cstr, uint n)		throws;	  // limit_error
 extern	str  catstr 	(cstr, cstr)		noexcept;
 extern	str  catstr 	(cstr, cstr, cstr, cstr=nullptr, cstr=nullptr, cstr=nullptr) noexcept;
+extern	str  catstr 	(cstr, cstr, cstr, cstr, cstr, cstr, cstr, cstr=nullptr, cstr=nullptr, cstr=nullptr) noexcept;
 extern	str  midstr 	(cstr, int a, int n) noexcept;
 extern	str  midstr 	(cstr, int a)		noexcept;
 extern	str  leftstr 	(cstr, int n)		noexcept;

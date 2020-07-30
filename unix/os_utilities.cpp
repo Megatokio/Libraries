@@ -108,7 +108,7 @@ cstr hostName()
 #endif
 }
 
-uint numCPUs()
+uint numCPUs() noexcept
 {
 #if 1
 	uint n = std::thread::hardware_concurrency();

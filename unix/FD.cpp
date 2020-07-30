@@ -412,6 +412,7 @@ uint32 FD::write_fmt( cstr format, ... ) THF
 	char bu[1];
 	int n = vsnprintf( bu, 0, format, va2 );	// calc. req. size
 	assert(n>=0);
+	va_end(va2);
 	char s[n+1];
 	vsnprintf( s, uint(n+1), format, va );		// create formatted string
 	errno = err;

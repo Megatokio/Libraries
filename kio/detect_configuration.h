@@ -361,9 +361,10 @@
 
 enum ByteOrder
 {
-	MsbFirst, BigEndian=MsbFirst,    NetworkByteOrder=MsbFirst,
-	LsbFirst, LittleEndian=LsbFirst, IntelByteOrder=LsbFirst,
-	PdpEndian
+	MsbFirst, BigEndian=MsbFirst,    NetworkByteOrder=MsbFirst, ByteOrderHiLo=MsbFirst,
+	LsbFirst, LittleEndian=LsbFirst, IntelByteOrder=LsbFirst,	ByteOrderLoHi=LsbFirst,
+	PdpEndian,
+	ByteOrderUndefined
 };
 
 #if defined(_LITTLE_ENDIAN)

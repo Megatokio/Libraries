@@ -665,7 +665,7 @@ a:	int err; char bu[size];
 	do
 	{
 		free(groups);
-		groups = reinterpret_cast<gid_t*>(malloc(uint(ngroups+1)*sizeof(int)));
+		groups = reinterpret_cast<gid_t*>(malloc(uint(ngroups+1)*sizeof(gid_t)));
 		if (groups == nullptr) { errno = ENOMEM; return nullptr; }
 	}
 #ifdef _MACOSX
@@ -1369,7 +1369,7 @@ MyVolumeInfoArray::MyVolumeInfoArray()
 		if (mntent==nullptr) break;
 
 		MyVolumeInfo* vi = new MyVolumeInfo(mntent);
-		if (vi->valid) append(vi);
+		if (vi->valid) append(vi); else delete vi;
 	}
 
 	endmntent(file);

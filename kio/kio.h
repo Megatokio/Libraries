@@ -37,6 +37,19 @@
 #define	kioDomain	"k1.spdns.de"
 
 
+// test for DEBUG and RELEASE are preferred:
+#ifdef DEBUG
+  #if defined NDEBUG || defined RELEASE || defined FINAL
+	#error ""
+  #endif
+#else
+  #undef  NDEBUG
+  #define NDEBUG
+  #undef  RELEASE
+  #define RELEASE
+#endif
+
+
 #include "auto_config.h"    // platform settings
 #include "settings.h"       // project settings
 
@@ -141,7 +154,7 @@ struct on_init { on_init(void(*f)()){f();} };
 	#define ON_INIT static on_init CAT(z,__LINE__)
 
 // log filename during statics initialization
-#ifndef NDEBUG
+#ifdef DEBUG
   #define DEBUG_INIT_MSG  ON_INIT( []{logline( "%s:", strrchr("/" __FILE__, '/')+1);} );
 #else
   #define DEBUG_INIT_MSG
@@ -151,19 +164,19 @@ struct on_init { on_init(void(*f)()){f();} };
 
 /* ==== Code checking depending on SAFETY ====
 */
-#ifdef NDEBUG
+#ifdef RELEASE
   #undef  SAFETY
-  #define SAFETY   0
-#endif
-#ifndef SAFETY
-  #define SAFETY   1
+  #define SAFETY 0
+#else
+  #if not defined SAFETY || SAFETY == 0
+	#undef  SAFETY
+	#define SAFETY 1
+  #endif
 #endif
 #define XSAFE  (SAFETY>=1)
 #define XXSAFE (SAFETY>=2)
 
 #if SAFETY == 0
-  #undef  NDEBUG
-  #define NDEBUG
   #define IFDEBUG(X)
   #define IFNDEBUG(X)  X
   #undef  debugstr
@@ -171,7 +184,6 @@ struct on_init { on_init(void(*f)()){f();} };
   #undef  assert
   #define assert(X) ((void)0)
 #else
-  #undef  NDEBUG
   #define IFDEBUG(X)  X
   #define IFNDEBUG(X)
   #undef  debugstr
@@ -195,12 +207,13 @@ struct on_init { on_init(void(*f)()){f();} };
 
 /* ==== Logging depending on LOGLEVEL ====
 */
-#ifdef NDEBUG
+#ifdef RELEASE
   #undef  LOGLEVEL
   #define LOGLEVEL 0
-#endif
-#ifndef LOGLEVEL
-  #define LOGLEVEL 0
+#else
+  #ifndef LOGLEVEL
+	#define LOGLEVEL 0
+  #endif
 #endif
 #define XLOG  (LOGLEVEL>=1)
 #define XXLOG (LOGLEVEL>=2)

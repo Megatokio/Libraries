@@ -244,6 +244,27 @@ str catstr (cstr s1, cstr s2, cstr s3, cstr s4, cstr s5, cstr s6) noexcept
 	return s;
 }
 
+str catstr (cstr s1, cstr s2, cstr s3, cstr s4, cstr s5, cstr s6,
+			cstr s7, cstr s8, cstr s9, cstr s10) noexcept
+{
+	// Concatenate up to 10 strings
+
+	str s = tempstr( strLen(s1)+strLen(s2)+strLen(s3)+strLen(s4)+strLen(s5)+strLen(s6)+
+					 strLen(s7)+strLen(s8)+strLen(s9)+strLen(s10) );
+	s[0]=0;
+	if (s1) strcpy ( s, s1 );
+	if (s2) strcat ( s, s2 );
+	if (s3) strcat ( s, s3 );
+	if (s4) strcat ( s, s4 );
+	if (s5) strcat ( s, s5 );
+	if (s6) strcat ( s, s6 );
+	if (s7) strcat ( s, s7 );
+	if (s8) strcat ( s, s8 );
+	if (s9) strcat ( s, s9 );
+	if (s10)strcat ( s, s10);
+	return s;
+}
+
 str hexstr (uint32 n, uint digits) noexcept
 {
 	// Convert number to hexadecimal string
@@ -1091,7 +1112,7 @@ str join (Array<cstr> const& q, cstr s, bool final) throws
 		if (i) { strcpy(p,s); p += slen; }
 		strcpy(p,q[i]); p = strchr(p,0);
 	}
-	if (final) { strcpy(p,s); p += slen; }
+	if (final) { strcpy(p,s); /*p += slen;*/ }
 
 	return rval;
 }
