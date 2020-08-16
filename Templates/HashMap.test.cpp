@@ -205,9 +205,9 @@ static void test1(uint& num_tests, uint& num_errors)
 
 	fd.rewind_file();
 	assert(eq(fd.read_str(),"•HashMap[3]"));
-	assert(eq(fd.read_str(), usingstr("  •[ 0] [#%8x] \"Aaa\" = 33",sdbm_hash("Aaa"))));
-	assert(eq(fd.read_str(), usingstr("  •[ 1] [#%8x] \"Ccc\" = 22",sdbm_hash("Ccc"))));
-	assert(eq(fd.read_str(), usingstr("  •[ 2] [#%8x] \"Bbb\" = 44",sdbm_hash("Bbb"))));
+	assert(eq(fd.read_str(), usingstr("  •[ 0] [#%8x] \"Aaa\" = 33",kio::sdbm_hash("Aaa"))));
+	assert(eq(fd.read_str(), usingstr("  •[ 1] [#%8x] \"Ccc\" = 22",kio::sdbm_hash("Ccc"))));
+	assert(eq(fd.read_str(), usingstr("  •[ 2] [#%8x] \"Bbb\" = 44",kio::sdbm_hash("Bbb"))));
 	assert(fd.read_char()=='X');
 	END
 }
