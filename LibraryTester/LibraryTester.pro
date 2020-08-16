@@ -7,9 +7,11 @@ CONFIG += precompiled_header
 
 QMAKE_CXXFLAGS += -Wno-multichar
 
-linux-g++ {
+CONFIG(release,debug|release) { DEFINES += NDEBUG RELEASE } # ATTN: curly brace must start in same line!
+CONFIG(debug,debug|release) { DEFINES += DEBUG } # ATTN: curly brace must start in same line!
+
 LIBS += -pthread
-}
+
 
 INCLUDEPATH +=  \
 	.			\

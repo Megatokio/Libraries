@@ -310,7 +310,7 @@ public:
 	helpers:
 */
 
-#ifndef NDEBUG
+#ifdef DEBUG
 static void lock()   noexcept { int e = pthread_mutex_lock(&mutex);	if (e) panic("LogFile:lock failed");   }
 static void unlock() noexcept { int e = pthread_mutex_unlock(&mutex);if (e) panic("LogFile:unlock failed"); }
 #else
