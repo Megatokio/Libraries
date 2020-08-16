@@ -19,7 +19,9 @@
 #include "kio/kio.h"
 #include "tempmem.h"
 
-#if defined(TEMPMEM_USE_PTHREADS)
+#if defined(NO_THREADS)
+#define PTHREADS 0
+#elif defined(TEMPMEM_USE_PTHREADS)
 #define PTHREADS 1
 #elif defined(TEMPMEM_USE_THREAD_LOCAL)
 #define PTHREADS 0
@@ -38,7 +40,17 @@
 #define DATA_BLOCK_SIZE	 8000
 
 
-#if PTHREADS
+#if defined(NO_THREADS)
+
+ON_INIT([]{ debugstr("tempmem: single-threaded\n"); });
+
+// current pool and linked list of all pools:
+static TempMemPool* pool = new TempMemPool;
+static inline TempMemPool* get_current_pool() { return pool; }
+static inline void set_current_pool (TempMemPool* p) { pool = p; }
+
+#elif PTHREADS
+
 static pthread_key_t tempmem_key;	// key for per-thread TempMemPool
 
 static inline TempMemPool* get_current_pool()
@@ -70,8 +82,8 @@ ON_INIT([]
 static thread_local struct CurrentPoolPtr
 {
 	TempMemPool* pool;
-	CurrentPoolPtr() : pool(new TempMemPool) { debugstr("tempmem: thread_local ctor\n"); }
-	~CurrentPoolPtr() { debugstr("tempmem: thread_local dtor\n"); while (pool) delete pool; }
+	CurrentPoolPtr() : pool(new TempMemPool) { debugstr("tempmem: thread-local ctor\n"); }
+	~CurrentPoolPtr() { debugstr("tempmem: thread-local dtor\n"); while (pool) delete pool; }
 } current_pool;
 
 static inline TempMemPool* get_current_pool() { return current_pool.pool; }
