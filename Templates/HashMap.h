@@ -114,8 +114,8 @@ public:
 
 // add / remove items:
 	void		purge		()				noexcept;
-	ITEM&		add			(KEY, ITEM)		throws;		// overwrites if key already exists 2020-05-30: changed return value
-	ITEM&		add_new		(KEY, ITEM)		throws;		// key must be new
+	HashMap&	add			(KEY, ITEM)		throws;		// overwrites if key already exists
+	HashMap&	add_new		(KEY, ITEM)		throws;		// key must be new
 	void		remove		(KEY)			noexcept;	// silently does nothing if key does not exist
 
 // misc:
@@ -291,7 +291,7 @@ int HashMap<KEY,ITEM>::indexof(KEY key) const noexcept	// search key by value
 }
 
 template<class KEY,class ITEM>
-ITEM& HashMap<KEY,ITEM>::add(KEY key, ITEM item) throws
+HashMap<KEY,ITEM>& HashMap<KEY,ITEM>::add(KEY key, ITEM item) throws
 {
 	// add item for key
 	// if key alredy exists, then overwrite
@@ -308,8 +308,9 @@ a:	uint mask = this->mask;					// for rapid access
 		idx &= ~BIT31;
 		if(kio::same(keys[idx],key)) 		// key exists => overwrite & exit:
 		{
+			items[idx] = std::move(item);	// overwrite item at idx
 			keys[idx] = key;				// also overwrite key, if KEY==cstr then the key may be kept alive by it's item
-			return items[idx] = std::move(item);	// overwrite item at idx
+			return *this;
 		}
 		if(fin) break;						// no more chances: key does not yet exist
 		idx = map[++i&mask];				// inspect next map[i] / items[idx]
@@ -334,12 +335,14 @@ a:	uint mask = this->mask;					// for rapid access
 
 	//map[(i-1)&mask] &= ~BIT31;  			// clear end-of-thread marker on previous index
 b:	map[i&mask] = items.count() + BIT31;	// store index, set end-of-thread marker
+	items.append(std::move(item));			// store item at index
 	keys.append(key);						// store key at index
-	return items.append(std::move(item));			// store item at index
+
+	return *this;
 }
 
 template<class KEY,class ITEM>
-ITEM& HashMap<KEY,ITEM>::add_new (KEY key, ITEM item) throws
+HashMap<KEY,ITEM>& HashMap<KEY,ITEM>::add_new (KEY key, ITEM item) throws
 {
 	// add item for key
 	// key must be new
@@ -369,8 +372,10 @@ a:	uint mask = this->mask;					// for rapid access
 
 	//map[(i-1)&mask] &= ~BIT31;  			// clear end-of-thread marker on previous index
 b:	map[i&mask] = items.count() + BIT31;	// store index, set end-of-thread marker
+	items.append(std::move(item));			// store item at index
 	keys.append(key);						// store key at index
-	return items.append(std::move(item));			// store item at index
+
+	return *this;
 }
 
 template<class KEY,class ITEM>
