@@ -177,7 +177,7 @@ template<typename T>
 T* Array<T>::allocate (uint n) throws
 {
 	if (n <= maxCount) return n ? reinterpret_cast<T*>(new char[n*sizeof(T)]) : nullptr;
-	throw limit_error("Array<T>", n, maxCount);
+	throw LimitError("Array<T>", n, maxCount);
 }
 
 template<typename T>
@@ -690,7 +690,7 @@ typename std::enable_if<std::is_fundamental<T>::value,void>::type
 	array.purge();
 
 	uint m = fd.read_uint16();
-	if (m!=array.MAGIC && m!=array.BYTESWAPPED_MAGIC) throw data_error("Array<T>: wrong magic");
+	if (m!=array.MAGIC && m!=array.BYTESWAPPED_MAGIC) throw DataError("Array<T>: wrong magic");
 
 	uint n = fd.read_uint32_z();
 	array.grow(n,n);
@@ -715,7 +715,7 @@ inline void Array<cstr>::deserialize (FD& fd, void*) throws
 	purge();
 
 	uint m = fd.read_uint16_z();
-	if (m != MAGIC) throw data_error("Array<cstr>: wrong magic");
+	if (m != MAGIC) throw DataError("Array<cstr>: wrong magic");
 
 	uint n = fd.read_uint32_z();
 	growmax(n);
@@ -734,7 +734,7 @@ inline void Array<str>::deserialize (FD& fd, void*) throws
 	purge();
 
 	uint m = fd.read_uint16_z();
-	if (m != MAGIC) throw data_error("Array<str>: wrong magic");
+	if (m != MAGIC) throw DataError("Array<str>: wrong magic");
 
 	uint n = fd.read_uint32_z();
 	growmax(n);
@@ -750,7 +750,7 @@ typename std::enable_if<kio::has_deserialize<T>::value && !kio::has_deserialize_
 	array.purge();
 
 	uint m = fd.read_uint16_z();
-	if (m!=array.MAGIC) throw data_error("Array<T>: wrong magic");
+	if (m!=array.MAGIC) throw DataError("Array<T>: wrong magic");
 
 	uint n = fd.read_uint32_z();
 	array.grow(n,n);
@@ -770,7 +770,7 @@ typename std::enable_if<kio::has_deserialize_w_data<T,void*>::value,void>::type
 	array.purge();
 
 	uint m = fd.read_uint16_z();
-	if (m!=array.MAGIC) throw data_error("Array<T>: wrong magic");
+	if (m!=array.MAGIC) throw DataError("Array<T>: wrong magic");
 
 	uint n = fd.read_uint32_z();
 	array.grow(n,n);

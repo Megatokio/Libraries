@@ -86,7 +86,7 @@ void AudioDecoder::open(cstr filename) noexcept(false)
 	err = ExtAudioFileOpenURL(urlRef, &audiofile);
 	CFRelease(urlStr);
 	CFRelease(urlRef);
-	if(err) { audiofile=NULL; throw any_error("AudioDecoder: Error opening file."); }
+	if(err) { audiofile=NULL; throw AnyError("AudioDecoder: Error opening file."); }
 	this->filename = newcopy(filename);
 	frame_position = 0;
 	client_format.mBitsPerChannel = 0;
@@ -94,13 +94,13 @@ void AudioDecoder::open(cstr filename) noexcept(false)
 	// get the input file format
 	uint32 size = sizeof(file_format);
 	err = ExtAudioFileGetProperty(audiofile, kExtAudioFileProperty_FileDataFormat, &size, &file_format);
-	if(err) throw any_error("AudioDecoder: Error getting file format.");
+	if(err) throw AnyError("AudioDecoder: Error getting file format.");
 
 	// get the total number of frames of the audio file
 	// a frame is the set of samples with 1 sample per channel
 	size = sizeof(num_frames);
 	err	= ExtAudioFileGetProperty(audiofile, kExtAudioFileProperty_FileLengthFrames, &size, &num_frames);
-	if(err) throw any_error("AudioDecoder: Error getting number of frames.");
+	if(err) throw AnyError("AudioDecoder: Error getting number of frames.");
 
 	num_channels		= file_format.mChannelsPerFrame;
 	frames_per_second	= file_format.mSampleRate;
@@ -113,7 +113,7 @@ void AudioDecoder::open(cstr filename) noexcept(false)
 void AudioDecoder::seekSamplePosition(uint32 frameposition) noexcept(false)
 {
 	OSStatus err = ExtAudioFileSeek(audiofile, frameposition);
-	if(err) throw any_error("AudioDecoder: seek(%u) failed: %i",uint(frameposition), int(err));
+	if(err) throw AnyError("AudioDecoder: seek(%u) failed: %i",uint(frameposition), int(err));
 	frame_position = frameposition;
 }
 
@@ -146,7 +146,7 @@ uint32 AudioDecoder::read_buffer(void* bu, uint numchannels, uint32 numframes, u
 		// set output format on audio file:
 		uint32 size  = sizeof(client_format);
 		OSStatus err = ExtAudioFileSetProperty(audiofile, kExtAudioFileProperty_ClientDataFormat, size, &client_format);
-		if(err) throw any_error("AudioDecoder: Error when setting ClientDataFormat: %i",int(err));
+		if(err) throw AnyError("AudioDecoder: Error when setting ClientDataFormat: %i",int(err));
 
 		seekSamplePosition(frame_position);	// security
 	}
@@ -157,7 +157,7 @@ uint32 AudioDecoder::read_buffer(void* bu, uint numchannels, uint32 numframes, u
 	audiobufferlist.mBuffers[0].mDataByteSize = numframes * numchannels * sizeofsample;
 	audiobufferlist.mBuffers[0].mData = bu;
 	OSStatus err = ExtAudioFileRead (audiofile, &numframes, &audiobufferlist);	// reads & sets num_frames
-	if(err) throw any_error("AudioDecoder: failed to read from file");
+	if(err) throw AnyError("AudioDecoder: failed to read from file");
 	return numframes;
 }
 

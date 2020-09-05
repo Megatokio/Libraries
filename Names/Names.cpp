@@ -133,8 +133,8 @@ void Names::deserialize(FD& fd)
 	uint a = fd.read_uint32();
 	uint e = fd.read_uint32();
 
-	if (m != MAGIC) throw data_error("Names: wrong MAGIC");
-	if (a != num_stdnames) throw data_error("Names: wrong num_stdnames");
+	if (m != MAGIC) throw DataError("Names: wrong MAGIC");
+	if (a != num_stdnames) throw DataError("Names: wrong num_stdnames");
 
 	purge();
 

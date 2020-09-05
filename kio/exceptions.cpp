@@ -22,10 +22,11 @@
 #include "kio/kio.h"
 #include "unix/s_type.h"
 #include "unix/FD.h"
+#include "exceptions.h"
 
 
 // helper
-static cstr filename(cstr file) noexcept
+static cstr filename (cstr file) noexcept
 {
 	cstr p = strrchr(file,'/');
 	return p ? p+1 : file;
@@ -33,152 +34,170 @@ static cstr filename(cstr file) noexcept
 
 
 // ---------------------------------------------
-//			any_error
+//			AnyError
 // ---------------------------------------------
 
-any_error::any_error(cstr format, ...) noexcept
-: error(customerror)
+AnyError::AnyError (cstr msg, va_list va) noexcept
+:
+	msg(newcopy(usingstr(msg,va))),
+	err(customerror)
+{}
+
+AnyError::AnyError(cstr format, ...) noexcept
+:
+	err(customerror)
 {
 	va_list va;
 	va_start(va,format);
-	text = newcopy(usingstr(format,va));
+	msg = newcopy(usingstr(format,va));
 	va_end(va);
 }
 
-any_error::any_error (cstr msg, va_list va)	noexcept
-: error(customerror),
-  text(newcopy(usingstr(msg,va)))
+AnyError::AnyError (int e, cstr msg) noexcept
+:
+	msg(newcopy(msg)),
+	err(e)
 {}
 
-any_error::any_error (int error, cstr msg) noexcept
-: error(error),
-  text(newcopy(msg))
+AnyError::AnyError (AnyError&& q) noexcept
+:
+	std::exception(std::move(q)),
+	msg(q.msg),
+	err(q.err)
+{
+	q.msg = nullptr;
+}
+
+AnyError::AnyError(AnyError const& q) noexcept
+:
+	std::exception(q),
+	msg(newcopy(q.msg)),
+	err(q.err)
+{
+}
+
+AnyError::~AnyError () noexcept
+{
+	delete[] msg;
+}
+
+cstr AnyError::what() const noexcept
+{
+	return msg ? msg : errorstr(err);
+}
+
+
+// ---------------------------------------------
+//			InternalError
+// ---------------------------------------------
+
+InternalError::InternalError (cstr file, uint line, cstr txt) noexcept
+:
+	AnyError(internalerror, usingstr("%s line %u: %s", filename(file), line, txt))
 {}
 
-any_error::any_error (any_error&& q) noexcept
-: std::exception(q),
-  error(q.error),
-  text(q.text)
-{
-	q.text=nullptr;
-}
-
-any_error::any_error(any_error const& q) noexcept
-: std::exception(q),
-  error(q.error),
-  text(newcopy(q.text))
+InternalError::InternalError (cstr file, uint line, int e) noexcept
+:
+	InternalError(file, line, errorstr(e))
 {}
 
-any_error::~any_error () noexcept
-{
-	delete[] text;
-}
 
-cstr any_error::what() const noexcept
-{
-	return text ? text : errorstr(error);
-}
+// ---------------------------------------------
+//			LimitError
+// ---------------------------------------------
+
+LimitError::LimitError (cstr where, long sz, long max) noexcept
+:
+	AnyError(limiterror, usingstr("%s: size %li exceeds maximum of %li", where, sz, max))
+{}
 
 
 // ---------------------------------------------
-//			internal_error
+//			DataError
 // ---------------------------------------------
 
-cstr internal_error::what() const noexcept
-{
-	return usingstr( "%s line %u: %s",
-		filename(file), line, text ? text : errorstr(error) );
-}
-
-
-// ---------------------------------------------
-//			limit_error
-// ---------------------------------------------
-
-limit_error::limit_error (cstr where, long sz, long max) noexcept :
-	any_error(limiterror)
-{
-	text = newcopy(usingstr( "%s: size %li exceeds maximum of %li", where, sz, max ));
-}
-
-
-// ---------------------------------------------
-//			data_error
-// ---------------------------------------------
-
-data_error::data_error (cstr msg, ...) noexcept
-: any_error(dataerror)
+DataError::DataError (cstr txt, ...) noexcept
+:
+	AnyError(dataerror)
 {
 	va_list va;
-	va_start(va,msg);
-	text = newcopy(usingstr(msg,va));
+	va_start(va,txt);
+	msg = newcopy(usingstr(txt,va));
 	va_end(va);
 }
 
 
 // ---------------------------------------------
-//			file_error
+//			FileError
 // ---------------------------------------------
 
-file_error::file_error (cstr path, int error) noexcept
-: any_error(error),
-  filepath(newcopy(path)),
-  fd(-1)
+FileError::FileError (cstr path, int e) noexcept
+:
+	AnyError(e),
+	filepath(newcopy(path)),
+	fd(-1)
 {}
 
-file_error::file_error (cstr path, int error, cstr msg) noexcept
-: any_error(error,msg),
-  filepath(newcopy(path)),
-  fd(-1)
+FileError::FileError (cstr path, int e, cstr txt) noexcept
+:
+	AnyError(e,txt),
+	filepath(newcopy(path)),
+	fd(-1)
 {}
 
-file_error::file_error (cstr path, int fd, int error) noexcept
-: any_error(error),
-  filepath(newcopy(path)),
-  fd(fd)
+FileError::FileError (int fd, cstr path, int error) noexcept
+:
+	AnyError(error),
+	filepath(newcopy(path)),
+	fd(fd)
 {}
 
-file_error::file_error (cstr path, int fd, int error, cstr msg) noexcept
-: any_error(error,msg),
-  filepath(newcopy(path)),
-  fd(fd)
+FileError::FileError (int fd, cstr path, int error, cstr txt) noexcept
+:
+	AnyError(error,txt),
+	filepath(newcopy(path)),
+	fd(fd)
 {}
 
-file_error::file_error (const FD& fd, int error) noexcept
-: any_error(error),
-  filepath(newcopy(fd.filepath())),
-  fd(fd.file_id())
+FileError::FileError (const FD& fd, int error) noexcept
+:
+	AnyError(error),
+	filepath(newcopy(fd.filepath())),
+	fd(fd.file_id())
 {}
 
-file_error::file_error (const FD& fd, int error, cstr msg) noexcept
-: any_error(error,msg),
-  filepath(newcopy(fd.filepath())),
-  fd(fd.file_id())
+FileError::FileError (const FD& fd, int error, cstr txt) noexcept
+:
+	AnyError(error,txt),
+	filepath(newcopy(fd.filepath())),
+	fd(fd.file_id())
 {}
 
-file_error::file_error(file_error const& q) noexcept
-: any_error(q),
-  filepath(newcopy(q.filepath)),
-  fd(q.fd)
+FileError::FileError (FileError const& q) noexcept
+:
+	AnyError(q),
+	filepath(newcopy(q.filepath)),
+	fd(q.fd)
 {}
 
-file_error::file_error(file_error&& q) noexcept
-: any_error(std::move(q)),
-  filepath(q.filepath),
-  fd(q.fd)
+FileError::FileError (FileError&& q) noexcept
+:
+	AnyError(std::move(q)),
+	filepath(q.filepath),
+	fd(q.fd)
 {
 	q.filepath = nullptr;
 }
 
-file_error::~file_error () noexcept
+FileError::~FileError () noexcept
 {
 	delete[] filepath;
 }
 
-cstr file_error::what() const noexcept
+cstr FileError::what() const noexcept
 {
-	if (text) return usingstr("%s in file \"%s\" (%s)",errorstr(error),filepath,text);
-	else	 return usingstr("%s in file \"%s\"",     errorstr(error),filepath);
+	if (msg) return usingstr("%s in file \"%s\" (%s)",errorstr(err), filepath, msg);
+	else	 return usingstr("%s in file \"%s\"",     errorstr(err), filepath);
 }
 
 

@@ -37,7 +37,7 @@ WavFile::WavFile(cstr filepath) noexcept
 		read_header();
 		xlogline("new WavFile:\n%s", tostr());
 	}
-	catch (any_error& e)
+	catch (AnyError& e)
 	{
 		xlogline("new WavFile(\"%s\"): %s",fd.filepath(),e.what());
 	}
@@ -80,8 +80,8 @@ void WavFile::read_header() throws
 		uint32 riff_size = fd.read_uint32_z();	(void) riff_size;
 		uint32 wave_tag  = fd.read_uint32_x();
 
-		if(riff_tag != 'RIFF') throw data_error("not a RIFF file");
-		if(wave_tag != 'WAVE') throw data_error("not a WAVE file");
+		if(riff_tag != 'RIFF') throw DataError("not a RIFF file");
+		if(wave_tag != 'WAVE') throw DataError("not a WAVE file");
 	}
 
 	// read FMT chunk:
@@ -89,8 +89,8 @@ void WavFile::read_header() throws
 		uint32 fmt_tag  = fd.read_uint32_x();
 		uint32 fmt_size = fd.read_uint32_z();
 
-		if(fmt_tag != 'fmt ') throw data_error("FMT chunk not found");
-		if(fmt_size<16) throw data_error("FMT chunk broken");
+		if(fmt_tag != 'fmt ') throw DataError("FMT chunk not found");
+		if(fmt_size<16) throw DataError("FMT chunk broken");
 
 		sample_format	 = fd.read_uint16_z();
 		num_channels	 = fd.read_uint16_z();
@@ -106,22 +106,22 @@ void WavFile::read_header() throws
 
 		uint z = sample_format;
 		if (z!=PCM && z!=ALAW && z!=ULAW && z!=IEEEFLOAT)
-			throw data_error("unknown sample format: %u", z);
+			throw DataError("unknown sample format: %u", z);
 
 		z = bits_per_sample;
 		if (z!=8 && z!=16 && z!=32)
-			throw data_error("unsupported sample size: %u bits", z);
+			throw DataError("unsupported sample size: %u bits", z);
 
 		if (num_channels != 1 && num_channels != 2)
-			throw data_error("unsupported number of channels: %u", num_channels);
+			throw DataError("unsupported number of channels: %u", num_channels);
 
 		if (bytes_per_frame * frames_per_second != bytes_per_second)
-			throw data_error("inconsistent values for bytes/frame, frames/second and bytes/second"
+			throw DataError("inconsistent values for bytes/frame, frames/second and bytes/second"
 							 " (%u,%u,%u)", bytes_per_frame, frames_per_second, bytes_per_second );
 
 		z = (num_channels * bits_per_sample + 7) / 8;
 		if (z != bytes_per_frame)
-			throw data_error("inconsistent values for num_channels, bits/sample and bytes/frame"
+			throw DataError("inconsistent values for num_channels, bits/sample and bytes/frame"
 							 " (%u,%u,%u)", num_channels, bits_per_sample, bytes_per_frame);
 	}
 
@@ -133,7 +133,7 @@ void WavFile::read_header() throws
 		{
 			uint32 n = fd.read_uint32_z(); n += n&1;
 			if (fd.file_remaining() < n+8)
-				throw data_error("DATA chunk not found");
+				throw DataError("DATA chunk not found");
 			fd.skip_bytes(n);
 			data_tag = fd.read_uint32_x();
 		}
@@ -142,10 +142,10 @@ void WavFile::read_header() throws
 		data_start = fd.file_position();
 
 		if (data_size / bytes_per_frame * bytes_per_frame != data_size)
-			throw data_error("total data size is not an integral multiple of bytes/frame");
+			throw DataError("total data size is not an integral multiple of bytes/frame");
 
 		if (fd.file_remaining() < data_size)
-			throw data_error("DATA truncated");
+			throw DataError("DATA truncated");
 	}
 
 	total_playtime = double(data_size) / bytes_per_second;

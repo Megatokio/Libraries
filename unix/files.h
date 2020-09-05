@@ -24,7 +24,7 @@
 
 #define TPL template<class T>
 #define SOT sizeof(T)
-#define THF	noexcept(false)	// file_error
+#define THF	noexcept(false)	// FileError
 #define EXT extern
 #define INL inline
 template <class T> class Array;

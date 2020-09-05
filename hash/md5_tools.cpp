@@ -55,7 +55,7 @@ void check_md5(const uint8 data[], uint32 count, const uint8 md5[16], cstr msg) 
 {
 	uint8 mymd5[16];
 	calc_md5(data,count,mymd5);
-	if (memcmp(md5,mymd5,16)) throw data_error(md5error,msg);
+	if (memcmp(md5,mymd5,16)) throw DataError(md5error,msg);
 }
 
 

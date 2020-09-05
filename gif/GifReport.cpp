@@ -162,7 +162,7 @@ void LogGifFile( cstr filepath )
 	{
 		char header[7]; header[6]=0;
 		fd.read_bytes(header,6);
-		if(strncmp(header,"GIF",3)!=0) throw file_error(fd,dataerror,"header!=\"GIF\"");
+		if(strncmp(header,"GIF",3)!=0) throw FileError(fd,dataerror,"header!=\"GIF\"");
 		Log( "Header: %s\n",header );
 
 		ushort w,h; uchar flags, bgcolor, aspectratio;
@@ -238,7 +238,7 @@ void LogGifFile( cstr filepath )
 		}
 
 	}
-	catch(any_error e)
+	catch(AnyError e)
 	{
 		Log( "file error: %s\n", e.what() );
 	}

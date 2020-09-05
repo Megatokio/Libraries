@@ -32,9 +32,9 @@ extern void test_kio_util (uint& num_tests, uint& num_errors);
 
 
 #undef  assert
-#define assert(X) do { if(!(X)){throw internal_error(__FILE__, __LINE__, "FAILED: " #X);} } while(0)
+#define assert(X) do { if(!(X)){throw InternalError(__FILE__, __LINE__, "FAILED: " #X);} } while(0)
 #undef IERR
-#define IERR() throw internal_error(__FILE__, __LINE__,internalerror)
+#define IERR() throw InternalError(__FILE__, __LINE__,internalerror)
 
 #define TRY num_tests++; try{
 #define END }catch(std::exception& e){num_errors++; logline("%s",e.what());}

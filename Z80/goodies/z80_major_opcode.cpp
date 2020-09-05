@@ -138,7 +138,7 @@ static cptr skip_word(cptr q, cstr name)
 	• prefix ED instruction "ld hl,(NN)" is never returned,
 	  because the non-prefix version is returned instead
 */
-uint8 z80_major_opcode(cstr q) noexcept(false) // any_error
+uint8 z80_major_opcode(cstr q) noexcept(false) // DataError
 {
 	uint op   = NIX;
 	uint arg1 = NIX;
@@ -153,7 +153,7 @@ uint8 z80_major_opcode(cstr q) noexcept(false) // any_error
 		q = skip_word(q0,op_idf[op]);
 		if(q) break;
 	}
-	if(q==NULL) throw any_error("unknown opcode");
+	if(q==nullptr) throw DataError("unknown opcode");
 	op = op_num[op];
 
 	// get 1st argument:
@@ -166,7 +166,7 @@ uint8 z80_major_opcode(cstr q) noexcept(false) // any_error
 			q = skip_word(q0,arg_idf[arg1]);
 			if(q) break;
 		}
-		if(q==NULL) throw any_error("unknown first argument");
+		if(q==nullptr) throw DataError("unknown first argument");
 		arg1 = arg_num[arg1];
 	}
 
@@ -183,13 +183,13 @@ uint8 z80_major_opcode(cstr q) noexcept(false) // any_error
 			q = skip_word(q0,arg_idf[arg2]);
 			if(q) break;
 		}
-		if(q==NULL) throw any_error("unknown second argument");
+		if(q==nullptr) throw DataError("unknown second argument");
 		arg2 = arg_num[arg2];
 	}
 
 	// test for end of opcode specifier:
 	while(is_space(*q)) q++;
-	if(*q) throw any_error("end of opcode expected");
+	if(*q) throw DataError("end of opcode expected");
 
 
 	// now calculate the major opcode byte of the z80 instruction:
@@ -273,7 +273,7 @@ uint8 z80_major_opcode(cstr q) noexcept(false) // any_error
 	}
 
 	// error:
-	throw any_error("unsuitable arguments for opcode");
+	throw DataError("unsuitable arguments for opcode");
 }
 
 

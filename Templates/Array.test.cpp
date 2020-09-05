@@ -127,7 +127,7 @@ static void test1(uint& num_tests, uint& num_errors)
 	/*TRY
 	Array<int> a;
 	a.first()++;
-	EXPECT(internal_error)*/
+	EXPECT(InternalError)*/
 
 	TRY
 	Array<int> a;
@@ -278,9 +278,9 @@ static void test1(uint& num_tests, uint& num_errors)
 	assert(array == Array<int>() << 6 << 5 << 9 << 7);
 	END
 
-	/*TRY array[4]; EXPECT(internal_error)*/
+	/*TRY array[4]; EXPECT(InternalError)*/
 
-	/*TRY array[uint(-1)]; EXPECT(internal_error)*/
+	/*TRY array[uint(-1)]; EXPECT(InternalError)*/
 
 	TRY
 	array[3]++;

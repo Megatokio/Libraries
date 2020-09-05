@@ -56,10 +56,10 @@
 	EMAC( brokenescapecode,	"broken escape code in string"),// cstrings/utf8.cpp
 	EMAC( endoffile,		"end of file"				),	// unix/FD.h
 #define   outofmemory		ENOMEM
-	EMAC( internalerror,	"internal error"			),	// kio/cdefs.h: macro IERR(),  class internal_error
-	EMAC( notyetimplemented,"not yet implemented"		),	// kio/cdefs.h: macro TODO(),  class internal_error
-	EMAC( limiterror,		"size exceeds limit"		),	// kio/exceptions.h: class limit_error
-	EMAC( dataerror,		"data error"				),	// kio/exceptions.h: class data_error
+	EMAC( internalerror,	"internal error"			),	// kio/cdefs.h: macro IERR(),  class InternalError
+	EMAC( notyetimplemented,"not yet implemented"		),	// kio/cdefs.h: macro TODO(),  class InternalError
+	EMAC( limiterror,		"size exceeds limit"		),	// kio/exceptions.h: class LimitError
+	EMAC( dataerror,		"data error"				),	// kio/exceptions.h: class DataError
 
 // os_utilities.cpp:
 	EMAC( childterminatedbysignal,	"child terminated by signal" ),

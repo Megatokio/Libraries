@@ -26,6 +26,7 @@ inline	bool is_space (char c)		noexcept { return uchar(c)<=' ' && c!=0; }
 inline	bool is_letter (char c)		noexcept { return uchar((c|0x20)-'a')<='z'-'a'; }
 inline	bool is_control	(char c)	noexcept { return uchar(c)<0x20 || uchar(c)==0x7f; }
 inline	bool is_printable (char c)	noexcept { return uchar(c)>=0x20 && uchar(c)!=0x7f; }
+inline  bool is_ascii (char c)		noexcept { return uchar(c) <= 0x7F; }
 inline	bool is_uppercase (char c)	noexcept { return uchar(c-'A')<='Z'-'A'; }
 inline	bool is_lowercase (char c)	noexcept { return uchar(c-'a')<='z'-'a'; }
 inline	char to_upper (char c)		noexcept { return uchar(c-'a')<='z'-'a' ? c&~0x20 : c; }
@@ -91,7 +92,7 @@ extern	str	 whitestr	(cstr, char c=' ')	noexcept;
 
 extern	str	 substr		(cptr a, cptr e)	noexcept;
 inline	str	 substr		(cuptr a, cuptr e)	noexcept { return substr(cptr(a),cptr(e)); }	// convenience method
-extern	str  mulstr 	(cstr, uint n)		throws;	  // limit_error
+extern	str  mulstr 	(cstr, uint n)		throws;	  // LimitError
 extern	str  catstr 	(cstr, cstr)		noexcept;
 extern	str  catstr 	(cstr, cstr, cstr, cstr=nullptr, cstr=nullptr, cstr=nullptr) noexcept;
 extern	str  catstr 	(cstr, cstr, cstr, cstr, cstr, cstr, cstr, cstr=nullptr, cstr=nullptr, cstr=nullptr) noexcept;
