@@ -42,11 +42,11 @@ hierarchy:
 		std::bad_cast				// #include <typeinfo>		Falscher Objekttyp bei Typumwandlung
 		std::bad_exception			// #include <exception>		unexpected()
 
-		any_error;					//							base class for own errors: includes error code
-			internal_error			// #include "kio/abort.h"	ABORT, TRAP, assert, IERR, TODO
-			limit_error;			//							Array<T>: array too large
-			data_error;				//							data parsers, e.g. for input data from file
-			file_error;				// "unix/file_utilities.h"
+		AnyError;					//							base class for own errors: includes error code
+			InternalError			// #include "kio/abort.h"	ABORT, TRAP, assert, IERR, TODO
+			LimitError;			//							Array<T>: array too large
+			DataError;				//							data parsers, e.g. for input data from file
+			FileError;				// "unix/file_utilities.h"
 
 		std::logic_error			// #include <stdexcept>		theoretisch vermeidbare Laufzeitfehler
 			std::invalid_argument	// #include <stdexcept>		stdc++ lib ((general function argument error))
@@ -62,112 +62,100 @@ hierarchy:
 
 
 // ---------------------------------------------
-//			bad_alloc
+//			AnyError
 // ---------------------------------------------
 
-typedef	std::bad_alloc	bad_alloc;
-
-
-
-// ---------------------------------------------
-//			any_error
-// ---------------------------------------------
-
-class any_error : public std::exception
+class AnyError : public std::exception
 {
-public:
-	int		error;		// errno
-	cstr	text;		// allocated
+protected:
+	cstr	msg = nullptr;	// allocated
+	int		err;			// errno
+	int		dummy;			// padding
 
 public:
-	explicit any_error (cstr msg, ...)		noexcept __printflike(2,3);
-	any_error (cstr msg, va_list va)		noexcept __printflike(2,0);
-	explicit any_error (int error)			noexcept :error(error), text(nullptr){}
-	any_error (int error, cstr msg)			noexcept;
-	~any_error ()							noexcept override;
+	explicit AnyError (cstr msg, ...)	noexcept __printflike(2,3);
+	AnyError (cstr msg, va_list va)		noexcept __printflike(2,0);
+	explicit AnyError (int err)			noexcept :err(err){}
+	AnyError (int err, cstr msg)		noexcept;
+	~AnyError ()						noexcept override;
 
-	cstr what () const						noexcept override;
+	cstr what () const					noexcept override;
+	int error() const noexcept { return err; }
 
-	any_error(any_error const&)				noexcept;
-	any_error(any_error&&)					noexcept;
-	any_error& operator= (any_error const&) = delete;
-	any_error& operator= (any_error&&)		= delete;
+	AnyError (const AnyError&)			noexcept;
+	AnyError (AnyError&&)				noexcept;
+	AnyError& operator= (const AnyError&) = delete;
+	AnyError& operator= (AnyError&&) = delete;
 };
 
 
 
 // ---------------------------------------------
-//			internal_error
+//			InternalError
 // ---------------------------------------------
 
-class internal_error : public any_error
+class InternalError : public AnyError
 {
 public:
-	cstr file;			// source file: const or temp;  assumed: __FILE__
-	uint line;			// source line number;			assumed: __LINE__
-
-public:
-	internal_error (cstr file, uint line)			 noexcept :any_error(internalerror),file(file),line(line){}
-	internal_error (cstr file, uint line, int err)	 noexcept :any_error(err),file(file),line(line){}
-	internal_error (cstr file, uint line, cstr msg)	 noexcept :any_error(internalerror,msg),file(file),line(line){}
-
-	cstr what () const								 noexcept override;
+	InternalError (cstr file, uint line, int err=internalerror) noexcept;
+	InternalError (cstr file, uint line, cstr msg) noexcept;
 };
 
 
 
 // ---------------------------------------------
-//			limit_error
+//			LimitError
 // ---------------------------------------------
 
-class limit_error : public any_error
+class LimitError : public AnyError
 {
 public:
-	limit_error (cstr where, long sz, long max)	noexcept;
-	limit_error (cstr where, ulong sz, ulong max) noexcept : limit_error(where,long(sz),long(max)){}
-	limit_error (cstr where, uint sz, uint max)	noexcept : limit_error(where,ulong(sz),ulong(max)){}
+	template<typename T>
+	LimitError (cstr where, T sz, T max) noexcept : LimitError(where,long(sz),long(max)){}
+	LimitError (cstr where, long sz, long max)	noexcept;
 };
 
 
 
 // ---------------------------------------------
-//			data_error
+//			DataError
 // ---------------------------------------------
 
-class data_error : public any_error
+class DataError : public AnyError
 {
 public:
-	 data_error	()								noexcept :any_error(dataerror){}
-	 data_error	(cstr msg, ...)					noexcept __printflike(2,3);
-	 data_error	(int error, cstr msg)			noexcept :any_error(error,msg){}
-	 data_error	(int error)						noexcept :any_error(error){}
+	 DataError ()						noexcept : AnyError(dataerror){}
+	 DataError (int error)				noexcept : AnyError(error){}
+	 DataError (int error, cstr text)	noexcept : AnyError(error,text){}
+	 DataError (cstr msg, ...)			noexcept __printflike(2,3);
 };
 
 
 
 // ---------------------------------------------
-//			file_error
+//			FileError
 // ---------------------------------------------
 
-class file_error : public any_error
+class FileError : public AnyError
 {
 public:
 	cstr filepath;
 	int  fd;
 
 public:
-	file_error(cstr path, int error)			noexcept;
-	file_error(cstr path, int error, cstr msg)	noexcept;
-	file_error(cstr path, int fd, int error)			noexcept;
-	file_error(cstr path, int fd, int error, cstr msg)	noexcept;
-	file_error(const FD&, int error)			noexcept;
-	file_error(const FD&, int error, cstr msg)	noexcept;
+	FileError (cstr path, int error)				noexcept;
+	FileError (cstr path, int error, cstr msg)	noexcept;
+	FileError (int fd, cstr path, int error)		noexcept;
+	FileError (int fd, cstr path, int error, cstr msg) noexcept;
+	FileError (const FD&, int error)				noexcept;
+	FileError (const FD&, int error, cstr msg)	noexcept;
 
-	file_error(file_error const&)				noexcept;
-	file_error(file_error&&)					noexcept;
-	file_error& operator= (file_error const&)	= delete;
-	file_error& operator= (file_error&&)		= delete;
-	~file_error ()								noexcept override;
+	FileError (FileError const&)					noexcept;
+	FileError (FileError&&)						noexcept;
+
+	FileError& operator= (FileError const&)	= delete;
+	FileError& operator= (FileError&&)		= delete;
+	~FileError ()								noexcept override;
 
 	cstr what() const							noexcept override;
 };

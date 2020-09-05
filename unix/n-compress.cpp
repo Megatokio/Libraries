@@ -478,10 +478,10 @@ void decompress(cstr qfilepath, cstr zfilepath) THF
 
 	FD q(qfilepath,'r');
 	while(insize < 3 && (rsize = q.read_bytes(inbuf+insize,IBUFSIZ,1)) > 0) { insize += rsize; }
-	if(insize < 3 || inbuf[0] != MAGIC_1 || inbuf[1] != MAGIC_2) throw file_error(q,customerror,"not in a compressed format");
+	if(insize < 3 || inbuf[0] != MAGIC_1 || inbuf[1] != MAGIC_2) throw FileError(q,customerror,"not in a compressed format");
 
 	int maxbits      = inbuf[2] & BIT_MASK;
-	if(maxbits > BITS) throw file_error(q,customerror,usingstr("corrupted data: claims %i bits",(int)maxbits));
+	if(maxbits > BITS) throw FileError(q,customerror,usingstr("corrupted data: claims %i bits",(int)maxbits));
 	int block_mode   = inbuf[2] & BLOCK_MODE;
 	int32 maxmaxcode = MAXCODE(maxbits);
 	int32 free_ent   = ((block_mode) ? FIRST : 256);
@@ -524,7 +524,7 @@ loop:
 
 		if(oldcode == -1)
 		{
-			if(code >= 256) throw file_error(q,customerror,usingstr("corrupted data: oldcode:-1 code:%i",int(code)));
+			if(code >= 256) throw FileError(q,customerror,usingstr("corrupted data: oldcode:-1 code:%i",int(code)));
 			outbuf[outpos++] = uint8(finchar = (int)(oldcode = code));
 			continue;
 		}
@@ -544,7 +544,7 @@ loop:
 
 		if(code >= free_ent)				// Special case for KwKwK string
 		{
-			if(code > free_ent) throw file_error(q, customerror, "corrupted data: code > free_ent");
+			if(code > free_ent) throw FileError(q, customerror, "corrupted data: code > free_ent");
 			*--stackp = uint8(finchar);
 			code = oldcode;
 		}

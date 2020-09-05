@@ -273,8 +273,8 @@ extern void abort( int error_number )	  __attribute__((__noreturn__));
 
 #ifdef NDEBUG
 	// catchable in final code:
-	#define IERR()	throw internal_error(__FILE__, __LINE__,internalerror)
-	#define TODO()	throw internal_error(__FILE__,__LINE__,notyetimplemented)
+	#define IERR()	throw InternalError(__FILE__, __LINE__,internalerror)
+	#define TODO()	throw InternalError(__FILE__,__LINE__,notyetimplemented)
 #else
 	// fail hard if debugging: (--> set breakpoint in abort() in kio.h)
 	#define IERR()	abort("%s line %u: INTERNAL ERROR",__FILE__,__LINE__)

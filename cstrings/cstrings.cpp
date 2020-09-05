@@ -202,14 +202,14 @@ bool islowerstr	(cstr s) noexcept
 	return yes;
 }
 
-str mulstr (cstr q, uint n) throws // limit_error
+str mulstr (cstr q, uint n) throws // LimitError
 {
 	// Repeate string n times
 
 	if (!q || !*q || !n) return emptystr;
 
 	size_t len = strlen(q);
-	if (len*n > 0xFFFFFF) throw limit_error("mulstr()",len*n,0xFFFFFF);	// 16 MB
+	if (len*n > 0xFFFFFF) throw LimitError("mulstr()",len*n,0xFFFFFF);	// 16 MB
 	str s = tempstr(uint(len*n));
 	ptr z = s;
 

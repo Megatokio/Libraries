@@ -843,7 +843,7 @@ void create_dir( cstr path, mode_t mode, bool autocreatedirs ) THF
 		if (mkdir(path,mode)==0) return;	// create dir or
 	}
 
-	throw file_error(path,errno, "create dir");
+	throw FileError(path, errno, "create dir");
 }
 
 
@@ -863,7 +863,7 @@ void create_pipe( cstr path, mode_t mode ) THF
 		if (mkfifo(path,mode)==0) return; // ok
 	}
 
-	throw file_error(path,errno,"create pipe");
+	throw FileError(path, errno, "create pipe");
 }
 
 
@@ -885,7 +885,7 @@ void create_symlink (cstr linkpath, cstr destpath) THF
 	}
 
 	if (symlink(destpath,linkpath)==0) return; // OK
-x:	throw file_error(linkpath, errno, "create symlink");
+x:	throw FileError(linkpath, errno, "create symlink");
 }
 
 
@@ -901,7 +901,7 @@ void create_hardlink (cstr newpath, cstr oldpath) THF
 	if (errno == ENOENT && link(oldpath,newpath) == 0) return;	// ok
 
 	if (errno == ok) errno = EEXIST;		// node exists
-	throw file_error(newpath, errno, "create hardlink");
+	throw FileError(newpath, errno, "create hardlink");
 }
 
 
@@ -953,10 +953,10 @@ void create_hardlinked_copy (cstr newdir, cstr olddir, bool copy_dir_owner) THF
 			// else: ignore
 		}
 	}
-	catch (file_error& e)
+	catch (FileError& e)
 	{
 		logline("create_hardlinked_copy dir size = %u, dir = %s", dir.count(),olddir);
-		throw e;
+		throw;
 	}
 }
 
@@ -976,7 +976,7 @@ void delete_node( cstr path, bool follow_symlink, s_type typ ) THF
 	}
 	if (remove(path)==0) return;
 
-x:	throw file_error(path,errno,"delete node");
+x:	throw FileError(path, errno, "delete node");
 }
 
 
@@ -1024,7 +1024,7 @@ void delete_dir( cstr path, bool fulltree ) THF
 
 	if (rmdir(path)==0 || (errno==ENOTEMPTY && fulltree && remove_tree(path)==0) ) return; // ok
 
-x:	throw file_error(path,errno,"delete dir");
+x:	throw FileError(path, errno, "delete dir");
 }
 
 
@@ -1047,7 +1047,7 @@ void rename_node( cstr oldpath, cstr newpath, bool overwrite ) THF
 	if (errno==ok || errno==ENOENT)
 		if (rename(oldpath,newpath)==0) return;			// renames files, dirs and symlinks!
 
-x:	throw file_error(oldpath,errno,usingstr("rename to \"%s\"",newpath));
+x:	throw FileError(oldpath, errno, usingstr("rename to \"%s\"",newpath));
 }
 
 
@@ -1066,7 +1066,7 @@ void swap_files( cstr path1, cstr path2 ) THF
 		return; // ok
 	}
 
-x:	throw file_error(path1,errno, usingstr("swap with file \"%s\"",path2));
+x:	throw FileError(path1, errno, usingstr("swap with file \"%s\"",path2));
 }
 
 
@@ -1082,7 +1082,7 @@ void read_dir( cstr path, MyFileInfoArray& v, bool resolve_symlinks ) THF
 	path = fullpath(path,yes);
 	if (errno && errno!=ENOENT)
 	{
-		x: throw file_error(path,errno, "read dir");
+		x: throw FileError(path, errno, "read dir");
 	}
 
 	cstr pattern = nullptr;

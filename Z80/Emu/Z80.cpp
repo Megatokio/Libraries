@@ -592,7 +592,7 @@ slow_loop:
 			goto irpt_xw;
 
 		default:					//	only RSTxx and CALL NN are supported
-			TODO();					//  any other opcode is of no real use.		((throws internal_error))
+			TODO();					//  any other opcode is of no real use.		((throws InternalError))
 		}
 
 	case 1:

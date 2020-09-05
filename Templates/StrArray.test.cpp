@@ -70,7 +70,7 @@ static void test1(uint& num_tests, uint& num_errors)
 	/*TRY
 		StrArray a;
 		a.first() = nullptr;
-	EXPECT(internal_error)*/
+	EXPECT(InternalError)*/
 
 	TRY
 		StrArray a;
@@ -228,9 +228,9 @@ static void test1(uint& num_tests, uint& num_errors)
 	assert(array == StrArray() << "6" << "5" << "9" << "7");
 	END
 
-	/*TRY array[4]; EXPECT(internal_error)*/
+	/*TRY array[4]; EXPECT(InternalError)*/
 
-	/*TRY array[uint(-1)]; EXPECT(internal_error)*/
+	/*TRY array[uint(-1)]; EXPECT(InternalError)*/
 
 	TRY
 	str s=newcopy("8");

@@ -480,11 +480,11 @@ void HashMap<KEY,TYPE>::deserialize (FD& fd, void* data) throws
 {
 	// deserialize: supports reading back on byte swapped host. (if items support this.)
 	uint m = fd.read_uint16_z();
-	if (m != MAGIC && m != BYTESWAPPED_MAGIC) throw data_error("HashMap<T,U>: wrong magic");
+	if (m != MAGIC && m != BYTESWAPPED_MAGIC) throw DataError("HashMap<T,U>: wrong magic");
 
 	items.deserialize(fd,data);
 	keys.deserialize(fd,data);
-	if (items.count() != keys.count()) throw data_error("HashMap<T,U>: key/item mismatch");
+	if (items.count() != keys.count()) throw DataError("HashMap<T,U>: key/item mismatch");
 
 	uint mapsize = items.count() < 8 ? 16 : 4u << msbit(items.count()-1);	// mapsize = 2 * max!
 	resizemap(mapsize);
