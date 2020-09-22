@@ -59,7 +59,7 @@ protected:
 
 	T* allocate (uint n)					throws;
 	void memmove (uint z, uint q, uint n)	noexcept { ::memmove( ptr(data+z), cptr(data+q), n*sizeof(T) ); }
-	void memcopy (T* z, void const* q, uint n) noexcept { ::memcpy ( ptr(z), cptr(q), n*sizeof(T) ); }
+	static void memcopy (T* z, void const* q, uint n) noexcept { ::memcpy ( ptr(z), cptr(q), n*sizeof(T) ); }
 	void memclr (uint z, uint n)			noexcept { ::memset ( ptr(data+z), 0, n*sizeof(T) ); }
 	void deallocate (T* data)				noexcept { delete[] ptr(data); }
 

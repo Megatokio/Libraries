@@ -190,7 +190,7 @@
 
 #elif defined(__x86_64__) || defined(_M_AMD64)
 	#define _I386x64 1
-	#define _PROCESSOR "i386x64"
+	#define _PROCESSOR "amd64"	// was: "i386x64"
 	#define _bits_per_byte			8
 	#define _sizeof_char			1
 	#define	_sizeof_short			2
