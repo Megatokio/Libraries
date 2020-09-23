@@ -274,6 +274,9 @@ protected:
 	using Array<RCPtr<T>>::data;
 
 public:
+	explicit RCArray ()	throws {}
+	explicit RCArray (uint cnt, uint max=0)	throws : Array<RCPtr<T>>(cnt,max) {}
+
 	uint indexof  (const T* item) const	noexcept		// find first occurance or return ~0u
 	{													// compares object addresses (pointers)
 		for (uint i=0; i<cnt; i++) { if (data[i].p == item) return i; }

@@ -1,20 +1,23 @@
+TARGET	= LibraryTester
 TEMPLATE = app
+QT       -= core
+QT       -= gui
+
 CONFIG += console
 CONFIG -= app_bundle
-CONFIG -= qt
 CONFIG += c++11
 CONFIG += precompiled_header
-
-QMAKE_CXXFLAGS += -Wno-multichar
-
 CONFIG(release,debug|release) { DEFINES += NDEBUG RELEASE } # ATTN: curly brace must start in same line!
 CONFIG(debug,debug|release) { DEFINES += DEBUG } # ATTN: curly brace must start in same line!
+QMAKE_CXXFLAGS += -Wno-multichar
+QMAKE_CXXFLAGS_RELEASE += -O2
+QMAKE_CXXFLAGS_DEBUG += -O0
 
 LIBS += -pthread
 
 
 INCLUDEPATH +=  \
-	.			\
+	./			\
 	Source		\
 	Libraries	\
 

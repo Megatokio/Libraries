@@ -1,0 +1,18 @@
+
+
+compiler = clang
+RCPtr test: 0.121471 sec. (RCObject with atomic cnt)
+RCPtr test: 0.121953 sec. (RCObject from template)
+RCPtr test: 0.045949 sec. (RCObject with plain cnt)
+RCPtr test: 0.319422 sec. (RCObject with mutex)
+RCPtr test: 0.124323 sec. (RCObject with std::shared_ptr)
+
+compiler = gcc
+RCPtr test: 0.109411 sec. (RCObject with atomic cnt)
+RCPtr test: 0.109751 sec. (RCObject from template)
+RCPtr test: 0.025607 sec. (RCObject with plain cnt)
+RCPtr test: 0.292775 sec. (RCObject with mutex)
+RCPtr test: 0.123479 sec. (RCObject with std::shared_ptr)
+
+
+

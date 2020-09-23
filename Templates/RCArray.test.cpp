@@ -24,12 +24,12 @@
 #include "Templates/RCPtr.h"
 #include "Templates/Array.h"
 #include "main.h"
-#define RCObject MyRCObject
 
 
 // --------------------------------
 // test RCArray
 
+#define RCObject MyRCObject
 class RCObject
 {
 public:
@@ -656,11 +656,169 @@ void RCObject::test2(uint& num_tests, uint& num_errors)
 	(void)num_errors;
 }
 
+
+#undef RCObject
+#include "Templates/RCObject.h"
+
+static int rc1_objects = 0;
+class RCObject1 // use atomic cnt
+{
+public:
+	std::atomic<uint> cnt{0};
+	void retain ()  noexcept { ++cnt; }
+	void release () noexcept { if (--cnt == 0) delete this; }
+	RCObject1()noexcept{rc1_objects++;}
+	virtual ~RCObject1(){rc1_objects--;}
+};
+
+static int rc2_objects = 0;
+class RCObject2 : public RCObject // use template
+{
+public:
+	RCObject2()noexcept{rc2_objects++;}
+	~RCObject2(){rc2_objects--;}
+};
+
+static int rc3_objects = 0;
+class RCObject3  // plain cnt
+{
+public:
+	uint cnt{0};
+	void retain ()  noexcept { ++cnt; }
+	void release () noexcept { if (--cnt == 0) delete this; }
+	RCObject3()noexcept{rc3_objects++;}
+	virtual ~RCObject3(){rc3_objects--;}
+};
+
+#include "cpp/cppthreads.h"
+static int rc4_objects = 0;
+class RCObject4  // with mutex
+{
+public:
+	uint cnt = 0;
+	PLock plock;
+	void retain ()  volatile noexcept { plock.lock(); ++cnt; plock.unlock(); }
+	void release () volatile noexcept { plock.lock(); if(--cnt==0) delete this; else plock.unlock(); }
+
+	RCObject4()noexcept{rc4_objects++;}
+	virtual ~RCObject4(){rc4_objects--;}
+};
+
+#include <vector>
+static int rc5_objects = 0;
+class RCObject5  // std::shared_ptr
+{
+public:
+	RCObject5()noexcept{rc5_objects++;}
+	virtual ~RCObject5(){rc5_objects--;}
+};
+
+
+
+void test_rc_performance(uint& num_tests, uint& num_errors)
+{
+	logline("\ncompiler = %s",_COMPILER);
+
+#ifdef _POSIX_THREAD_CPUTIME
+#define CLOCK CLOCK_THREAD_CPUTIME_ID
+#else
+#define CLOCK
+#endif
+
+	// burn-in:
+	double a = now() + 1.0;
+	while(now() < a) {}
+
+	double t1=0,t2=0,t3=0,t4=0,t5=0;
+
+	for (uint i=0;i<9;i++)
+	{
+		TRY
+			if (i) t1 -= now(CLOCK);
+
+			rc1_objects = 0;
+			RCArray<RCObject1> array(0,1000000);
+			for (uint i=0;i<1000;i++) { array << new RCObject1(); }
+			for (uint i=1000;i<1000000;i++) { array << array[i-1000]; }
+			while (array.count()) { array.pop(); }
+			assert(rc1_objects==0);
+
+			if (i) t1 += now(CLOCK);
+		END
+
+		TRY
+			if (i) t2 -= now(CLOCK);
+
+			rc2_objects = 0;
+			RCArray<RCObject2> array(0,1000000);
+			for (uint i=0;i<1000;i++) { array << new RCObject2(); }
+			for (uint i=1000;i<1000000;i++) { array << array[i-1000]; }
+			while (array.count()) { array.pop(); }
+			assert(rc2_objects==0);
+
+			if (i) t2 += now(CLOCK);
+		END
+
+		TRY
+			if (i) t3 -= now(CLOCK);
+
+			rc3_objects = 0;
+			RCArray<RCObject3> array(0,1000000);
+			for (uint i=0;i<1000;i++) { array << new RCObject3(); }
+			for (uint i=1000;i<1000000;i++) { array << array[i-1000]; }
+			while (array.count()) { array.pop(); }
+			assert(rc3_objects==0);
+
+			if (i) t3 += now(CLOCK);
+		END
+
+		TRY
+			if (i) t4 -= now(CLOCK);
+
+			rc4_objects = 0;
+			RCArray<RCObject4> array(0,1000000);
+			for (uint i=0;i<1000;i++) { array << new RCObject4(); }
+			for (uint i=1000;i<1000000;i++) { array << array[i-1000]; }
+			while (array.count()) { array.pop(); }
+			assert(rc4_objects==0);
+
+			if (i) t4 += now(CLOCK);
+		END
+
+		TRY
+			if (i) t5 -= now(CLOCK);
+
+			rc5_objects = 0;
+			std::vector<std::shared_ptr<RCObject5>> array;
+			array.reserve(1000000);
+			for (uint i=0;i<1000;i++) { array.push_back(std::make_shared<RCObject5>()); }
+			for (uint i=1000;i<1000000;i++) { array.push_back(array[i-1000]); }
+			while (array.size()) { array.pop_back(); }
+			assert(rc5_objects==0);
+
+			if (i) t5 += now(CLOCK);
+		END
+	}
+
+	logline("RCPtr test: %f sec. (RCObject with atomic cnt)", t1);
+	logline("RCPtr test: %f sec. (RCObject from template)", t2);
+	logline("RCPtr test: %f sec. (RCObject with plain cnt)", t3);
+	logline("RCPtr test: %f sec. (RCObject with mutex)", t4);
+	logline("RCPtr test: %f sec. (RCObject with std::shared_ptr)", t5);
+	logline("");
+	logline("RCPtr test: sizeof RCObject1 = %lu", sizeof(RCObject1));
+	logline("RCPtr test: sizeof RCObject2 = %lu", sizeof(RCObject2));
+	logline("RCPtr test: sizeof RCObject3 = %lu", sizeof(RCObject3));
+	logline("RCPtr test: sizeof RCObject4 = %lu", sizeof(RCObject4));
+	logline("");
+}
+
 void test_RCArray(uint& num_tests, uint& num_errors)
 {
 	logIn("test template Array");
-	RCObject::test1(num_tests,num_errors);
-	RCObject::test2(num_tests,num_errors);
+	MyRCObject::test1(num_tests,num_errors);
+	MyRCObject::test2(num_tests,num_errors);
+	test_rc_performance(num_tests,num_errors);
 }
 
 
