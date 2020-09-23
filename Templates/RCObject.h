@@ -19,10 +19,9 @@
 
 #include "kio/kio.h"
 #include "unix/FD.h"
-#ifdef USE_THREADS
-#include "cpp/cppthreads.h"
+#ifndef NO_THREADS
+#include <atomic>
 #endif
-
 
 /*	Simple base class for objects with reference counting
 	for use with RCPtr and NVPtr.
@@ -51,37 +50,31 @@
 	  this is best done by storing it in a temporary/local NVPtr.
 */
 
-
 class RCObject
 {
 	template<class T> friend class RCPtr;
 	template<class T> friend class NVPtr;
 
 protected:
-	mutable uint cnt = 0;
+	#ifndef NO_THREADS
+	mutable std::atomic<uint> cnt{0};
+	#else
+	mutable uint cnt{0};
+	#endif
 
-	void	retain () const 				noexcept { ++cnt; }
-	void	release () const				noexcept { if (--cnt == 0) delete this; }
-
-#ifdef USE_THREADS
-	mutable PLock plock;
-	void	lock ()    volatile const		noexcept { plock.lock(); }
-	void	unlock ()  volatile const		noexcept { plock.unlock(); }
-	void	retain ()  volatile const		noexcept { lock(); ++cnt; unlock(); }
-	void	release () volatile const		noexcept { lock(); if(--cnt==0) delete this; else unlock(); }
-#endif
-
+	void retain ()  volatile const			noexcept { ++cnt; }
+	void release () volatile const			noexcept { if (--cnt == 0) delete this; }
 
 public:
 	RCObject ()								noexcept {}
-	explicit RCObject (RCObject const&)		noexcept {}
+	explicit RCObject (const RCObject&)		noexcept {}
 	RCObject (RCObject&&)					noexcept {}
-	virtual	~RCObject ()					noexcept { if (unlikely(cnt!=0)) abort("~RCObject(): cnt=%i\n",cnt); }
+	virtual	~RCObject ()					noexcept { if (unlikely(cnt!=0)) { abort("~RCObject(): cnt=%i\n", uint(cnt)); } }
 
-	RCObject& operator= (RCObject const&)	noexcept { return *this; }
+	RCObject& operator= (const RCObject&)	noexcept { return *this; }
 	RCObject& operator= (RCObject&&)		noexcept { return *this; }
 
-	uint	refcnt () const					noexcept { return cnt; }
+	uint refcnt () const					noexcept { return cnt; }
 
 // implement if required:
 	static	RCObject* restore (FD&)			throws;		// factory method: may return this or any subclass
