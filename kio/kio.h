@@ -282,18 +282,28 @@ extern void abort( int error_number )	  __attribute__((__noreturn__));
 #endif
 
 
-/*	get current time in seconds since epoche
+/*	get current wall time in seconds since epoche,
+	a monotonic time or
+	the per thread/process execution time
+	for possible more clocks see time.h
 	defined in kio/kio.cpp
+
+	CLOCK_REALTIME = wall time
+	The symbols _POSIX_MONOTONIC_CLOCK, _POSIX_CPUTIME, _POSIX_THREAD_CPUTIME indicate that
+	CLOCK_MONOTONIC, CLOCK_PROCESS_CPUTIME_ID, CLOCK_THREAD_CPUTIME_ID are available. (See also sysconf(3).)
 */
-template<typename T = double> extern T now() noexcept;
-template<> double now() noexcept;						// available specialization: double (template default)
-template<> time_t now() noexcept;						// available specialization: time_t (int64)
-template<> struct timespec now() noexcept;				// available specialization: struct timespec
-template<> struct timeval now() noexcept;				// available specialization: struct timeval ((deprecated))
+#if defined(_POSIX_TIMERS) && _POSIX_TIMERS>0
+template<typename T = double> extern T now(int=CLOCK_REALTIME) noexcept;
+#else // only wall time:
+template<typename T = double> extern T now(int=0) noexcept;
+#endif
+template<> double now(int) noexcept;					// available specialization: double (template default)
+template<> time_t now(int) noexcept;					// available specialization: time_t (int64)
+template<> struct timespec now(int) noexcept;			// available specialization: struct timespec
+template<> struct timeval now(int) noexcept;			// available specialization: struct timeval ((deprecated))
 
 extern void waitDelay (double seconds);
-extern void waitUntil (double seconds_since_epoche);
-
+extern void waitUntil (double seconds_since_epoche);	// Wall time
 
 
 /*	basic maths
