@@ -39,15 +39,15 @@ cstr errorstr (int err) noexcept
 }
 
 
-template<> double now() noexcept	// specialisation for double
+#if defined(_POSIX_TIMERS) && _POSIX_TIMERS>0
+
+template<> double now (int clock_id) noexcept	// return double  ((default))
 {
 	// get Real Time (Wall Time) in seconds:
 	//	• Real time = Wall time can jump when the clock is set by the user or adjusted by NTP etc.
 	//	• An IEEE 64 bit double can store time since epoche with 1ns precision only up to 1970-04-15 05:59:59.
 	//	  Since 2006-07-14 23:58:24 precision is 256ns.
 	//	  Since 2043-01-25 23:56:49 precision is 512ns.
-
-#if defined(_UNIX) && defined(_POSIX_TIMERS) && _POSIX_TIMERS>0
 
 	// clock_gettime():
 	// SUSv2, POSIX.1-2001.
@@ -59,10 +59,39 @@ template<> double now() noexcept	// specialisation for double
 	// macOS >= 10.12
 
 	struct timespec tv;
-	clock_gettime(CLOCK_REALTIME, &tv);
-	return tv.tv_sec + tv.tv_nsec * 1e-9;
+	clock_gettime(clock_id, &tv);
+	return double(tv.tv_sec) + double(tv.tv_nsec) * 1e-9;
+}
 
-#else
+template<> time_t now (int clock_id) noexcept	// return time_t
+{
+	struct timespec tv;
+	clock_gettime(clock_id, &tv);
+	return tv.tv_sec;
+}
+
+template<> struct timespec now (int clock_id) noexcept	// return timespec
+{
+	struct timespec tv;
+	clock_gettime(clock_id, &tv);
+	return tv;
+}
+
+template<> struct timeval now (int clock_id) noexcept	// return timeval  ((deprecated))
+{
+	struct timeval tv;
+	struct timespec tspec;
+	clock_gettime(clock_id, &tspec);
+	tv.tv_sec = tspec.tv_sec;
+	tv.tv_usec = tspec.tv_nsec/1000;
+	return tv;
+}
+
+#else // no clock_gettime:
+
+template<> double now (int) noexcept	// return double  ((default))
+{
+	// get Real Time (Wall Time) in seconds
 
 	// gettimeofday():
 	// SVr4, 4.3BSD.
@@ -70,51 +99,35 @@ template<> double now() noexcept	// specialisation for double
 	// POSIX.1-2008 marks gettimeofday() as obsolete, recommending the use of clock_gettime(2) instead.
 
 	struct timeval tv;
-	gettimeofday ( &tv, nullptr );
-	return tv.tv_sec + tv.tv_usec * 1e-6;
-
-#endif
+	gettimeofday(&tv, nullptr);
+	return double(tv.tv_sec) + double(tv.tv_usec) * 1e-6;
 }
 
-template<> time_t now() noexcept	// specialisation for time_t
+template<> time_t now (int) noexcept	// return time_t
 {
-#if defined(_UNIX) && defined(_POSIX_TIMERS) && _POSIX_TIMERS>0
-	struct timespec tv;
-	clock_gettime(CLOCK_REALTIME, &tv);
-#else
 	struct timeval tv;
-	gettimeofday ( &tv, nullptr );
-#endif
+	gettimeofday(&tv, nullptr);
 	return tv.tv_sec;
 }
 
-template<> struct timespec now() noexcept	// specialisation for timespec
+template<> struct timespec now (int) noexcept	// return timespec
 {
 	struct timespec tv;
-#if defined(_UNIX) && defined(_POSIX_TIMERS) && _POSIX_TIMERS>0
-	clock_gettime(CLOCK_REALTIME, &tv);
-#else
 	struct timeval tval;
 	gettimeofday(&tval, nullptr);
 	tv.tv_sec = tval.tv_sec;
 	tv.tv_nsec = tval.tv_usec*1000;
-#endif
 	return tv;
 }
 
-template<> struct timeval now() noexcept	// specialisation for timeval  ((deprecated))
+template<> struct timeval now (int) noexcept	// return timeval  ((deprecated))
 {
 	struct timeval tv;
-#if defined(_UNIX) && defined(_POSIX_TIMERS) && _POSIX_TIMERS>0
-	struct timespec tspec;
-	clock_gettime(CLOCK_REALTIME, &tspec);
-	tv.tv_sec = tspec.tv_sec;
-	tv.tv_usec = tspec.tv_nsec/1000;
-#else
 	gettimeofday(&tv, nullptr);
-#endif
 	return tv;
 }
+
+#endif // clock_gettime
 
 
 // ----------------------------------------------------
