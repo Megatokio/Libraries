@@ -401,6 +401,25 @@ off_t FD::seek_fpos( off_t fpos, int whence ) THF
 	return fpos;
 }
 
+void FD::skip_utf8_bom() THF
+{
+	//assert(file_position() == 0);
+
+	uint32 n = 0;
+	uint8* bu = reinterpret_cast<uint8*>(&n);
+	off_t num = read_bytes(bu,3,1); // no throw on eof
+
+#if defined(_BIG_ENDIAN)
+	if (n == 0xEFBBBF00) return;
+#elif defined(_LITTLE_ENDIAN)
+	if (n == 0x00BFBBEF) return;
+#else
+	if (bu[0] == 0xEF && bu[1] == 0xBB && bu[2] == 0xBF) return;
+#endif
+
+	skip_bytes(-num);
+}
+
 uint32 FD::write_fmt( cstr format, ... ) THF
 {
 	va_list va;

@@ -140,6 +140,7 @@ public:
 
 // read/write c-strings:
 
+	void	skip_utf8_bom	()							THF;
 	uint32	write_str		(cstr p)					THF		{ return p&&*p ? write_bytes(p,uint32(strlen(p))) : 0; }
 	uint32	write_fmt		(cstr fmt, ...)				THF		__printflike(2,3);
 	str		read_str		()							THF;	// read from file up to EOF,0,10,13,10+13,13+10
