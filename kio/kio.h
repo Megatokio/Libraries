@@ -168,8 +168,7 @@ struct on_init { on_init(void(*f)()){f();} };
   #undef  SAFETY
   #define SAFETY 0
 #else
-  #if not defined SAFETY || SAFETY == 0
-	#undef  SAFETY
+  #ifndef SAFETY
 	#define SAFETY 1
   #endif
 #endif
