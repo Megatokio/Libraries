@@ -132,10 +132,10 @@ public:
 	off_t	skip_bytes		(off_t signed_offset)		THF		{ return seek_fpos(signed_offset,SEEK_CUR); }
 	off_t	rewind_file		()							THF		{ return seek_fpos(0,SEEK_SET); }
 
-	off_t	file_position	()							THF		{ return seek_fpos(0,SEEK_CUR); }
-	off_t	file_remaining	()							THF		{ return file_size() - file_position(); }
-	bool	is_at_eof		()							THF		{ return file_position() >= file_size(); }
-	bool	is_near_eof		(off_t proximity)			THF		{ return file_remaining() <= proximity; }
+	off_t	file_position	() const					THF;
+	off_t	file_remaining	() const					THF		{ return file_size() - file_position(); }
+	bool	is_at_eof		() const					THF		{ return file_position() >= file_size(); }
+	bool	is_near_eof		(off_t proximity) const		THF		{ return file_remaining() <= proximity; }
 
 
 // read/write c-strings:

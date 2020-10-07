@@ -94,8 +94,10 @@ int FD::open_file( cstr path, int mode, mode_t perm ) THF
 	if (mode=='a') mode = O_WRONLY|O_CREAT|O_APPEND; else
 	if (mode=='w') mode = O_WRONLY|O_CREAT|O_TRUNC;  // else mode = mode;
 
+	path = newcopy(path);
 	delete[] fpath;
-	fpath = newcopy(path);
+	fpath = path;
+
 a:	fd = open(path, mode, perm);
 	if (fd>=0) return ok;
 	if (errno==EINTR) goto a;					// WebDAV
@@ -397,9 +399,17 @@ off_t FD::resize_file( off_t size ) THF
 off_t FD::seek_fpos( off_t fpos, int whence ) THF
 {
 	fpos = lseek(fd, fpos, whence);
-	if (fpos==-1) THROW_FILE_ERROR("fd383");
-	return fpos;
+	if (fpos != -1) return fpos;
+	else THROW_FILE_ERROR("fd383");
 }
+
+off_t FD::file_position() const THF
+{
+	off_t fpos = lseek(fd, 0, SEEK_CUR);
+	if (fpos != -1) return fpos;
+	else THROW_FILE_ERROR("fd409");
+}
+
 
 void FD::skip_utf8_bom() THF
 {
