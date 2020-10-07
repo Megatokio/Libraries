@@ -111,6 +111,8 @@ public:
 	ITEM const&	get			(KEY key) const	noexcept { int i=indexof(key); assert(i!=-1); return items[i]; } // uses KEY::eq()
 	ITEM&		operator[]	(KEY key)		noexcept { int i=indexof(key); assert(i!=-1); return items[i]; } // uses KEY::eq()
 	ITEM const&	operator[]	(KEY key) const	noexcept { int i=indexof(key); assert(i!=-1); return items[i]; } // uses KEY::eq()
+	ITEM*	    find		(KEY key)		noexcept { int i=indexof(key); return i ? &items[i] : nullptr; }
+	ITEM const*	find		(KEY key) const noexcept { int i=indexof(key); return i ? &items[i] : nullptr; }
 
 // add / remove items:
 	void		purge		()				noexcept;
