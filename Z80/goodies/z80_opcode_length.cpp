@@ -145,7 +145,7 @@ uint z180_opcode_length (uint8* ip)
 		case 0:										// IN0_r_xN and OUT0_xN_r
 			return 2 + ((op2&7)<=1 && op2!=0x31);	// not shure for 0x31: ill. OUT0_xN_0 ?
 		case 1:
-			if ((op2|0x10)==0x76) return 7;			// TST_N and TSTIO_N
+			if ((op2|0x10)==0x74) return 3;			// TST_N and TSTIO_N
 			else break;
 		}
 	}
