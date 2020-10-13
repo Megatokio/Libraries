@@ -24,7 +24,7 @@
 	define them only on request
 */
 #ifndef DEFINE_Z180_CB_TABLES
-#define DEFINE_Z180_CB_TABLES 1
+#define DEFINE_Z180_CB_TABLES 0
 #endif
 
 
@@ -522,15 +522,15 @@ ON_INIT([]()
 	assert(z180_clock_cycles(PFX_ED,IN0_C_xN,0)==12);
 	assert(z180_clock_cycles(PFX_ED,TST_xHL,0)==10);
 	assert(z180_clock_cycles(PFX_ED,IN_F_xC,0)==9);
-	assert(z80_clock_cycles(PFX_ED,MLT_SP,0,CpuZ180)==17);
+	assert(cpu_clock_cycles(CpuZ180,PFX_ED,MLT_SP,0)==17);
 
 	assert(z180_clock_cycles(PFX_IX,INC_xHL,0)==18);
 	assert(z180_clock_cycles(PFX_IY,LD_xHL_N,0)==15);
-	assert(z80_clock_cycles(PFX_IX,LD_E_xHL,0,CpuZ180)==14);
+	assert(cpu_clock_cycles(CpuZ180,PFX_IX,LD_E_xHL,0)==14);
 
 	assert(z180_clock_cycles(PFX_IX,PFX_CB,SRL_xHL)==19);
 	assert(z180_clock_cycles(PFX_IX,PFX_CB,BIT4_xHL)==15);
-	assert(z80_clock_cycles(PFX_IY,PFX_CB,SET4_xHL,CpuZ180)==19);
+	assert(cpu_clock_cycles(CpuZ180,PFX_IY,PFX_CB,SET4_xHL)==19);
 });
 #endif
 
