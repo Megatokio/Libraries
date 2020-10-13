@@ -28,12 +28,19 @@ enum CpuID
 };
 
 
-/*	Calculate length [bytes] of Z80, 8080 or Z180/HD64180 opcode
+typedef uint8  Byte;
+typedef uint16 Word;
+
+inline Byte peek (const Byte* p) { return *p; }
+inline Word peek_word (const Byte* p) { return *p + 256 * *(p+1); }
+
+
+/*	Calculate length [bytes] of opcode
 */
-extern uint z80_opcode_length (uint8* ip, CpuID);
-extern uint z80_opcode_length (uint8* ip);
-extern uint z180_opcode_length (uint8* ip);
-extern uint i8080_opcode_length (uint8 op) noexcept;
+extern uint cpu_opcode_length (CpuID, const Byte* ip) noexcept;
+extern uint z80_opcode_length (const Byte* ip) noexcept;
+extern uint z180_opcode_length (const Byte* ip) noexcept;
+extern uint i8080_opcode_length (const Byte* ip) noexcept;
 
 
 /*	Calculate the "major" opcode of an instruction mnemonic.
@@ -45,15 +52,15 @@ extern uint i8080_opcode_length (uint8 op) noexcept;
 	• prefix ED instruction "ld hl,(NN)" is never returned,
 	  because the non-prefix version is returned instead
 */
-extern uint8 z80_major_opcode(cstr q) throws;
+extern uint8 z80_major_opcode (cstr q) throws;
 
 
 /* Calculate the minimum number of clock cycles for a Z80, Z180 or 8080 opcode
    if no wait cycles are added.
 */
-extern bool z80_opcode_can_branch(uint8 op1, uint8 op2, CpuID) noexcept;	// op2 only used if op1==0xED
-extern uint z80_clock_cycles(uint8 op1, uint8 op2, uint8 op4, CpuID) noexcept;	// dito, op4 only for IXCB/IYCB
-extern uint z80_clock_cycles_on_branch(uint8 op1, uint8 op2, CpuID) noexcept;	// op2 only used if op1==0xED
+extern bool cpu_opcode_can_branch (CpuID, uint8 op1, uint8 op2) noexcept;		// op2 only used if op1==0xED
+extern uint cpu_clock_cycles (CpuID, uint8 op1, uint8 op2, uint8 op4) noexcept;	// dito, op4 only for IXCB/IYCB
+extern uint cpu_clock_cycles_on_branch (CpuID, uint8 op1, uint8 op2) noexcept;	// op2 only used if op1==0xED
 
 extern bool z80_opcode_can_branch(uint8 op1, uint8 op2) noexcept;			// op2 only used if op1==0xED
 extern uint z80_clock_cycles(uint8 op1, uint8 op2, uint8 op4) noexcept;		// dito, op4 only for IXCB/IYCB

@@ -590,9 +590,9 @@ uint z80_clock_cycles_on_branch(uint8 op1, uint8 op2) noexcept
 	return (n&31) + (((n>>5)+1)&7);
 }
 
-bool z80_opcode_can_branch(uint8 op1, uint8 op2, CpuID variant) noexcept
+bool cpu_opcode_can_branch(CpuID cpuid, uint8 op1, uint8 op2) noexcept
 {
-	switch (variant)
+	switch (cpuid)
 	{
 	case Cpu8080:
 		return i8080_opcode_can_branch(op1);
@@ -604,9 +604,9 @@ bool z80_opcode_can_branch(uint8 op1, uint8 op2, CpuID variant) noexcept
 	}
 }
 
-uint z80_clock_cycles(uint8 op1, uint8 op2, uint8 op4, CpuID variant) noexcept
+uint cpu_clock_cycles(CpuID cpuid, uint8 op1, uint8 op2, uint8 op4) noexcept
 {
-	switch (variant)
+	switch (cpuid)
 	{
 	case Cpu8080:
 		return i8080_clock_cycles(op1);
@@ -618,9 +618,9 @@ uint z80_clock_cycles(uint8 op1, uint8 op2, uint8 op4, CpuID variant) noexcept
 	}
 }
 
-uint z80_clock_cycles_on_branch(uint8 op1, uint8 op2, CpuID variant) noexcept
+uint cpu_clock_cycles_on_branch(CpuID cpuid, uint8 op1, uint8 op2) noexcept
 {
-	switch (variant)
+	switch (cpuid)
 	{
 	case Cpu8080:
 		return i8080_clock_cycles_on_branch(op1);

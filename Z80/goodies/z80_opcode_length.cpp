@@ -76,9 +76,11 @@ static char const i8080len3[65] = // opcodes 0xC0 - 0xFF: prefixes are 0
 #endif
 
 
-uint i8080_opcode_length (uint8 op) noexcept
+uint i8080_opcode_length (const Byte* ip) noexcept
 {
 	// Calculate length [bytes] of instruction
+
+	uint8 op = peek(ip);
 
 	switch (op>>6)
 	{
@@ -93,19 +95,19 @@ uint i8080_opcode_length (uint8 op) noexcept
 	}
 }
 
-uint z80_opcode_length (uint8* ip)
+uint z80_opcode_length (const Byte* ip) noexcept
 {
 	// Calculate length of instruction
 	// op2 is only used if op1 is a prefix instruction
 	// IX/IY before IX/IY/ED have no effect and are reported as length 1
 
-	uint8 op = *ip++;
+	uint8 op = peek(ip);
 
 	switch(op>>6)
 	{
-	case 0:	return len0[op]-'0';	// 0x00 - 0x3F:	various length
-	case 1:							// 0x40 - 0x7F: ld r,r: all 1
-	case 2:	return 1;				// 0x80 - 0xBF:	arithmetics/logics op a,r: all 1
+	case 0:	return uint(len0[op]-'0');	// 0x00 - 0x3F:	various length
+	case 1:								// 0x40 - 0x7F: ld r,r: all 1
+	case 2:	return 1;					// 0x80 - 0xBF:	arithmetics/logics op a,r: all 1
 	}
 
 	// 0xC0 .. 0xFF:
@@ -114,32 +116,32 @@ uint z80_opcode_length (uint8* ip)
 	switch(op)
 	{
 	case 0xcb:	return 2;
-	case 0xed:  return (*ip/*op2*/&0xc7)==0x43 ? 4 : 2;
+	case 0xed:  return (peek(ip+1) & 0xc7) == 0x43 ? 4 : 2;
 	case 0xdd:
 	case 0xfd:
-		op = *ip;
+		op = peek(ip+1);
 		switch (op>>6)
 		{
-		case 0:	return len0[op]+1-'0' + (op>=0x34 && op<=0x36);	// inc(hl); dec(hl); ld(hl),N: add displacement
+		case 0:	return uint(len0[op]+1-'0') + (op>=0x34 && op<=0x36);	// inc(hl); dec(hl); ld(hl),N: add displacement
 		case 1:
 		case 2:	return ((op&0x07)==6) != ((op&0x0F8)==0x70) ? 3 : 2;	// if (hl) add displacement except for HALT
 		}
 		if (op==0xcb) return 4;
-		return len3[op&0x3F]+1-'0';		// note: entries for prefixes are 0 giving a total of 1,
-	}									// just to skip the useless prefix
+		return uint(len3[op&0x3F]+1-'0');	// note: entries for prefixes are 0 giving a total of 1,
+	}										// just to skip the useless prefix
 
-	return len3[op&0x3F]-'0';			// 0xC0 - 0xFF:	no prefix:	various length
+	return uint(len3[op&0x3F]-'0');			// 0xC0 - 0xFF:	no prefix:	various length
 }
 
-uint z180_opcode_length (uint8* ip)
+uint z180_opcode_length (const Byte* ip) noexcept
 {
 	// Calculate length [bytes] of instruction
 	// op2 is only used if op1 is a prefix instruction
 	// illegal opcodes are reported as for Z80
 
-	if (*ip == 0xED)	// additional opcodes of the Z80180 all prefix 0xED
+	if (peek(ip) == 0xED)				// additional opcodes of the Z80180 all have prefix 0xED
 	{
-		uint8 op2 = *(ip+1);
+		uint8 op2 = peek(ip+1);
 		switch(op2>>6)
 		{
 		case 0:										// IN0_r_xN and OUT0_xN_r
@@ -150,15 +152,15 @@ uint z180_opcode_length (uint8* ip)
 		}
 	}
 
-	return z80_opcode_length(ip);	// all other opcodes: same as Z80
+	return z80_opcode_length(ip);		// all other opcodes: same as Z80
 }
 
-uint z80_opcode_length (uint8* ip, CpuID variant)
+uint cpu_opcode_length (CpuID cpuid, const Byte* ip) noexcept
 {
-	switch(variant)
+	switch(cpuid)
 	{
 	case Cpu8080:
-		return i8080_opcode_length(*ip);
+		return i8080_opcode_length(ip);
 
 	case CpuZ180:
 		return z180_opcode_length(ip);
