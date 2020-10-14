@@ -292,17 +292,18 @@ extern void abort( int error_number )	  __attribute__((__noreturn__));
 	CLOCK_MONOTONIC, CLOCK_PROCESS_CPUTIME_ID, CLOCK_THREAD_CPUTIME_ID are available. (See also sysconf(3).)
 */
 #if defined(_POSIX_TIMERS) && _POSIX_TIMERS>0
-template<typename T = double> extern T now(int=CLOCK_REALTIME) noexcept;
+	template<typename T = double> extern T now(int=CLOCK_REALTIME) noexcept;
+	extern void waitUntil (double time, int=CLOCK_REALTIME) noexcept;  // default = Wall time
 #else // only wall time:
-template<typename T = double> extern T now(int=0) noexcept;
+	template<typename T = double> extern T now(int=0) noexcept;
+	extern void waitUntil (double time, int clock=0) noexcept;
 #endif
 template<> double now(int) noexcept;					// available specialization: double (template default)
 template<> time_t now(int) noexcept;					// available specialization: time_t (int64)
 template<> struct timespec now(int) noexcept;			// available specialization: struct timespec
 template<> struct timeval now(int) noexcept;			// available specialization: struct timeval ((deprecated))
 
-extern void waitDelay (double seconds);
-extern void waitUntil (double seconds_since_epoche);	// Wall time
+extern void waitDelay (double seconds) noexcept;		// realtime (monotonic)
 
 
 /*	basic maths

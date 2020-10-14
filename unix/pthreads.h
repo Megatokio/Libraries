@@ -112,14 +112,6 @@ public:				PSemaphore	(cstr static_name_str="", uint32 _avail = 0);
 };
 
 
-
-// Timer
-template<typename T> extern T now () noexcept;	// was: currentTime()
-
-extern void waitDelay			( double delay );
-extern void	waitUntil			( double time );
-
-
 /*	in a loop, wait 'delay' and execute function fu() until fu() returns false.
 	'arg' is passed to fu() as argument and must be persistent until fu() reads it.
 	fu() is called exactly in the defined interval independently how long fu() runs itself.
