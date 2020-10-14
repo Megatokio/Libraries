@@ -136,7 +136,7 @@ template<> struct timeval now (int) noexcept	// return timeval  ((deprecated))
 
 /*	wait delay in seconds:
 */
-void waitDelay (double delay)	// seconds
+void waitDelay (double delay) noexcept	// seconds
 {
 #if 0
 	// usleep():
@@ -159,9 +159,9 @@ void waitDelay (double delay)	// seconds
 	while (nanosleep(&wait_time, &wait_time) == -1 && errno==EINTR) {}
 }
 
-void waitUntil (double time)	// seconds since epoche
+void waitUntil (double time, int clk) noexcept
 {
-	waitDelay(time - now());
+	waitDelay(time - now(clk));
 }
 
 
@@ -173,7 +173,7 @@ static pthread_cond_t wait_cond;	// eine condition für Wait(), die niemals getr
 static pthread_mutex_t wait_lock;	// ihr Lock
 ON_INIT([](){ int e = pthread_mutex_init(&wait_lock, nullptr) | pthread_cond_init(&wait_cond, nullptr); assert(!e); });
 
-void waitUntil (double time)
+void waitUntil (double time)	// TODO: rework to use one of the various clocks
 {
 	double time_fract, time_int; time_fract = modf(time, &time_int);
 	timespec wait_time = { time_t(time_int), long(time_fract*1000000000) };
@@ -188,7 +188,7 @@ void waitUntil (double time)
 	abort("waitUntil: %s", strerror(e));
 }
 
-void waitDelay (double delay)
+void waitDelay (double delay)	// TODO: rework to use one of the various clocks
 {
 	waitUntil(now() + delay);
 }
@@ -198,7 +198,7 @@ void waitDelay (double delay)
 
 #include <sys/select.h>
 
-void waitDelay (double delay)
+void waitDelay (double delay)	// TODO: rework to use one of the various clocks
 {
 	double delay_fract, delay_int;
 	delay_fract = modf(delay, &delay_int);
@@ -212,7 +212,7 @@ void waitDelay (double delay)
 
 void waitUntil (double time)	// seconds since epoche
 {
-	waitDelay(time - now());
+	waitDelay(time - now());	// TODO: rework to use one of the various clocks
 }
 
 // ----------------------------------------------------
@@ -223,13 +223,13 @@ void waitUntil (double time)	// seconds since epoche
 /*	wait delay in seconds:
 */
 void waitDelay (double delay)	// seconds
-{
+{								// TODO: rework to use one of the various clocks
 	using namespace std::chrono;
 	if (delay > 0) std::this_thread::sleep_for (nanoseconds(int64(delay*1e9)));
 }
 
 void waitUntil (double time)	// seconds since epoche
-{
+{								// TODO: rework to use one of the various clocks
 	using namespace std::chrono;
 	static const system_clock::time_point epoche = system_clock::from_time_t(0);
 	std::this_thread::sleep_until(epoche + nanoseconds(int64(time * 1e9)));
