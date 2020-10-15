@@ -20,8 +20,8 @@
 	pthread wrappers
 */
 
-#include <pthread.h>
 #include "kio/kio.h"
+#include <pthread.h>
 
 
 // pthread_t is int or ptr on some systems

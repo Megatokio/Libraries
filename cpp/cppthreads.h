@@ -17,10 +17,10 @@
 	TO THE EXTENT PERMITTED BY APPLICABLE LAW.
 */
 
+#include "kio/kio.h"
 #include <mutex>
 #include <condition_variable>
 #include <thread>
-#include "kio/kio.h"
 
 
 // convenience:

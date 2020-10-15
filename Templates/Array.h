@@ -17,9 +17,9 @@
 	TO THE EXTENT PERMITTED BY APPLICABLE LAW.
 */
 
+#include "kio/kio.h"
 #include <memory>
 #include <type_traits>
-#include "kio/kio.h"
 #include "unix/FD.h"
 #include "template_helpers.h"
 #include "sort.h"

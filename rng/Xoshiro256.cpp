@@ -10,11 +10,11 @@ See <http://creativecommons.org/publicdomain/zero/1.0/>.
 See	<http://prng.di.unimi.it>
 */
 
+#include "kio/kio.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include <math.h>
 #include <random>
-#include "kio/kio.h"
 #include "Xoshiro256.h"
 
 

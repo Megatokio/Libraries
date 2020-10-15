@@ -1,7 +1,4 @@
 #pragma once
-#ifndef KIO_H		// the syntax checker has a problem with #pragma once for this file
-#define KIO_H
-
 /*	Copyright  (c)  Günter Woigk 1994 - 2020
 					mailto:kio@little-bat.de
 
@@ -22,10 +19,15 @@
 
 	Kio's universal standard c++ header.
 
+	ATTN: wg. _FILE_OFFSET_BITS: this file must be included before any system header.
+
 	required files in project:
 	must exist, may be empty:
 	- settings.h	project settings
 */
+
+#ifndef KIO_H		// the syntax checker has a problem with #pragma once for this file
+#define KIO_H
 
 #ifndef __cplusplus
 #error c++ ahead

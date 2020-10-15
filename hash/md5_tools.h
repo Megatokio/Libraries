@@ -17,8 +17,8 @@
 	TO THE EXTENT PERMITTED BY APPLICABLE LAW.
 */
 
-#include "md5.h"
 #include "kio/kio.h"
+#include "md5.h"
 #include "unix/FD.h"
 
 

@@ -24,8 +24,9 @@
 	To my best knowing the copyright on the algorithm has expired.
 */
 
-#include "fcntl.h"
-#include "unistd.h"
+#include "kio/kio.h"
+#include <fcntl.h>
+#include <unistd.h>
 #include "GifEncoder.h"
 
 

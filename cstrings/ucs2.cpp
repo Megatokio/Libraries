@@ -16,8 +16,8 @@
 	TO THE EXTENT PERMITTED BY APPLICABLE LAW.
 */
 
-#include <cmath>
 #include "ucs2.h"
+#include <cmath>
 
 #ifndef NAN
 	static const float NAN (0.0f/0.0f);

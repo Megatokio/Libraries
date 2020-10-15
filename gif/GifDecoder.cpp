@@ -25,12 +25,12 @@
 
 #define SAFE 3
 
+#include "kio/kio.h"
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
 #include <ctype.h>
-
 #include "GifDecoder.h"
 #include "unix/FD.h"
 INIT_MSG

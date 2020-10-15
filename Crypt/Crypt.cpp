@@ -16,8 +16,8 @@
 	TO THE EXTENT PERMITTED BY APPLICABLE LAW.
 */
 
-#include "hash/md5.h"
 #include "kio/kio.h"
+#include "hash/md5.h"
 #include "Crypt.h"
 #include "cstrings/base85.h"
 
