@@ -17,8 +17,8 @@
 */
 
 
-#include <thread>
 #include "kio/kio.h"
+#include <thread>
 
 #ifdef HAVE_TIME_H
 #include <time.h>

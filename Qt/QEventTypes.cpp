@@ -16,8 +16,8 @@
 	TO THE EXTENT PERMITTED BY APPLICABLE LAW.
 */
 
-#include <QEvent>
 #include "kio/kio.h"
+#include <QEvent>
 //#include "globals.h"
 
 

@@ -20,10 +20,10 @@
 #define SAFE	3
 #define LOG		1
 
+#include "kio/kio.h"
 #include <fcntl.h>
 #include <string.h>
 #include <ctype.h>
-
 #import "unix/FD.h"
 #import "GifReport.h"
 

@@ -20,6 +20,7 @@
 #undef NDEBUG
 #define SAFETY 2
 #define LOGLEVEL 1
+#include "kio/kio.h"
 #include "main.h"
 #include "util/count1bits.h"
 #include "util/msbit.h"

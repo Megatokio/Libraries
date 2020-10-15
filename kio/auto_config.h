@@ -18,6 +18,7 @@
 
 
 	this file is included by kio.h
+	ATTN: wg. _FILE_OFFSET_BITS: this file must be included before any system header.
 */
 
 // system info:

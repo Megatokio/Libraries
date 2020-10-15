@@ -18,10 +18,10 @@
 
 #define LOGLEVEL 1
 #define SAFETY 1
+#include "kio/kio.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "kio/kio.h"
 #include "unix/FD.h"
 #include "Templates/Array.h"
 #include "WavFile.h"
