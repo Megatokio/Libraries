@@ -138,16 +138,15 @@ inline	cstr tostr		(cstr s)			noexcept { return s ? quotedstr(s) : "nullptr"; }
 
 extern	str	 binstr		(uint n, cstr b0="00000000", cstr b1="11111111") noexcept;
 extern	str	 hexstr 	(uint32 n, uint len) noexcept;
-inline	str  hexstr		(int32 n, uint len)  noexcept { return hexstr(uint32(n),len); }
 extern	str	 hexstr 	(uint64 n, uint len) noexcept;
-inline	str	 hexstr		(int64 n, uint len)	noexcept { return hexstr(uint64(n),len); }
-#ifdef _LINUX
-inline	str	 hexstr		(long long n, uint len)  noexcept { return hexstr(uint64(n),len); }
-inline	str	 hexstr		(unsigned long long n, uint len) noexcept { return hexstr(uint64(n),len); }
-#else
-inline	str	 hexstr		(long n, uint len)  noexcept { return hexstr(uint64(n),len); }
-inline	str	 hexstr		(ulong n, uint len) noexcept { return hexstr(uint64(n),len); }
-#endif
+
+// this is a PITA:
+#include <type_traits>
+#define str_if_Tle4 typename std::enable_if<(std::is_integral<T>::value || std::is_enum<T>::value) && sizeof(T)<=4,str>::type
+#define str_if_Tgt4 typename std::enable_if<(std::is_integral<T>::value || std::is_enum<T>::value) && 4<sizeof(T),str>::type
+template <typename T> inline str_if_Tle4 hexstr (T n, uint len)  noexcept { return hexstr(uint32(n),len); }
+template <typename T> inline str_if_Tgt4 hexstr (T n, uint len)  noexcept { return hexstr(uint64(n),len); }
+
 extern	str  hexstr		(cptr, uint len)	noexcept;
 inline	str  hexstr		(cstr s)			noexcept { return hexstr(s,strLen(s)); }	// must not contain nullbyte
 
