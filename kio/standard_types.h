@@ -75,6 +75,7 @@ typedef long double longdouble;
 // there are also 'int_least8_t'-style typedefs in <stdint.h>
 
 typedef	unsigned char		uchar,	*ucharptr;			// ISO: min. sizeof(char)   =  undefined !
+typedef	signed char			schar,	*scharptr;			// ISO: min. sizeof(char)   =  undefined !
 typedef	unsigned short		ushort,	*ushortptr;			//		min. sizeof(short)  =  undefined !
 typedef unsigned int		uint,	*uintptr;			//		min. sizeof(int)    =  16 bit    !
 typedef	unsigned long		ulong,	*ulongptr;			//		min. sizeof(long)   =  32 bit
@@ -91,12 +92,11 @@ typedef	long						*longptr;
 typedef	char				*str;
 typedef char const			*cstr;
 
-typedef	char				*ptr;	// currently used for bytes and char - i hope most chars are bytes...
+typedef	char				*ptr;
 typedef char const			*cptr;
 
 typedef	uchar				*uptr;
 typedef uchar const			*cuptr;
-
 
 
 // cast shortenders:

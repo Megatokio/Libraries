@@ -33,14 +33,6 @@
 //#endif
 
 
-
-// statt utf8.h:
-inline bool utf8_is_7bit (char c)	{ return int8(c) >= 0; }
-inline bool	utf8_no_7bit (char c)	{ return int8(c) < 0;  }
-inline bool utf8_is_fup	 (char c)	{ return int8(c) < int8(0xc0); }
-inline bool utf8_no_fup	 (char c)	{ return int8(c) >= int8(0xc0); }
-
-
 cptr find (cstr target, cstr search) noexcept
 {
 	// search sub string
@@ -649,7 +641,7 @@ str fromutf8str (cstr qstr) noexcept // sets errno
 	if (*qstr == char(0xef) && *(qstr+1) == char(0xbb) && *(qstr+2) == char(0xbf)) qstr += 3;	// skip BOM
 
 	int	zlen = 0;					// golden rule: every non_fup makes a character!
-	for (cptr q=qstr;*q;) { zlen += utf8_no_fup(*q++); }
+	for (cptr q=qstr;*q;) { zlen += !is_utf8_fup(*q++); }
 
 	str	zstr = tempstr(zlen);
 	cptr q = qstr;
@@ -658,10 +650,10 @@ str fromutf8str (cstr qstr) noexcept // sets errno
 
 	while (*q)
 	{
-		if (utf8_is_7bit(c1=*q++))			{ *z++ = c1; continue; }
-		if (utf8_is_fup(c1))				{ errno = unexpectedfup; continue; }
+		if (is_ascii(c1=*q++))				{ *z++ = c1; continue; }
+		if (is_utf8_fup(c1))				{ errno = unexpectedfup; continue; }
 		if (uint8(c1) >= 0xc4)				{ *z++ = '?'; errno = notindestcharset; continue; }
-		if (*q==0 || utf8_no_fup(c2=*q))	{ *z++ = '?'; errno = truncatedchar; continue; }
+		if (*q==0 || !is_utf8_fup(c2=*q))	{ *z++ = '?'; errno = truncatedchar; continue; }
 		q++; *z++ = char((c1<<6) + (c2&0x3f));
 	}
 	return zstr;
@@ -672,7 +664,7 @@ str toutf8str (cstr qstr) noexcept
 	if (qstr==nullptr || *qstr==0) return nullptr;
 
 	int	zlen = 0;
-	cptr q=qstr; while (*q) zlen += utf8_no_7bit(*q++); zlen += q-qstr;
+	cptr q=qstr; while (*q) zlen += !is_ascii(*q++); zlen += q-qstr;
 	str	zstr = tempstr(zlen);
 	ptr z = zstr;
 	q = qstr;
@@ -680,7 +672,7 @@ str toutf8str (cstr qstr) noexcept
 	while (*q)
 	{
 		char c = *q++;
-		if (utf8_is_7bit(c)) { *z++ = c; continue; }	// 7-bit ascii
+		if (is_ascii(c)) { *z++ = c; continue; }	// 7-bit ascii
 		*z++ = char(0xC0 + (uchar(c)>>6));		// 2-char utf8 code
 		*z++ = char(0x80 + (c&0x3f));
 	}

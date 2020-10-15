@@ -27,6 +27,7 @@ inline	bool is_letter (char c)		noexcept { return uchar((c|0x20)-'a')<='z'-'a'; 
 inline	bool is_control	(char c)	noexcept { return uchar(c)<0x20 || uchar(c)==0x7f; }
 inline	bool is_printable (char c)	noexcept { return uchar(c)>=0x20 && uchar(c)!=0x7f; }
 inline  bool is_ascii (char c)		noexcept { return uchar(c) <= 0x7F; }
+inline  bool is_utf8_fup (char c)	noexcept { return schar(c) < schar(0xc0); }	// prefer utf8::is_fup(c) if included
 inline	bool is_uppercase (char c)	noexcept { return uchar(c-'A')<='Z'-'A'; }
 inline	bool is_lowercase (char c)	noexcept { return uchar(c-'a')<='z'-'a'; }
 inline	char to_upper (char c)		noexcept { return uchar(c-'a')<='z'-'a' ? c&~0x20 : c; }
