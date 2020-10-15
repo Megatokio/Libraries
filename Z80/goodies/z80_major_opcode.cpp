@@ -22,7 +22,7 @@
 
 namespace Z80	// there are some name colissions with the enum below
 {
-#include "Z80/Emu/Z80opcodes.h"
+#include "z80_opcodes.h"
 }
 
 
