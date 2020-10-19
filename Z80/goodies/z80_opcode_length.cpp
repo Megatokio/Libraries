@@ -133,6 +133,19 @@ uint z80_opcode_length (const Byte* ip) noexcept
 	return uint(len3[op&0x3F]-'0');			// 0xC0 - 0xFF:	no prefix:	various length
 }
 
+#ifdef DEBUG
+#include "z80_opcodes.h"
+ON_INIT([]{
+	static const Byte ld_a_xix[] = {0xdd,LD_A_xHL,0};	assert(z180_opcode_length(ld_a_xix)==3);
+	static const Byte ld_xix_a[] = {0xdd,LD_xHL_A,0};	assert(z180_opcode_length(ld_xix_a)==3);
+	static const Byte ld_b_xix[] = {0xdd,LD_B_xHL,0};	assert(z180_opcode_length(ld_b_xix)==3);
+	static const Byte ld_xix_b[] = {0xdd,LD_xHL_B,0};	assert(z180_opcode_length(ld_xix_b)==3);
+	static const Byte ld_c_xix[] = {0xdd,LD_C_xHL,0};	assert(z180_opcode_length(ld_c_xix)==3);
+	static const Byte ld_xix_c[] = {0xdd,LD_xHL_C,0};	assert(z180_opcode_length(ld_xix_c)==3);
+	static const Byte ld_ix_halt[] = {0xdd,HALT,0};  	assert(z180_opcode_length(ld_ix_halt)==2);
+});
+#endif
+
 uint z180_opcode_length (const Byte* ip) noexcept
 {
 	// Calculate length [bytes] of instruction
