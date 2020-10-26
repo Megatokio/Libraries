@@ -438,16 +438,27 @@ uint32 FD::write_fmt( cstr format, ... ) THF
 	int err = errno;
 	va_list va2;								// duplicate va_list
 	va_copy(va2,va);
-	char bu[1];
-	int n = vsnprintf( bu, 0, format, va2 );	// calc. req. size
+
+	char bu[256];
+	int n = vsnprintf(bu, 256, format, va2);	// calc. req. size
 	assert(n>=0);
 	va_end(va2);
-	char s[n+1];
-	vsnprintf( s, uint(n+1), format, va );		// create formatted string
-	errno = err;
 
-	va_end(va);
-	return write_bytes(s,uint(n));
+	if (uint(n) < sizeof(bu))
+	{
+		errno = err;
+		va_end(va);
+		return write_bytes(bu,uint(n));
+	}
+	else
+	{
+		std::unique_ptr<char[]> s(new char[n+1]);
+		vsnprintf( s.get(), uint(n+1), format, va );	// try again
+
+		errno = err;
+		va_end(va);
+		return write_bytes(s.get(),uint(n));
+	}
 }
 
 //	read line-break separated string from file or stream
