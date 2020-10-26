@@ -253,7 +253,7 @@ cstr opcode_mnemo (CpuID cpuid, const Byte* core, Address addr)
 	// op2 and op4 are only used if required (( op2: op1=XY/CB/ED; op4: op1,2=XY,CB ))
 	// returns tempstr or const string
 
-	assert(cpuid==CpuZ80);	// others: TODO
+	assert(cpuid==CpuZ80 || cpuid==CpuDefault);	// others: TODO
 
 	char* m;
 	const uint8 op1 = peek(core,addr);
@@ -339,7 +339,7 @@ int opcode_legal_state (CpuID cpuid, const Byte* core, Address addr)
 	// get legal state of instruction
 	// op2 and op4 are only used if required (( op2: op1=XY/CB/ED; op4: op1,2=XY,CB ))
 
-	assert(cpuid==CpuZ80);	// others: TODO
+	assert(cpuid==CpuZ80 || cpuid==CpuDefault);	// others: TODO
 
 	switch (peek(core,addr))
 	{
@@ -515,6 +515,8 @@ cstr disassemble_i8080 (const Byte* core, Address& addr)
 
 cstr disassemble_z180 (const Byte* core, Address& addr)
 {
+	(void)core;
+	(void)addr;
 	TODO();
 }
 
@@ -525,11 +527,12 @@ cstr disassemble (CpuID cpuid, const Byte* core, Address& addr, bool alternate_s
 
 	switch(cpuid)
 	{
+	case CpuDefault:
 	case CpuZ80:	return disassemble_z80(core,addr);
 	case CpuZ180:	return disassemble_z180(core,addr);
 	case Cpu8080:	return (alternate_syntax?disassemble_asm8080:disassemble_i8080)(core,addr);
-	default: IERR();
 	}
+	IERR();
 }
 
 
