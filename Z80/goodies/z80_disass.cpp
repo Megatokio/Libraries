@@ -254,6 +254,7 @@ cstr opcode_mnemo (CpuID cpuid, const Byte* core, Address addr)
 	// returns tempstr or const string
 
 	assert(cpuid==CpuZ80 || cpuid==CpuDefault);	// others: TODO
+	(void)cpuid;
 
 	char* m;
 	const uint8 op1 = peek(core,addr);
@@ -340,6 +341,7 @@ int opcode_legal_state (CpuID cpuid, const Byte* core, Address addr)
 	// op2 and op4 are only used if required (( op2: op1=XY/CB/ED; op4: op1,2=XY,CB ))
 
 	assert(cpuid==CpuZ80 || cpuid==CpuDefault);	// others: TODO
+	(void)cpuid;
 
 	switch (peek(core,addr))
 	{
