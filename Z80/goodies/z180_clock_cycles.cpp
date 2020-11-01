@@ -141,7 +141,7 @@ static const uint8 cc_z180_CB[256] =
 		7u,			7u,			7u,			7u,			7u,			7u,			13u, 		7u,
 		7u,			7u,			7u,			7u,			7u,			7u,			13u, 		7u,
 		7u,			7u,			7u,			7u,			7u,			7u,			13u, 		7u,
-		0,			0,			0,			0,			0,			0,			15,			0,
+		0,			0,			0,			0,			0,			0,			0,			0,
 		7u,			7u,			7u,			7u,			7u,			7u,			13u, 		7u,
 
 	// BIT0_B,		BIT0_C,		BIT0_D,		BIT0_E,		BIT0_H,		BIT0_L,		BIT0_xHL,	BIT0_A,
@@ -203,14 +203,14 @@ static const uint8 cc_z180_ED[256] =
 	// times are for the entire opcode incl. ED
 	// illegal opcodes are trapped by the Z80180
 
-	// IN0_B_xN, 	OUT0_B_xN, 	ED02,		ED03,		TST_B,		ED05,		ED06,		ED07,
-	// IN0_C_xN, 	OUT0_C_xN, 	ED0A,		ED0B,		TST_C,		ED0D,		ED0E,		ED0F,
-	// IN0_D_xN, 	OUT0_D_xN, 	ED12,		ED13,		TST_D,		ED15,		ED16,		ED17,
-	// IN0_E_xN, 	OUT0_E_xN, 	ED1A,		ED1B,		TST_E,		ED1D,		ED1E,		ED1F,
-	// IN0_H_xN, 	OUT0_H_xN, 	ED22,		ED23,		TST_H,		ED25,		ED26,		ED27,
-	// IN0_L_xN, 	OUT0_L_xN, 	ED2A,		ED2B,		TST_L,		ED2D,		ED2E,		ED2F,
+	// IN0_B_xN, 	OUT0_xN_B, 	ED02,		ED03,		TST_B,		ED05,		ED06,		ED07,
+	// IN0_C_xN, 	OUT0_xN_C, 	ED0A,		ED0B,		TST_C,		ED0D,		ED0E,		ED0F,
+	// IN0_D_xN, 	OUT0_xN_D, 	ED12,		ED13,		TST_D,		ED15,		ED16,		ED17,
+	// IN0_E_xN, 	OUT0_xN_E, 	ED1A,		ED1B,		TST_E,		ED1D,		ED1E,		ED1F,
+	// IN0_H_xN, 	OUT0_xN_H, 	ED22,		ED23,		TST_H,		ED25,		ED26,		ED27,
+	// IN0_L_xN, 	OUT0_xN_L, 	ED2A,		ED2B,		TST_L,		ED2D,		ED2E,		ED2F,
 	// IN0_F_xN, 	ED31,		ED32,		ED33,		TST_xHL,	ED35,		ED36,		ED37,
-	// IN0_A_xN, 	OUT0_A_xN,	ED3A,		ED3B,		TST_A,		ED3D,		ED3E,		ED3F,
+	// IN0_A_xN, 	OUT0_xN_A,	ED3A,		ED3B,		TST_A,		ED3D,		ED3E,		ED3F,
 		12u, 		13u,		0,			0,			7u,			0,			0,			0,
 		12u, 		13u,		0,			0,			7u,			0,			0,			0,
 		12u, 		13u,		0,			0,			7u,			0,			0,			0,

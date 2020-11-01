@@ -21,7 +21,7 @@
 
 enum CpuID
 {
-	CpuDefault,	// same as Z80, but not actively selected
+	CpuDefault=0,	// same as Z80, but not actively selected
 	CpuZ80,
 	Cpu8080,
 	CpuZ180
