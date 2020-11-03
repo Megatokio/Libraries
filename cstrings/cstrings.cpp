@@ -90,7 +90,7 @@ cstr spaces (uint n) noexcept
 	// or in tempmem if longer
 
 	static const char _spaces[] = "                                        ";
-	static uint maxlen = NELEM(_spaces)-1;
+	static const uint maxlen = NELEM(_spaces)-1;
 
 	return n>maxlen ? spacestr(int(n)) : _spaces + maxlen - n;
 }

@@ -29,6 +29,7 @@ extern void test_RCArray(uint& num_tests, uint& num_errors);
 extern void TestStringClass(uint& num_tests, uint& num_errors);
 extern void test_relational_operators(uint& num_tests, uint& num_errors);
 extern void test_kio_util (uint& num_tests, uint& num_errors);
+extern void test_z80_disass(uint& num_tests, uint& num_errors);
 
 
 #undef  assert

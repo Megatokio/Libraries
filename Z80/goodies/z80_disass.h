@@ -27,13 +27,21 @@ typedef uint16 Word;
 
 inline Byte peek (const Byte* core, Address addr) { return core[addr]; }
 
-extern cstr disassemble		(CpuID, const Byte* core, Address& ip, bool alternate_syntax=no);
-extern cstr disassemble_z80	(const Byte* core, Address& ip);
-extern cstr disassemble_i8080 (const Byte* core, Address& ip);
-extern cstr disassemble_z180 (const Byte* core, Address& ip);
-extern cstr disassemble_asm8080 (const Byte* core, Address& ip);	// i8080 with asm8080 syntax
+enum { DISASS_STD=0, DISASS_ASM8080, DISASS_IXCBR2, DISASS_IXCBXH };
 
-extern int  opcode_legal_state (CpuID, const Byte* core, Address ip);
+extern cstr disassemble_z80  (const Byte* core, Address& addr, int option=DISASS_STD);
+extern cstr disassemble_8080 (const Byte* core, Address& addr, int option=DISASS_STD);
+extern cstr disassemble_z180 (const Byte* core, Address& addr);
+extern cstr disassemble		 (CpuID, const Byte* core, Address& addr, int option=DISASS_STD);
+
+inline cstr disassemble_asm8080 (const Byte* core, Address& addr)
+{
+	return disassemble_8080(core,addr,DISASS_ASM8080);
+}
+
+extern int  opcode_legal_state (CpuID, const Byte* core, Address addr);
+
+__attribute__((deprecated))
 extern cstr opcode_mnemo	(CpuID, const Byte* core, Address addr);
 
 

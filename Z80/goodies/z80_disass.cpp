@@ -20,6 +20,9 @@
 #include "z80_goodies.h"
 
 
+typedef uchar Mnemo[3];
+
+
 // ----	Z80 opcode definitions ------------------------------------------------------
 
 enum
@@ -40,10 +43,18 @@ enum
 	N00,	N08,	N10,	N18,	N20,	N28,	N30,	N38,
 	Z,		NZ,		NC,		PO,		PE,		M,		P,
 	N,		NN,		XNN,	XN,		DIS,	CB,		ED,
-	XH,		XL,		YH,		YL,		XIX,	XIY
+	XH,		XL,		YH,		YL,		XIX,	XIY,
+	IN0,	OUT0,	TST,	TSTIO,	MLT,	OTIM,	OTDM,	OTIMR,	OTDMR, SLP,
+	LXI,STAX,INX,INR,DCR,MVI,DAD,LDAX,DCX,
+	RAL,RAR,SHLD,LHLD,CMA,STA,STC,LDA,CMC,
+	RNZ,JNZ,JMP,CNZ,ADI,RZ,JZ,CZ,ACI,RNC,JNC,CNC,
+	SUI,RC,JC,CC,SBI,RPO,JPO,XTHL,CPO,ANI,RPE,PCHL,
+	JPE,XCHG,CPE,XRI,RP,PSW,ORI,RM,SPHL,JM,CM,HLT,
+	SBB,ANA,XRA,ORA,CMP,
+	NUM_WORD_DEFS
 };
 
-static cstr word[] =
+static const char word[][9] =
 {
 	"",		"nop",	"ld",	"inc",	"dec",	"rlca",	"ex",	"add",
 	"rrca",	"djnz",	"rla",	"jr",	"rra",	"daa",	"cpl",	"halt",
@@ -58,101 +69,196 @@ static cstr word[] =
 	"b",	"c",	"d",	"e",	"h",	"l",	"(hl)",	"a",
 	"(bc)",	"(de)",	"r",	"i",	"(c)",	"(sp)",	"pc",	"f",
 	"0",	"1",	"2",	"3",	"4",	"5",	"6",	"7",
-	"$00",	"$08",	"$10",	"$18",	"$20",	"$28",	"$30",	"$38",
+	"0",	"8",	"16",	"24",	"32",	"40",	"48",	"56",
 	"z",	"nz",	"nc",	"po",	"pe",	"m",	"p",
 	"N",	"NN",	"(NN)",	"(N)",	"dis",	"cb",	"ed",
-	"xh",	"xl",	"yh",	"yl",	"(ix+dis)","(iy+dis)"
+	"xh",	"xl",	"yh",	"yl",	"(ix+dis)","(iy+dis)",
+	"in0",	"out0",	"tst",	"tstio","mlt",	"otim",	"otdm",	"otimr","otdmr","slp",
+	"lxi",	"stax",	"inx",	"inr",	"dcr",	"mvi",	"dad",	"ldax",	"dcx",
+	"ral",	"rar",	"shld",	"lhld",	"cma",	"sta",	"stc",	"lda",	"cmc",
+	"rnz",	"jnz",	"jmp",	"cnz",	"adi",	"rz",	"jz",	"cz",	"aci",	"rnc",	"jnc",	"cnc",
+	"sui",	"rc",	"jc",	"cc",	"sbi",	"rpo",	"jpo",	"xthl",	"cpo",	"ani",	"rpe",	"pchl",
+	"jpe",	"xchg",	"cpe",	"xri",	"rp",	"psw",	"ori",	"rm",	"sphl",	"jm",	"cm",	"hlt",
+	"sbb",	"ana",	"xra",	"ora",	"cmp",
 };
 
-static char cmd_00[64][3] =
-{	{NOP,0,0},	{LD,BC,NN},	{LD,XBC,A},	{INC,BC,0},	{INC,B,0},	{DEC,B,0},	{LD,B,N},	{RLCA,0,0},
-	{EX,AF,AF2},{ADD,HL,BC},{LD,A,XBC},	{DEC,BC,0},	{INC,C,0},	{DEC,C,0},	{LD,C,N},	{RRCA,0,0},
-	{DJNZ,DIS,0},{LD,DE,NN},{LD,XDE,A},	{INC,DE,0},	{INC,D,0},	{DEC,D,0},	{LD,D,N},	{RLA,0,0},
-	{JR,DIS,0},	{ADD,HL,DE},{LD,A,XDE},	{DEC,DE,0},	{INC,E,0},	{DEC,E,0},	{LD,E,N},	{RRA,0,0},
-	{JR,NZ,DIS},{LD,HL,NN},	{LD,XNN,HL},{INC,HL,0},	{INC,H,0},	{DEC,H,0},	{LD,H,N},	{DAA,0,0},
-	{JR,Z,DIS},	{ADD,HL,HL},{LD,HL,XNN},{DEC,HL,0},	{INC,L,0}, 	{DEC,L,0}, 	{LD,L,N},	{CPL,0,0},
-	{JR,NC,DIS},{LD,SP,NN},	{LD,XNN,A},	{INC,SP,0},	{INC,XHL,0},{DEC,XHL,0},{LD,XHL,N},	{SCF,0,0},
-	{JR,C,DIS},	{ADD,HL,SP},{LD,A,XNN},	{DEC,SP,0},	{INC,A,0},	{DEC,A,0},	{LD,A,N},	{CCF,0,0}
+static_assert(NELEM(word) == NUM_WORD_DEFS, "");
+
+static const Mnemo i8080_cmd_00[64] =
+{
+	{NOP},  {LXI,B,NN},	 {STAX,B},	{INX,B},  {INR,B},  {DCR,B},  {MVI,B,N},  {RLC},
+	{NOP},  {DAD,B},	 {LDAX,B},	{DCX,B},  {INR,C},  {DCR,C},  {MVI,C,N},  {RRC},
+	{NOP},  {LXI,D,NN},	 {STAX,D},	{INX,D},  {INR,D},  {DCR,D},  {MVI,D,N},  {RAL},
+	{NOP},  {DAD,D},	 {LDAX,D},	{DCX,D},  {INR,E},  {DCR,E},  {MVI,E,N},  {RAR},
+	{NOP},  {LXI,H,NN},	 {SHLD,NN},	{INX,H},  {INR,H},  {DCR,H},  {MVI,H,N},  {DAA},
+	{NOP},  {DAD,H},	 {LHLD,NN},	{DCX,H},  {INR,L},  {DCR,L},  {MVI,L,N},  {CMA},
+	{NOP},  {LXI,SP,NN}, {STA,NN},	{INX,SP}, {INR,M},  {DCR,M},  {MVI,M,N},  {STC},
+	{NOP},  {DAD,SP},	 {LDA,NN},	{DCX,SP}, {INR,A},  {DCR,A},  {MVI,A,N},  {CMC},
 };
 
-static char cmd_C0[64][3] =
-{	{RET,NZ,0},	{POP,BC,0},	{JP,NZ,NN},	{JP,NN,0},	{CALL,NZ,NN},	{PUSH,BC,0},	{ADD,A,N},	{RST,N00,0},
-	{RET,Z,0},	{RET,0,0},	{JP,Z,NN},	{PFX,CB,0},	{CALL,Z,NN},	{CALL,NN,0},	{ADC,A,N},	{RST,N08,0},
-	{RET,NC,0},	{POP,DE,0},	{JP,NC,NN},	{OUT,XN,A},	{CALL,NC,NN},	{PUSH,DE,0},	{SUB,A,N},	{RST,N10,0},
-	{RET,C,0},	{EXX,0,0},	{JP,C,NN},	{IN,A,XN},	{CALL,C,NN},	{PFX,IX,0},		{SBC,A,N},	{RST,N18,0},
-	{RET,PO,0},	{POP,HL,0},	{JP,PO,NN},	{EX,HL,XSP},{CALL,PO,NN},	{PUSH,HL,0},	{AND,A,N},	{RST,N20,0},
-	{RET,PE,0},	{JP,HL,0},	{JP,PE,NN},	{EX,DE,HL},	{CALL,PE,NN},	{PFX,ED,0},		{XOR,A,N},	{RST,N28,0},  // ld pc,hl statt jp(hl) da: (hl) wird zu (ix+dis)
-	{RET,P,0},	{POP,AF,0},	{JP,P,NN},	{DI,0,0},	{CALL,P,NN},	{PUSH,AF,0},	{OR,A,N},	{RST,N30,0},
-	{RET,M,0},	{LD,SP,HL},	{JP,M,NN},	{EI,0,0},	{CALL,M,NN},	{PFX,IY,0},		{CP,A,N},	{RST,N38,0}
+static const Mnemo i8080_cmd_C0[64] =
+{
+	{RNZ},	{POP,B},   {JNZ,NN},  {JMP,NN}, {CNZ,NN}, {PUSH,B},	  {ADI,N},  {RST,N0},
+	{RZ},	{RET},	   {JZ,NN},	  {JMP,NN}, {CZ,NN},  {CALL,NN},  {ACI,N},  {RST,N1},
+	{RNC},	{POP,D},   {JNC,NN},  {OUT,N},  {CNC,NN}, {PUSH,D},	  {SUI,N},  {RST,N2},
+	{RC},	{RET},	   {JC,NN},	  {IN,N},	{CC,NN},  {CALL,NN},  {SBI,N},  {RST,N3},
+	{RPO},	{POP,H},   {JPO,NN},  {XTHL},	{CPO,NN}, {PUSH,H},	  {ANI,N},  {RST,N4},
+	{RPE},	{PCHL},	   {JPE,NN},  {XCHG},	{CPE,NN}, {CALL,NN},  {XRI,N},  {RST,N5},
+	{RP},	{POP,PSW}, {JP,NN},	  {DI},		{CP,NN},  {PUSH,PSW}, {ORI,N},  {RST,N6},
+	{RM},	{SPHL},	   {JM,NN},	  {EI},		{CM,NN},  {CALL,NN},  {CPI,N},  {RST,N7},
 };
 
-static char cmd_ED40[64][3] =
-{	{IN,B,XC},	{OUT,XC,B},	{SBC,HL,BC},	{LD,XNN,BC},	{NEG,0,0},	{RETN,0,0},	{IM,N0,0},	{LD,I,A},
-	{IN,C,XC},	{OUT,XC,C},	{ADC,HL,BC},	{LD,BC,XNN},	{NEG,0,0},	{RETI,0,0},	{IM,N0,0},	{LD,R,A},
-	{IN,D,XC},	{OUT,XC,D},	{SBC,HL,DE},	{LD,XNN,DE},	{NEG,0,0},	{RETN,0,0},	{IM,N1,0},	{LD,A,I},
-	{IN,E,XC},	{OUT,XC,E},	{ADC,HL,DE},	{LD,DE,XNN},	{NEG,0,0},	{RETI,0,0},	{IM,N2,0},	{LD,A,R},
-	{IN,H,XC},	{OUT,XC,H},	{SBC,HL,HL},	{LD,XNN,HL},	{NEG,0,0},	{RETN,0,0},	{IM,N0,0},	{RRD,0,0},
-	{IN,L,XC},	{OUT,XC,L},	{ADC,HL,HL},	{LD,HL,XNN},	{NEG,0,0},	{RETI,0,0},	{IM,N0,0},	{RLD,0,0},
-	{IN,F,XC},	{OUT,XC,N0},{SBC,HL,SP},	{LD,XNN,SP},	{NEG,0,0},	{RETN,0,0},	{IM,N1,0},	{NOP,0,0},
-	{IN,A,XC},	{OUT,XC,A},	{ADC,HL,SP},	{LD,SP,XNN},	{NEG,0,0},	{RETI,0,0},	{IM,N2,0},	{NOP,0,0}
+static const Mnemo z80_cmd_00[64] =
+{	{NOP},	    {LD,BC,NN},	{LD,XBC,A},	{INC,BC},	{INC,B},	{DEC,B},	{LD,B,N},	{RLCA},
+	{EX,AF,AF2},{ADD,HL,BC},{LD,A,XBC},	{DEC,BC},	{INC,C},	{DEC,C},	{LD,C,N},	{RRCA},
+	{DJNZ,DIS}, {LD,DE,NN}, {LD,XDE,A},	{INC,DE},	{INC,D},	{DEC,D},	{LD,D,N},	{RLA},
+	{JR,DIS},	{ADD,HL,DE},{LD,A,XDE},	{DEC,DE},	{INC,E},	{DEC,E},	{LD,E,N},	{RRA},
+	{JR,NZ,DIS},{LD,HL,NN},	{LD,XNN,HL},{INC,HL},	{INC,H},	{DEC,H},	{LD,H,N},	{DAA},
+	{JR,Z,DIS},	{ADD,HL,HL},{LD,HL,XNN},{DEC,HL},	{INC,L}, 	{DEC,L}, 	{LD,L,N},	{CPL},
+	{JR,NC,DIS},{LD,SP,NN},	{LD,XNN,A},	{INC,SP},	{INC,XHL},	{DEC,XHL},	{LD,XHL,N},	{SCF},
+	{JR,C,DIS},	{ADD,HL,SP},{LD,A,XNN},	{DEC,SP},	{INC,A},	{DEC,A},	{LD,A,N},	{CCF},
 };
 
-static char cmd_halt[]	= { HALT,0,0 };
-static char cmd_nop[]	= { NOP,0,0 };
-static char c_ari[]     = { ADD,ADC,SUB,SBC,AND,XOR,OR,CP };
-static char c_blk[]     = { LDI,CPI,INI,OUTI,0,0,0,0,LDD,CPD,IND,OUTD,0,0,0,0, LDIR,CPIR,INIR,OTIR,0,0,0,0,LDDR,CPDR,INDR,OTDR };
-static char c_sh[]  	= { RLC,RRC,RL,RR,SLA,SRA,SLL,SRL };
+static const Mnemo z80_cmd_C0[64] =
+{	{RET,NZ}, {POP,BC},	 {JP,NZ,NN}, {JP,NN},	 {CALL,NZ,NN},	{PUSH,BC},  {ADD,A,N},  {RST,N00},
+	{RET,Z},  {RET},	 {JP,Z,NN},	 {PFX,CB},	 {CALL,Z,NN},	{CALL,NN},  {ADC,A,N},  {RST,N08},
+	{RET,NC}, {POP,DE},	 {JP,NC,NN}, {OUT,XN,A}, {CALL,NC,NN},	{PUSH,DE},  {SUB,A,N},  {RST,N10},
+	{RET,C},  {EXX},	 {JP,C,NN},	 {IN,A,XN},	 {CALL,C,NN},	{PFX,IX},	{SBC,A,N},  {RST,N18},
+	{RET,PO}, {POP,HL},	 {JP,PO,NN}, {EX,HL,XSP},{CALL,PO,NN},	{PUSH,HL},  {AND,A,N},  {RST,N20},
+	{RET,PE}, {JP,HL},	 {JP,PE,NN}, {EX,DE,HL}, {CALL,PE,NN},	{PFX,ED},	{XOR,A,N},  {RST,N28},
+	{RET,P},  {POP,AF},	 {JP,P,NN},	 {DI},		 {CALL,P,NN},	{PUSH,AF},  {OR,A,N},   {RST,N30},
+	{RET,M},  {LD,SP,HL},{JP,M,NN},	 {EI},		 {CALL,M,NN},	{PFX,IY},	{CP,A,N},   {RST,N38},
+};
+
+static const Mnemo z80_cmd_ED40[64] =
+{	{IN,B,XC},	{OUT,XC,B},	{SBC,HL,BC},  {LD,XNN,BC},  {NEG},  {RETN},  {IM,N0},  {LD,I,A},
+	{IN,C,XC},	{OUT,XC,C},	{ADC,HL,BC},  {LD,BC,XNN},  {NEG},  {RETI},  {IM,N0},  {LD,R,A},
+	{IN,D,XC},	{OUT,XC,D},	{SBC,HL,DE},  {LD,XNN,DE},  {NEG},  {RETN},  {IM,N1},  {LD,A,I},
+	{IN,E,XC},	{OUT,XC,E},	{ADC,HL,DE},  {LD,DE,XNN},  {NEG},  {RETI},  {IM,N2},  {LD,A,R},
+	{IN,H,XC},	{OUT,XC,H},	{SBC,HL,HL},  {LD,XNN,HL},  {NEG},  {RETN},  {IM,N0},  {RRD},
+	{IN,L,XC},	{OUT,XC,L},	{ADC,HL,HL},  {LD,HL,XNN},  {NEG},  {RETI},  {IM,N0},  {RLD},
+	{IN,F,XC},	{OUT,XC,N0},{SBC,HL,SP},  {LD,XNN,SP},  {NEG},  {RETN},  {IM,N1},  {NOP},
+	{IN,A,XC},	{OUT,XC,A},	{ADC,HL,SP},  {LD,SP,XNN},  {NEG},  {RETI},  {IM,N2},  {NOP},
+};
+
+static const Mnemo z180_cmd_ED[3*64] =
+{
+	{IN0,B,XN}, {OUT0,XN,B},  {NOP},  {NOP},  {TST,B},	 {NOP},  {NOP},  {NOP},
+	{IN0,C,XN}, {OUT0,XN,C},  {NOP},  {NOP},  {TST,C},	 {NOP},  {NOP},  {NOP},
+	{IN0,D,XN}, {OUT0,XN,D},  {NOP},  {NOP},  {TST,D},	 {NOP},  {NOP},  {NOP},
+	{IN0,E,XN}, {OUT0,XN,E},  {NOP},  {NOP},  {TST,E},	 {NOP},  {NOP},  {NOP},
+	{IN0,H,XN}, {OUT0,XN,H},  {NOP},  {NOP},  {TST,H},	 {NOP},  {NOP},  {NOP},
+	{IN0,L,XN}, {OUT0,XN,L},  {NOP},  {NOP},  {TST,L},	 {NOP},  {NOP},  {NOP},
+	{IN0,F,XN}, {NOP},		  {NOP},  {NOP},  {TST,XHL}, {NOP},  {NOP},  {NOP},
+	{IN0,A,XN}, {OUT0,XN,A},  {NOP},  {NOP},  {TST,A},	 {NOP},  {NOP},  {NOP},
+
+	{IN,B,XC},  {OUT,XC,B},  {SBC,HL,BC},  {LD,XNN,BC},  {NEG},		{RETN},	 {IM,N0},	{LD,I,A},
+	{IN,C,XC},  {OUT,XC,C},  {ADC,HL,BC},  {LD,BC,XNN},  {MLT,BC},	{RETI},	 {NOP},		{LD,R,A},
+	{IN,D,XC},  {OUT,XC,D},  {SBC,HL,DE},  {LD,XNN,DE},  {NOP},		{NOP},	 {IM,N1},	{LD,A,I},
+	{IN,E,XC},  {OUT,XC,E},  {ADC,HL,DE},  {LD,DE,XNN},  {MLT,DE},	{NOP},	 {IM,N2},	{LD,A,R},
+	{IN,H,XC},  {OUT,XC,H},  {SBC,HL,HL},  {LD,XNN,HL},  {TST,N},	{NOP},	 {NOP},		{RRD},
+	{IN,L,XC},  {OUT,XC,L},  {ADC,HL,HL},  {LD,HL,XNN},  {MLT,HL},	{NOP},	 {NOP},		{RLD},
+	{IN,F,XC},  {NOP},		 {SBC,HL,SP},  {LD,XNN,SP},  {TSTIO,N},	{NOP},	 {SLP},		{NOP},
+	{IN,A,XC},  {OUT,XC,A},  {ADC,HL,SP},  {LD,SP,XNN},  {MLT,SP},	{NOP},	 {NOP},		{NOP},
+
+	{NOP},	{NOP},	{NOP},	{OTIM},	 {NOP},  {NOP},  {NOP},  {NOP},
+	{NOP},	{NOP},	{NOP},	{OTDM},	 {NOP},  {NOP},  {NOP},  {NOP},
+	{NOP},	{NOP},	{NOP},	{OTIMR}, {NOP},  {NOP},  {NOP},  {NOP},
+	{NOP},	{NOP},	{NOP},	{OTDMR}, {NOP},  {NOP},  {NOP},  {NOP},
+	{LDI},	{CPI},	{INI},	{OUTI},	 {NOP},  {NOP},  {NOP},  {NOP},
+	{LDD},	{CPD},	{IND},	{OUTD},	 {NOP},  {NOP},  {NOP},  {NOP},
+	{LDIR},	{CPIR},	{INIR},	{OTIR},	 {NOP},  {NOP},  {NOP},  {NOP},
+	{LDDR},	{CPDR},	{INDR},	{OTDR},	 {NOP},  {NOP},  {NOP},  {NOP},
+};
 
 
 // ============================================================================================
 // Mnemonic:
 
-inline void copy3 (char* z, const char* q)
+static inline void copy3 (uchar* z, const uchar* q)
 {
 	*z++ = *q++;
 	*z++ = *q++;
 	*z++ = *q++;
 }
 
-static char* mnemo (Byte op)	// Z80
+static const uchar* z80_mnemo (Byte op)
 {
 	// return m[3] mnenonic descriptor for normal instructions
 	// tempmem or const
 
-	char* s;
+	static const uchar cmd_ari[]  = { ADD,ADC,SUB,SBC,AND,XOR,OR,CP };
+	static const Mnemo cmd_halt = { HALT,0,0 };
+
+	uchar* s;
 	switch(op>>6)
 	{
 	case 0:
-		return cmd_00[op];
+		return z80_cmd_00[op];
 	case 1:
 		if (op==0x76) return cmd_halt;
-		s = tempmem(3);
+		s = temp<uchar>(3);
 		s[0] = LD;
 		s[1] = B + ((op>>3)&0x07);
 		s[2] = B + (op&0x07);
 		return s;
 	case 2:
-		s = tempmem(3);
-		s[0] = c_ari[(op>>3)&0x07];
+		s = temp<uchar>(3);
+		s[0] = cmd_ari[(op>>3)&0x07];
 		s[1] = A;
 		s[2] = B + (op&0x07);
 		return s;
 	//case 3:
 	default:
-		return cmd_C0[op&0x3f];
+		return z80_cmd_C0[op&0x3f];
 	}
 }
 
-static char* mnemoCB (Byte op2)	// Z80
+static const uchar* i8080_mnemo (Byte op)
+{
+	// return m[3] mnenonic descriptor for normal instructions
+	// tempmem or const
+
+	static const Mnemo cmd_hlt = { HLT,0,0 };
+	static const uchar ari[]   = { ADD,ADC,SUB,SBB,ANA,XRA,ORA,CMP };
+	static const uchar reg[]   = { B,C,D,E,H,L,M,A };
+
+	uchar* s;
+	switch(op>>6)
+	{
+	case 0:
+		return i8080_cmd_00[op];
+	case 1:
+		if (op==0x76) return cmd_hlt;
+		s = temp<uchar>(3);
+		s[0] = LD;
+		s[1] = reg[(op>>3)&0x07];
+		s[2] = reg[op&0x07];
+		return s;
+	case 2:
+		s = temp<uchar>(3);
+		s[0] = ari[(op>>3)&0x07];
+		s[1] = reg[op&0x07];
+		s[2] = 0;
+		return s;
+	//case 3:
+	default:
+		return i8080_cmd_C0[op&0x3f];
+	}
+}
+
+static uchar* z80_mnemoCB (Byte op2)
 {
 	// return m[3] mnenonic descriptor for CB instructions
 	// tempmem or const
 
-	char* s = tempmem(3);
+	static const uchar cmd_sh[] = { RLC,RRC,RL,RR,SLA,SRA,SLL,SRL };
+
+	uchar* s = temp<uchar>(3);
 	switch(op2>>6)
 	{
 	case 0:
-		s[0] = c_sh[(op2>>3)&0x07];
+		s[0] = cmd_sh[(op2>>3)&0x07];
 		s[1] = B + (op2&0x07);
 		s[2] = 0;
 		return s;
@@ -168,58 +274,56 @@ static char* mnemoCB (Byte op2)	// Z80
 	return s;
 }
 
-static char* mnemoIXCB (Byte op4)	// Z80
+static const uchar* z80_mnemoIXCB (Byte op4)
 {
 	// return m[3] mnenonic descriptor for IXCB instructions
 	// tempmem or const
 
-	char* c = mnemoCB(op4);
-	if (c[1]==XHL) c[1] = char(XIX);	// this is only allowed, because mnemo() doesn't
-	if (c[2]==XHL) c[2] = char(XIX);	// retrieve a pointer but creates mnemo descr ad hoc
+	uchar* c = z80_mnemoCB(op4);
+	if (c[1]==XHL) c[1] = XIX;	// this is only allowed, because mnemo() doesn't
+	if (c[2]==XHL) c[2] = XIX;	// retrieve a pointer but creates mnemo descr ad hoc
 	return c;
 }
 
-static char* mnemoIYCB (Byte op4)	// Z80
+static const uchar* z80_mnemoIYCB (Byte op4)
 {
-	// return m[3] mnenonic descriptor for IYCB instructions
+	// return Mnemo for IYCB instructions
 	// tempmem or const
 
-	char* c = mnemoCB(op4);
-	if (c[1]==XHL) c[1] = char(XIY);	// this is only allowed, because mnemo() doesn't
-	if (c[2]==XHL) c[2] = char(XIY);	// retrieve a pointer but creates mnemo descr ad hoc
+	uchar* c = z80_mnemoCB(op4);
+	if (c[1]==XHL) c[1] = XIY;	// this is only allowed, because mnemo() doesn't
+	if (c[2]==XHL) c[2] = XIY;	// retrieve a pointer but creates mnemo descr ad hoc
 	return c;
 }
 
-static char* mnemoED (Byte op2)	// Z80
+static const uchar* z80_mnemoED (Byte op2)
 {
-	// return m[3] mnenonic descriptor for ED instructions
-	// tempmem or const
+	// return Mnemo for ED instructions
 
-	if(op2<0x40) return cmd_nop;
-
-	if(op2>=0x080)
-	{
-		if( (op2&0xE4)!=0xA0 ) return cmd_nop;
-
-		char* s = tempmem(3);
-		s[0]=c_blk[op2&0x1B];
-		s[1]=0;
-		s[2]=0;
-		return s;
-	}
-
-	return cmd_ED40[op2-0x40];
+	if (op2 >= 0x40 && op2 < 0x80) return z80_cmd_ED40[op2-0x40];
+	if (op2 >= 0xA0 && op2 < 0xC0) return z180_cmd_ED[op2];
+	static const Mnemo cmd_nop  = { NOP,0,0 };
+	return cmd_nop;
 }
 
-static char* mnemoIX (Byte op2)	// Z80
+static const uchar* z180_mnemoED (Byte op2)
+{
+	// return Mnemo for ED instructions
+
+	if (op2 < 0xC0) return z180_cmd_ED[op2];
+	static const Mnemo cmd_nop  = { NOP,0,0 };
+	return cmd_nop;
+}
+
+static const uchar* z80_mnemoIX (Byte op2)
 {
 	// return m[3] mnenonic descriptor for IX instructions
 	// tempmem or const
 
-	char* s = tempmem(3);
-	copy3(s, mnemo(op2));
-	if (s[1]==XHL) { s[1] = char(XIX); return s; }
-	if (s[2]==XHL) { s[2] = char(XIX); return s; }
+	uchar* s = temp<uchar>(3);
+	copy3(s, z80_mnemo(op2));
+	if (s[1]==XHL) { s[1] = XIX; return s; }
+	if (s[2]==XHL) { s[2] = XIX; return s; }
 	if (s[1]==HL)  { if (op2!=0xEB/*EX_DE_HL*/) s[1] = IX;  return s; }
 	if (s[2]==HL)  { if (op2!=0xEB/*EX_DE_HL*/) s[2] = IX;  return s; }
 	if (s[1]==H) s[1] = XH;
@@ -229,15 +333,15 @@ static char* mnemoIX (Byte op2)	// Z80
 	return s;
 }
 
-static char* mnemoIY (Byte op2)	// Z80
+static const uchar* z80_mnemoIY (Byte op2)
 {
 	// return m[3] mnenonic descriptor for IY instructions
 	// tempmem or const
 
-	char* s = tempmem(3);
-	copy3(s, mnemo(op2));
-	if (s[1]==XHL) { s[1] = char(XIY); return s; }
-	if (s[2]==XHL) { s[2] = char(XIY); return s; }
+	uchar* s = temp<uchar>(3);
+	copy3(s, z80_mnemo(op2));
+	if (s[1]==XHL) { s[1] = XIY; return s; }
+	if (s[2]==XHL) { s[2] = XIY; return s; }
 	if (s[1]==HL)  { if (op2!=0xEB/*EX_DE_HL*/) s[1] = IY;  return s; }
 	if (s[2]==HL)  { if (op2!=0xEB/*EX_DE_HL*/) s[2] = IY;  return s; }
 	if (s[1]==H) s[1] = YH;
@@ -247,6 +351,7 @@ static char* mnemoIY (Byte op2)	// Z80
 	return s;
 }
 
+// deprecated
 cstr opcode_mnemo (CpuID cpuid, const Byte* core, Address addr)
 {
 	// return mnenonic with symbolic arguments for instructions
@@ -256,21 +361,21 @@ cstr opcode_mnemo (CpuID cpuid, const Byte* core, Address addr)
 	assert(cpuid==CpuZ80 || cpuid==CpuDefault);	// others: TODO
 	(void)cpuid;
 
-	char* m;
+	const uchar* m;
 	const uint8 op1 = peek(core,addr);
 
 	switch(op1)
 	{
-	case 0xCB:	m = mnemoCB(peek(core,addr+1)); break;
-	case 0xED:	m = mnemoED(peek(core,addr+1)); break;
-	case 0xDD:	m = peek(core,addr+1)==0xCB ? mnemoIXCB(peek(core,addr+3)) : mnemoIX(peek(core,addr+1)); break;
-	case 0xFD:	m = peek(core,addr+1)==0xCB ? mnemoIYCB(peek(core,addr+3)) : mnemoIY(peek(core,addr+1)); break;
-	default:	m = mnemo(op1);                 break;
+	case 0xCB:	m = z80_mnemoCB(peek(core,addr+1)); break;
+	case 0xED:	m = z80_mnemoED(peek(core,addr+1)); break;
+	case 0xDD:	m = peek(core,addr+1)==0xCB ? z80_mnemoIXCB(peek(core,addr+3)) : z80_mnemoIX(peek(core,addr+1)); break;
+	case 0xFD:	m = peek(core,addr+1)==0xCB ? z80_mnemoIYCB(peek(core,addr+3)) : z80_mnemoIY(peek(core,addr+1)); break;
+	default:	m = z80_mnemo(op1);                 break;
 	}
 
-	cstr s1 = word[uchar(m[0])];  if(m[1]==0) return s1;
-	cstr s2 = word[uchar(m[1])];
-	cstr s3 = word[uchar(m[2])];
+	cstr s1 = word[m[0]];  if(m[1]==0) return s1;
+	cstr s2 = word[m[1]];
+	cstr s3 = word[m[2]];
 
 	str s = tempstr( 5 + strlen(s2) + (*s3?1+strlen(s3):0) );
 
@@ -290,7 +395,7 @@ cstr opcode_mnemo (CpuID cpuid, const Byte* core, Address addr)
 // ================================================================================
 // Opcode Legal State:
 
-inline int illegalCB (Byte op)	// Z80
+static inline int z80_illegalCB (Byte op)
 {
 	// get legal state of CB instruction
 	// all instructions legal except: sll is illegal
@@ -298,7 +403,7 @@ inline int illegalCB (Byte op)	// Z80
 	return op>=0x30 && op<0x38 ? IllegalOpcode : LegalOpcode;
 }
 
-inline int illegalED (Byte op)	// Z80
+static inline int z80_illegalED (Byte op)
 {
 	// get legal state of ED instruction
 	// 0x00-0x3F and 0x80-0xFF weird except block instructions
@@ -308,24 +413,24 @@ inline int illegalED (Byte op)	// Z80
 	const static char il[] = "1111111111110101111100111111001111110001111100011011000011110000";
 
 	if ((op>>6)==1)	return il[op-0x40]-'0' ? WeirdOpcode : LegalOpcode;
-	return *mnemoED(op)==NOP ? WeirdOpcode : LegalOpcode;
+	return *z80_mnemoED(op)==NOP ? WeirdOpcode : LegalOpcode;
 }
 
-inline int illegalXY (Byte op)	// Z80
+static inline int z80_illegalXY (Byte op)
 {
 	// get legal state of IX/IY instruction
 	// all illegal instructions, which use XH or XL are illegal
 	// all illegal instructions, which don't use XH or XL are weird
 	// prefixes are legal
 
-	cstr c = mnemo(op);
+	const uchar* c = z80_mnemo(op);
 
 	if (c[0]==PFX || c[1]==XHL || c[2]==XHL) return LegalOpcode;
 	if (c[1]==H||c[1]==L||c[2]==H||c[2]==L) return IllegalOpcode;
 	return WeirdOpcode;
 }
 
-inline int illegalXYCB (Byte op)	// Z80
+static inline int z80_illegalXYCB (Byte op)
 {
 	// get legal state of IXCB/IYCB instruction
 	// all instructions which do not use IX are weird
@@ -345,10 +450,10 @@ int opcode_legal_state (CpuID cpuid, const Byte* core, Address addr)
 
 	switch (peek(core,addr))
 	{
-	case 0xCB: return illegalCB(peek(core,addr+1));
-	case 0xED: return illegalED(peek(core,addr+1));
+	case 0xCB: return z80_illegalCB(peek(core,addr+1));
+	case 0xED: return z80_illegalED(peek(core,addr+1));
 	case 0xDD:
-	case 0xFD: return peek(core,addr+1)==0xCB ? illegalXYCB(peek(core,addr+3)) : illegalXY(peek(core,addr+1));
+	case 0xFD: return peek(core,addr+1)==0xCB ? z80_illegalXYCB(peek(core,addr+3)) : z80_illegalXY(peek(core,addr+1));
 	default:   return LegalOpcode;
 	}
 }
@@ -359,21 +464,21 @@ int opcode_legal_state (CpuID cpuid, const Byte* core, Address addr)
 
 #define NEXTBYTE    peek(core,addr++)
 
-static cstr expand_word (uint8 token, const Byte* core, Address& addr)
+static cstr expand_word (const Byte* core, Address& addr, uint8 token)
 {
 	// expand token n, reading opcode parameters via *ip++ if needed
 	// tempstr or const string
 
-	uint nn;
+	uint n,nn;
 	str s;
 
 	switch (token)
 	{
 	case DIS:
-		nn = NEXTBYTE;
-		nn = Word(addr + int8(nn));
-		s = tempstr(5);    // "$FFFF"
-		sprintf(s, "$%04X", nn);		// branch destination
+		n  = NEXTBYTE;
+		nn = Word(addr + int8(n));
+		s = tempstr(14);							// "$+123 ; $FFFF"
+		sprintf(s, "$%+i ; $%04X", int8(n+2), nn);	// "$+dis ; $dest"
 		return s;
 	case N:
 		s = tempstr(3);    // "255"
@@ -397,421 +502,160 @@ static cstr expand_word (uint8 token, const Byte* core, Address& addr)
 		return s;
 	case XIX:
 		s = tempstr(8); // "(ix+123)"
-		sprintf(s, "(ix%+i)", NEXTBYTE);
+		sprintf(s, "(ix%+i)", int8(NEXTBYTE));
 		return s;
 	case XIY:
 		s = tempstr(8); // "(iy+123)"
-		sprintf(s, "(iy%+i)", NEXTBYTE);
+		sprintf(s, "(iy%+i)", int8(NEXTBYTE));
 		return s;
 	default:
 		return word[token];
 	}
 }
 
-cstr disassemble_z80 (const Byte* core, Address& addr)
+static cstr expand_mnemo (const Byte* core, Address& addr, const Mnemo m)
+{
+	cstr cmd = word[m[0]];
+	if (m[1]==0) return cmd;
+
+	cstr s2 = expand_word(core, addr, m[1]);
+	if (m[2]==0) return catstr(cmd," ",s2);
+
+	cstr s3 = expand_word(core, addr, m[2]);
+	return catstr(cmd, " ", s2, ",", s3);
+}
+
+cstr disassemble_z80 (const Byte* core, Address& addr, int option)
 {
 	// disassemble one instruction and increment ip
 	// tempstr or const string
 
-	cstr m;
+	// TODO: option DISASS_IXCBR2 and DISASS_IXCBXH
+	(void)option;
+
+	const uchar* m;
 	Byte op = NEXTBYTE;
 	bool ixcb = 0;
 
 	switch(op)
 	{
 	case 0xcb:
-		m = mnemoCB(NEXTBYTE);
+		m = z80_mnemoCB(NEXTBYTE);
 		break;
 	case 0xed:
-		m = mnemoED(NEXTBYTE);
+		m = z80_mnemoED(NEXTBYTE);
 		break;
 	case 0xdd:
 		op = NEXTBYTE;
 		ixcb = op == 0xCB;
-		m = ixcb ? mnemoIXCB(peek(core,addr+1)) : mnemoIX(op);
+		m = ixcb ? z80_mnemoIXCB(peek(core,addr+1)) : z80_mnemoIX(op);
 		break;
 	case 0xfd:
 		op = NEXTBYTE;
 		ixcb = op == 0xCB;
-		m = ixcb ? mnemoIYCB(peek(core,addr+1)) : mnemoIY(op);
+		m = ixcb ? z80_mnemoIYCB(peek(core,addr+1)) : z80_mnemoIY(op);
 		break;
 	default:
-		m = mnemo(op);
+		m = z80_mnemo(op);
 		break;
 	}
 
-	cstr s1 = word[uchar(m[0])]; if(m[1]==0) return s1;
-	cstr s2 = expand_word(uchar(m[1]),core,addr);
-	cstr s3 = expand_word(uchar(m[2]),core,addr);
+	cstr s = expand_mnemo(core,addr,m);
 	addr += ixcb;
-
-	str s = tempstr( 5 + strlen(s2) + (*s3?1+strlen(s3):0) );
-
-	strcpy(s,s1);
-	strcat(s,"    ");
-	strcpy(s+5,s2);
-
-	if(*s3)
-	{
-		strcat(s,",");
-		strcat(s,s3);
-	}
-
-	return s;
-}
-
-cstr disassemble_i8080 (const Byte* core, Address& addr)
-{
-	// disassemble 8080 opcode using z80 syntax
-
-	Byte op = NEXTBYTE;
-	cstr m;
-
-	static const char cmd_call[] = { CALL,NN,0 };
-	static const char cmd_jp[]	 = { JP,NN,0 };
-
-	switch(op)
-	{
-	case 8:		// ex af,af'
-	case 16:	// djnz
-	case 24:	// jr
-	case 32:	// jr nz
-	case 40:	// jr z
-	case 48:	// jr nc
-	case 56:	// jr c
-		return "nop";
-
-	case 0xD9:	// exx
-		return "ret";
-
-	case 0xCB:
-		m = cmd_jp; break;
-
-	case 0xDD:
-	case 0xED:
-	case 0xFD:
-		m = cmd_call; break;
-
-	default:
-		m = mnemo(op);
-	}
-
-	cstr s1 = word[uchar(m[0])]; if(m[1]==0) return s1;
-	cstr s2 = expand_word(uchar(m[1]),core,addr);
-	cstr s3 = expand_word(uchar(m[2]),core,addr);
-
-	str s = tempstr( 5 + strlen(s2) + (*s3?1+strlen(s3):0) );
-
-	strcpy(s,s1);
-	strcat(s,"    ");
-	strcpy(s+5,s2);
-
-	if(*s3)
-	{
-		strcat(s,",");
-		strcat(s,s3);
-	}
-
 	return s;
 }
 
 cstr disassemble_z180 (const Byte* core, Address& addr)
 {
-	(void)core;
-	(void)addr;
-	TODO();
+	const uchar* m;
+	Byte op = NEXTBYTE;
+	bool ixcb = 0;
+	bool legal = yes;
+	cstr s;
+
+	switch(op)
+	{
+	case 0xcb:
+		m = z80_mnemoCB(NEXTBYTE);
+		legal = m[0] != SLL;
+		break;
+	case 0xed:
+		m = z180_mnemoED(NEXTBYTE);		// TODO
+		legal = m[0] != NOP;
+		break;
+	case 0xdd:
+		op = NEXTBYTE;
+		ixcb = op == 0xCB;
+		m = ixcb ? z80_mnemoIXCB(peek(core,addr+1)) : z80_mnemoIX(op);
+		legal = m[0]!=SLL && (m[1]==IX || m[1]==XIX || m[2]==IX || m[2]==XIX);
+		break;
+	case 0xfd:
+		op = NEXTBYTE;
+		ixcb = op == 0xCB;
+		m = ixcb ? z80_mnemoIYCB(peek(core,addr+1)) : z80_mnemoIY(op);
+		legal = m[0]!=SLL && (m[1]==IY || m[1]==XIY || m[2]==IY || m[2]==XIY);
+		break;
+	default:
+		m = z80_mnemo(op);		// this should be ok for all other opcodes
+		break;
+	}
+
+	s = expand_mnemo(core,addr,m);
+	addr += ixcb;
+	return legal ? s : catstr(s, " ; ***illegal opcode***");
 }
 
-cstr disassemble (CpuID cpuid, const Byte* core, Address& addr, bool alternate_syntax)
+cstr disassemble_8080 (const Byte* core, Address& addr, int syntax)
 {
-	// disassemble one instruction and increment ip
+	// disassemble 8080 opcode using z80 or asm8080 syntax
+
+	Byte op = NEXTBYTE;
+	cstr s;
+
+	// test for deprecated opcode:
+	// these are all NOP, CALL, JP or RET
+	// which happen to be the same in asm8080 and Z80 syntax:
+
+	switch(op)
+	{
+	case 8:		return "nop ; $08: ***deprecated*** Z80: EX AF,AF'";
+	case 16:	return "nop ; $10: ***deprecated*** Z80: DJNZ dest";
+	case 24:	return "nop ; $18: ***deprecated*** Z80: JR dest";
+	case 32:	return "nop ; $20: ***deprecated*** Z80: JR nz,dest";
+	case 40:	return "nop ; $28: ***deprecated*** Z80: JR z,dest";
+	case 48:	return "nop ; $30: ***deprecated*** Z80: JR nc,dest";
+	case 56:	return "nop ; $38: ***deprecated*** Z80: JR c,dest";
+	case 0xD9:	return "ret ; $D9: ***deprecated*** Z80: EXX";
+
+	case 0xCB:
+		s = expand_word(core,addr,uchar(NN));
+		return usingstr("%s %s ; $CB: ***deprecated*** Z80: prefix CB", (syntax==DISASS_ASM8080?"jmp":"jp"), s);
+
+	case 0xDD:
+	case 0xED:
+	case 0xFD:
+		s = expand_word(core,addr,uchar(NN));
+		return usingstr("call %s ; $%02X: ***deprecated*** Z80: prefix $%02X",s,op,op);
+	}
+
+	// legal opcode: return asm8080 or Z80 systax:
+
+	const uchar* mnemo = (syntax == DISASS_ASM8080 ? i8080_mnemo : z80_mnemo)(op);
+	return expand_mnemo(core,addr,mnemo);
+}
+
+cstr disassemble (CpuID cpuid, const Byte* core, Address& addr, int option)
+{
+	// disassemble one instruction and increment addr
 	// tempstr or const string
 
 	switch(cpuid)
 	{
-	case CpuDefault:
-	case CpuZ80:	return disassemble_z80(core,addr);
+	default:
+	case CpuZ80:	return disassemble_z80(core,addr,option);
 	case CpuZ180:	return disassemble_z180(core,addr);
-	case Cpu8080:	return (alternate_syntax?disassemble_asm8080:disassemble_i8080)(core,addr);
+	case Cpu8080:	return disassemble_8080(core,addr,option);
 	}
-	IERR();
-}
-
-
-static const char op8080[256][9] =
-{
-	"nop",		//	0x00 	1
-	"2lxi b,",	//	0x01 	3	B <- byte 3, C <- byte 2
-	"stax b",	//	0x02 	1	(BC) <- A
-	"inx b",	//	0x03 	1	BC <- BC+1
-	"inr b",	//	0x04 	1	B <- B+1
-	"dcr b",	//	0x05 	1	B <- B-1
-	"1mvi b,",	//	0x06 	2	B <- byte 2
-	"rlc",		//	0x07 	1	A = A << 1; bit 0 = prev bit 7; CY = prev bit 7
-	"db 08h",	//	0x08	1	nop (deprecated)
-	"dad b",	//	0x09 	1	HL = HL + BC
-	"ldax b",	//	0x0a 	1	A <- (BC)
-	"dcx b",	//	0x0b 	1	BC = BC-1
-	"inr c",	//	0x0c 	1	C <- C+1
-	"dcr c",	//	0x0d 	1	C <-C-1
-	"1mvi c,",	//	0x0e 	2	C <- byte 2
-	"rrc",		//	0x0f 	1	A = A >> 1; bit 7 = prev bit 0; CY = prev bit 0
-	"db 10h",	//	0x10	1	nop (deprecated)
-	"2lxi d,",	//	0x11 	3	D <- byte 3, E <- byte 2
-	"stax d",	//	0x12 	1	(DE) <- A
-	"inx d",	//	0x13 	1	DE <- DE + 1
-	"inr d",	//	0x14 	1	D <- D+1
-	"dcr d",	//	0x15 	1	D <- D-1
-	"1mvi d,",	//	0x16 	2	D <- byte 2
-	"ral",		//	0x17 	1	A = A << 1; bit 0 = prev CY; CY = prev bit 7
-	"db 18h",	//	0x18	1	nop (deprecated)
-	"dad d",	//	0x19 	1	HL = HL + DE
-	"ldax d",	//	0x1a 	1	A <- (DE)
-	"dcx d",	//	0x1b 	1	DE = DE-1
-	"inr e",	//	0x1c 	1	E <-E+1
-	"dcr e",	//	0x1d 	1	E <- E-1
-	"1mvi e,",	//	0x1e 	2	E <- byte 2
-	"rar",		//	0x1f 	1	A = A >> 1; bit 7 = prev bit 7; CY = prev bit 0
-	"db 20h",	//	0x20	1	nop (deprecated)
-	"2lxi h,",	//	0x21 	3	H <- byte 3, L <- byte 2
-	"2shld ",	//	0x22 	3	(NN) <-L; (NN+1)<-H
-	"inx h",	//	0x23 	1	HL <- HL + 1
-	"inr h",	//	0x24 	1	H <- H+1
-	"dcr h",	//	0x25 	1	H <- H-1
-	"1mvi h,",	//	0x26 	2	L <- byte 2
-	"daa",		//	0x27 	1	decimal adjust prev. arith. op.
-	"db 28h",	//	0x28	1	nop (deprecated)
-	"dad h",	//	0x29 	1	HL = HL + HI
-	"2lhld ",	//	0x2a 	3	L <- (NN); H<-(NN+1)
-	"dcx h",	//	0x2b 	1	HL = HL-1
-	"inr l",	//	0x2c 	1	L <- L+1
-	"dcr l",	//	0x2d 	1	L <- L-1
-	"1mvi l,",	//	0x2e 	2	L <- byte 2
-	"cma",		//	0x2f 	1	A <- ~A
-	"db 30h",	//	0x30	1	nop (deprecated)
-	"2lxi sp,",	//	0x31 	3	SP.hi <- byte 3, SP.lo <- byte 2
-	"2sta ",	//	0x32 	3	(NN) <- A
-	"inx sp",	//	0x33 	1	SP = SP + 1
-	"inr m",	//	0x34 	1	(HL) <- (HL)+1
-	"dcr m",	//	0x35 	1	(HL) <- (HL)-1
-	"1mvi m,",	//	0x36 	2	(HL) <- byte 2
-	"stc",		//	0x37 	1	CY = 1
-	"db 38h",	//	0x38	1	nop (deprecated)
-	"dad sp",	//	0x39 	1	HL = HL + SP
-	"2lda ",	//	0x3a 	3	A <- (NN)
-	"dcx sp",	//	0x3b 	1	SP = SP-1
-	"inr a",	//	0x3c 	1	A <- A+1
-	"dcr a",	//	0x3d 	1	A <- A-1
-	"1mvi a,",	//	0x3e 	2	A <- byte 2
-	"cmc",		//	0x3f 	1	CY=!CY
-	"mov b,b",	//	0x40 	1	B <- B
-	"mov b,c",	//	0x41 	1	B <- C
-	"mov b,d",	//	0x42 	1	B <- D
-	"mov b,e",	//	0x43 	1	B <- E
-	"mov b,h",	//	0x44 	1	B <- H
-	"mov b,l",	//	0x45 	1	B <- L
-	"mov b,m",	//	0x46 	1	B <- (HL)
-	"mov b,a",	//	0x47 	1	B <- A
-	"mov c,b",	//	0x48 	1	C <- B
-	"mov c,c",	//	0x49 	1	C <- C
-	"mov c,d",	//	0x4a 	1	C <- D
-	"mov c,e",	//	0x4b 	1	C <- E
-	"mov c,h",	//	0x4c 	1	C <- H
-	"mov c,l",	//	0x4d 	1	C <- L
-	"mov c,m",	//	0x4e 	1	C <- (HL)
-	"mov c,a",	//	0x4f 	1	C <- A
-	"mov d,b",	//	0x50 	1	D <- B
-	"mov d,c",	//	0x51 	1	D <- C
-	"mov d,d",	//	0x52 	1	D <- D
-	"mov d,e",	//	0x53 	1	D <- E
-	"mov d,h",	//	0x54 	1	D <- H
-	"mov d,l",	//	0x55 	1	D <- L
-	"mov d,m",	//	0x56 	1	D <- (HL)
-	"mov d,a",	//	0x57 	1	D <- A
-	"mov e,b",	//	0x58 	1	E <- B
-	"mov e,c",	//	0x59 	1	E <- C
-	"mov e,d",	//	0x5a 	1	E <- D
-	"mov e,e",	//	0x5b 	1	E <- E
-	"mov e,h",	//	0x5c 	1	E <- H
-	"mov e,l",	//	0x5d 	1	E <- L
-	"mov e,m",	//	0x5e 	1	E <- (HL)
-	"mov e,a",	//	0x5f 	1	E <- A
-	"mov h,b",	//	0x60 	1	H <- B
-	"mov h,c",	//	0x61 	1	H <- C
-	"mov h,d",	//	0x62 	1	H <- D
-	"mov h,e",	//	0x63 	1	H <- E
-	"mov h,h",	//	0x64 	1	H <- H
-	"mov h,l",	//	0x65 	1	H <- L
-	"mov h,m",	//	0x66 	1	H <- (HL)
-	"mov h,a",	//	0x67 	1	H <- A
-	"mov l,b",	//	0x68 	1	L <- B
-	"mov l,c",	//	0x69 	1	L <- C
-	"mov l,d",	//	0x6a 	1	L <- D
-	"mov l,e",	//	0x6b 	1	L <- E
-	"mov l,h",	//	0x6c 	1	L <- H
-	"mov l,l",	//	0x6d 	1	L <- L
-	"mov l,m",	//	0x6e 	1	L <- (HL)
-	"mov l,a",	//	0x6f 	1	L <- A
-	"mov m,b",	//	0x70 	1	(HL) <- B
-	"mov m,c",	//	0x71 	1	(HL) <- C
-	"mov m,d",	//	0x72 	1	(HL) <- D
-	"mov m,e",	//	0x73 	1	(HL) <- E
-	"mov m,h",	//	0x74 	1	(HL) <- H
-	"mov m,l",	//	0x75 	1	(HL) <- L
-	"hlt",		//	0x76 	1	halt cpu and wait for interrupt
-	"mov m,a",	//	0x77 	1	(HL) <- C
-	"mov a,b",	//	0x78 	1	A <- B
-	"mov a,c",	//	0x79 	1	A <- C
-	"mov a,d",	//	0x7a 	1	A <- D
-	"mov a,e",	//	0x7b 	1	A <- E
-	"mov a,h",	//	0x7c 	1	A <- H
-	"mov a,l",	//	0x7d 	1	A <- L
-	"mov a,m",	//	0x7e 	1	A <- (HL)
-	"mov a,a",	//	0x7f 	1	A <- A
-	"add b",	//	0x80 	1	A <- A + B
-	"add c",	//	0x81 	1	A <- A + C
-	"add d",	//	0x82 	1	A <- A + D
-	"add e",	//	0x83 	1	A <- A + E
-	"add h",	//	0x84 	1	A <- A + H
-	"add l",	//	0x85 	1	A <- A + L
-	"add m",	//	0x86 	1	A <- A + (HL)
-	"add a",	//	0x87 	1	A <- A + A
-	"adc b",	//	0x88 	1	A <- A + B + CY
-	"adc c",	//	0x89 	1	A <- A + C + CY
-	"adc d",	//	0x8a 	1	A <- A + D + CY
-	"adc e",	//	0x8b 	1	A <- A + E + CY
-	"adc h",	//	0x8c 	1	A <- A + H + CY
-	"adc l",	//	0x8d 	1	A <- A + L + CY
-	"adc m",	//	0x8e 	1	A <- A + (HL) + CY
-	"adc a",	//	0x8f 	1	A <- A + A + CY
-	"sub b",	//	0x90 	1	A <- A - B
-	"sub c",	//	0x91 	1	A <- A - C
-	"sub d",	//	0x92 	1	A <- A + D
-	"sub e",	//	0x93 	1	A <- A - E
-	"sub h",	//	0x94 	1	A <- A + H
-	"sub l",	//	0x95 	1	A <- A - L
-	"sub m",	//	0x96 	1	A <- A + (HL)
-	"sub a",	//	0x97 	1	A <- A - A
-	"sbb b",	//	0x98 	1	A <- A - B - CY
-	"sbb c",	//	0x99 	1	A <- A - C - CY
-	"sbb d",	//	0x9a 	1	A <- A - D - CY
-	"sbb e",	//	0x9b 	1	A <- A - E - CY
-	"sbb h",	//	0x9c 	1	A <- A - H - CY
-	"sbb l",	//	0x9d 	1	A <- A - L - CY
-	"sbb m",	//	0x9e 	1	A <- A - (HL) - CY
-	"sbb a",	//	0x9f 	1	A <- A - A - CY
-	"ana b",	//	0xa0 	1	A <- A & B
-	"ana c",	//	0xa1 	1	A <- A & C
-	"ana d",	//	0xa2 	1	A <- A & D
-	"ana e",	//	0xa3 	1	A <- A & E
-	"ana h",	//	0xa4 	1	A <- A & H
-	"ana l",	//	0xa5 	1	A <- A & L
-	"ana m",	//	0xa6 	1	A <- A & (HL)
-	"ana a",	//	0xa7 	1	A <- A & A
-	"xra b",	//	0xa8 	1	A <- A ^ B
-	"xra c",	//	0xa9 	1	A <- A ^ C
-	"xra d",	//	0xaa 	1	A <- A ^ D
-	"xra e",	//	0xab 	1	A <- A ^ E
-	"xra h",	//	0xac 	1	A <- A ^ H
-	"xra l",	//	0xad 	1	A <- A ^ L
-	"xra m",	//	0xae 	1	A <- A ^ (HL)
-	"xra a",	//	0xaf 	1	A <- A ^ A
-	"ora b",	//	0xb0 	1	A <- A | B
-	"ora c",	//	0xb1 	1	A <- A | C
-	"ora d",	//	0xb2 	1	A <- A | D
-	"ora e",	//	0xb3 	1	A <- A | E
-	"ora h",	//	0xb4 	1	A <- A | H
-	"ora l",	//	0xb5 	1	A <- A | L
-	"ora m",	//	0xb6 	1	A <- A | (HL)
-	"ora a",	//	0xb7 	1	A <- A | A
-	"cmp b",	//	0xb8 	1	A - B
-	"cmp c",	//	0xb9 	1	A - C
-	"cmp d",	//	0xba 	1	A - D
-	"cmp e",	//	0xbb 	1	A - E
-	"cmp h",	//	0xbc 	1	A - H
-	"cmp l",	//	0xbd 	1	A - L
-	"cmp m",	//	0xbe 	1	A - (HL)
-	"cmp a",	//	0xbf 	1	A - A
-	"rnz",		//	0xc0 	1	if NZ, RET
-	"pop b",	//	0xc1 	1	C <- (sp); B <- (sp+1); sp <- sp+2
-	"2jnz ",	//	0xc2 	3	if NZ, PC <- NN
-	"2jmp ",	//	0xc3 	3	PC <= NN
-	"2cnz ",	//	0xc4 	3	if NZ, CALL NN
-	"push b",	//	0xc5 	1	(sp-2)<-C; (sp-1)<-B; sp <- sp - 2
-	"1adi ",	//	0xc6 	2	A <- A + byte
-	"rst 0",	//	0xc7 	1	CALL $0
-	"rz",		//	0xc8 	1	if Z, RET
-	"ret",		//	0xc9 	1	PC.lo <- (sp); PC.hi<-(sp+1); SP <- SP+2
-	"2jz ",		//	0xca 	3	if Z, PC <- NN
-	"2jp ",		//	0xcb	3	jp NN (deprecated, Z80: PFX)
-	"2cz ",		//	0xcc 	3	if Z, CALL NN
-	"2call ",	//	0xcd 	3	(SP-1)<-PC.hi;(SP-2)<-PC.lo;SP<-SP+2;PC=NN
-	"1aci ",	//	0xce 	2	A <- A + data + CY
-	"rst 1",	//	0xcf 	1	CALL $8
-	"rnc",		//	0xd0 	1	if NCY, RET
-	"pop d",	//	0xd1 	1	E <- (sp); D <- (sp+1); sp <- sp+2
-	"2jnc ",	//	0xd2 	3	if NCY, PC<-NN
-	"1out ",	//	0xd3 	2	output byte to peripheral ic
-	"2cnc ",	//	0xd4 	3	if NCY, CALL NN
-	"push d",	//	0xd5 	1	(sp-2)<-E; (sp-1)<-D; sp <- sp - 2
-	"1sui ",	//	0xd6 	2	A <- A - data
-	"rst 2",	//	0xd7 	1	CALL $10
-	"rc",		//	0xd8 	1	if CY, RET
-	"ret",		//	0xd9	1	RET (deprecated, Z80: EXX)
-	"2jc ",		//	0xda 	3	if CY, PC<-NN
-	"1in ",		//	0xdb 	2	input byte from peripheral ic
-	"2cc ",		//	0xdc 	3	if CY, CALL NN
-	"2call ",	//	0xdd	3	call NN (deprecated, Z80: PFX)
-	"1sbi ",	//	0xde 	2	A <- A - data - CY
-	"rst 3",	//	0xdf 	1	CALL $18
-	"rpo",		//	0xe0 	1	if PO, RET
-	"pop h",	//	0xe1 	1	L <- (sp); H <- (sp+1); sp <- sp+2
-	"2jpo ",	//	0xe2 	3	if PO, PC <- NN
-	"xthl",		//	0xe3 	1	L <-> (SP); H <-> (SP+1)
-	"2cpo ",	//	0xe4 	3	if PO, CALL NN
-	"push h",	//	0xe5 	1	(sp-2)<-L; (sp-1)<-H; sp <- sp - 2
-	"1ani ",	//	0xe6 	2	A <- A & data
-	"rst 4",	//	0xe7 	1	CALL $20
-	"rpe",		//	0xe8 	1	if PE, RET
-	"pchl",		//	0xe9 	1	PC.hi <- H; PC.lo <- L
-	"2jpe ",	//	0xea 	3	if PE, PC <- NN
-	"xchg",		//	0xeb 	1	H <-> D; L <-> E
-	"2cpe ",	//	0xec 	3	if PE, CALL NN
-	"2call ",	//	0xed	3	call NN (deprecated, Z80: PFX)
-	"1xri ",	//	0xee 	2	A <- A ^ data
-	"rst 5",	//	0xef 	1	CALL $28
-	"rp",		//	0xf0 	1	if P, RET
-	"pop psw",	//	0xf1 	1	flags <- (sp); A <- (sp+1); sp <- sp+2
-	"2jp ",		//	0xf2 	3	if P=1 PC <- NN
-	"di",		//	0xf3 	1	disable interrupts
-	"2cp ",		//	0xf4 	3	if P, PC <- NN
-	"push psw",	//	0xf5 	1	(sp-2)<-flags; (sp-1)<-A; sp <- sp - 2
-	"1ori ",	//	0xf6 	2	A <- A | data
-	"rst 6",	//	0xf7 	1	CALL $30
-	"rm",		//	0xf8 	1	if M, RET
-	"sphl",		//	0xf9 	1	SP=HL
-	"2jm ",		//	0xfa 	3	if M, PC <- NN
-	"ei",		//	0xfb 	1	enable interrupts
-	"2cm ",		//	0xfc 	3	if M, CALL NN
-	"2call ",	//	0xfd	3	call NN (deprecated, Z80: PFX)
-	"1cpi ",	//	0xfe 	2	A - data
-	"rst 7",	//	0xff 	1	CALL $38
-};
-
-cstr disassemble_asm8080 (const Byte* core, Address& addr)
-{
-	// i8080 with asm8080 syntax
-
-	Byte op = peek(core,addr);
-
-	cstr m = op8080[op];
-	if (*m > '2') return m;		// no prefix '1' for N or '2' for NN
-
-	uint nn = NEXTBYTE;
-	if (*m=='1') return catstr(m+1, tostr(nn));
-
-	nn += 256 * NEXTBYTE;
-	return catstr(m+1, hexstr(nn, nn<0xA000?4:5), "h");
 }
 
 
