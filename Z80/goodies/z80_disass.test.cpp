@@ -30,56 +30,16 @@
 #include "z80_opcodes.h"
 
 
-// text used in deprecation warning in 8080 code:
-//static char deprecated[] = "***deprecated***";
-
-
 struct TestSet
 {
-	uint8 code[5];
-	char expected[15];
+	uint8 code[5];		// code to disassemble + 1 byte 0x00
+	char expected[17];	// expected disassembly
 };
 
-#define NN(nn) (nn&0xff),(nn>>8)
-
-
-static TestSet i8080_tests[] =
-{
-	// tests only for i8080
-	// using Z80 syntax
-
-	{{NOP},		"nop"},
-	{{EX_AF_AF},"nop ;"},
-	{{DJNZ},	"nop ;"},
-	{{JR},		"nop ;"},
-	{{JR_Z},	"nop ;"},
-	{{JR_NZ},	"nop ;"},
-	{{JR_C},	"nop ;"},
-	{{JR_NC},	"nop ;"},
-	{{EXX},     "ret ;"},
-	{{PFX_CB,1,2}, "jp $0201 ;"},
-	{{PFX_IX,1,2}, "call $0201 ;"},
-	{{PFX_ED,1,2}, "call $0201 ;"},
-	{{PFX_IY,1,2}, "call $0201 ;"},
-};
-
-static TestSet z80_tests[] =
-{
-	// tests only run for Z80
-
-	{{EX_AF_AF},	"ex af,af'"   },
-	{{DJNZ,66},		"djnz $+68 ;" },		// "djnz $+dis ; $dest" --> "djnz $+68 ; $0044"
-	{{JR,66},		"jr $+68 ;"   },
-	{{JR_Z,66},		"jr z,$+68 ;" },
-	{{JR_NZ,256-66},"jr nz,$-64 ;"},
-	{{JR_C,256-66},	"jr c,$-64 ;" },
-	{{JR_NC,66},	"jr nc,$+68 ;"},
-	{{EXX},			"exx"         },
-};
 
 static TestSet common_tests[] =
 {
-	// tests run for i8080, Z80 and Z180
+	// tests for i8080, Z80 and Z180
 
 	{{NOP}, "nop"},
 
@@ -166,18 +126,11 @@ static TestSet common_tests[] =
 	{{CALL_PE,0x45,0x23}, "call pe,$2345"}, {{XOR_N,123}, "xor a,123"}, {{DI,	   }, "di"},
 	{{CALL_P ,0x45,0x23}, "call p,$2345"},  {{OR_N ,123},  "or a,123"}, {{EI,	   }, "ei"},
 	{{CALL_M ,0x45,0x23}, "call m,$2345"},  {{CP_N ,123},  "cp a,123"},
-
-/*
-	{{PFX_CB,	 }, ""},
-	{{PFX_IX, }, ""},
-	{{PFX_ED, }, ""},
-	{{PFX_IY, }, ""},
-*/
 };
 
 static TestSet asm8080_tests[] =
 {
-	// tests only run for i8080
+	// tests for i8080
 	// asm8080 syntax
 
 	{{NOP},		"nop"},
@@ -279,6 +232,546 @@ static TestSet asm8080_tests[] =
 	{{CALL_M ,0x45,0x23}, "cm $2345"},  {{CP_N ,123}, "cpi 123"},
 };
 
+static TestSet i8080_tests[] =
+{
+	// tests for i8080
+	// Z80 syntax
+
+	{{NOP},		"nop"},
+	{{EX_AF_AF},"nop ;"},
+	{{DJNZ},	"nop ;"},
+	{{JR},		"nop ;"},
+	{{JR_Z},	"nop ;"},
+	{{JR_NZ},	"nop ;"},
+	{{JR_C},	"nop ;"},
+	{{JR_NC},	"nop ;"},
+	{{EXX},     "ret ;"},
+	{{PFX_CB,1,2}, "jp $0201 ;"},
+	{{PFX_IX,1,2}, "call $0201 ;"},
+	{{PFX_ED,1,2}, "call $0201 ;"},
+	{{PFX_IY,1,2}, "call $0201 ;"},
+};
+
+static TestSet z80_z180_tests[] =
+{
+	// tests for Z80 and Z180:
+	// legal CB, ED and IX opcodes
+
+	// non-prefix opcodes not present in i8080:
+
+	{{NOP},		"nop"},
+	{{DJNZ,33},	"djnz $+35 ;"},
+	{{JR,128},	"jr $-126 ;"},
+	{{JR_Z,127},"jr z,$+129 ;"},
+	{{JR_NZ,20},"jr nz,$+22 ;"},
+	{{JR_C,255},"jr c,$+1 ;"},
+	{{JR_NC,0},	"jr nc,$+2 ;"},
+	{{EX_AF_AF},"ex af,af'"},
+	{{EXX},     "exx"},
+
+	// prefix IX/IY opcodes:
+
+	{{PFX_IX,LD_HL_NN, 0x43,0x21}, "ld ix,$2143"},
+	{{PFX_IY,LD_HL_xNN,0x43,0x21}, "ld iy,($2143)"},
+	{{PFX_IX,LD_xNN_HL,0x43,0x21}, "ld ($2143),ix"},
+	{{PFX_IY,ADD_HL_BC}, "add iy,bc"},
+	{{PFX_IX,ADD_HL_DE}, "add ix,de"},
+	{{PFX_IY,ADD_HL_HL}, "add iy,iy"},
+	{{PFX_IX,ADD_HL_HL}, "add ix,ix"},
+	{{PFX_IX,ADD_HL_SP}, "add ix,sp"},
+	{{PFX_IY,PUSH_HL},   "push iy"},
+	{{PFX_IX,POP_HL},    "pop ix"},
+	{{PFX_IY,JP_HL},     "jp iy"},
+	{{PFX_IX,LD_SP_HL},  "ld sp,ix"},
+	{{PFX_IY,INC_HL },   "inc iy"},
+	{{PFX_IX,DEC_HL },   "dec ix"},
+
+	{{PFX_IX,INC_xHL,66},  "inc (ix+66)"},
+	{{PFX_IY,DEC_xHL,200}, "dec (iy-56)"},
+	{{PFX_IX,LD_xHL_N,66,200},"ld (ix+66),200"},
+
+	{{PFX_IX,LD_xHL_B,66}, "ld (ix+66),b"},
+	{{PFX_IY,LD_xHL_H,66}, "ld (iy+66),h"},
+	{{PFX_IX,LD_xHL_A,66}, "ld (ix+66),a"},
+	{{PFX_IY,LD_B_xHL,66}, "ld b,(iy+66)"},
+	{{PFX_IX,LD_L_xHL,66}, "ld l,(ix+66)"},
+	{{PFX_IY,LD_A_xHL,66}, "ld a,(iy+66)"},
+
+	{{PFX_IX,ADD_xHL,66}, "add a,(ix+66)"},
+	{{PFX_IY,ADC_xHL,66}, "adc a,(iy+66)"},
+	{{PFX_IX,SUB_xHL,66}, "sub a,(ix+66)"},
+	{{PFX_IY,SBC_xHL,66}, "sbc a,(iy+66)"},
+	{{PFX_IY,AND_xHL,66}, "and a,(iy+66)"},
+	{{PFX_IY,XOR_xHL,66}, "xor a,(iy+66)"},
+	{{PFX_IX, OR_xHL,66},  "or a,(ix+66)"},
+	{{PFX_IX, CP_xHL,66},  "cp a,(ix+66)"},
+
+	// prefix CB opcodes:
+
+	{{PFX_CB,RLC_B},  "rlc b"}, {{PFX_CB,RLC_H}, "rlc h"}, {{PFX_CB,RLC_C}, "rlc c"}, {{PFX_CB,RLC_L},   "rlc l"},
+	{{PFX_CB,RLC_D},  "rlc d"}, {{PFX_CB,RLC_A}, "rlc a"}, {{PFX_CB,RLC_E}, "rlc e"}, {{PFX_CB,RLC_xHL}, "rlc (hl)"},
+	{{PFX_CB,RRC_B},  "rrc b"}, {{PFX_CB,RRC_C}, "rrc c"}, {{PFX_CB,RRC_D}, "rrc d"}, {{PFX_CB,RRC_E},   "rrc e"},
+	{{PFX_CB,RRC_H},  "rrc h"}, {{PFX_CB,RRC_L}, "rrc l"}, {{PFX_CB,RRC_A}, "rrc a"}, {{PFX_CB,RRC_xHL}, "rrc (hl)"},
+	{{PFX_CB,RL_B},   "rl b"},  {{PFX_CB,RL_C},  "rl c"},  {{PFX_CB,RL_D},  "rl d"},  {{PFX_CB,RL_E},    "rl e"},
+	{{PFX_CB,RL_H},   "rl h"},  {{PFX_CB,RL_L},  "rl l"},  {{PFX_CB,RL_A},  "rl a"},  {{PFX_CB,RL_xHL},  "rl (hl)"},
+	{{PFX_CB,RR_B},   "rr b"},  {{PFX_CB,RR_H},  "rr h"},  {{PFX_CB,RR_A},  "rr a"},  {{PFX_CB,RR_xHL},  "rr (hl)"},
+	{{PFX_CB,SLA_C},  "sla c"}, {{PFX_CB,SLA_L}, "sla l"}, {{PFX_CB,SLA_A}, "sla a"}, {{PFX_CB,SLA_xHL}, "sla (hl)"},
+	{{PFX_CB,SRA_B},  "sra b"}, {{PFX_CB,SRA_H}, "sra h"}, {{PFX_CB,SRA_A}, "sra a"}, {{PFX_CB,SRA_xHL}, "sra (hl)"},
+	{{PFX_CB,SRL_C},  "srl c"}, {{PFX_CB,SRL_L}, "srl l"}, {{PFX_CB,SRL_A}, "srl a"}, {{PFX_CB,SRL_xHL}, "srl (hl)"},
+
+	{{PFX_CB,BIT0_B}, "bit 0,b"}, {{PFX_CB,BIT0_C}, "bit 0,c"}, {{PFX_CB,BIT0_D}, "bit 0,d"}, {{PFX_CB,BIT0_E},  "bit 0,e"},
+	{{PFX_CB,BIT0_H}, "bit 0,h"}, {{PFX_CB,BIT0_L}, "bit 0,l"}, {{PFX_CB,BIT0_A}, "bit 0,a"}, {{PFX_CB,BIT0_xHL},"bit 0,(hl)"},
+	{{PFX_CB,BIT1_B}, "bit 1,b"}, {{PFX_CB,BIT1_C}, "bit 1,c"}, {{PFX_CB,BIT2_D}, "bit 2,d"}, {{PFX_CB,BIT3_E},  "bit 3,e"},
+	{{PFX_CB,BIT3_H}, "bit 3,h"}, {{PFX_CB,BIT4_L}, "bit 4,l"}, {{PFX_CB,BIT5_A}, "bit 5,a"}, {{PFX_CB,BIT6_xHL},"bit 6,(hl)"},
+	{{PFX_CB,BIT7_B}, "bit 7,b"}, {{PFX_CB,BIT7_C}, "bit 7,c"}, {{PFX_CB,BIT7_D}, "bit 7,d"}, {{PFX_CB,BIT7_E},  "bit 7,e"},
+	{{PFX_CB,BIT7_H}, "bit 7,h"}, {{PFX_CB,BIT7_L}, "bit 7,l"}, {{PFX_CB,BIT7_A}, "bit 7,a"}, {{PFX_CB,BIT7_xHL},"bit 7,(hl)"},
+
+	{{PFX_CB,SET0_B}, "set 0,b"}, {{PFX_CB,SET0_C}, "set 0,c"}, {{PFX_CB,SET0_D}, "set 0,d"}, {{PFX_CB,SET0_E},  "set 0,e"},
+	{{PFX_CB,SET0_H}, "set 0,h"}, {{PFX_CB,SET0_L}, "set 0,l"}, {{PFX_CB,SET0_A}, "set 0,a"}, {{PFX_CB,SET0_xHL},"set 0,(hl)"},
+	{{PFX_CB,SET1_B}, "set 1,b"}, {{PFX_CB,SET1_C}, "set 1,c"}, {{PFX_CB,SET2_D}, "set 2,d"}, {{PFX_CB,SET3_E},  "set 3,e"},
+	{{PFX_CB,SET3_H}, "set 3,h"}, {{PFX_CB,SET4_L}, "set 4,l"}, {{PFX_CB,SET5_A}, "set 5,a"}, {{PFX_CB,SET6_xHL},"set 6,(hl)"},
+	{{PFX_CB,SET7_B}, "set 7,b"}, {{PFX_CB,SET7_C}, "set 7,c"}, {{PFX_CB,SET7_D}, "set 7,d"}, {{PFX_CB,SET7_E},  "set 7,e"},
+	{{PFX_CB,SET7_H}, "set 7,h"}, {{PFX_CB,SET7_L}, "set 7,l"}, {{PFX_CB,SET7_A}, "set 7,a"}, {{PFX_CB,SET7_xHL},"set 7,(hl)"},
+
+	{{PFX_CB,RES0_B}, "res 0,b"}, {{PFX_CB,RES0_C}, "res 0,c"}, {{PFX_CB,RES0_D}, "res 0,d"}, {{PFX_CB,RES0_E},  "res 0,e"},
+	{{PFX_CB,RES0_H}, "res 0,h"}, {{PFX_CB,RES0_L}, "res 0,l"}, {{PFX_CB,RES0_A}, "res 0,a"}, {{PFX_CB,RES0_xHL},"res 0,(hl)"},
+	{{PFX_CB,RES1_B}, "res 1,b"}, {{PFX_CB,RES1_C}, "res 1,c"}, {{PFX_CB,RES2_D}, "res 2,d"}, {{PFX_CB,RES3_E},  "res 3,e"},
+	{{PFX_CB,RES3_H}, "res 3,h"}, {{PFX_CB,RES4_L}, "res 4,l"}, {{PFX_CB,RES5_A}, "res 5,a"}, {{PFX_CB,RES6_xHL},"res 6,(hl)"},
+	{{PFX_CB,RES7_B}, "res 7,b"}, {{PFX_CB,RES7_C}, "res 7,c"}, {{PFX_CB,RES7_D}, "res 7,d"}, {{PFX_CB,RES7_E},  "res 7,e"},
+	{{PFX_CB,RES7_H}, "res 7,h"}, {{PFX_CB,RES7_L}, "res 7,l"}, {{PFX_CB,RES7_A}, "res 7,a"}, {{PFX_CB,RES7_xHL},"res 7,(hl)"},
+
+	// prefix IXCB opcodes:
+
+	{{PFX_IX,PFX_CB, 67,RLC_xHL},"rlc (ix+67)"},    {{PFX_IX,PFX_CB,127,RRC_xHL},"rrc (ix+127)"},   {{PFX_IY,PFX_CB,0,RL_xHL}, "rl (iy+0)"},
+	{{PFX_IY,PFX_CB,255,RR_xHL}, "rr  (iy-1)"},     {{PFX_IY,PFX_CB,200,SLA_xHL},"sla (iy-56)"},
+	{{PFX_IX,PFX_CB,128,SRA_xHL},"sra (ix-128)"},   {{PFX_IX,PFX_CB, 67,SRL_xHL},"srl (ix+67)"},
+	{{PFX_IX,PFX_CB, 67,BIT0_xHL},"bit 0,(ix+67)"}, {{PFX_IY,PFX_CB,199,BIT1_xHL},"bit 1,(iy-57)"}, {{PFX_IX,PFX_CB,128,BIT2_xHL},"bit 2,(ix-128)"},
+	{{PFX_IY,PFX_CB,127,BIT3_xHL},"bit 3,(iy+127)"},{{PFX_IY,PFX_CB,  0,BIT4_xHL},"bit 4,(iy+0)"},  {{PFX_IX,PFX_CB,  0,BIT5_xHL},"bit 5,(ix+0)"},
+	{{PFX_IX,PFX_CB, 67,BIT6_xHL},"bit 6,(ix+67)"}, {{PFX_IY,PFX_CB, 67,BIT7_xHL},"bit 7,(iy+67)"}, {{PFX_IY,PFX_CB, 67,SET0_xHL},"set 0,(iy+67)"},
+	{{PFX_IY,PFX_CB, 67,SET3_xHL},"set 3,(iy+67)"}, {{PFX_IX,PFX_CB, 67,SET6_xHL},"set 6,(ix+67)"}, {{PFX_IX,PFX_CB, 67,SET7_xHL},"set 7,(ix+67)"},
+	{{PFX_IX,PFX_CB, 67,RES0_xHL},"res 0,(ix+67)"}, {{PFX_IY,PFX_CB, 67,RES5_xHL},"res 5,(iy+67)"},
+	{{PFX_IX,PFX_CB, 67,RES6_xHL},"res 6,(ix+67)"}, {{PFX_IY,PFX_CB, 67,RES7_xHL},"res 7,(iy+67)"},
+
+	// prefix ED opcodes:
+
+	{{PFX_ED,IN_B_xC},"in b,(c)"}, {{PFX_ED,IN_C_xC},"in c,(c)"}, {{PFX_ED,IN_D_xC},"in d,(c)"}, {{PFX_ED,IN_E_xC},"in e,(c)"},
+	{{PFX_ED,IN_H_xC},"in h,(c)"}, {{PFX_ED,IN_L_xC},"in l,(c)"}, {{PFX_ED,IN_F_xC},"in f,(c)"}, {{PFX_ED,IN_A_xC},"in a,(c)"},
+
+	{{PFX_ED,OUT_xC_B},"out (c),b"}, {{PFX_ED,OUT_xC_C},"out (c),c"}, {{PFX_ED,OUT_xC_D},"out (c),d"}, {{PFX_ED,OUT_xC_E},"out (c),e"},
+	{{PFX_ED,OUT_xC_H},"out (c),h"}, {{PFX_ED,OUT_xC_L},"out (c),l"}, {{PFX_ED,OUT_xC_A},"out (c),a"},
+
+	{{PFX_ED,SBC_HL_BC},"sbc hl,bc"}, {{PFX_ED,ADC_HL_BC},"adc hl,bc"}, {{PFX_ED,SBC_HL_DE},"sbc hl,de"}, {{PFX_ED,ADC_HL_DE},"adc hl,de"},
+	{{PFX_ED,SBC_HL_HL},"sbc hl,hl"}, {{PFX_ED,ADC_HL_HL},"adc hl,hl"}, {{PFX_ED,SBC_HL_SP},"sbc hl,sp"}, {{PFX_ED,ADC_HL_SP},"adc hl,sp"},
+
+	{{PFX_ED,LD_xNN_BC,0x34,0x12},"ld ($1234),bc"}, {{PFX_ED,LD_BC_xNN,0x34,0x12},"ld bc,($1234)"},
+	{{PFX_ED,LD_xNN_DE,0x34,0x12},"ld ($1234),de"}, {{PFX_ED,LD_DE_xNN,0x34,0x12},"ld de,($1234)"},
+	{{PFX_ED,ED_xNN_HL,0x34,0x12},"ld ($1234),hl"}, {{PFX_ED,ED_HL_xNN,0x34,0x12},"ld hl,($1234)"},
+	{{PFX_ED,LD_xNN_SP,0x34,0x12},"ld ($1234),sp"}, {{PFX_ED,LD_SP_xNN,0x34,0x12},"ld sp,($1234)"},
+
+	{{PFX_ED,NEG}, "neg"},  {{PFX_ED,RETN},"retn"}, {{PFX_ED,RETI},"reti"},
+	{{PFX_ED,IM_0},"im 0"}, {{PFX_ED,IM_1},"im 1"}, {{PFX_ED,IM_2},"im 2"},
+	{{PFX_ED,LD_A_I},"ld a,i"}, {{PFX_ED,LD_I_A},"ld i,a"}, {{PFX_ED,LD_R_A},"ld r,a"}, {{PFX_ED,LD_A_R},"ld a,r"},
+	{{PFX_ED,RRD},"rrd"},  {{PFX_ED,RLD},"rld"},
+	{{PFX_ED,LDI}, "ldi"}, {{PFX_ED,LDIR},"ldir"}, {{PFX_ED,LDD}, "ldd"}, {{PFX_ED,LDDR},"lddr"},
+	{{PFX_ED,CPI}, "cpi"}, {{PFX_ED,CPIR},"cpir"}, {{PFX_ED,CPD}, "cpd"}, {{PFX_ED,CPDR},"cpdr"},
+	{{PFX_ED,INI}, "ini"}, {{PFX_ED,INIR},"inir"}, {{PFX_ED,IND}, "ind"}, {{PFX_ED,INDR},"indr"},
+	{{PFX_ED,OUTI},"outi"},{{PFX_ED,OTDR},"otdr"}, {{PFX_ED,OUTD},"outd"},{{PFX_ED,OTDR},"otdr"},
+};
+
+static TestSet z180_tests[] =
+{
+	// tests only run for Z180
+	// Z180 additional opcodes and illegal opcodes
+
+	// SLL is illegal:
+
+	{{PFX_CB,SLL_B},  "nop ; "},
+	{{PFX_CB,SLL_C},  "nop ; "},
+	{{PFX_CB,SLL_D},  "nop ; "},
+	{{PFX_CB,SLL_E},  "nop ; "},
+	{{PFX_CB,SLL_H},  "nop ; "},
+	{{PFX_CB,SLL_L},  "nop ; "},
+	{{PFX_CB,SLL_A},  "nop ; "},
+	{{PFX_CB,SLL_xHL},"nop ; "},
+
+	{{PFX_IX,PFX_CB, 67,SLL_B},  "nop ;"},
+	{{PFX_IX,PFX_CB, 67,SLL_L},  "nop ;"},
+	{{PFX_IX,PFX_CB, 67,SLL_xHL},"nop ;"},
+	{{PFX_IX,PFX_CB, 67,SLL_A},  "nop ;"},
+
+	// prefix IX/IY opcodes which don't use the HL register are illegal:
+
+	{{PFX_IX,HALT},  "nop ;"},
+
+	{{PFX_IX,PFX_CB, 67,RLC_B}, "nop ;"}, {{PFX_IX,PFX_CB,127,RRC_D}, "nop ;"}, {{PFX_IY,PFX_CB,0,RL_H},  "nop ;"},
+	{{PFX_IY,PFX_CB,255,RR_C},  "nop ;"}, {{PFX_IY,PFX_CB,200,SLA_E}, "nop ;"}, {{PFX_IX,PFX_CB,1,RL_L},  "nop ;"},
+	{{PFX_IX,PFX_CB,128,SRA_D}, "nop ;"}, {{PFX_IX,PFX_CB, 67,SRL_H}, "nop ;"}, {{PFX_IY,PFX_CB,5,RL_A},  "nop ;"},
+	{{PFX_IX,PFX_CB, 67,BIT0_E},"nop ;"}, {{PFX_IY,PFX_CB,199,BIT1_L},"nop ;"}, {{PFX_IX,PFX_CB,8,BIT2_B},"nop ;"},
+	{{PFX_IY,PFX_CB,127,BIT3_H},"nop ;"}, {{PFX_IY,PFX_CB,  0,BIT4_A},"nop ;"}, {{PFX_IX,PFX_CB,0,BIT5_C},"nop ;"},
+	{{PFX_IX,PFX_CB, 67,BIT6_L},"nop ;"}, {{PFX_IY,PFX_CB, 67,BIT7_B},"nop ;"}, {{PFX_IY,PFX_CB,7,SET0_D},"nop ;"},
+	{{PFX_IY,PFX_CB, 67,SET3_A},"nop ;"}, {{PFX_IX,PFX_CB, 67,SET6_C},"nop ;"}, {{PFX_IX,PFX_CB,6,SET7_E},"nop ;"},
+	{{PFX_IX,PFX_CB, 67,RES0_B},"nop ;"}, {{PFX_IY,PFX_CB, 67,RES5_D},"nop ;"},
+	{{PFX_IX,PFX_CB, 67,RES6_C},"nop ;"}, {{PFX_IY,PFX_CB, 67,RES7_E},"nop ;"},
+
+	// prefix ED opcodes
+	// all new opcodes here.
+	// undocumented opcodes are illegal:
+
+	{{PFX_ED,OUT_xC_0}, "nop ;"},
+
+	{{PFX_ED,ED00,0x56},"in0 b,($56)"},	{{PFX_ED,ED01,0x56},"out0 ($56),b"},
+	{{PFX_ED,ED08,0x56},"in0 c,($56)"},	{{PFX_ED,ED09,0x56},"out0 ($56),c"},
+	{{PFX_ED,ED10,0x56},"in0 d,($56)"},	{{PFX_ED,ED11,0x56},"out0 ($56),d"},
+	{{PFX_ED,ED18,0x56},"in0 e,($56)"},	{{PFX_ED,ED19,0x56},"out0 ($56),e"},
+	{{PFX_ED,ED20,0x56},"in0 h,($56)"},	{{PFX_ED,ED21,0x56},"out0 ($56),h"},
+	{{PFX_ED,ED28,0x56},"in0 l,($56)"},	{{PFX_ED,ED29,0x56},"out0 ($56),l"},
+	{{PFX_ED,ED38,0x56},"in0 a,($56)"},	{{PFX_ED,ED39,0x56},"out0 ($56),a"},
+	{{PFX_ED,ED30,0x56},"in0 f,($56)"},	{{PFX_ED,ED31,0x00},"nop ;"},	// <-- disass doesn't skip N; Z180 unknown, irrelevant!
+
+	{{PFX_ED,ED02},"nop ;"},{{PFX_ED,ED03},"nop ;"},{{PFX_ED,ED04},"tst b"},{{PFX_ED,ED05},"nop ;"},
+	{{PFX_ED,ED06},"nop ;"},{{PFX_ED,ED07},"nop ;"},{{PFX_ED,ED0A},"nop ;"},{{PFX_ED,ED0B},"nop ;"},
+	{{PFX_ED,ED0C},"tst c"},{{PFX_ED,ED0D},"nop ;"},{{PFX_ED,ED0E},"nop ;"},{{PFX_ED,ED0F},"nop ;"},
+	{{PFX_ED,ED12},"nop ;"},{{PFX_ED,ED13},"nop ;"},{{PFX_ED,ED14},"tst d"},{{PFX_ED,ED15},"nop ;"},
+	{{PFX_ED,ED16},"nop ;"},{{PFX_ED,ED17},"nop ;"},{{PFX_ED,ED1A},"nop ;"},{{PFX_ED,ED1B},"nop ;"},
+	{{PFX_ED,ED1C},"tst e"},{{PFX_ED,ED1D},"nop ;"},{{PFX_ED,ED1E},"nop ;"},{{PFX_ED,ED1F},"nop ;"},
+	{{PFX_ED,ED22},"nop ;"},{{PFX_ED,ED23},"nop ;"},{{PFX_ED,ED24},"tst h"},{{PFX_ED,ED25},"nop ;"},
+	{{PFX_ED,ED26},"nop ;"},{{PFX_ED,ED27},"nop ;"},{{PFX_ED,ED2A},"nop ;"},{{PFX_ED,ED2B},"nop ;"},
+	{{PFX_ED,ED2C},"tst l"},{{PFX_ED,ED2D},"nop ;"},{{PFX_ED,ED2E},"nop ;"},{{PFX_ED,ED2F},"nop ;"},
+	{{PFX_ED,ED32},"nop ;"},{{PFX_ED,ED33},"nop ;"},{{PFX_ED,ED3C},"tst a"},{{PFX_ED,ED34},"tst (hl)"},
+	{{PFX_ED,ED35},"nop ;"},{{PFX_ED,ED36},"nop ;"},{{PFX_ED,ED37},"nop ;"},{{PFX_ED,ED3A},"nop ;"},
+	{{PFX_ED,ED3B},"nop ;"},{{PFX_ED,ED3D},"nop ;"},{{PFX_ED,ED3E},"nop ;"},{{PFX_ED,ED3F},"nop ;"},
+
+	{{PFX_ED,ED4C},"mlt bc"},{{PFX_ED,ED54},"nop ;"},{{PFX_ED,ED5C},"mlt de"},{{PFX_ED,ED64,89},"tst 89"},
+	{{PFX_ED,ED6C},"mlt hl"},{{PFX_ED,ED74,89},"tstio 89"},{{PFX_ED,ED7C},"mlt sp"},{{PFX_ED,ED55},"nop ;"},
+	{{PFX_ED,ED5D},"nop ;"},{{PFX_ED,ED65},"nop ;"},{{PFX_ED,ED6D},"nop ;"},{{PFX_ED,ED75},"nop ;"},
+	{{PFX_ED,ED7D},"nop ;"},{{PFX_ED,ED4E},"nop ;"},{{PFX_ED,ED66},"nop ;"},{{PFX_ED,ED6E},"nop ;"},
+	{{PFX_ED,ED76},"slp"  },{{PFX_ED,ED7E},"nop ;"},{{PFX_ED,ED77},"nop ;"},{{PFX_ED,ED7F},"nop ;"},
+
+	{{PFX_ED,ED80},"nop ;"},{{PFX_ED,ED81},"nop ;"},{{PFX_ED,ED82},"nop ;"},{{PFX_ED,ED83},"otim"},
+	{{PFX_ED,ED84},"nop ;"},{{PFX_ED,ED85},"nop ;"},{{PFX_ED,ED86},"nop ;"},{{PFX_ED,ED87},"nop ;"},
+	{{PFX_ED,ED88},"nop ;"},{{PFX_ED,ED89},"nop ;"},{{PFX_ED,ED8A},"nop ;"},{{PFX_ED,ED8B},"otdm"},
+	{{PFX_ED,ED8C},"nop ;"},{{PFX_ED,ED8D},"nop ;"},{{PFX_ED,ED8E},"nop ;"},{{PFX_ED,ED8F},"nop ;"},
+
+	{{PFX_ED,ED90},"nop ;"},{{PFX_ED,ED91},"nop ;"},{{PFX_ED,ED92},"nop ;"},{{PFX_ED,ED93},"otimr"},
+	{{PFX_ED,ED94},"nop ;"},{{PFX_ED,ED95},"nop ;"},{{PFX_ED,ED96},"nop ;"},{{PFX_ED,ED97},"nop ;"},
+	{{PFX_ED,ED98},"nop ;"},{{PFX_ED,ED99},"nop ;"},{{PFX_ED,ED9A},"nop ;"},{{PFX_ED,ED9B},"otdmr"},
+	{{PFX_ED,ED9C},"nop ;"},{{PFX_ED,ED9D},"nop ;"},{{PFX_ED,ED9E},"nop ;"},{{PFX_ED,ED9F},"nop ;"},
+
+	{{PFX_ED,EDA4},"nop ;"},{{PFX_ED,EDA5},"nop ;"},{{PFX_ED,EDA6},"nop ;"},{{PFX_ED,EDA7},"nop ;"},
+	{{PFX_ED,EDAC},"nop ;"},{{PFX_ED,EDAD},"nop ;"},{{PFX_ED,EDAE},"nop ;"},{{PFX_ED,EDAF},"nop ;"},
+	{{PFX_ED,EDB4},"nop ;"},{{PFX_ED,EDB5},"nop ;"},{{PFX_ED,EDB6},"nop ;"},{{PFX_ED,EDB7},"nop ;"},
+	{{PFX_ED,EDBC},"nop ;"},{{PFX_ED,EDBD},"nop ;"},{{PFX_ED,EDBE},"nop ;"},{{PFX_ED,EDBF},"nop ;"},
+
+	{{PFX_ED,EDC0},"nop ;"},{{PFX_ED,EDC1},"nop ;"},{{PFX_ED,EDC2},"nop ;"},{{PFX_ED,EDC3},"nop ;"},
+	{{PFX_ED,EDC4},"nop ;"},{{PFX_ED,EDC5},"nop ;"},{{PFX_ED,EDC6},"nop ;"},{{PFX_ED,EDC7},"nop ;"},
+	{{PFX_ED,EDC8},"nop ;"},{{PFX_ED,EDC9},"nop ;"},{{PFX_ED,EDCA},"nop ;"},{{PFX_ED,EDCB},"nop ;"},
+	{{PFX_ED,EDCC},"nop ;"},{{PFX_ED,EDCD},"nop ;"},{{PFX_ED,EDCE},"nop ;"},{{PFX_ED,EDCF},"nop ;"},
+	{{PFX_ED,EDD0},"nop ;"},{{PFX_ED,EDD1},"nop ;"},{{PFX_ED,EDD2},"nop ;"},{{PFX_ED,EDD3},"nop ;"},
+	{{PFX_ED,EDD4},"nop ;"},{{PFX_ED,EDD5},"nop ;"},{{PFX_ED,EDD6},"nop ;"},{{PFX_ED,EDD7},"nop ;"},
+	{{PFX_ED,EDD8},"nop ;"},{{PFX_ED,EDD9},"nop ;"},{{PFX_ED,EDDA},"nop ;"},{{PFX_ED,EDDB},"nop ;"},
+	{{PFX_ED,EDDC},"nop ;"},{{PFX_ED,EDDD},"nop ;"},{{PFX_ED,EDDE},"nop ;"},{{PFX_ED,EDDF},"nop ;"},
+	{{PFX_ED,EDE0},"nop ;"},{{PFX_ED,EDE1},"nop ;"},{{PFX_ED,EDE2},"nop ;"},{{PFX_ED,EDE3},"nop ;"},
+	{{PFX_ED,EDE4},"nop ;"},{{PFX_ED,EDE5},"nop ;"},{{PFX_ED,EDE6},"nop ;"},{{PFX_ED,EDE7},"nop ;"},
+	{{PFX_ED,EDE8},"nop ;"},{{PFX_ED,EDE9},"nop ;"},{{PFX_ED,EDEA},"nop ;"},{{PFX_ED,EDEB},"nop ;"},
+	{{PFX_ED,EDEC},"nop ;"},{{PFX_ED,EDED},"nop ;"},{{PFX_ED,EDEE},"nop ;"},{{PFX_ED,EDEF},"nop ;"},
+	{{PFX_ED,EDF0},"nop ;"},{{PFX_ED,EDF1},"nop ;"},{{PFX_ED,EDF2},"nop ;"},{{PFX_ED,EDF3},"nop ;"},
+	{{PFX_ED,EDF4},"nop ;"},{{PFX_ED,EDF5},"nop ;"},{{PFX_ED,EDF6},"nop ;"},{{PFX_ED,EDF7},"nop ;"},
+	{{PFX_ED,EDF8},"nop ;"},{{PFX_ED,EDF9},"nop ;"},{{PFX_ED,EDFA},"nop ;"},{{PFX_ED,EDFB},"nop ;"},
+	{{PFX_ED,EDFC},"nop ;"},{{PFX_ED,EDFD},"nop ;"},{{PFX_ED,EDFE},"nop ;"},{{PFX_ED,EDFF},"nop ;"},
+};
+
+static TestSet z80_tests[] =
+{
+	// tests only run for Z80
+	// illegal CB and IXCB and ED opcodes
+	// excluding ixcbr2 and ixcbxh opcodes
+
+	// "valid": SLL
+	// "valid": out (c),0
+
+	{{PFX_CB,SLL_B},  "sll b"},	{{PFX_CB,SLL_C},  "sll c"},
+	{{PFX_CB,SLL_D},  "sll d"},	{{PFX_CB,SLL_E},  "sll e"},
+	{{PFX_CB,SLL_H},  "sll h"},	{{PFX_CB,SLL_L},  "sll l"},
+	{{PFX_CB,SLL_A},  "sll a"},	{{PFX_CB,SLL_xHL},"sll (hl)"},
+
+	{{PFX_IX,PFX_CB, 67,SLL_xHL},"sll (ix+67)"},
+	{{PFX_IY,PFX_CB,189,SLL_xHL},"sll (iy-67)"},
+
+	{{PFX_ED,OUT_xC_0},"out (c),0"},
+	{{PFX_IX,HALT},  "halt ;"},
+
+	// prefix IX/IY + byte register opcode
+
+	{{PFX_IX,LD_B_H},"ld b,xh"},	{{PFX_IY,LD_B_L},"ld b,yl"},
+	{{PFX_IX,LD_C_H},"ld c,xh"},	{{PFX_IY,LD_C_L},"ld c,yl"},
+	{{PFX_IY,LD_D_H},"ld d,yh"},	{{PFX_IX,LD_D_L},"ld d,xl"},
+	{{PFX_IX,LD_E_H},"ld e,xh"},	{{PFX_IY,LD_E_L},"ld e,yl"},
+	{{PFX_IY,LD_H_H},"ld yh,yh"},	{{PFX_IY,LD_H_L},"ld yh,yl"},
+	{{PFX_IX,LD_L_H},"ld xl,xh"},	{{PFX_IX,LD_L_L},"ld xl,xl"},
+	{{PFX_IX,LD_A_H},"ld a,xh"},	{{PFX_IY,LD_A_L},"ld a,yl"},
+	{{PFX_IX,LD_H_B},"ld xh,b"},	{{PFX_IY,LD_L_B},"ld yl,b"},
+	{{PFX_IX,LD_H_C},"ld xh,c"},	{{PFX_IY,LD_L_C},"ld yl,c"},
+	{{PFX_IY,LD_H_D},"ld yh,d"},	{{PFX_IX,LD_L_D},"ld xl,d"},
+	{{PFX_IX,LD_H_E},"ld xh,e"},	{{PFX_IX,LD_L_E},"ld xl,e"},
+	{{PFX_IY,LD_H_A},"ld yh,a"},	{{PFX_IY,LD_L_A},"ld yl,a"},
+	{{PFX_IY,ADD_H },"add a,yh"},	{{PFX_IX,ADC_H },"adc a,xh"},
+	{{PFX_IY,SUB_H },"sub a,yh"},	{{PFX_IX,SBC_H },"sbc a,xh"},
+	{{PFX_IX,AND_H },"and a,xh"},	{{PFX_IY,XOR_H },"xor a,yh"},
+	{{PFX_IY,OR_H  },"or  a,yh"},	{{PFX_IX,CP_H  },"cp  a,xh"},
+	{{PFX_IX,INC_H },"inc xh"}, 	{{PFX_IY,DEC_L },"dec yl"},
+	{{PFX_IY,LD_H_N,54},"ld yh,54"},{{PFX_IX,LD_L_N,223},"ld xl,223"},
+
+	// undocumented prefix ED opcodes which do nothing:
+
+	{{PFX_ED,ED00},"nop"},{{PFX_ED,ED01},"nop"},{{PFX_ED,ED02},"nop"},{{PFX_ED,ED03},"nop"},
+	{{PFX_ED,ED04},"nop"},{{PFX_ED,ED05},"nop"},{{PFX_ED,ED06},"nop"},{{PFX_ED,ED07},"nop"},
+	{{PFX_ED,ED08},"nop"},{{PFX_ED,ED09},"nop"},{{PFX_ED,ED0A},"nop"},{{PFX_ED,ED0B},"nop"},
+	{{PFX_ED,ED0C},"nop"},{{PFX_ED,ED0D},"nop"},{{PFX_ED,ED0E},"nop"},{{PFX_ED,ED0F},"nop"},
+	{{PFX_ED,ED10},"nop"},{{PFX_ED,ED11},"nop"},{{PFX_ED,ED12},"nop"},{{PFX_ED,ED13},"nop"},
+	{{PFX_ED,ED14},"nop"},{{PFX_ED,ED15},"nop"},{{PFX_ED,ED16},"nop"},{{PFX_ED,ED17},"nop"},
+	{{PFX_ED,ED18},"nop"},{{PFX_ED,ED19},"nop"},{{PFX_ED,ED1A},"nop"},{{PFX_ED,ED1B},"nop"},
+	{{PFX_ED,ED1C},"nop"},{{PFX_ED,ED1D},"nop"},{{PFX_ED,ED1E},"nop"},{{PFX_ED,ED1F},"nop"},
+	{{PFX_ED,ED20},"nop"},{{PFX_ED,ED21},"nop"},{{PFX_ED,ED22},"nop"},{{PFX_ED,ED23},"nop"},
+	{{PFX_ED,ED24},"nop"},{{PFX_ED,ED25},"nop"},{{PFX_ED,ED26},"nop"},{{PFX_ED,ED27},"nop"},
+	{{PFX_ED,ED28},"nop"},{{PFX_ED,ED29},"nop"},{{PFX_ED,ED2A},"nop"},{{PFX_ED,ED2B},"nop"},
+	{{PFX_ED,ED2C},"nop"},{{PFX_ED,ED2D},"nop"},{{PFX_ED,ED2E},"nop"},{{PFX_ED,ED2F},"nop"},
+	{{PFX_ED,ED30},"nop"},{{PFX_ED,ED31},"nop"},{{PFX_ED,ED32},"nop"},{{PFX_ED,ED33},"nop"},
+	{{PFX_ED,ED34},"nop"},{{PFX_ED,ED35},"nop"},{{PFX_ED,ED36},"nop"},{{PFX_ED,ED37},"nop"},
+	{{PFX_ED,ED38},"nop"},{{PFX_ED,ED39},"nop"},{{PFX_ED,ED3A},"nop"},{{PFX_ED,ED3B},"nop"},
+	{{PFX_ED,ED3C},"nop"},{{PFX_ED,ED3D},"nop"},{{PFX_ED,ED3E},"nop"},{{PFX_ED,ED3F},"nop"},
+
+	{{PFX_ED,ED80},"nop"},{{PFX_ED,ED81},"nop"},{{PFX_ED,ED82},"nop"},{{PFX_ED,ED83},"nop"},
+	{{PFX_ED,ED84},"nop"},{{PFX_ED,ED85},"nop"},{{PFX_ED,ED86},"nop"},{{PFX_ED,ED87},"nop"},
+	{{PFX_ED,ED88},"nop"},{{PFX_ED,ED89},"nop"},{{PFX_ED,ED8A},"nop"},{{PFX_ED,ED8B},"nop"},
+	{{PFX_ED,ED8C},"nop"},{{PFX_ED,ED8D},"nop"},{{PFX_ED,ED8E},"nop"},{{PFX_ED,ED8F},"nop"},
+	{{PFX_ED,ED90},"nop"},{{PFX_ED,ED91},"nop"},{{PFX_ED,ED92},"nop"},{{PFX_ED,ED93},"nop"},
+	{{PFX_ED,ED94},"nop"},{{PFX_ED,ED95},"nop"},{{PFX_ED,ED96},"nop"},{{PFX_ED,ED97},"nop"},
+	{{PFX_ED,ED98},"nop"},{{PFX_ED,ED99},"nop"},{{PFX_ED,ED9A},"nop"},{{PFX_ED,ED9B},"nop"},
+	{{PFX_ED,ED9C},"nop"},{{PFX_ED,ED9D},"nop"},{{PFX_ED,ED9E},"nop"},{{PFX_ED,ED9F},"nop"},
+	{{PFX_ED,EDA4},"nop"},{{PFX_ED,EDA5},"nop"},{{PFX_ED,EDA6},"nop"},{{PFX_ED,EDA7},"nop"},
+	{{PFX_ED,EDAC},"nop"},{{PFX_ED,EDAD},"nop"},{{PFX_ED,EDAE},"nop"},{{PFX_ED,EDAF},"nop"},
+	{{PFX_ED,EDB4},"nop"},{{PFX_ED,EDB5},"nop"},{{PFX_ED,EDB6},"nop"},{{PFX_ED,EDB7},"nop"},
+	{{PFX_ED,EDBC},"nop"},{{PFX_ED,EDBD},"nop"},{{PFX_ED,EDBE},"nop"},{{PFX_ED,EDBF},"nop"},
+
+	{{PFX_ED,EDC0},"nop"},{{PFX_ED,EDC1},"nop"},{{PFX_ED,EDC2},"nop"},{{PFX_ED,EDC3},"nop"},
+	{{PFX_ED,EDC4},"nop"},{{PFX_ED,EDC5},"nop"},{{PFX_ED,EDC6},"nop"},{{PFX_ED,EDC7},"nop"},
+	{{PFX_ED,EDC8},"nop"},{{PFX_ED,EDC9},"nop"},{{PFX_ED,EDCA},"nop"},{{PFX_ED,EDCB},"nop"},
+	{{PFX_ED,EDCC},"nop"},{{PFX_ED,EDCD},"nop"},{{PFX_ED,EDCE},"nop"},{{PFX_ED,EDCF},"nop"},
+	{{PFX_ED,EDD0},"nop"},{{PFX_ED,EDD1},"nop"},{{PFX_ED,EDD2},"nop"},{{PFX_ED,EDD3},"nop"},
+	{{PFX_ED,EDD4},"nop"},{{PFX_ED,EDD5},"nop"},{{PFX_ED,EDD6},"nop"},{{PFX_ED,EDD7},"nop"},
+	{{PFX_ED,EDD8},"nop"},{{PFX_ED,EDD9},"nop"},{{PFX_ED,EDDA},"nop"},{{PFX_ED,EDDB},"nop"},
+	{{PFX_ED,EDDC},"nop"},{{PFX_ED,EDDD},"nop"},{{PFX_ED,EDDE},"nop"},{{PFX_ED,EDDF},"nop"},
+	{{PFX_ED,EDE0},"nop"},{{PFX_ED,EDE1},"nop"},{{PFX_ED,EDE2},"nop"},{{PFX_ED,EDE3},"nop"},
+	{{PFX_ED,EDE4},"nop"},{{PFX_ED,EDE5},"nop"},{{PFX_ED,EDE6},"nop"},{{PFX_ED,EDE7},"nop"},
+	{{PFX_ED,EDE8},"nop"},{{PFX_ED,EDE9},"nop"},{{PFX_ED,EDEA},"nop"},{{PFX_ED,EDEB},"nop"},
+	{{PFX_ED,EDEC},"nop"},{{PFX_ED,EDED},"nop"},{{PFX_ED,EDEE},"nop"},{{PFX_ED,EDEF},"nop"},
+	{{PFX_ED,EDF0},"nop"},{{PFX_ED,EDF1},"nop"},{{PFX_ED,EDF2},"nop"},{{PFX_ED,EDF3},"nop"},
+	{{PFX_ED,EDF4},"nop"},{{PFX_ED,EDF5},"nop"},{{PFX_ED,EDF6},"nop"},{{PFX_ED,EDF7},"nop"},
+	{{PFX_ED,EDF8},"nop"},{{PFX_ED,EDF9},"nop"},{{PFX_ED,EDFA},"nop"},{{PFX_ED,EDFB},"nop"},
+	{{PFX_ED,EDFC},"nop"},{{PFX_ED,EDFD},"nop"},{{PFX_ED,EDFE},"nop"},{{PFX_ED,EDFF},"nop"},
+
+	// not fully decoded prefix ED opcodes:
+
+	{{PFX_ED,NEG },"neg" },{{PFX_ED,ED4C},"neg" },{{PFX_ED,ED54},"neg" },{{PFX_ED,ED5C},"neg"},
+	{{PFX_ED,ED64},"neg" },{{PFX_ED,ED6C},"neg" },{{PFX_ED,ED74},"neg" },{{PFX_ED,ED7C},"neg"},
+	{{PFX_ED,RETN},"retn"},{{PFX_ED,RETI},"reti"},{{PFX_ED,ED55},"reti"},{{PFX_ED,ED5D},"reti"},
+	{{PFX_ED,ED65},"reti"},{{PFX_ED,ED6D},"reti"},{{PFX_ED,ED75},"reti"},{{PFX_ED,ED7D},"reti"},
+	{{PFX_ED,IM_0},"im 0"},{{PFX_ED,ED4E},"im 0"},{{PFX_ED,IM_1},"im 1"},{{PFX_ED,IM_2},"im 2"},
+	{{PFX_ED,ED66},"im 0"},{{PFX_ED,ED6E},"im 0"},{{PFX_ED,ED76},"im 1"},{{PFX_ED,ED7E},"im 2"},
+	{{PFX_ED,ED77},"nop" },{{PFX_ED,ED7F},"nop"},
+};
+
+static TestSet z80_ixcbr2_tests[] =
+{
+	// tests for Z80 --ixcbr2 opcodes
+	// testing the ixcbr2 opcodes
+
+	{{PFX_IX,PFX_CB,55,RLC_B}, "rlc (ix+55),b"},{{PFX_IX,PFX_CB,55,RLC_H}, "rlc (ix+55),h"},
+	{{PFX_IY,PFX_CB,55,RLC_C}, "rlc (iy+55),c"},{{PFX_IY,PFX_CB,55,RLC_L}, "rlc (iy+55),l"},
+	{{PFX_IY,PFX_CB,55,RLC_D}, "rlc (iy+55),d"},{{PFX_IX,PFX_CB,55,RLC_A}, "rlc (ix+55),a"},
+	{{PFX_IX,PFX_CB,55,RLC_E}, "rlc (ix+55),e"},{{PFX_IX,PFX_CB,55,RRC_B}, "rrc (ix+55),b"},
+	{{PFX_IX,PFX_CB,55,RRC_C}, "rrc (ix+55),c"},{{PFX_IX,PFX_CB,55,RRC_D}, "rrc (ix+55),d"},
+	{{PFX_IY,PFX_CB,55,RRC_E}, "rrc (iy+55),e"},{{PFX_IY,PFX_CB,55,RRC_H}, "rrc (iy+55),h"},
+	{{PFX_IY,PFX_CB,55,RRC_L}, "rrc (iy+55),l"},{{PFX_IX,PFX_CB,55,RRC_A}, "rrc (ix+55),a"},
+	{{PFX_IX,PFX_CB,55,RL_B},  "rl  (ix+55),b"},{{PFX_IX,PFX_CB,55,RL_C},  "rl  (ix+55),c"},
+	{{PFX_IX,PFX_CB,55,RL_D},  "rl  (ix+55),d"},{{PFX_IX,PFX_CB,55,RL_E},  "rl  (ix+55),e"},
+	{{PFX_IX,PFX_CB,55,RL_H},  "rl  (ix+55),h"},{{PFX_IY,PFX_CB,55,RL_L},  "rl  (iy+55),l"},
+	{{PFX_IY,PFX_CB,55,RL_A},  "rl  (iy+55),a"},{{PFX_IY,PFX_CB,55,RR_B},  "rr  (iy+55),b"},
+	{{PFX_IX,PFX_CB,55,RR_H},  "rr  (ix+55),h"},{{PFX_IX,PFX_CB,55,RR_A},  "rr  (ix+55),a"},
+	{{PFX_IX,PFX_CB,55,RR_L},  "rr  (ix+55),l"},{{PFX_IX,PFX_CB,55,SLA_C}, "sla (ix+55),c"},
+	{{PFX_IX,PFX_CB,55,SLA_L}, "sla (ix+55),l"},{{PFX_IX,PFX_CB,55,SLA_A}, "sla (ix+55),a"},
+	{{PFX_IY,PFX_CB,55,SLA_H}, "sla (iy+55),h"},{{PFX_IY,PFX_CB,55,SRA_B}, "sra (iy+55),b"},
+	{{PFX_IY,PFX_CB,55,SRA_H}, "sra (iy+55),h"},{{PFX_IX,PFX_CB,55,SRA_A}, "sra (ix+55),a"},
+	{{PFX_IX,PFX_CB,55,SRA_L}, "sra (ix+55),l"},{{PFX_IX,PFX_CB,55,SLL_C}, "sll (ix+55),c"},
+	{{PFX_IX,PFX_CB,55,SLL_L}, "sll (ix+55),l"},{{PFX_IX,PFX_CB,55,SLL_A}, "sll (ix+55),a"},
+	{{PFX_IX,PFX_CB,55,SLL_H}, "sll (ix+55),h"},{{PFX_IX,PFX_CB,55,SRL_C}, "srl (ix+55),c"},
+	{{PFX_IY,PFX_CB,55,SRL_L}, "srl (iy+55),l"},{{PFX_IY,PFX_CB,55,SRL_A}, "srl (iy+55),a"},
+	{{PFX_IY,PFX_CB,55,SRL_H}, "srl (iy+55),h"},
+
+	{{PFX_IX,PFX_CB,3,BIT0_B}, "bit 0,(ix+3),b"}, {{PFX_IX,PFX_CB,3,BIT0_C}, "bit 0,(ix+3),c"},
+	{{PFX_IY,PFX_CB,3,BIT0_D}, "bit 0,(iy+3),d"}, {{PFX_IY,PFX_CB,3,BIT0_E}, "bit 0,(iy+3),e"},
+	{{PFX_IY,PFX_CB,3,BIT0_H}, "bit 0,(iy+3),h"}, {{PFX_IX,PFX_CB,3,BIT0_L}, "bit 0,(ix+3),l"},
+	{{PFX_IX,PFX_CB,3,BIT0_A}, "bit 0,(ix+3),a"}, {{PFX_IX,PFX_CB,3,BIT1_B}, "bit 1,(ix+3),b"},
+	{{PFX_IX,PFX_CB,3,BIT1_C}, "bit 1,(ix+3),c"}, {{PFX_IX,PFX_CB,3,BIT2_D}, "bit 2,(ix+3),d"},
+	{{PFX_IX,PFX_CB,3,BIT3_E}, "bit 3,(ix+3),e"}, {{PFX_IY,PFX_CB,3,BIT3_H}, "bit 3,(iy+3),h"},
+	{{PFX_IY,PFX_CB,3,BIT4_L}, "bit 4,(iy+3),l"}, {{PFX_IY,PFX_CB,3,BIT5_A}, "bit 5,(iy+3),a"},
+	{{PFX_IX,PFX_CB,3,BIT7_B}, "bit 7,(ix+3),b"}, {{PFX_IX,PFX_CB,3,BIT7_C}, "bit 7,(ix+3),c"},
+	{{PFX_IX,PFX_CB,3,BIT7_D}, "bit 7,(ix+3),d"}, {{PFX_IX,PFX_CB,3,BIT7_E}, "bit 7,(ix+3),e"},
+	{{PFX_IY,PFX_CB,3,BIT7_H}, "bit 7,(iy+3),h"}, {{PFX_IY,PFX_CB,3,BIT7_L}, "bit 7,(iy+3),l"},
+	{{PFX_IY,PFX_CB,3,BIT7_A}, "bit 7,(iy+3),a"},
+
+	{{PFX_IX,PFX_CB,3,SET0_B}, "set 0,(ix+3),b"}, {{PFX_IX,PFX_CB,3,SET0_C}, "set 0,(ix+3),c"},
+	{{PFX_IY,PFX_CB,3,SET0_D}, "set 0,(iy+3),d"}, {{PFX_IY,PFX_CB,3,SET0_E}, "set 0,(iy+3),e"},
+	{{PFX_IY,PFX_CB,3,SET0_H}, "set 0,(iy+3),h"}, {{PFX_IX,PFX_CB,3,SET0_L}, "set 0,(ix+3),l"},
+	{{PFX_IX,PFX_CB,3,SET0_A}, "set 0,(ix+3),a"}, {{PFX_IX,PFX_CB,3,SET1_B}, "set 1,(ix+3),b"},
+	{{PFX_IX,PFX_CB,3,SET1_C}, "set 1,(ix+3),c"}, {{PFX_IX,PFX_CB,3,SET2_D}, "set 2,(ix+3),d"},
+	{{PFX_IX,PFX_CB,3,SET3_E}, "set 3,(ix+3),e"}, {{PFX_IY,PFX_CB,3,SET3_H}, "set 3,(iy+3),h"},
+	{{PFX_IY,PFX_CB,3,SET4_L}, "set 4,(iy+3),l"}, {{PFX_IY,PFX_CB,3,SET5_A}, "set 5,(iy+3),a"},
+	{{PFX_IX,PFX_CB,3,SET7_B}, "set 7,(ix+3),b"}, {{PFX_IX,PFX_CB,3,SET7_C}, "set 7,(ix+3),c"},
+	{{PFX_IX,PFX_CB,3,SET7_D}, "set 7,(ix+3),d"}, {{PFX_IX,PFX_CB,3,SET7_E}, "set 7,(ix+3),e"},
+	{{PFX_IY,PFX_CB,3,SET7_H}, "set 7,(iy+3),h"}, {{PFX_IY,PFX_CB,3,SET7_L}, "set 7,(iy+3),l"},
+	{{PFX_IY,PFX_CB,3,SET7_A}, "set 7,(iy+3),a"},
+
+	{{PFX_IX,PFX_CB,4,RES0_B}, "res 0,(ix+4),b"}, {{PFX_IX,PFX_CB,250,RES0_C}, "res 0,(ix-6),c"},
+	{{PFX_IY,PFX_CB,4,RES0_D}, "res 0,(iy+4),d"}, {{PFX_IY,PFX_CB,250,RES0_E}, "res 0,(iy-6),e"},
+	{{PFX_IY,PFX_CB,4,RES0_H}, "res 0,(iy+4),h"}, {{PFX_IX,PFX_CB,250,RES0_L}, "res 0,(ix-6),l"},
+	{{PFX_IX,PFX_CB,4,RES0_A}, "res 0,(ix+4),a"}, {{PFX_IX,PFX_CB,250,RES1_B}, "res 1,(ix-6),b"},
+	{{PFX_IX,PFX_CB,4,RES1_C}, "res 1,(ix+4),c"}, {{PFX_IX,PFX_CB,250,RES2_D}, "res 2,(ix-6),d"},
+	{{PFX_IX,PFX_CB,4,RES3_E}, "res 3,(ix+4),e"}, {{PFX_IY,PFX_CB,250,RES3_H}, "res 3,(iy-6),h"},
+	{{PFX_IY,PFX_CB,4,RES4_L}, "res 4,(iy+4),l"}, {{PFX_IY,PFX_CB,250,RES5_A}, "res 5,(iy-6),a"},
+	{{PFX_IX,PFX_CB,4,RES7_B}, "res 7,(ix+4),b"}, {{PFX_IX,PFX_CB,250,RES7_C}, "res 7,(ix-6),c"},
+	{{PFX_IX,PFX_CB,4,RES7_D}, "res 7,(ix+4),d"}, {{PFX_IX,PFX_CB,250,RES7_E}, "res 7,(ix-6),e"},
+	{{PFX_IY,PFX_CB,4,RES7_H}, "res 7,(iy+4),h"}, {{PFX_IY,PFX_CB,250,RES7_L}, "res 7,(iy-6),l"},
+	{{PFX_IY,PFX_CB,4,RES7_A}, "res 7,(iy+4),a"},
+};
+
+static TestSet z80_noopt_tests[] =
+{
+	// tests for Z80 without --ixcbr2 or --ixcbxh
+
+	// IXCB opcodes are disassembled as for --ixcbr2
+	// but a warning comment is appended
+
+	{{PFX_IX,PFX_CB,55,RLC_B}, "rlc (ix+55),b ;"},{{PFX_IX,PFX_CB,55,RLC_H}, "rlc (ix+55),h ;"},
+	{{PFX_IY,PFX_CB,55,RLC_C}, "rlc (iy+55),c ;"},{{PFX_IY,PFX_CB,55,RLC_L}, "rlc (iy+55),l ;"},
+	{{PFX_IY,PFX_CB,55,RLC_D}, "rlc (iy+55),d ;"},{{PFX_IX,PFX_CB,55,RLC_A}, "rlc (ix+55),a ;"},
+	{{PFX_IX,PFX_CB,55,RLC_E}, "rlc (ix+55),e ;"},{{PFX_IX,PFX_CB,55,RRC_B}, "rrc (ix+55),b ;"},
+	{{PFX_IX,PFX_CB,55,RRC_C}, "rrc (ix+55),c ;"},{{PFX_IX,PFX_CB,55,RRC_D}, "rrc (ix+55),d ;"},
+	{{PFX_IY,PFX_CB,55,RRC_E}, "rrc (iy+55),e ;"},{{PFX_IY,PFX_CB,55,RRC_H}, "rrc (iy+55),h ;"},
+	{{PFX_IY,PFX_CB,55,RRC_L}, "rrc (iy+55),l ;"},{{PFX_IX,PFX_CB,55,RRC_A}, "rrc (ix+55),a ;"},
+	{{PFX_IX,PFX_CB,55,RL_B},  "rl  (ix+55),b ;"},{{PFX_IX,PFX_CB,55,RL_C},  "rl  (ix+55),c ;"},
+	{{PFX_IX,PFX_CB,55,RL_D},  "rl  (ix+55),d ;"},{{PFX_IX,PFX_CB,55,RL_E},  "rl  (ix+55),e ;"},
+	{{PFX_IX,PFX_CB,55,RL_H},  "rl  (ix+55),h ;"},{{PFX_IY,PFX_CB,55,RL_L},  "rl  (iy+55),l ;"},
+	{{PFX_IY,PFX_CB,55,RL_A},  "rl  (iy+55),a ;"},{{PFX_IY,PFX_CB,55,RR_B},  "rr  (iy+55),b ;"},
+	{{PFX_IX,PFX_CB,55,RR_H},  "rr  (ix+55),h ;"},{{PFX_IX,PFX_CB,55,RR_A},  "rr  (ix+55),a ;"},
+	{{PFX_IX,PFX_CB,55,RR_L},  "rr  (ix+55),l ;"},{{PFX_IX,PFX_CB,55,SLA_C}, "sla (ix+55),c ;"},
+	{{PFX_IX,PFX_CB,55,SLA_L}, "sla (ix+55),l ;"},{{PFX_IX,PFX_CB,55,SLA_A}, "sla (ix+55),a ;"},
+	{{PFX_IY,PFX_CB,55,SLA_H}, "sla (iy+55),h ;"},{{PFX_IY,PFX_CB,55,SRA_B}, "sra (iy+55),b ;"},
+	{{PFX_IY,PFX_CB,55,SRA_H}, "sra (iy+55),h ;"},{{PFX_IX,PFX_CB,55,SRA_A}, "sra (ix+55),a ;"},
+	{{PFX_IX,PFX_CB,55,SRA_L}, "sra (ix+55),l ;"},{{PFX_IX,PFX_CB,55,SLL_C}, "sll (ix+55),c ;"},
+	{{PFX_IX,PFX_CB,55,SLL_L}, "sll (ix+55),l ;"},{{PFX_IX,PFX_CB,55,SLL_A}, "sll (ix+55),a ;"},
+	{{PFX_IX,PFX_CB,55,SLL_H}, "sll (ix+55),h ;"},{{PFX_IX,PFX_CB,55,SRL_C}, "srl (ix+55),c ;"},
+	{{PFX_IY,PFX_CB,55,SRL_L}, "srl (iy+55),l ;"},{{PFX_IY,PFX_CB,55,SRL_A}, "srl (iy+55),a ;"},
+	{{PFX_IY,PFX_CB,55,SRL_H}, "srl (iy+55),h ;"},
+
+	{{PFX_IX,PFX_CB,3,BIT0_B}, "bit 0,(ix+3),b ;"}, {{PFX_IX,PFX_CB,3,BIT0_C}, "bit 0,(ix+3),c ;"},
+	{{PFX_IY,PFX_CB,3,BIT0_D}, "bit 0,(iy+3),d ;"}, {{PFX_IY,PFX_CB,3,BIT0_E}, "bit 0,(iy+3),e ;"},
+	{{PFX_IY,PFX_CB,3,BIT0_H}, "bit 0,(iy+3),h ;"}, {{PFX_IX,PFX_CB,3,BIT0_L}, "bit 0,(ix+3),l ;"},
+	{{PFX_IX,PFX_CB,3,BIT0_A}, "bit 0,(ix+3),a ;"}, {{PFX_IX,PFX_CB,3,BIT1_B}, "bit 1,(ix+3),b ;"},
+	{{PFX_IX,PFX_CB,3,BIT1_C}, "bit 1,(ix+3),c ;"}, {{PFX_IX,PFX_CB,3,BIT2_D}, "bit 2,(ix+3),d ;"},
+	{{PFX_IX,PFX_CB,3,BIT3_E}, "bit 3,(ix+3),e ;"}, {{PFX_IY,PFX_CB,3,BIT3_H}, "bit 3,(iy+3),h ;"},
+	{{PFX_IY,PFX_CB,3,BIT4_L}, "bit 4,(iy+3),l ;"}, {{PFX_IY,PFX_CB,3,BIT5_A}, "bit 5,(iy+3),a ;"},
+	{{PFX_IX,PFX_CB,3,BIT7_B}, "bit 7,(ix+3),b ;"}, {{PFX_IX,PFX_CB,3,BIT7_C}, "bit 7,(ix+3),c ;"},
+	{{PFX_IX,PFX_CB,3,BIT7_D}, "bit 7,(ix+3),d ;"}, {{PFX_IX,PFX_CB,3,BIT7_E}, "bit 7,(ix+3),e ;"},
+	{{PFX_IY,PFX_CB,3,BIT7_H}, "bit 7,(iy+3),h ;"}, {{PFX_IY,PFX_CB,3,BIT7_L}, "bit 7,(iy+3),l ;"},
+	{{PFX_IY,PFX_CB,3,BIT7_A}, "bit 7,(iy+3),a ;"},
+
+	{{PFX_IX,PFX_CB,3,SET0_B}, "set 0,(ix+3),b ;"}, {{PFX_IX,PFX_CB,3,SET0_C}, "set 0,(ix+3),c ;"},
+	{{PFX_IY,PFX_CB,3,SET0_D}, "set 0,(iy+3),d ;"}, {{PFX_IY,PFX_CB,3,SET0_E}, "set 0,(iy+3),e ;"},
+	{{PFX_IY,PFX_CB,3,SET0_H}, "set 0,(iy+3),h ;"}, {{PFX_IX,PFX_CB,3,SET0_L}, "set 0,(ix+3),l ;"},
+	{{PFX_IX,PFX_CB,3,SET0_A}, "set 0,(ix+3),a ;"}, {{PFX_IX,PFX_CB,3,SET1_B}, "set 1,(ix+3),b ;"},
+	{{PFX_IX,PFX_CB,3,SET1_C}, "set 1,(ix+3),c ;"}, {{PFX_IX,PFX_CB,3,SET2_D}, "set 2,(ix+3),d ;"},
+	{{PFX_IX,PFX_CB,3,SET3_E}, "set 3,(ix+3),e ;"}, {{PFX_IY,PFX_CB,3,SET3_H}, "set 3,(iy+3),h ;"},
+	{{PFX_IY,PFX_CB,3,SET4_L}, "set 4,(iy+3),l ;"}, {{PFX_IY,PFX_CB,3,SET5_A}, "set 5,(iy+3),a ;"},
+	{{PFX_IX,PFX_CB,3,SET7_B}, "set 7,(ix+3),b ;"}, {{PFX_IX,PFX_CB,3,SET7_C}, "set 7,(ix+3),c ;"},
+	{{PFX_IX,PFX_CB,3,SET7_D}, "set 7,(ix+3),d ;"}, {{PFX_IX,PFX_CB,3,SET7_E}, "set 7,(ix+3),e ;"},
+	{{PFX_IY,PFX_CB,3,SET7_H}, "set 7,(iy+3),h ;"}, {{PFX_IY,PFX_CB,3,SET7_L}, "set 7,(iy+3),l ;"},
+	{{PFX_IY,PFX_CB,3,SET7_A}, "set 7,(iy+3),a ;"},
+
+	{{PFX_IX,PFX_CB,4,RES0_B}, "res 0,(ix+4),b ;"}, {{PFX_IX,PFX_CB,250,RES0_C}, "res 0,(ix-6),c ;"},
+	{{PFX_IY,PFX_CB,4,RES0_D}, "res 0,(iy+4),d ;"}, {{PFX_IY,PFX_CB,250,RES0_E}, "res 0,(iy-6),e ;"},
+	{{PFX_IY,PFX_CB,4,RES0_H}, "res 0,(iy+4),h ;"}, {{PFX_IX,PFX_CB,250,RES0_L}, "res 0,(ix-6),l ;"},
+	{{PFX_IX,PFX_CB,4,RES0_A}, "res 0,(ix+4),a ;"}, {{PFX_IX,PFX_CB,250,RES1_B}, "res 1,(ix-6),b ;"},
+	{{PFX_IX,PFX_CB,4,RES1_C}, "res 1,(ix+4),c ;"}, {{PFX_IX,PFX_CB,250,RES2_D}, "res 2,(ix-6),d ;"},
+	{{PFX_IX,PFX_CB,4,RES3_E}, "res 3,(ix+4),e ;"}, {{PFX_IY,PFX_CB,250,RES3_H}, "res 3,(iy-6),h ;"},
+	{{PFX_IY,PFX_CB,4,RES4_L}, "res 4,(iy+4),l ;"}, {{PFX_IY,PFX_CB,250,RES5_A}, "res 5,(iy-6),a ;"},
+	{{PFX_IX,PFX_CB,4,RES7_B}, "res 7,(ix+4),b ;"}, {{PFX_IX,PFX_CB,250,RES7_C}, "res 7,(ix-6),c ;"},
+	{{PFX_IX,PFX_CB,4,RES7_D}, "res 7,(ix+4),d ;"}, {{PFX_IX,PFX_CB,250,RES7_E}, "res 7,(ix-6),e ;"},
+	{{PFX_IY,PFX_CB,4,RES7_H}, "res 7,(iy+4),h ;"}, {{PFX_IY,PFX_CB,250,RES7_L}, "res 7,(iy-6),l ;"},
+	{{PFX_IY,PFX_CB,4,RES7_A}, "res 7,(iy+4),a ;"},
+};
+
+static TestSet z80_ixcbxh_tests[] =
+{
+	// tests for Z80 --ixcbxh opcodes
+	// testing the ixcbxh opcodes
+
+{{PFX_IX,PFX_CB,55,RLC_B}, "rlc b ;"}, {{PFX_IX,PFX_CB,55,RLC_H}, "rlc xh"},
+{{PFX_IY,PFX_CB,55,RLC_C}, "rlc c ;"}, {{PFX_IY,PFX_CB,55,RLC_L}, "rlc yl"},
+{{PFX_IY,PFX_CB,55,RLC_D}, "rlc d ;"}, {{PFX_IX,PFX_CB,55,RLC_A}, "rlc a ;"},
+{{PFX_IX,PFX_CB,55,RLC_E}, "rlc e ;"}, {{PFX_IY,PFX_CB,55,RLC_H}, "rlc yh"},
+{{PFX_IX,PFX_CB,55,RRC_B}, "rrc b ;"}, {{PFX_IX,PFX_CB,55,RRC_H}, "rrc xh"},
+{{PFX_IY,PFX_CB,55,RRC_C}, "rrc c ;"}, {{PFX_IY,PFX_CB,55,RRC_L}, "rrc yl"},
+{{PFX_IY,PFX_CB,55,RRC_D}, "rrc d ;"}, {{PFX_IX,PFX_CB,55,RRC_A}, "rrc a ;"},
+{{PFX_IX,PFX_CB,55,RRC_E}, "rrc e ;"}, {{PFX_IX,PFX_CB,55,RRC_L}, "rrc xl"},
+{{PFX_IX,PFX_CB,55,RL_B},  "rl  b ;"}, {{PFX_IX,PFX_CB,55,RL_H }, "rl  xh"},
+{{PFX_IX,PFX_CB,55,RL_C},  "rl  c ;"}, {{PFX_IX,PFX_CB,55,RL_L }, "rl  xl"},
+{{PFX_IX,PFX_CB,55,RL_D},  "rl  d ;"}, {{PFX_IY,PFX_CB,55,RL_A }, "rl  a ;"},
+{{PFX_IY,PFX_CB,55,RL_E},  "rl  e ;"}, {{PFX_IY,PFX_CB,55,RL_L }, "rl  yl"},
+{{PFX_IX,PFX_CB,55,RR_B},  "rr  b ;"}, {{PFX_IX,PFX_CB,55,RR_H }, "rr  xh"},
+{{PFX_IX,PFX_CB,55,RR_D},  "rr  d ;"}, {{PFX_IY,PFX_CB,55,RR_L }, "rr  yl"},
+{{PFX_IX,PFX_CB,55,SLA_B}, "sla b ;"}, {{PFX_IY,PFX_CB,55,SLA_H}, "sla yh"},
+{{PFX_IX,PFX_CB,55,SLA_D}, "sla d ;"}, {{PFX_IX,PFX_CB,55,SLA_L}, "sla xl"},
+{{PFX_IX,PFX_CB,55,SRA_C}, "sra c ;"}, {{PFX_IY,PFX_CB,55,SRA_H}, "sra yh"},
+{{PFX_IX,PFX_CB,55,SRA_E}, "sra e ;"}, {{PFX_IX,PFX_CB,55,SRA_L}, "sra xl"},
+{{PFX_IX,PFX_CB,55,SLL_B}, "sll b ;"}, {{PFX_IY,PFX_CB,55,SLL_H}, "sll yh"},
+{{PFX_IX,PFX_CB,55,SLL_D}, "sll d ;"}, {{PFX_IX,PFX_CB,55,SLL_L}, "sll xl"},
+{{PFX_IX,PFX_CB,55,SRL_C}, "srl c ;"}, {{PFX_IY,PFX_CB,55,SRL_H}, "srl yh"},
+{{PFX_IX,PFX_CB,55,SRL_E}, "srl e ;"}, {{PFX_IX,PFX_CB,55,SRL_L}, "srl xl"},
+
+{{PFX_IX,PFX_CB,3,BIT0_B}, "bit 0,b ;"}, {{PFX_IX,PFX_CB,3,BIT0_H}, "bit 0,xh"},
+{{PFX_IY,PFX_CB,3,BIT0_C}, "bit 0,c ;"}, {{PFX_IY,PFX_CB,3,BIT0_L}, "bit 0,yl"},
+{{PFX_IX,PFX_CB,3,BIT1_D}, "bit 1,d ;"}, {{PFX_IX,PFX_CB,3,BIT1_H}, "bit 1,xh"},
+{{PFX_IY,PFX_CB,3,BIT1_E}, "bit 1,e ;"}, {{PFX_IY,PFX_CB,3,BIT1_L}, "bit 1,yl"},
+{{PFX_IX,PFX_CB,3,BIT2_B}, "bit 2,b ;"}, {{PFX_IY,PFX_CB,3,BIT2_H}, "bit 2,yh"},
+{{PFX_IY,PFX_CB,3,BIT3_C}, "bit 3,c ;"}, {{PFX_IX,PFX_CB,3,BIT3_H}, "bit 3,xh"},
+{{PFX_IX,PFX_CB,3,BIT4_D}, "bit 4,d ;"}, {{PFX_IX,PFX_CB,3,BIT4_H}, "bit 4,xh"},
+{{PFX_IY,PFX_CB,3,BIT5_E}, "bit 5,e ;"}, {{PFX_IX,PFX_CB,3,BIT5_L}, "bit 5,xl"},
+{{PFX_IX,PFX_CB,3,BIT6_A}, "bit 6,a ;"}, {{PFX_IY,PFX_CB,3,BIT6_L}, "bit 6,yl"},
+{{PFX_IY,PFX_CB,3,BIT7_B}, "bit 7,b ;"}, {{PFX_IY,PFX_CB,3,BIT7_L}, "bit 7,yl"},
+{{PFX_IX,PFX_CB,3,SET0_B}, "set 0,b ;"}, {{PFX_IX,PFX_CB,3,SET0_H}, "set 0,xh"},
+{{PFX_IY,PFX_CB,3,SET0_C}, "set 0,c ;"}, {{PFX_IY,PFX_CB,3,SET0_L}, "set 0,yl"},
+{{PFX_IX,PFX_CB,3,SET1_D}, "set 1,d ;"}, {{PFX_IX,PFX_CB,3,SET1_H}, "set 1,xh"},
+{{PFX_IY,PFX_CB,3,SET1_E}, "set 1,e ;"}, {{PFX_IY,PFX_CB,3,SET1_L}, "set 1,yl"},
+{{PFX_IX,PFX_CB,3,SET2_B}, "set 2,b ;"}, {{PFX_IY,PFX_CB,3,SET2_H}, "set 2,yh"},
+{{PFX_IY,PFX_CB,3,SET3_C}, "set 3,c ;"}, {{PFX_IX,PFX_CB,3,SET3_H}, "set 3,xh"},
+{{PFX_IX,PFX_CB,3,SET4_D}, "set 4,d ;"}, {{PFX_IX,PFX_CB,3,SET4_H}, "set 4,xh"},
+{{PFX_IY,PFX_CB,3,SET5_E}, "set 5,e ;"}, {{PFX_IX,PFX_CB,3,SET5_L}, "set 5,xl"},
+{{PFX_IX,PFX_CB,3,SET6_A}, "set 6,a ;"}, {{PFX_IY,PFX_CB,3,SET6_L}, "set 6,yl"},
+{{PFX_IY,PFX_CB,3,SET7_B}, "set 7,b ;"}, {{PFX_IY,PFX_CB,3,SET7_L}, "set 7,yl"},
+{{PFX_IX,PFX_CB,3,RES0_B}, "res 0,b ;"}, {{PFX_IX,PFX_CB,3,RES0_H}, "res 0,xh"},
+{{PFX_IY,PFX_CB,3,RES0_C}, "res 0,c ;"}, {{PFX_IY,PFX_CB,3,RES0_L}, "res 0,yl"},
+{{PFX_IX,PFX_CB,3,RES1_D}, "res 1,d ;"}, {{PFX_IX,PFX_CB,3,RES1_H}, "res 1,xh"},
+{{PFX_IY,PFX_CB,3,RES1_E}, "res 1,e ;"}, {{PFX_IY,PFX_CB,3,RES1_L}, "res 1,yl"},
+{{PFX_IX,PFX_CB,3,RES2_B}, "res 2,b ;"}, {{PFX_IY,PFX_CB,3,RES2_H}, "res 2,yh"},
+{{PFX_IY,PFX_CB,3,RES3_C}, "res 3,c ;"}, {{PFX_IX,PFX_CB,3,RES3_H}, "res 3,xh"},
+{{PFX_IX,PFX_CB,3,RES4_D}, "res 4,d ;"}, {{PFX_IX,PFX_CB,3,RES4_H}, "res 4,xh"},
+{{PFX_IY,PFX_CB,3,RES5_E}, "res 5,e ;"}, {{PFX_IX,PFX_CB,3,RES5_L}, "res 5,xl"},
+{{PFX_IX,PFX_CB,3,RES6_A}, "res 6,a ;"}, {{PFX_IY,PFX_CB,3,RES6_L}, "res 6,yl"},
+{{PFX_IY,PFX_CB,3,RES7_B}, "res 7,b ;"}, {{PFX_IY,PFX_CB,3,RES7_L}, "res 7,yl"},
+};
+
+
 
 static bool same(cstr a, cstr b)
 {
@@ -319,8 +812,7 @@ static void run_tests (uint& num_tests, uint& num_errors, CpuID cpu_id, int opti
 			assert_same(test.expected,disassembly);
 			assert(addr>0 && addr<=4);
 			assert(test.code[addr] == 0);
-		END
-
+			END
 	}
 	logline("##");
 }
@@ -343,7 +835,22 @@ static void test_disass_z80 (uint& num_tests, uint& num_errors, CpuID cpu_id, in
 		run_tests(num_tests,num_errors,cpu_id,option,i8080_tests,NELEM(i8080_tests));
 
 	if (cpu_id == CpuZ80)
+	{
 		run_tests(num_tests,num_errors,cpu_id,option,z80_tests,NELEM(z80_tests));
+		run_tests(num_tests,num_errors,cpu_id,option,z80_z180_tests,NELEM(z80_z180_tests));
+		if (option==DISASS_IXCBR2)
+			run_tests(num_tests,num_errors,cpu_id,option,z80_ixcbr2_tests,NELEM(z80_ixcbr2_tests));
+		else if (option==DISASS_IXCBXH)
+			run_tests(num_tests,num_errors,cpu_id,option,z80_ixcbxh_tests,NELEM(z80_ixcbxh_tests));
+		else
+			run_tests(num_tests,num_errors,cpu_id,option,z80_noopt_tests,NELEM(z80_noopt_tests));
+	}
+
+	if (cpu_id == CpuZ180)
+	{
+		run_tests(num_tests,num_errors,cpu_id,option,z180_tests,NELEM(z180_tests));
+		run_tests(num_tests,num_errors,cpu_id,option,z80_z180_tests,NELEM(z80_z180_tests));
+	}
 }
 
 

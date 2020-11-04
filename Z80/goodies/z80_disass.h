@@ -27,7 +27,7 @@ typedef uint16 Word;
 
 inline Byte peek (const Byte* core, Address addr) { return core[addr]; }
 
-enum { DISASS_STD=0, DISASS_ASM8080, DISASS_IXCBR2, DISASS_IXCBXH };
+enum { DISASS_STD=0, DISASS_ASM8080, DISASS_IXCBR2, DISASS_IXCBXH, DISASS_Z180 };
 
 extern cstr disassemble_z80  (const Byte* core, Address& addr, int option=DISASS_STD);
 extern cstr disassemble_8080 (const Byte* core, Address& addr, int option=DISASS_STD);
