@@ -32,7 +32,7 @@
 
 struct TestSet
 {
-	uint8 code[5];		// code to disassemble + 1 byte 0x00
+	uint8 code[4];		// code to disassemble + 1 byte 0x00
 	char expected[17];	// expected disassembly
 };
 
@@ -811,8 +811,13 @@ static void run_tests (uint& num_tests, uint& num_errors, CpuID cpu_id, int opti
 			cstr disassembly = disassemble(cpu_id, test.code, addr, option);
 			assert_same(test.expected,disassembly);
 			assert(addr>0 && addr<=4);
-			assert(test.code[addr] == 0);
-			END
+			if (addr != cpu_opcode_length(cpu_id, test.code))
+			{
+				log("\nwrong opcode length: 0x%02x%02x%02x%02x: me: %i, he: %i ",
+					test.code[0],test.code[1],test.code[2],test.code[3],addr,cpu_opcode_length(cpu_id, test.code));
+				num_errors++;
+			}
+		END
 	}
 	logline("##");
 }

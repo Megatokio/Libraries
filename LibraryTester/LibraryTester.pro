@@ -30,6 +30,7 @@ SOURCES += \
 	Libraries/Z80/goodies/z80_disass.test.cpp \
 	Libraries/Z80/goodies/z80_major_opcode.cpp \
 	Libraries/Z80/goodies/z80_opcode_length.cpp \
+	Libraries/Z80/goodies/z80_opcode_length.test.cpp \
 	Source/main.cpp \
 	Libraries/kio/kio.cpp \
 	Libraries/kio/kio.test.cpp \
