@@ -20,10 +20,23 @@
 #include "kio/kio.h"
 #include "z80_goodies.h"	// wg. CpuID
 
-enum { LegalOpcode, IllegalOpcode, WeirdOpcode };
 typedef uint16 Address;
 typedef uint8  Byte;
 typedef uint16 Word;
+
+enum __attribute__((deprecated)) { LegalOpcode, IllegalOpcode, WeirdOpcode };	// deprecated: use enum below
+enum
+{
+	LEGAL_OPCODE,
+	UNDOCUMENTED_OPCODE,// undocumented opcodes which have a useful new effect:
+						// z80: SLL, use of XH, XL, YH and YL, IXCBR2 or IXCBXH if option ON
+
+	DEPRECATED_OPCODE,	// opcode aliases and undocumented opcodes which have no useful new effect:
+						// 8080: opcode aliases reused by z80; z80: 0xED aliases for RETI, IM_x
+
+	ILLEGAL_OPCODE		// unhandled ops, undocumented nops, ops with uncertain effect:
+						// z180: all; z80: IX/IY with no effect, 0xED nops, IXCBR2 or IXCBXH if option OFF
+};
 
 inline Byte peek (const Byte* core, Address addr) { return core[addr]; }
 
