@@ -39,6 +39,7 @@ int main(int, const char**)
 	test_sort(num_tests, num_errors);
 	TestStringClass(num_tests, num_errors);
 	test_z80_disass(num_tests, num_errors);
+	test_z80_opcode_length (num_tests, num_errors);
 
 	std::cout << "\n" << num_tests << " tests run, " << num_errors << " errors.\n";
 
