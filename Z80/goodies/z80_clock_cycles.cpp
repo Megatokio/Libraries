@@ -590,7 +590,7 @@ uint z80_clock_cycles_on_branch(uint8 op1, uint8 op2) noexcept
 	return (n&31) + (((n>>5)+1)&7);
 }
 
-bool cpu_opcode_can_branch(CpuID cpuid, uint8 op1, uint8 op2) noexcept
+bool opcode_can_branch(CpuID cpuid, uint8 op1, uint8 op2) noexcept
 {
 	switch (cpuid)
 	{
@@ -604,7 +604,7 @@ bool cpu_opcode_can_branch(CpuID cpuid, uint8 op1, uint8 op2) noexcept
 	}
 }
 
-uint cpu_clock_cycles(CpuID cpuid, uint8 op1, uint8 op2, uint8 op4) noexcept
+uint clock_cycles(CpuID cpuid, uint8 op1, uint8 op2, uint8 op4) noexcept
 {
 	switch (cpuid)
 	{
@@ -618,7 +618,7 @@ uint cpu_clock_cycles(CpuID cpuid, uint8 op1, uint8 op2, uint8 op4) noexcept
 	}
 }
 
-uint cpu_clock_cycles_on_branch(CpuID cpuid, uint8 op1, uint8 op2) noexcept
+uint clock_cycles_on_branch(CpuID cpuid, uint8 op1, uint8 op2) noexcept
 {
 	switch (cpuid)
 	{

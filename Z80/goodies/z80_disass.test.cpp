@@ -811,10 +811,10 @@ static void run_tests (uint& num_tests, uint& num_errors, CpuID cpu_id, int opti
 			cstr disassembly = disassemble(cpu_id, test.code, addr, option);
 			assert_same(test.expected,disassembly);
 			assert(addr>0 && addr<=4);
-			if (addr != cpu_opcode_length(cpu_id, test.code))
+			if (addr != opcode_length(cpu_id, test.code))
 			{
 				log("\nwrong opcode length: 0x%02x%02x%02x%02x: me: %i, he: %i ",
-					test.code[0],test.code[1],test.code[2],test.code[3],addr,cpu_opcode_length(cpu_id, test.code));
+					test.code[0],test.code[1],test.code[2],test.code[3],addr,opcode_length(cpu_id, test.code));
 				num_errors++;
 			}
 		END

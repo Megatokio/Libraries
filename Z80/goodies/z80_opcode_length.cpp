@@ -139,7 +139,7 @@ uint z180_opcode_length (const Byte* ip) noexcept
 	return 2;
 }
 
-uint cpu_opcode_length (CpuID cpuid, const Byte* ip) noexcept
+uint opcode_length (CpuID cpuid, const Byte* ip) noexcept
 {
 	switch(cpuid)
 	{
