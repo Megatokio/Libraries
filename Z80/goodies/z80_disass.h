@@ -36,27 +36,29 @@ enum
 						// 8080: opcode aliases reused by z80; z80: 0xED aliases for RETI, IM_x
 
 	ILLEGAL_OPCODE		// unhandled ops, undocumented nops, ops with uncertain effect:
-						// z180: all; z80: IX/IY with no effect, 0xED nops, IXCBR2 or IXCBXH if option OFF
+						// z180: all; z80: 0xED nops, IX/IY with no effect, IXCBR2 or IXCBXH if option OFF
 };
 
 inline Byte peek (const Byte* core, Address addr) { return core[addr]; }
 
-enum { DISASS_STD=0, DISASS_ASM8080, DISASS_IXCBR2, DISASS_IXCBXH, DISASS_Z180 };
+// get info about the legal state of an opcode:
+// return: LEGAL_OPCODE .. ILLEGAL_OPCODE
+extern int z80_opcode_validity (CpuID, const Byte* core, Address addr);
 
-extern cstr disassemble_z80  (const Byte* core, Address& addr, int option=DISASS_STD);
-extern cstr disassemble_8080 (const Byte* core, Address& addr, int option=DISASS_STD);
-extern cstr disassemble_z180 (const Byte* core, Address& addr);
-extern cstr disassemble		 (CpuID, const Byte* core, Address& addr, int option=DISASS_STD);
+// disassemble 8080, Z80 or Z180 opcode using Z80 syntax:
+extern cstr disassemble (CpuID, const Byte* core, Address& addr);
 
-inline cstr disassemble_asm8080 (const Byte* core, Address& addr)
-{
-	return disassemble_8080(core,addr,DISASS_ASM8080);
-}
+// disassemble 8080 opcode using 8080 or Z80 syntax:
+extern cstr disassemble_8080 (const Byte* core, Address& addr, bool asm8080=yes);
 
-extern int  opcode_legal_state (CpuID, const Byte* core, Address addr);
 
-__attribute__((deprecated))
-extern cstr opcode_mnemo	(CpuID, const Byte* core, Address addr);
+
+
+__attribute__((deprecated))	// use z80_opcode_validity()
+inline int opcode_legal_state (CpuID id, const Byte* core, Address addr) { return z80_opcode_validity(id,core,addr); }
+
+__attribute__((deprecated)) // use real disassemble()
+extern cstr opcode_mnemo (CpuID, const Byte* core, Address addr);
 
 
 

@@ -18,7 +18,9 @@
 
 #include "z80_disass.h"
 #include "z80_goodies.h"
-
+namespace Z80 { // wg. enum collissions
+#include "z80_opcodes.h"
+}
 
 typedef uchar Mnemo[3];
 typedef uchar IXCBMnemo[4];
@@ -249,22 +251,23 @@ static const uchar* i8080_mnemo (Byte op)
 }
 
 static const uchar cmd_sh[] = { RLC,RRC,RL,RR,SLA,SRA,SLL,SRL };
-static const uint8 reg_cb[] = {B,C,D,E,H,L,XHL,A};
+static const uint8 reg_cb[] = { B,C,D,E,H,L,XHL,A };
 
 static const uchar* z80_mnemoCB (Byte op2, const uint8* reg = reg_cb)
 {
-	// return m[3] mnenonic descriptor for CB instructions
+	// return m[4] mnenonic descriptor for CB instructions
 
 	uint8 r = op2 & 0x07;
 	uint8 n = (op2>>3) & 0x07;
 
-	uchar* s = temp<uchar>(3);
+	uchar* s = temp<uchar>(4);
 	switch(op2>>6)
 	{
 	case 0:
 		s[0] = cmd_sh[n];
 		s[1] = reg[r];
 		s[2] = 0;
+		s[3] = 0;
 		return s;
 	case 1:
 		s[0] = BIT; break;
@@ -275,31 +278,25 @@ static const uchar* z80_mnemoCB (Byte op2, const uint8* reg = reg_cb)
 	}
 	s[1] = N0 + n;
 	s[2] = reg[r];
+	s[3] = 0;
 	return s;
 }
 
-static const uchar* z80_mnemoIXCBXH (Byte op4)
+static const uchar* z80_mnemoXYCB (CpuID cpuid, Byte pfx, Byte op4)
 {
-	// return m[3] mnenonic descriptor for IXCB instructions in IXCBXH mode
+	// return m[4] mnenonic descriptor for IXCB instruction
+	// legal opcode:     "set 0,(ix+dis)"
+	// illegal --ixbcxh: "set 0,xh", "set 0,b"
+	// illegal --ixbcr2: "set 0,(ix+dis),h", "set 0,(ix+dis),b"
+	// illegal others:   same as --ixbcr2
 
-	static const uint8 reg[] = {B,C,D,E,XH,XL,XIX,A};
-	return z80_mnemoCB(op4,reg);
-}
+	static const uint8 yreg[] = {B,C,D,E,YH,YL,XIY,A};
+	static const uint8 xreg[] = {B,C,D,E,XH,XL,XIX,A};
 
-static const uchar* z80_mnemoIYCBYH (Byte op4)
-{
-	// return m[3] mnenonic descriptor for IYCB instructions in IXCBXH mode
+	// --ixcbxh mode:
+	if (cpuid == CpuZ80_ixcbxh) return z80_mnemoCB(op4, pfx==0xdd ? xreg : yreg);
 
-	static const uint8 reg[] = {B,C,D,E,YH,YL,XIY,A};
-	return z80_mnemoCB(op4,reg);
-}
-
-static const uchar* z80_mnemoIXCBR2 (Byte op4, uint8 reg = XIX)
-{
-	// return m[4] mnenonic descriptor for IXCB instruction in IXCBR2 mode
-	//
-	// return legal opcode e.g.: set 0,(ix+dis)
-	// or illegal opcode,  e.g.: set 0,(ix+dis),b
+	// --ixbcr2 and all other modes:
 
 	uint8 r = op4 & 0x07;
 	uint8 n = (op4>>3)&0x07;
@@ -309,7 +306,7 @@ static const uchar* z80_mnemoIXCBR2 (Byte op4, uint8 reg = XIX)
 	{
 	case 0:
 		s[0] = cmd_sh[n];
-		s[1] = reg;
+		s[1] = pfx==0xdd ? XIX : XIY;
 		s[2] = r==6 ? 0 : B + r;
 		s[3] = 0;
 		return s;
@@ -321,38 +318,29 @@ static const uchar* z80_mnemoIXCBR2 (Byte op4, uint8 reg = XIX)
 		s[0] = SET; break;
 	}
 	s[1] = N0 + n;
-	s[2] = reg;
+	s[2] = pfx==0xdd ? XIX : XIY;
 	s[3] = r==6 ? 0 : B + r;
 	return s;
 }
 
-static const uchar* z80_mnemoIYCBR2 (Byte op4)
-{
-	// return m[4] mnenonic descriptor for IYCB instruction in IXCBR2 mode
-
-	return z80_mnemoIXCBR2(op4,XIY);
-}
-
-static const uchar* z80_mnemoED (Byte op2)
+static const uchar* z80_mnemoED (CpuID cpuid, Byte op2)
 {
 	// return Mnemo for ED instructions
 
-	if (op2 >= 0x40 && op2 < 0x80) return z80_cmd_ED40[op2-0x40];
-	if (op2 >= 0xA0 && op2 < 0xC0) return z180_cmd_ED[op2];
-	static const Mnemo cmd_nop  = { NOP,0,0 };
-	return cmd_nop;
+	if (cpuid==CpuZ180)
+	{
+		if (op2 < 0xC0) return z180_cmd_ED[op2];
+	}
+	else // Z80
+	{
+		if (op2 >= 0x40 && op2 < 0x80) return z80_cmd_ED40[op2-0x40];
+		if (op2 >= 0xA0 && op2 < 0xC0) return z180_cmd_ED[op2];
+	}
+
+	return z80_cmd_00[Z80::NOP];
 }
 
-static const uchar* z180_mnemoED (Byte op2)
-{
-	// return Mnemo for ED instructions
-
-	if (op2 < 0xC0) return z180_cmd_ED[op2];
-	static const Mnemo cmd_nop  = { NOP,0,0 };
-	return cmd_nop;
-}
-
-static const uchar* z80_mnemoIX (Byte op2)
+static const uchar* z80_mnemoXY (Byte pfx, Byte op2)
 {
 	// return m[3] mnenonic descriptor for IX instructions
 	// tempmem or const
@@ -360,37 +348,18 @@ static const uchar* z80_mnemoIX (Byte op2)
 	uchar* s = temp<uchar>(3);
 	copy3(s, z80_mnemo(op2));
 
-	if (s[2]==HL)  { if (op2!=0xEB/*EX_DE_HL*/) s[2] = IX;  }	// don't return wg. add ix,ix
-	if (s[1]==HL)  { if (op2!=0xEB/*EX_DE_HL*/) s[1] = IX;  return s; }
+	bool ix = pfx == Z80::PFX_IX;
 
-	if (s[1]==XHL) { s[1] = XIX; return s; }
-	if (s[2]==XHL) { s[2] = XIX; return s; }
+	if (s[2]==HL)  { if (op2 != Z80::EX_DE_HL) s[2] = ix?IX:IY; }	// don't return wg. add ix,ix
+	if (s[1]==HL)  { if (op2 != Z80::EX_DE_HL) s[1] = ix?IX:IY; return s; }
 
-	if (s[1]==H) s[1] = XH;
-	if (s[1]==L) s[1] = XL;
-	if (s[2]==H) s[2] = XH;
-	if (s[2]==L) s[2] = XL;
-	return s;
-}
+	if (s[1]==XHL) { s[1] = ix?XIX:XIY; return s; }
+	if (s[2]==XHL) { s[2] = ix?XIX:XIY; return s; }
 
-static const uchar* z80_mnemoIY (Byte op2)
-{
-	// return m[3] mnenonic descriptor for IY instructions
-	// tempmem or const
-
-	uchar* s = temp<uchar>(3);
-	copy3(s, z80_mnemo(op2));
-
-	if (s[2]==HL)  { if (op2!=0xEB/*EX_DE_HL*/) s[2] = IY;  }	// don't return wg. add iy,iy
-	if (s[1]==HL)  { if (op2!=0xEB/*EX_DE_HL*/) s[1] = IY;  return s; }
-
-	if (s[1]==XHL) { s[1] = XIY; return s; }
-	if (s[2]==XHL) { s[2] = XIY; return s; }
-
-	if (s[1]==H) s[1] = YH;
-	if (s[1]==L) s[1] = YL;
-	if (s[2]==H) s[2] = YH;
-	if (s[2]==L) s[2] = YL;
+	if (s[1]==H) s[1] = ix?XH:YH;
+	if (s[1]==L) s[1] = ix?XL:YL;
+	if (s[2]==H) s[2] = ix?XH:YH;
+	if (s[2]==L) s[2] = ix?XL:YL;
 	return s;
 }
 
@@ -401,19 +370,27 @@ cstr opcode_mnemo (CpuID cpuid, const Byte* core, Address addr)
 	// op2 and op4 are only used if required (( op2: op1=XY/CB/ED; op4: op1,2=XY,CB ))
 	// returns tempstr or const string
 
-	assert(cpuid==CpuZ80 || cpuid==CpuDefault);	// others: TODO
-	(void)cpuid;
-
 	const uchar* m;
 	const uint8 op1 = peek(core,addr);
 
-	switch(op1)
+	if (cpuid==Cpu8080)
 	{
-	case 0xCB:	m = z80_mnemoCB(peek(core,addr+1)); break;
-	case 0xED:	m = z80_mnemoED(peek(core,addr+1)); break;
-	case 0xDD:	m = peek(core,addr+1)==0xCB ? z80_mnemoIXCBXH(peek(core,addr+3)) : z80_mnemoIX(peek(core,addr+1)); break;
-	case 0xFD:	m = peek(core,addr+1)==0xCB ? z80_mnemoIYCBYH(peek(core,addr+3)) : z80_mnemoIY(peek(core,addr+1)); break;
-	default:	m = z80_mnemo(op1);                 break;
+		m = i8080_mnemo(op1);
+	}
+	else switch(op1)
+	{
+	case 0xCB:
+		m = z80_mnemoCB(peek(core,addr+1));
+		break;
+	case 0xED:
+		m = z80_mnemoED(cpuid,peek(core,addr+1));
+		break;
+	case 0xDD:
+	case 0xFD:
+		m = peek(core,addr+1)==0xCB ? z80_mnemoXYCB(cpuid,op1,peek(core,addr+3)) : z80_mnemoXY(op1,peek(core,addr+1));
+		break;
+	default:
+		m = z80_mnemo(op1); break;
 	}
 
 	cstr s1 = word[m[0]];  if(m[1]==0) return s1;
@@ -438,66 +415,148 @@ cstr opcode_mnemo (CpuID cpuid, const Byte* core, Address addr)
 // ================================================================================
 // Opcode Legal State:
 
-static inline int z80_illegalCB (Byte op)
+static inline int z80_illegalCB (CpuID cpuid, Byte op)
 {
-	// get legal state of CB instruction
-	// all instructions legal except: sll is illegal
+	// get legal state of 0xCB instruction
+	// all instructions LEGAL except SLL is UNDOCUMENTED
 
-	return op>=0x30 && op<0x38 ? IllegalOpcode : LegalOpcode;
+	return op>=0x30 && op<0x38 ? cpuid==CpuZ180?ILLEGAL_OPCODE:UNDOCUMENTED_OPCODE : LEGAL_OPCODE;
 }
 
-static inline int z80_illegalED (Byte op)
+static inline int z80_illegalED (CpuID cpuid, Byte op)
 {
 	// get legal state of ED instruction
-	// 0x00-0x3F and 0x80-0xFF weird except block instructions
-	// 0x40-0x7F legal or weird
-	// in f,(c) is legal; out (c),0 is weird
+	// LEGAL:        all documented opcodes
+	// UNDOCUMENTED: out (c),0
+	// ILLEGAL:      all others: ill. NOP or ill. aliases
 
-	const static char il[] = "1111111111110101111100111111001111110001111100011011000011110000";
+	static constexpr uint8 L = LEGAL_OPCODE;
+	static constexpr uint8 U = UNDOCUMENTED_OPCODE;
+	static constexpr uint8 i = ILLEGAL_OPCODE;
 
-	if ((op>>6)==1)	return il[op-0x40]-'0' ? WeirdOpcode : LegalOpcode;
-	return *z80_mnemoED(op)==NOP ? WeirdOpcode : LegalOpcode;
+	static const uint8 state_40[64] =
+	{
+		L,L,L,L, L,L,L,L, // IN_B_xC,	OUT_xC_B, SBC_HL_BC, LD_xNN_BC,   NEG,  RETN, IM_0, LD_I_A,
+		L,L,L,L, i,L,i,L, // IN_C_xC,	OUT_xC_C, ADC_HL_BC, LD_BC_xNN,   ED4C, RETI, ED4E, LD_R_A,
+		L,L,L,L, i,i,L,L, // IN_D_xC,	OUT_xC_D, SBC_HL_DE, LD_xNN_DE,   ED54, ED55, IM_1, LD_A_I,
+		L,L,L,L, i,i,L,L, // IN_E_xC,	OUT_xC_E, ADC_HL_DE, LD_DE_xNN,   ED5C, ED5D, IM_2, LD_A_R,
+		L,L,L,L, i,i,i,L, // IN_H_xC,	OUT_xC_H, SBC_HL_HL, ED_xNN_HL,   ED64, ED65, ED66, RRD,
+		L,L,L,L, i,i,i,L, // IN_L_xC,	OUT_xC_L, ADC_HL_HL, ED_HL_xNN,   ED6C, ED6D, ED6E, RLD,
+		L,U,L,L, i,i,i,i, // IN_F_xC,	OUT_xC_0, SBC_HL_SP, LD_xNN_SP,   ED74, ED75, ED76, ED77,
+		L,L,L,L, i,i,i,i, // IN_A_xC,	OUT_xC_A, ADC_HL_SP, LD_SP_xNN,   ED7C, ED7D, ED7E, ED7F,
+	};
+
+	static const uint8 state_140[64] =
+	{
+		L,L,L,L, L,L,L,L, // IN_B_xC,	OUT_xC_B, SBC_HL_BC, LD_xNN_BC,   NEG,  RETN, IM_0, LD_I_A,
+		L,L,L,L, L,L,i,L, // IN_C_xC,	OUT_xC_C, ADC_HL_BC, LD_BC_xNN,   *MLT,  RETI, ED4E, LD_R_A,
+		L,L,L,L, i,i,L,L, // IN_D_xC,	OUT_xC_D, SBC_HL_DE, LD_xNN_DE,   ED54, ED55, IM_1, LD_A_I,
+		L,L,L,L, L,i,L,L, // IN_E_xC,	OUT_xC_E, ADC_HL_DE, LD_DE_xNN,   *MLT, ED5D, IM_2, LD_A_R,
+		L,L,L,L, L,i,i,L, // IN_H_xC,	OUT_xC_H, SBC_HL_HL, ED_xNN_HL,   *TST, ED65, ED66, RRD,
+		L,L,L,L, L,i,i,L, // IN_L_xC,	OUT_xC_L, ADC_HL_HL, ED_HL_xNN,   *MLT, ED6D, ED6E, RLD,
+		L,i,L,L, L,i,L,i, // IN_F_xC,	OUT_xC_0, SBC_HL_SP, LD_xNN_SP,   *TST, ED75, *SLP, ED77,
+		L,L,L,L, L,i,i,i, // IN_A_xC,	OUT_xC_A, ADC_HL_SP, LD_SP_xNN,   *MLT, ED7D, ED7E, ED7F,
+	};
+
+	if (cpuid == CpuZ180)
+	{
+		if (op < 0x40) return (op&3)==0 || ((op&7)==1 && op!=0x31) ? LEGAL_OPCODE : ILLEGAL_OPCODE;
+		if (op < 0x80) return state_140[op & 0x3F];	// misc.
+		if ((op&0344) == 0xA0) return LEGAL_OPCODE;	// z80 block opcodes
+		if ((op&0xE7) == 0x83) return LEGAL_OPCODE; // z180 block io opcodes
+		return ILLEGAL_OPCODE;						// all others
+	}
+	else // Z80
+	{
+		if (op < 0x40) return ILLEGAL_OPCODE;		// all NOPs
+		if (op < 0x80) return state_40[op & 0x3F];	// misc.
+		if ((op&0344) == 0xA0) return LEGAL_OPCODE;	// block opcodes
+		return ILLEGAL_OPCODE;						// all NOPs
+	}
 }
 
-static inline int z80_illegalXY (Byte op)
+static inline int z80_illegalXY (CpuID cpuid, Byte op)
 {
 	// get legal state of IX/IY instruction
-	// all illegal instructions, which use XH or XL are illegal
-	// all illegal instructions, which don't use XH or XL are weird
-	// prefixes are legal
+	// LEGAL:		 instructions which use (hl)
+	// UNDOCUMENTED: instructions, which use XH or XL are UNDOCUMENTED
+	// ILLEGAL:		 all others: prefix no effect!
+	//				 note: prefix 0xCB is also reported as illegal
 
-	const uchar* c = z80_mnemo(op);
+	static constexpr uint8 L = LEGAL_OPCODE;
+	static constexpr uint8 U = UNDOCUMENTED_OPCODE;
+	static constexpr uint8 i = ILLEGAL_OPCODE;
 
-	if (c[0]==PFX || c[1]==XHL || c[2]==XHL) return LegalOpcode;
-	if (c[1]==H||c[1]==L||c[2]==H||c[2]==L) return IllegalOpcode;
-	return WeirdOpcode;
+	static const uint8 state_00[64] =
+	{
+		i,i,i,i, i,i,i,i,	//	NOP,	 LD_BC_NN,	LD_xBC_A,	INC_BC,		INC_B,	DEC_B,	LD_B_N,	 RLCA,
+		i,L,i,i, i,i,i,i,	//	EX_AF_AF ADD_HL_BC,	LD_A_xBC,	DEC_BC,		INC_C,	DEC_C,	LD_C_N,	 RRCA,
+		i,i,i,i, i,i,i,i,	//	DJNZ,	 LD_DE_NN,	LD_xDE_A,	INC_DE,		INC_D,	DEC_D,	LD_D_N,	 RLA,
+		i,L,i,i, i,i,i,i,	//	JR, 	 ADD_HL_DE,	LD_A_xDE,	DEC_DE,		INC_E,	DEC_E,	LD_E_N,	 RRA,
+		i,L,L,L, U,U,U,i,	//	JR_NZ,	 LD_HL_NN,	LD_xNN_HL,	INC_HL,		INC_H,	DEC_H,	LD_H_N,	 DAA,
+		i,L,L,L, U,U,U,i,	//	JR_Z,	 ADD_HL_HL,	LD_HL_xNN,	DEC_HL,		INC_L,	DEC_L,	LD_L_N,	 CPL,
+		i,i,i,i, L,L,L,i,	//	JR_NC,	 LD_SP_NN,	LD_xNN_A,	INC_SP,		INC_xHL,DEC_xHL LD_xHL_N SCF,
+		i,L,i,i, i,i,i,i,	//	JR_C,	 ADD_HL_SP,	LD_A_xNN,	DEC_SP,		INC_A,	DEC_A,	LD_A_N,	 CCF,
+	};
+
+	if (op < 0x40)
+	{
+		int rval = state_00[op];
+		return rval == LEGAL_OPCODE || cpuid != CpuZ180 ? rval : ILLEGAL_OPCODE;
+	}
+
+	if (op < 0xC0)	// LD r,r and ARI a,r:
+	{
+		if (((op&7) == 6) != ((op&0xF8) == 0x70)) return LEGAL_OPCODE;	// either source or dest is (hl)
+		if (cpuid == CpuZ180) return ILLEGAL_OPCODE;
+		if ( (op&006)  == 004)
+			return UNDOCUMENTED_OPCODE;				// LD or ARI uses H or L
+		if ( (op&0360) == 0140)
+			return UNDOCUMENTED_OPCODE;				// LD uses H or L as dest
+		else return ILLEGAL_OPCODE;										// IX/IY prefix has no effect
+	}
+
+	using namespace Z80;
+	if (op==PUSH_HL || op==POP_HL || op==JP_HL || op==LD_SP_HL || op==EX_HL_xSP) return LEGAL_OPCODE;
+	else return ILLEGAL_OPCODE;
 }
 
-static inline int z80_illegalXYCB (Byte op)
+static inline int z80_illegalXYCB (CpuID cpuid, Byte op)
 {
 	// get legal state of IXCB/IYCB instruction
 	// all instructions which do not use IX are weird
 	// instructions using IX are legal except: sll is illegal
 
-	if ((op&0x07)!=6) return WeirdOpcode;
-	return op>=0x30 && op<0x38 ? IllegalOpcode : LegalOpcode;
+	if ((op&7) == 6) return op != Z80::SLL_xHL ? LEGAL_OPCODE :			 // uses hl
+							cpuid == CpuZ180 ? ILLEGAL_OPCODE : UNDOCUMENTED_OPCODE;
+	if (cpuid == CpuZ80_ixcbr2) return UNDOCUMENTED_OPCODE;				 // all registers: known effect
+	if (cpuid == CpuZ80_ixcbxh && (op&6)==4) return UNDOCUMENTED_OPCODE; // uses H or L
+	return ILLEGAL_OPCODE;												 // no effect or unknown effect
 }
 
-int opcode_legal_state (CpuID cpuid, const Byte* core, Address addr)
+int z80_opcode_validity (CpuID cpuid, const Byte* core, Address addr)
 {
 	// get legal state of instruction
 	// op2 and op4 are only used if required (( op2: op1=XY/CB/ED; op4: op1,2=XY,CB ))
 
-	assert(cpuid==CpuZ80 || cpuid==CpuDefault);	// others: TODO
-	(void)cpuid;
-
-	switch (peek(core,addr))
+	uint8 op = peek(core,addr);
+	switch (op)
 	{
-	case 0xCB: return z80_illegalCB(peek(core,addr+1));
-	case 0xED: return z80_illegalED(peek(core,addr+1));
+	case 0xCB:
+		if (cpuid == Cpu8080) return DEPRECATED_OPCODE;
+		return z80_illegalCB(cpuid,peek(core,addr+1));
+	case 0xED:
+		if (cpuid == Cpu8080) return DEPRECATED_OPCODE;
+		return z80_illegalED(cpuid, peek(core,addr+1));
 	case 0xDD:
-	case 0xFD: return peek(core,addr+1)==0xCB ? z80_illegalXYCB(peek(core,addr+3)) : z80_illegalXY(peek(core,addr+1));
-	default:   return LegalOpcode;
+	case 0xFD:
+		if (cpuid == Cpu8080) return DEPRECATED_OPCODE;
+		return peek(core,addr+1) != 0xCB ? z80_illegalXY(cpuid,peek(core,addr+1)) :
+										   z80_illegalXYCB(cpuid,peek(core,addr+3));
+	default:
+		if (cpuid != Cpu8080) return LEGAL_OPCODE;
+		if (op<0xC0) return (op&0xC7)==0 && op!=0 ? DEPRECATED_OPCODE : LEGAL_OPCODE;
+		else return op==0xD9 ? DEPRECATED_OPCODE : LEGAL_OPCODE;
 	}
 }
 
@@ -575,122 +634,7 @@ static cstr expand_mnemoXYCB (const Byte* core, Address& addr, const IXCBMnemo m
 	return s;
 }
 
-cstr disassemble_z80 (const Byte* core, Address& addr, int option)
-{
-	// disassemble one instruction and increment ip
-	// tempstr or const
-
-	// option = DISASS_STD, DISASS_IXCBR2, DISASS_IXCPXH, DISASS_Z180
-	// TODO: DISASS_IXCPXH
-
-	Byte op = NEXTBYTE;
-	const uchar* m;
-
-	switch(op)
-	{
-	case 0xcb:
-		m = z80_mnemoCB(NEXTBYTE);
-		if (option==DISASS_Z180 && m[0] == SLL) goto ill;
-		else break;
-
-	case 0xed:
-		if (option==DISASS_Z180)
-		{
-			m = z180_mnemoED(NEXTBYTE);
-			if (m[0] == NOP) goto ill;
-			break;
-		}
-		m = z80_mnemoED(NEXTBYTE);		// ill. NOPs accepted. TODO: append "***ill**"
-		break;
-
-	case 0xdd:
-		op = NEXTBYTE;
-		if (op == 0xcb)
-		{
-			op = peek(core,addr+1);
-			if (option==DISASS_Z180 && (op|7) == 0x37/*SLL*/) { addr+=2; goto ill; }
-
-			if ((op&7) == 6/*(hl)*/)
-			{
-				m = z80_mnemoIXCBXH(op);
-				cstr s = expand_mnemo(core,addr,m); addr++;
-				return s;
-			}
-
-			// illegal IXCB opcode:
-
-			if (option==DISASS_Z180) { addr+=2; goto ill; }	// Z180: trapped
-
-			if (option==DISASS_IXCBXH)
-			{
-				m = z80_mnemoIXCBXH(op);
-				cstr s = expand_mnemo(core,addr,m); addr += 2;
-				if (m[1]==XH || m[1]==XL || m[2]==XH || m[2]==XL) return s;
-				return catstr(s," ; ***Prefix has no effect***");
-			}
-
-			m = z80_mnemoIXCBR2(op);
-			cstr s = expand_mnemoXYCB(core,addr,m); addr++;
-			if (option==DISASS_IXCBR2) return s;
-			return catstr(s," ; ***illegal with unknown effect***"); // DISASS_STD
-		}
-		m = z80_mnemoIX(op);
-		if (m[1]==IX || m[1]==XIX || m[2]==IX || m[2]==XIX) break; // legal
-		if (option==DISASS_Z180) goto ill;	// Z180: trapped
-		if (m[1]==XH || m[1]==XL || m[2]==XH || m[2]==XL) break;	// well supported illegal
-		if (op==0xdd || op==0xed || op==0xfd) { addr--; return "db $DD ; ***Prefix has no effect***"; }
-		return catstr(expand_mnemo(core,addr,m)," ; ***Prefix has no effect***");
-
-	case 0xfd:
-		op = NEXTBYTE;
-		if (op == 0xcb)
-		{
-			op = peek(core,addr+1);
-			if (option==DISASS_Z180 && (op|7) == 0x37/*SLL*/) { addr+=2; goto ill; }
-
-			if ((op&7) == 6/*(hl)*/)
-			{
-				m = z80_mnemoIYCBYH(op);
-				cstr s = expand_mnemo(core,addr,m); addr++;
-				return s;
-			}
-
-			// illegal IXCB opcode:
-
-			if (option==DISASS_Z180) { addr+=2; goto ill; }	// Z180: trapped
-
-			if (option==DISASS_IXCBXH)
-			{
-				m = z80_mnemoIYCBYH(op);
-				cstr s = expand_mnemo(core,addr,m); addr += 2;
-				if (m[1]==YH || m[1]==YL || m[2]==YH || m[2]==YL) return s;
-				return catstr(s," ; ***Prefix has no effect***");
-			}
-
-			m = z80_mnemoIYCBR2(op);
-			cstr s = expand_mnemoXYCB(core,addr,m); addr++;
-			if (option==DISASS_IXCBR2) return s;
-			return catstr(s," ; ***illegal with unknown effect***"); // DISASS_STD
-		}
-		m = z80_mnemoIY(op);
-		if (m[1]==IY || m[1]==XIY || m[2]==IY || m[2]==XIY) break;	// legal
-		if (option==DISASS_Z180) goto ill;							// Z180: trapped
-		if (m[1]==YH || m[1]==YL || m[2]==YH || m[2]==YL) break;	// well supported illegal
-		if (op==0xdd || op==0xed || op==0xfd) { addr--; return "nop ; ***Prefix has no effect***"; }
-		return catstr(expand_mnemo(core,addr,m)," ; ***Prefix has no effect***");
-
-	default:
-		m = z80_mnemo(op);
-		break;
-	}
-
-	return expand_mnemo(core,addr,m);
-
-ill:
-	return "nop ; ***illegal opcode***";
-}
-
-cstr disassemble_8080 (const Byte* core, Address& addr, int syntax)
+cstr disassemble_8080 (const Byte* core, Address& addr, bool asm8080)
 {
 	// disassemble 8080 opcode using z80 or asm8080 syntax
 
@@ -698,7 +642,7 @@ cstr disassemble_8080 (const Byte* core, Address& addr, int syntax)
 	cstr s;
 
 	// test for deprecated opcode:
-	// these are all NOP, CALL, JP or RET
+	// these are all NOP, CALL, JMP or RET
 	// which happen to be the same in asm8080 and Z80 syntax:
 
 	switch(op)
@@ -714,7 +658,7 @@ cstr disassemble_8080 (const Byte* core, Address& addr, int syntax)
 
 	case 0xCB:
 		s = expand_word(core,addr,uchar(NN));
-		return usingstr("%s %s ; $CB: ***deprecated*** Z80: prefix CB", (syntax==DISASS_ASM8080?"jmp":"jp"), s);
+		return usingstr("%s %s ; $CB: ***deprecated*** Z80: prefix CB", (asm8080?"jmp":"jp"), s);
 
 	case 0xDD:
 	case 0xED:
@@ -725,21 +669,58 @@ cstr disassemble_8080 (const Byte* core, Address& addr, int syntax)
 
 	// legal opcode: return asm8080 or Z80 systax:
 
-	const uchar* mnemo = (syntax == DISASS_ASM8080 ? i8080_mnemo : z80_mnemo)(op);
+	const uchar* mnemo = (asm8080 ? i8080_mnemo : z80_mnemo)(op);
 	return expand_mnemo(core,addr,mnemo);
 }
 
-cstr disassemble (CpuID cpuid, const Byte* core, Address& addr, int option)
+cstr disassemble (CpuID cpuid, const Byte* core, Address& addr)
 {
-	// disassemble one instruction and increment addr
-	// tempstr or const string
+	// disassemble one instruction and increment ip
+	// tempstr or const
 
-	switch(cpuid)
+	if (cpuid == Cpu8080) return disassemble_8080(core,addr,no);
+
+	Byte op = NEXTBYTE;
+	const uchar* m;
+	cstr s;
+
+	switch(op)
 	{
 	default:
-	case CpuZ80:	return disassemble_z80(core,addr,option);
-	case CpuZ180:	return disassemble_z80(core,addr,DISASS_Z180);
-	case Cpu8080:	return disassemble_8080(core,addr,option);
+		m = z80_mnemo(op);
+		return expand_mnemo(core,addr,m);
+
+	case 0xcb:
+		op = NEXTBYTE;
+		m = z80_mnemoCB(op);
+		s = expand_mnemo(core,addr,m);
+		if (cpuid != CpuZ180 || m[0] != SLL) return s;
+		else return catstr(s," ; ***illegal opcode***");
+
+	case 0xed:
+		op = NEXTBYTE;
+		m = z80_mnemoED(cpuid,op);
+		s = expand_mnemo(core,addr,m);
+		if (z80_illegalED(cpuid,op) != ILLEGAL_OPCODE) return s;
+		else return catstr(s," ; ***illegal opcode***");
+
+	case 0xdd:
+	case 0xfd:
+		Byte op2 = NEXTBYTE;
+		if (op2 == 0xcb)
+		{
+			Address end = addr+2;
+			Byte op4 = peek(core,addr+1);
+			m = z80_mnemoXYCB(cpuid,op,op4);
+			s = expand_mnemoXYCB(core,addr,m); addr = end;
+			if (z80_illegalXYCB(cpuid,op4) != ILLEGAL_OPCODE) return s;
+			else return catstr(s," ; ***illegal opcode***");
+		}
+		m = z80_mnemoXY(op,op2);
+		s = expand_mnemo(core,addr,m);
+		if (z80_illegalXY(cpuid,op2) != ILLEGAL_OPCODE) return s;
+		if (op2==0xdd || op2==0xed || op2==0xfd) { addr--; return usingstr("db $%02X ; ***prefix no effect***", op); }
+		else return catstr(s," ; ***illegal opcode***");
 	}
 }
 
