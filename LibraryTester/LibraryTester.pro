@@ -57,6 +57,7 @@ SOURCES += \
 	Libraries/VString/String.cpp
 
 HEADERS += \
+	Libraries/Z80/goodies/CpuID.h \
 	Libraries/Z80/goodies/z80_disass.h \
 	Libraries/Z80/goodies/z80_goodies.h \
 	Libraries/Z80/goodies/z80_major_opcode_tables.h \

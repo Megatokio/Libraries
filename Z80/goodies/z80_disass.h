@@ -1,4 +1,3 @@
-#pragma once
 /*	Copyright  (c)	Günter Woigk 1996 - 2020
 					mailto:kio@little-bat.de
 
@@ -17,8 +16,10 @@
 	TO THE EXTENT PERMITTED BY APPLICABLE LAW.
 */
 
+#pragma once
+
 #include "kio/kio.h"
-#include "z80_goodies.h"	// wg. CpuID
+#include "CpuID.h"
 
 typedef uint16 Address;
 typedef uint8  Byte;
