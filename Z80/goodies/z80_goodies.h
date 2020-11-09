@@ -18,14 +18,7 @@
 
 #pragma once
 #include "kio/kio.h"
-
-enum CpuID
-{
-	CpuDefault=0,	// same as Z80, but not actively selected
-	CpuZ80,
-	Cpu8080,
-	CpuZ180
-};
+#include "CpuID.h"
 
 
 typedef uint8  Byte;
