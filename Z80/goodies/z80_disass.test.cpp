@@ -385,33 +385,79 @@ static TestSet z180_tests[] =
 
 	// SLL is illegal:
 
-	{{PFX_CB,SLL_B},  "nop ; "},
-	{{PFX_CB,SLL_C},  "nop ; "},
-	{{PFX_CB,SLL_D},  "nop ; "},
-	{{PFX_CB,SLL_E},  "nop ; "},
-	{{PFX_CB,SLL_H},  "nop ; "},
-	{{PFX_CB,SLL_L},  "nop ; "},
-	{{PFX_CB,SLL_A},  "nop ; "},
-	{{PFX_CB,SLL_xHL},"nop ; "},
+	{{PFX_CB,SLL_B},  "sll b ;"},
+	{{PFX_CB,SLL_C},  "sll c ;"},
+	{{PFX_CB,SLL_D},  "sll d ;"},
+	{{PFX_CB,SLL_E},  "sll e ;"},
+	{{PFX_CB,SLL_H},  "sll h ;"},
+	{{PFX_CB,SLL_L},  "sll l ;"},
+	{{PFX_CB,SLL_xHL},"sll (hl) ;"},
+	{{PFX_CB,SLL_A},  "sll a ;"},
 
-	{{PFX_IX,PFX_CB, 67,SLL_B},  "nop ;"},
-	{{PFX_IX,PFX_CB, 67,SLL_L},  "nop ;"},
-	{{PFX_IX,PFX_CB, 67,SLL_xHL},"nop ;"},
-	{{PFX_IX,PFX_CB, 67,SLL_A},  "nop ;"},
+	{{PFX_IX,PFX_CB, 67,SLL_B},  "sll (ix+67),b ;"},
+	{{PFX_IY,PFX_CB, 67,SLL_L},  "sll (iy+67),l ;"},
+	{{PFX_IY,PFX_CB,199,SLL_xHL},"sll (iy-57) ;"},
+	{{PFX_IX,PFX_CB,199,SLL_A},  "sll (ix-57),a ;"},
 
 	// prefix IX/IY opcodes which don't use the HL register are illegal:
 
-	{{PFX_IX,HALT},  "nop ;"},
+	{{PFX_IX,HALT},  "halt ;"},
+	{{PFX_IX,LD_B_D},"ld b,d ;"},	{{PFX_IY,LD_B_C},"ld b,c ;"},
+	{{PFX_IX,LD_C_E},"ld c,e ;"},	{{PFX_IY,LD_C_A},"ld c,a ;"},
+	{{PFX_IY,LD_D_A},"ld d,a ;"},	{{PFX_IX,LD_D_C},"ld d,c ;"},
+	{{PFX_IX,LD_E_B},"ld e,b ;"},	{{PFX_IY,LD_E_D},"ld e,d ;"},
 
-	{{PFX_IX,PFX_CB, 67,RLC_B}, "nop ;"}, {{PFX_IX,PFX_CB,127,RRC_D}, "nop ;"}, {{PFX_IY,PFX_CB,0,RL_H},  "nop ;"},
-	{{PFX_IY,PFX_CB,255,RR_C},  "nop ;"}, {{PFX_IY,PFX_CB,200,SLA_E}, "nop ;"}, {{PFX_IX,PFX_CB,1,RL_L},  "nop ;"},
-	{{PFX_IX,PFX_CB,128,SRA_D}, "nop ;"}, {{PFX_IX,PFX_CB, 67,SRL_H}, "nop ;"}, {{PFX_IY,PFX_CB,5,RL_A},  "nop ;"},
-	{{PFX_IX,PFX_CB, 67,BIT0_E},"nop ;"}, {{PFX_IY,PFX_CB,199,BIT1_L},"nop ;"}, {{PFX_IX,PFX_CB,8,BIT2_B},"nop ;"},
-	{{PFX_IY,PFX_CB,127,BIT3_H},"nop ;"}, {{PFX_IY,PFX_CB,  0,BIT4_A},"nop ;"}, {{PFX_IX,PFX_CB,0,BIT5_C},"nop ;"},
-	{{PFX_IX,PFX_CB, 67,BIT6_L},"nop ;"}, {{PFX_IY,PFX_CB, 67,BIT7_B},"nop ;"}, {{PFX_IY,PFX_CB,7,SET0_D},"nop ;"},
-	{{PFX_IY,PFX_CB, 67,SET3_A},"nop ;"}, {{PFX_IX,PFX_CB, 67,SET6_C},"nop ;"}, {{PFX_IX,PFX_CB,6,SET7_E},"nop ;"},
-	{{PFX_IX,PFX_CB, 67,RES0_B},"nop ;"}, {{PFX_IY,PFX_CB, 67,RES5_D},"nop ;"},
-	{{PFX_IX,PFX_CB, 67,RES6_C},"nop ;"}, {{PFX_IY,PFX_CB, 67,RES7_E},"nop ;"},
+	{{PFX_IY,ADD_B },"add a,b ;"},	{{PFX_IX,ADC_D },"adc a,d ;"},
+	{{PFX_IY,SUB_C },"sub a,c ;"},	{{PFX_IX,SBC_E },"sbc a,e ;"},
+	{{PFX_IX,AND_D },"and a,d ;"},	{{PFX_IY,XOR_A },"xor a,a ;"},
+	{{PFX_IY,OR_E  },"or  a,e ;"},	{{PFX_IX,CP_B  },"cp  a,b ;"},
+	{{PFX_IX,INC_A },"inc a ;"}, 	{{PFX_IY,DEC_C },"dec c ;"},
+	{{PFX_IY,LD_B_N,5},"ld b,5 ;"}, {{PFX_IX,LD_D_N,223},"ld d,223 ;"},
+
+	{{PFX_IX,LD_B_H},"ld b,xh ;"},	{{PFX_IY,LD_B_L},"ld b,yl ;"},
+	{{PFX_IX,LD_C_H},"ld c,xh ;"},	{{PFX_IY,LD_C_L},"ld c,yl ;"},
+	{{PFX_IY,LD_D_H},"ld d,yh ;"},	{{PFX_IX,LD_D_L},"ld d,xl ;"},
+	{{PFX_IX,LD_E_H},"ld e,xh ;"},	{{PFX_IY,LD_E_L},"ld e,yl ;"},
+	{{PFX_IY,LD_H_H},"ld yh,yh ;"},	{{PFX_IY,LD_H_L},"ld yh,yl ;"},
+	{{PFX_IX,LD_L_H},"ld xl,xh ;"},	{{PFX_IX,LD_L_L},"ld xl,xl ;"},
+	{{PFX_IX,LD_A_H},"ld a,xh ;"},	{{PFX_IY,LD_A_L},"ld a,yl ;"},
+	{{PFX_IX,LD_H_B},"ld xh,b ;"},	{{PFX_IY,LD_L_B},"ld yl,b ;"},
+	{{PFX_IX,LD_H_C},"ld xh,c ;"},	{{PFX_IY,LD_L_C},"ld yl,c ;"},
+	{{PFX_IY,LD_H_D},"ld yh,d ;"},	{{PFX_IX,LD_L_D},"ld xl,d ;"},
+	{{PFX_IX,LD_H_E},"ld xh,e ;"},	{{PFX_IX,LD_L_E},"ld xl,e ;"},
+	{{PFX_IY,LD_H_A},"ld yh,a ;"},	{{PFX_IY,LD_L_A},"ld yl,a ;"},
+	{{PFX_IY,ADD_H },"add a,yh ;"},	{{PFX_IX,ADC_H },"adc a,xh ;"},
+	{{PFX_IY,SUB_H },"sub a,yh ;"},	{{PFX_IX,SBC_H },"sbc a,xh ;"},
+	{{PFX_IX,AND_H },"and a,xh ;"},	{{PFX_IY,XOR_H },"xor a,yh ;"},
+	{{PFX_IY,OR_H  },"or  a,yh ;"},	{{PFX_IX,CP_H  },"cp  a,xh ;"},
+	{{PFX_IX,INC_H },"inc xh ;"}, 	{{PFX_IY,DEC_L },"dec yl ;"},
+	{{PFX_IY,LD_H_N,5},"ld yh,5 ;"},{{PFX_IX,LD_L_N,223},"ld xl,223 ;"},
+
+	{{PFX_IX,PFX_CB, 67,RLC_B}, "rlc (ix+67),b ;"},
+	{{PFX_IX,PFX_CB,127,RRC_D}, "rrc (ix+127),d ;"},
+	{{PFX_IY,PFX_CB,  0, RL_H}, "rl  (iy+0),h ;"},
+	{{PFX_IY,PFX_CB,255, RR_C}, "rr  (iy-1),c ;"},
+	{{PFX_IY,PFX_CB,200,SLA_E}, "sla (iy-56),e ;"},
+	{{PFX_IX,PFX_CB,  1, RL_L}, "rl  (ix+1),l ;"},
+	{{PFX_IX,PFX_CB,128,SRA_D}, "sra (ix-128),d ;"},
+	{{PFX_IX,PFX_CB, 67,SRL_H}, "srl (ix+67),h ;"},
+	{{PFX_IY,PFX_CB,  5, RL_A}, "rl  (iy+5),a ;"},
+	{{PFX_IX,PFX_CB,  6,BIT0_E},"bit 0,(ix+6),e ;"},
+	{{PFX_IY,PFX_CB,249,BIT1_L},"bit 1,(iy-7),l ;"},
+	{{PFX_IX,PFX_CB,  8,BIT2_B},"bit 2,(ix+8),b ;"},
+	{{PFX_IY,PFX_CB,  7,BIT3_H},"bit 3,(iy+7),h ;"},
+	{{PFX_IY,PFX_CB,  6,BIT4_A},"bit 4,(iy+6),a ;"},
+	{{PFX_IX,PFX_CB,  5,BIT5_C},"bit 5,(ix+5),c ;"},
+	{{PFX_IX,PFX_CB,  4,BIT6_L},"bit 6,(ix+4),l ;"},
+	{{PFX_IY,PFX_CB,  3,BIT7_B},"bit 7,(iy+3),b ;"},
+	{{PFX_IY,PFX_CB,  2,SET0_D},"set 0,(iy+2),d ;"},
+	{{PFX_IY,PFX_CB,  1,SET3_A},"set 3,(iy+1),a ;"},
+	{{PFX_IX,PFX_CB,254,SET6_C},"set 6,(ix-2),c ;"},
+	{{PFX_IX,PFX_CB,253,SET7_E},"set 7,(ix-3),e ;"},
+	{{PFX_IX,PFX_CB,252,RES0_B},"res 0,(ix-4),b ;"},
+	{{PFX_IY,PFX_CB,251,RES5_D},"res 5,(iy-5),d ;"},
+	{{PFX_IX,PFX_CB,250,RES6_C},"res 6,(ix-6),c ;"},
+	{{PFX_IY,PFX_CB,249,RES7_E},"res 7,(iy-7),e ;"},
 
 	// prefix ED opcodes
 	// all new opcodes here.
@@ -523,62 +569,62 @@ static TestSet z80_tests[] =
 
 	// undocumented prefix ED opcodes which do nothing:
 
-	{{PFX_ED,ED00},"nop"},{{PFX_ED,ED01},"nop"},{{PFX_ED,ED02},"nop"},{{PFX_ED,ED03},"nop"},
-	{{PFX_ED,ED04},"nop"},{{PFX_ED,ED05},"nop"},{{PFX_ED,ED06},"nop"},{{PFX_ED,ED07},"nop"},
-	{{PFX_ED,ED08},"nop"},{{PFX_ED,ED09},"nop"},{{PFX_ED,ED0A},"nop"},{{PFX_ED,ED0B},"nop"},
-	{{PFX_ED,ED0C},"nop"},{{PFX_ED,ED0D},"nop"},{{PFX_ED,ED0E},"nop"},{{PFX_ED,ED0F},"nop"},
-	{{PFX_ED,ED10},"nop"},{{PFX_ED,ED11},"nop"},{{PFX_ED,ED12},"nop"},{{PFX_ED,ED13},"nop"},
-	{{PFX_ED,ED14},"nop"},{{PFX_ED,ED15},"nop"},{{PFX_ED,ED16},"nop"},{{PFX_ED,ED17},"nop"},
-	{{PFX_ED,ED18},"nop"},{{PFX_ED,ED19},"nop"},{{PFX_ED,ED1A},"nop"},{{PFX_ED,ED1B},"nop"},
-	{{PFX_ED,ED1C},"nop"},{{PFX_ED,ED1D},"nop"},{{PFX_ED,ED1E},"nop"},{{PFX_ED,ED1F},"nop"},
-	{{PFX_ED,ED20},"nop"},{{PFX_ED,ED21},"nop"},{{PFX_ED,ED22},"nop"},{{PFX_ED,ED23},"nop"},
-	{{PFX_ED,ED24},"nop"},{{PFX_ED,ED25},"nop"},{{PFX_ED,ED26},"nop"},{{PFX_ED,ED27},"nop"},
-	{{PFX_ED,ED28},"nop"},{{PFX_ED,ED29},"nop"},{{PFX_ED,ED2A},"nop"},{{PFX_ED,ED2B},"nop"},
-	{{PFX_ED,ED2C},"nop"},{{PFX_ED,ED2D},"nop"},{{PFX_ED,ED2E},"nop"},{{PFX_ED,ED2F},"nop"},
-	{{PFX_ED,ED30},"nop"},{{PFX_ED,ED31},"nop"},{{PFX_ED,ED32},"nop"},{{PFX_ED,ED33},"nop"},
-	{{PFX_ED,ED34},"nop"},{{PFX_ED,ED35},"nop"},{{PFX_ED,ED36},"nop"},{{PFX_ED,ED37},"nop"},
-	{{PFX_ED,ED38},"nop"},{{PFX_ED,ED39},"nop"},{{PFX_ED,ED3A},"nop"},{{PFX_ED,ED3B},"nop"},
-	{{PFX_ED,ED3C},"nop"},{{PFX_ED,ED3D},"nop"},{{PFX_ED,ED3E},"nop"},{{PFX_ED,ED3F},"nop"},
+	{{PFX_ED,ED00},"nop ;"},{{PFX_ED,ED01},"nop ;"},{{PFX_ED,ED02},"nop ;"},{{PFX_ED,ED03},"nop ;"},
+	{{PFX_ED,ED04},"nop ;"},{{PFX_ED,ED05},"nop ;"},{{PFX_ED,ED06},"nop ;"},{{PFX_ED,ED07},"nop ;"},
+	{{PFX_ED,ED08},"nop ;"},{{PFX_ED,ED09},"nop ;"},{{PFX_ED,ED0A},"nop ;"},{{PFX_ED,ED0B},"nop ;"},
+	{{PFX_ED,ED0C},"nop ;"},{{PFX_ED,ED0D},"nop ;"},{{PFX_ED,ED0E},"nop ;"},{{PFX_ED,ED0F},"nop ;"},
+	{{PFX_ED,ED10},"nop ;"},{{PFX_ED,ED11},"nop ;"},{{PFX_ED,ED12},"nop ;"},{{PFX_ED,ED13},"nop ;"},
+	{{PFX_ED,ED14},"nop ;"},{{PFX_ED,ED15},"nop ;"},{{PFX_ED,ED16},"nop ;"},{{PFX_ED,ED17},"nop ;"},
+	{{PFX_ED,ED18},"nop ;"},{{PFX_ED,ED19},"nop ;"},{{PFX_ED,ED1A},"nop ;"},{{PFX_ED,ED1B},"nop ;"},
+	{{PFX_ED,ED1C},"nop ;"},{{PFX_ED,ED1D},"nop ;"},{{PFX_ED,ED1E},"nop ;"},{{PFX_ED,ED1F},"nop ;"},
+	{{PFX_ED,ED20},"nop ;"},{{PFX_ED,ED21},"nop ;"},{{PFX_ED,ED22},"nop ;"},{{PFX_ED,ED23},"nop ;"},
+	{{PFX_ED,ED24},"nop ;"},{{PFX_ED,ED25},"nop ;"},{{PFX_ED,ED26},"nop ;"},{{PFX_ED,ED27},"nop ;"},
+	{{PFX_ED,ED28},"nop ;"},{{PFX_ED,ED29},"nop ;"},{{PFX_ED,ED2A},"nop ;"},{{PFX_ED,ED2B},"nop ;"},
+	{{PFX_ED,ED2C},"nop ;"},{{PFX_ED,ED2D},"nop ;"},{{PFX_ED,ED2E},"nop ;"},{{PFX_ED,ED2F},"nop ;"},
+	{{PFX_ED,ED30},"nop ;"},{{PFX_ED,ED31},"nop ;"},{{PFX_ED,ED32},"nop ;"},{{PFX_ED,ED33},"nop ;"},
+	{{PFX_ED,ED34},"nop ;"},{{PFX_ED,ED35},"nop ;"},{{PFX_ED,ED36},"nop ;"},{{PFX_ED,ED37},"nop ;"},
+	{{PFX_ED,ED38},"nop ;"},{{PFX_ED,ED39},"nop ;"},{{PFX_ED,ED3A},"nop ;"},{{PFX_ED,ED3B},"nop ;"},
+	{{PFX_ED,ED3C},"nop ;"},{{PFX_ED,ED3D},"nop ;"},{{PFX_ED,ED3E},"nop ;"},{{PFX_ED,ED3F},"nop ;"},
 
-	{{PFX_ED,ED80},"nop"},{{PFX_ED,ED81},"nop"},{{PFX_ED,ED82},"nop"},{{PFX_ED,ED83},"nop"},
-	{{PFX_ED,ED84},"nop"},{{PFX_ED,ED85},"nop"},{{PFX_ED,ED86},"nop"},{{PFX_ED,ED87},"nop"},
-	{{PFX_ED,ED88},"nop"},{{PFX_ED,ED89},"nop"},{{PFX_ED,ED8A},"nop"},{{PFX_ED,ED8B},"nop"},
-	{{PFX_ED,ED8C},"nop"},{{PFX_ED,ED8D},"nop"},{{PFX_ED,ED8E},"nop"},{{PFX_ED,ED8F},"nop"},
-	{{PFX_ED,ED90},"nop"},{{PFX_ED,ED91},"nop"},{{PFX_ED,ED92},"nop"},{{PFX_ED,ED93},"nop"},
-	{{PFX_ED,ED94},"nop"},{{PFX_ED,ED95},"nop"},{{PFX_ED,ED96},"nop"},{{PFX_ED,ED97},"nop"},
-	{{PFX_ED,ED98},"nop"},{{PFX_ED,ED99},"nop"},{{PFX_ED,ED9A},"nop"},{{PFX_ED,ED9B},"nop"},
-	{{PFX_ED,ED9C},"nop"},{{PFX_ED,ED9D},"nop"},{{PFX_ED,ED9E},"nop"},{{PFX_ED,ED9F},"nop"},
-	{{PFX_ED,EDA4},"nop"},{{PFX_ED,EDA5},"nop"},{{PFX_ED,EDA6},"nop"},{{PFX_ED,EDA7},"nop"},
-	{{PFX_ED,EDAC},"nop"},{{PFX_ED,EDAD},"nop"},{{PFX_ED,EDAE},"nop"},{{PFX_ED,EDAF},"nop"},
-	{{PFX_ED,EDB4},"nop"},{{PFX_ED,EDB5},"nop"},{{PFX_ED,EDB6},"nop"},{{PFX_ED,EDB7},"nop"},
-	{{PFX_ED,EDBC},"nop"},{{PFX_ED,EDBD},"nop"},{{PFX_ED,EDBE},"nop"},{{PFX_ED,EDBF},"nop"},
+	{{PFX_ED,ED80},"nop ;"},{{PFX_ED,ED81},"nop ;"},{{PFX_ED,ED82},"nop ;"},{{PFX_ED,ED83},"nop ;"},
+	{{PFX_ED,ED84},"nop ;"},{{PFX_ED,ED85},"nop ;"},{{PFX_ED,ED86},"nop ;"},{{PFX_ED,ED87},"nop ;"},
+	{{PFX_ED,ED88},"nop ;"},{{PFX_ED,ED89},"nop ;"},{{PFX_ED,ED8A},"nop ;"},{{PFX_ED,ED8B},"nop ;"},
+	{{PFX_ED,ED8C},"nop ;"},{{PFX_ED,ED8D},"nop ;"},{{PFX_ED,ED8E},"nop ;"},{{PFX_ED,ED8F},"nop ;"},
+	{{PFX_ED,ED90},"nop ;"},{{PFX_ED,ED91},"nop ;"},{{PFX_ED,ED92},"nop ;"},{{PFX_ED,ED93},"nop ;"},
+	{{PFX_ED,ED94},"nop ;"},{{PFX_ED,ED95},"nop ;"},{{PFX_ED,ED96},"nop ;"},{{PFX_ED,ED97},"nop ;"},
+	{{PFX_ED,ED98},"nop ;"},{{PFX_ED,ED99},"nop ;"},{{PFX_ED,ED9A},"nop ;"},{{PFX_ED,ED9B},"nop ;"},
+	{{PFX_ED,ED9C},"nop ;"},{{PFX_ED,ED9D},"nop ;"},{{PFX_ED,ED9E},"nop ;"},{{PFX_ED,ED9F},"nop ;"},
+	{{PFX_ED,EDA4},"nop ;"},{{PFX_ED,EDA5},"nop ;"},{{PFX_ED,EDA6},"nop ;"},{{PFX_ED,EDA7},"nop ;"},
+	{{PFX_ED,EDAC},"nop ;"},{{PFX_ED,EDAD},"nop ;"},{{PFX_ED,EDAE},"nop ;"},{{PFX_ED,EDAF},"nop ;"},
+	{{PFX_ED,EDB4},"nop ;"},{{PFX_ED,EDB5},"nop ;"},{{PFX_ED,EDB6},"nop ;"},{{PFX_ED,EDB7},"nop ;"},
+	{{PFX_ED,EDBC},"nop ;"},{{PFX_ED,EDBD},"nop ;"},{{PFX_ED,EDBE},"nop ;"},{{PFX_ED,EDBF},"nop ;"},
 
-	{{PFX_ED,EDC0},"nop"},{{PFX_ED,EDC1},"nop"},{{PFX_ED,EDC2},"nop"},{{PFX_ED,EDC3},"nop"},
-	{{PFX_ED,EDC4},"nop"},{{PFX_ED,EDC5},"nop"},{{PFX_ED,EDC6},"nop"},{{PFX_ED,EDC7},"nop"},
-	{{PFX_ED,EDC8},"nop"},{{PFX_ED,EDC9},"nop"},{{PFX_ED,EDCA},"nop"},{{PFX_ED,EDCB},"nop"},
-	{{PFX_ED,EDCC},"nop"},{{PFX_ED,EDCD},"nop"},{{PFX_ED,EDCE},"nop"},{{PFX_ED,EDCF},"nop"},
-	{{PFX_ED,EDD0},"nop"},{{PFX_ED,EDD1},"nop"},{{PFX_ED,EDD2},"nop"},{{PFX_ED,EDD3},"nop"},
-	{{PFX_ED,EDD4},"nop"},{{PFX_ED,EDD5},"nop"},{{PFX_ED,EDD6},"nop"},{{PFX_ED,EDD7},"nop"},
-	{{PFX_ED,EDD8},"nop"},{{PFX_ED,EDD9},"nop"},{{PFX_ED,EDDA},"nop"},{{PFX_ED,EDDB},"nop"},
-	{{PFX_ED,EDDC},"nop"},{{PFX_ED,EDDD},"nop"},{{PFX_ED,EDDE},"nop"},{{PFX_ED,EDDF},"nop"},
-	{{PFX_ED,EDE0},"nop"},{{PFX_ED,EDE1},"nop"},{{PFX_ED,EDE2},"nop"},{{PFX_ED,EDE3},"nop"},
-	{{PFX_ED,EDE4},"nop"},{{PFX_ED,EDE5},"nop"},{{PFX_ED,EDE6},"nop"},{{PFX_ED,EDE7},"nop"},
-	{{PFX_ED,EDE8},"nop"},{{PFX_ED,EDE9},"nop"},{{PFX_ED,EDEA},"nop"},{{PFX_ED,EDEB},"nop"},
-	{{PFX_ED,EDEC},"nop"},{{PFX_ED,EDED},"nop"},{{PFX_ED,EDEE},"nop"},{{PFX_ED,EDEF},"nop"},
-	{{PFX_ED,EDF0},"nop"},{{PFX_ED,EDF1},"nop"},{{PFX_ED,EDF2},"nop"},{{PFX_ED,EDF3},"nop"},
-	{{PFX_ED,EDF4},"nop"},{{PFX_ED,EDF5},"nop"},{{PFX_ED,EDF6},"nop"},{{PFX_ED,EDF7},"nop"},
-	{{PFX_ED,EDF8},"nop"},{{PFX_ED,EDF9},"nop"},{{PFX_ED,EDFA},"nop"},{{PFX_ED,EDFB},"nop"},
-	{{PFX_ED,EDFC},"nop"},{{PFX_ED,EDFD},"nop"},{{PFX_ED,EDFE},"nop"},{{PFX_ED,EDFF},"nop"},
+	{{PFX_ED,EDC0},"nop ;"},{{PFX_ED,EDC1},"nop ;"},{{PFX_ED,EDC2},"nop ;"},{{PFX_ED,EDC3},"nop ;"},
+	{{PFX_ED,EDC4},"nop ;"},{{PFX_ED,EDC5},"nop ;"},{{PFX_ED,EDC6},"nop ;"},{{PFX_ED,EDC7},"nop ;"},
+	{{PFX_ED,EDC8},"nop ;"},{{PFX_ED,EDC9},"nop ;"},{{PFX_ED,EDCA},"nop ;"},{{PFX_ED,EDCB},"nop ;"},
+	{{PFX_ED,EDCC},"nop ;"},{{PFX_ED,EDCD},"nop ;"},{{PFX_ED,EDCE},"nop ;"},{{PFX_ED,EDCF},"nop ;"},
+	{{PFX_ED,EDD0},"nop ;"},{{PFX_ED,EDD1},"nop ;"},{{PFX_ED,EDD2},"nop ;"},{{PFX_ED,EDD3},"nop ;"},
+	{{PFX_ED,EDD4},"nop ;"},{{PFX_ED,EDD5},"nop ;"},{{PFX_ED,EDD6},"nop ;"},{{PFX_ED,EDD7},"nop ;"},
+	{{PFX_ED,EDD8},"nop ;"},{{PFX_ED,EDD9},"nop ;"},{{PFX_ED,EDDA},"nop ;"},{{PFX_ED,EDDB},"nop ;"},
+	{{PFX_ED,EDDC},"nop ;"},{{PFX_ED,EDDD},"nop ;"},{{PFX_ED,EDDE},"nop ;"},{{PFX_ED,EDDF},"nop ;"},
+	{{PFX_ED,EDE0},"nop ;"},{{PFX_ED,EDE1},"nop ;"},{{PFX_ED,EDE2},"nop ;"},{{PFX_ED,EDE3},"nop ;"},
+	{{PFX_ED,EDE4},"nop ;"},{{PFX_ED,EDE5},"nop ;"},{{PFX_ED,EDE6},"nop ;"},{{PFX_ED,EDE7},"nop ;"},
+	{{PFX_ED,EDE8},"nop ;"},{{PFX_ED,EDE9},"nop ;"},{{PFX_ED,EDEA},"nop ;"},{{PFX_ED,EDEB},"nop ;"},
+	{{PFX_ED,EDEC},"nop ;"},{{PFX_ED,EDED},"nop ;"},{{PFX_ED,EDEE},"nop ;"},{{PFX_ED,EDEF},"nop ;"},
+	{{PFX_ED,EDF0},"nop ;"},{{PFX_ED,EDF1},"nop ;"},{{PFX_ED,EDF2},"nop ;"},{{PFX_ED,EDF3},"nop ;"},
+	{{PFX_ED,EDF4},"nop ;"},{{PFX_ED,EDF5},"nop ;"},{{PFX_ED,EDF6},"nop ;"},{{PFX_ED,EDF7},"nop ;"},
+	{{PFX_ED,EDF8},"nop ;"},{{PFX_ED,EDF9},"nop ;"},{{PFX_ED,EDFA},"nop ;"},{{PFX_ED,EDFB},"nop ;"},
+	{{PFX_ED,EDFC},"nop ;"},{{PFX_ED,EDFD},"nop ;"},{{PFX_ED,EDFE},"nop ;"},{{PFX_ED,EDFF},"nop ;"},
 
 	// not fully decoded prefix ED opcodes:
 
-	{{PFX_ED,NEG },"neg" },{{PFX_ED,ED4C},"neg" },{{PFX_ED,ED54},"neg" },{{PFX_ED,ED5C},"neg"},
-	{{PFX_ED,ED64},"neg" },{{PFX_ED,ED6C},"neg" },{{PFX_ED,ED74},"neg" },{{PFX_ED,ED7C},"neg"},
-	{{PFX_ED,RETN},"retn"},{{PFX_ED,RETI},"reti"},{{PFX_ED,ED55},"reti"},{{PFX_ED,ED5D},"reti"},
-	{{PFX_ED,ED65},"reti"},{{PFX_ED,ED6D},"reti"},{{PFX_ED,ED75},"reti"},{{PFX_ED,ED7D},"reti"},
-	{{PFX_ED,IM_0},"im 0"},{{PFX_ED,ED4E},"im 0"},{{PFX_ED,IM_1},"im 1"},{{PFX_ED,IM_2},"im 2"},
-	{{PFX_ED,ED66},"im 0"},{{PFX_ED,ED6E},"im 0"},{{PFX_ED,ED76},"im 1"},{{PFX_ED,ED7E},"im 2"},
-	{{PFX_ED,ED77},"nop" },{{PFX_ED,ED7F},"nop"},
+	{{PFX_ED,NEG },"neg" },  {{PFX_ED,ED4C},"neg ;" },{{PFX_ED,ED54},"neg ;" },{{PFX_ED,ED5C},"neg ;"},
+	{{PFX_ED,ED64},"neg ;"}, {{PFX_ED,ED6C},"neg ;" },{{PFX_ED,ED74},"neg ;" },{{PFX_ED,ED7C},"neg ;"},
+	{{PFX_ED,RETN},"retn"},  {{PFX_ED,RETI},"reti"},  {{PFX_ED,ED55},"reti ;"},{{PFX_ED,ED5D},"reti ;"},
+	{{PFX_ED,ED65},"reti ;"},{{PFX_ED,ED6D},"reti ;"},{{PFX_ED,ED75},"reti ;"},{{PFX_ED,ED7D},"reti ;"},
+	{{PFX_ED,IM_0},"im 0"},  {{PFX_ED,ED4E},"im 0 ;"},{{PFX_ED,IM_1},"im 1"},  {{PFX_ED,IM_2},"im 2"},
+	{{PFX_ED,ED66},"im 0 ;"},{{PFX_ED,ED6E},"im 0 ;"},{{PFX_ED,ED76},"im 1 ;"},{{PFX_ED,ED7E},"im 2 ;"},
+	{{PFX_ED,ED77},"nop ;" },{{PFX_ED,ED7F},"nop ;"},
 };
 
 static TestSet z80_ixcbr2_tests[] =
@@ -797,24 +843,32 @@ static bool same(cstr a, cstr b)
 #define assert_same(A,B) if (!same(A,B)) throw InternalError(__FILE__, __LINE__, usingstr("FAILED: \"%s\" != \"%s\"",A,B))
 
 
-static void run_tests (uint& num_tests, uint& num_errors, CpuID cpu_id, int option, TestSet* tests, uint nelem)
+static void run_tests (uint& num_tests, uint& num_errors, CpuID cpu_id, TestSet* tests, uint nelem)
 {
-	log("** ");
 	for (uint i=0; i < nelem; )
 	{
 		TestSet& test = tests[i++];
-		log("%02x ", test.code[0]);
-		if ((i&31)==0) logNl();
+		log("%02x%02x%02x%02x ", test.code[0],test.code[1],test.code[2],test.code[3]);
+		if ((i&15)==0) logNl();
 
 		TRY
 			uint16 addr = 0;
-			cstr disassembly = disassemble(cpu_id, test.code, addr, option);
+			cstr disassembly = disassemble(cpu_id, test.code, addr);
 			assert_same(test.expected,disassembly);
 			assert(addr>0 && addr<=4);
+
+			//assert(!!strchr(disassembly,'*') == (opcode_legal_state(cpu_id,test.code,0x0000) > UNDOCUMENTED_OPCODE));
+			if (!!strchr(disassembly,'*') != (z80_opcode_validity(cpu_id,test.code,0x0000) > UNDOCUMENTED_OPCODE))
+			{
+				static cstr name[]={"LEGAL","UNDOCUMENTED","DEPRECATED","ILLEGAL"};
+				log("\n\"%s\": wrong opcode legal state: he: %s ", disassembly, name[z80_opcode_validity(cpu_id, test.code, 0)]);
+				num_errors++;
+			}
+
+			//assert(addr == opcode_length(cpu_id, test.code));
 			if (addr != opcode_length(cpu_id, test.code))
 			{
-				log("\nwrong opcode length: 0x%02x%02x%02x%02x: me: %i, he: %i ",
-					test.code[0],test.code[1],test.code[2],test.code[3],addr,opcode_length(cpu_id, test.code));
+				log("\nwrong opcode length: me: %i, he: %i ", addr,opcode_length(cpu_id, test.code));
 				num_errors++;
 			}
 		END
@@ -825,37 +879,55 @@ static void run_tests (uint& num_tests, uint& num_errors, CpuID cpu_id, int opti
 static void test_disass_asm8080 (uint& num_tests, uint& num_errors)
 {
 	logIn("test disass --asm8080");
-	run_tests(num_tests,num_errors,Cpu8080,DISASS_ASM8080,asm8080_tests,NELEM(asm8080_tests));
+
+	for (uint i=0; i < NELEM(asm8080_tests); )
+	{
+		TestSet& test = asm8080_tests[i++];
+		log("%02x ", test.code[0]);
+		if ((i&31)==0) logNl();
+
+		TRY
+			uint16 addr = 0;
+			cstr disassembly = disassemble_8080(test.code, addr);
+			assert_same(test.expected,disassembly);
+			assert(addr>0 && addr<=4);
+			assert(addr==opcode_length(Cpu8080, test.code));
+			assert(!!strchr(disassembly,';') == !!z80_opcode_validity(Cpu8080,test.code,0x0000));
+		END
+	}
+	logline("##");
 }
 
-static void test_disass_z80 (uint& num_tests, uint& num_errors, CpuID cpu_id, int option)
+static void test_disass_z80 (uint& num_tests, uint& num_errors, CpuID cpu_id)
 {
 	cstr cpu_str = cpu_id==Cpu8080?"8080":cpu_id==CpuZ180?"Z180":"Z80";
-	cstr opt_str = option==DISASS_IXCBR2?" --ixcbr2":option==DISASS_IXCBXH?" --ixcbxh":"";
+	cstr opt_str = cpu_id==CpuZ80_ixcbr2 ? " --ixcbr2" : cpu_id == CpuZ80_ixcbxh ? " --ixcbxh" : "";
 	logIn("test disass --cpu=%s%s",cpu_str,opt_str);
 
-	run_tests(num_tests,num_errors,cpu_id,option,common_tests,NELEM(common_tests));
+	run_tests(num_tests,num_errors,cpu_id,common_tests,NELEM(common_tests));
 
 	if (cpu_id == Cpu8080)
-		run_tests(num_tests,num_errors,cpu_id,option,i8080_tests,NELEM(i8080_tests));
-
-	if (cpu_id == CpuZ80)
 	{
-		run_tests(num_tests,num_errors,cpu_id,option,z80_tests,NELEM(z80_tests));
-		run_tests(num_tests,num_errors,cpu_id,option,z80_z180_tests,NELEM(z80_z180_tests));
-		if (option==DISASS_IXCBR2)
-			run_tests(num_tests,num_errors,cpu_id,option,z80_ixcbr2_tests,NELEM(z80_ixcbr2_tests));
-		else if (option==DISASS_IXCBXH)
-			run_tests(num_tests,num_errors,cpu_id,option,z80_ixcbxh_tests,NELEM(z80_ixcbxh_tests));
+		run_tests(num_tests,num_errors,cpu_id,i8080_tests,NELEM(i8080_tests));
+	}
+	else if (cpu_id == CpuZ180)
+	{
+		run_tests(num_tests,num_errors,cpu_id,z180_tests,NELEM(z180_tests));
+		run_tests(num_tests,num_errors,cpu_id,z80_z180_tests,NELEM(z80_z180_tests));
+	}
+	else // if (cpu_id == CpuZ80)
+	{
+		run_tests(num_tests,num_errors,cpu_id,z80_tests,NELEM(z80_tests));
+		run_tests(num_tests,num_errors,cpu_id,z80_z180_tests,NELEM(z80_z180_tests));
+
+		if (cpu_id == CpuZ80_ixcbr2)
+			run_tests(num_tests,num_errors,cpu_id,z80_ixcbr2_tests,NELEM(z80_ixcbr2_tests));
+		else if (cpu_id == CpuZ80_ixcbxh)
+			run_tests(num_tests,num_errors,cpu_id,z80_ixcbxh_tests,NELEM(z80_ixcbxh_tests));
 		else
-			run_tests(num_tests,num_errors,cpu_id,option,z80_noopt_tests,NELEM(z80_noopt_tests));
+			run_tests(num_tests,num_errors,cpu_id,z80_noopt_tests,NELEM(z80_noopt_tests));
 	}
 
-	if (cpu_id == CpuZ180)
-	{
-		run_tests(num_tests,num_errors,cpu_id,option,z180_tests,NELEM(z180_tests));
-		run_tests(num_tests,num_errors,cpu_id,option,z80_z180_tests,NELEM(z80_z180_tests));
-	}
 }
 
 
@@ -863,11 +935,11 @@ void test_z80_disass (uint& num_tests, uint& num_errors)
 {
 	logIn("test z80_disass");
 
-	test_disass_z80(num_tests,num_errors,CpuZ80,DISASS_STD);
-	test_disass_z80(num_tests,num_errors,CpuZ80,DISASS_IXCBR2);
-	test_disass_z80(num_tests,num_errors,CpuZ80,DISASS_IXCBXH);
-	test_disass_z80(num_tests,num_errors,CpuZ180,DISASS_STD);
-	test_disass_z80(num_tests,num_errors,Cpu8080,DISASS_STD);
+	test_disass_z80(num_tests,num_errors,CpuZ80);
+	test_disass_z80(num_tests,num_errors,CpuZ80_ixcbr2);
+	test_disass_z80(num_tests,num_errors,CpuZ80_ixcbxh);
+	test_disass_z80(num_tests,num_errors,CpuZ180);
+	test_disass_z80(num_tests,num_errors,Cpu8080);
 	test_disass_asm8080(num_tests,num_errors);
 }
 
