@@ -29,60 +29,72 @@ typedef uchar IXCBMnemo[4];
 // ----	Z80 opcode definitions ------------------------------------------------------
 
 enum
-{
-	NIX,	NOP,	LD,		INC,	DEC,	RLCA,	EX,		ADD,
+{	// Instruction:
+
+	// Z80:
+	NIX,	NOP,	LD,		INC,	DEC,	RLCA,	EX,
+	ADD,	ADC,	SUB,	SBC,	AND,	XOR,	OR,		CP,		// <-- DO NOT REORDER!
+	RLC,	RRC,	RL,		RR,		SLA,	SRA,	SLL,	SRL,	// <-- DO NOT REORDER!
 	RRCA,	DJNZ,	RLA,	JR,		RRA,	DAA,	CPL,	HALT,
-	SCF,	CCF,	RLC,	RRC,	RL,		RR,		SLA,	SRA,
-	SLL,	SRL,	IN,		OUT,	SBC,	NEG,	RETN,	IM,
-	ADC,	RETI,	RRD,	RLD,	SUB,	AND,	XOR,
-	OR,		CP,		BIT,	RES,	SET,	LDI,	CPI,	INI,
+	SCF,	CCF,	IN,		OUT,	NEG,	RETN,	IM,		RETI,
+	RRD,	RLD,	LDI,	CPI,	INI,	BIT,	RES,	SET,
 	OUTI,	LDD,	CPD,	IND,	OUTD,	LDIR,	CPIR,	INIR,
 	OTIR,	LDDR,	CPDR,	INDR,	OTDR,	RET,	POP,	JP,
 	CALL,	PUSH,	RST,	PFX,	EXX,	DI,		EI,
-	BC,		DE,		HL,		IX,		IY,		SP,		AF,		AF2,
-	B,		C,		D,		E,		H,		L,		XHL,	A,		// <- KEEP THIS ORDER!
-	XBC,	XDE,	R,		I,		XC,		XSP,	PC,		F,
-	N0,		N1,		N2,		N3,		N4,		N5,		N6,		N7,
-	N00,	N08,	N10,	N18,	N20,	N28,	N30,	N38,
-	Z,		NZ,		NC,		PO,		PE,		M,		P,
-	N,		NN,		XNN,	XN,		DIS,	CB,		ED,
-	XH,		XL,		YH,		YL,		XIX,	XIY,
+
+	// Z180 new opcodes:
 	IN0,	OUT0,	TST,	TSTIO,	MLT,	OTIM,	OTDM,	OTIMR,	OTDMR, SLP,
+
+	// asm8080 names: (new names, some names are already enumerated in Z80 section)
 	LXI,STAX,INX,INR,DCR,MVI,DAD,LDAX,DCX,
 	RAL,RAR,SHLD,LHLD,CMA,STA,STC,LDA,CMC,
 	RNZ,JNZ,JMP,CNZ,ADI,RZ,JZ,CZ,ACI,RNC,JNC,CNC,
 	SUI,RC,JC,CC,SBI,RPO,JPO,XTHL,CPO,ANI,RPE,PCHL,
-	JPE,XCHG,CPE,XRI,RP,PSW,ORI,RM,SPHL,JM,CM,HLT,
+	JPE,XCHG,CPE,XRI,RP,ORI,RM,SPHL,JM,CM,HLT,
 	SBB,ANA,XRA,ORA,CMP,
+
+	// Register / Argument:
+	BC,		DE,		HL,		SP,		AF,		AF2,
+	B,		C,		D,		E,		H,		L,		XHL,	A,		// <-- DO NOT REORDER!
+	XBC,	XDE,	R,		I,		XC,		XSP,	PC,		F,
+	N0,		N1,		N2,		N3,		N4,		N5,		N6,		N7,		// <-- DO NOT REORDER!
+	N00,	N08,	N10,	N18,	N20,	N28,	N30,	N38,	// <-- DO NOT REORDER!
+	Z,		NZ,		NC,		PO,		PE,		M,		P,		PSW,
+	N,		NN,		XNN,	XN,		DIS,	CB,		ED,
+	IX,		IY,		XH,		XL,		YH,		YL,		XIX,	XIY,	// <-- keep at end
+
 	NUM_WORD_DEFS
 };
 
 static const char word[][9] =
 {
-	"",		"nop",	"ld",	"inc",	"dec",	"rlca",	"ex",	"add",
+	"",		"nop",	"ld",	"inc",	"dec",	"rlca",	"ex",
+	"add",	"adc",	"sub",	"sbc",	"and",	"xor",	"or",	"cp",
+	"rlc",	"rrc",	"rl",	"rr",	"sla",	"sra",	"sll",	"srl",
 	"rrca",	"djnz",	"rla",	"jr",	"rra",	"daa",	"cpl",	"halt",
-	"scf",	"ccf",	"rlc",	"rrc",	"rl",	"rr",	"sla",	"sra",
-	"sll",	"srl",	"in",	"out",	"sbc",	"neg",	"retn",	"im",
-	"adc",	"reti",	"rrd",	"rld",	"sub",	"and",	"xor",
-	"or",	"cp",	"bit",	"res",	"set",	"ldi",	"cpi",	"ini",
+	"scf",	"ccf",	"in",	"out",	"neg",	"retn",	"im",	"reti",
+	"rrd",	"rld",	"ldi",	"cpi",	"ini",	"bit",	"res",	"set",
 	"outi",	"ldd",	"cpd",	"ind",	"outd",	"ldir",	"cpir",	"inir",
 	"otir",	"lddr",	"cpdr",	"indr",	"otdr",	"ret",	"pop",	"jp",
 	"call",	"push",	"rst",	"prefix","exx",	"di",	"ei",
-	"bc",	"de",	"hl",	"ix",	"iy",	"sp",	"af",	"af'",
-	"b",	"c",	"d",	"e",	"h",	"l",	"(hl)",	"a",
-	"(bc)",	"(de)",	"r",	"i",	"(c)",	"(sp)",	"pc",	"f",
-	"0",	"1",	"2",	"3",	"4",	"5",	"6",	"7",
-	"0",	"8",	"16",	"24",	"32",	"40",	"48",	"56",
-	"z",	"nz",	"nc",	"po",	"pe",	"m",	"p",
-	"N",	"NN",	"(NN)",	"(N)",	"dis",	"cb",	"ed",
-	"xh",	"xl",	"yh",	"yl",	"(ix+dis)","(iy+dis)",
+
 	"in0",	"out0",	"tst",	"tstio","mlt",	"otim",	"otdm",	"otimr","otdmr","slp",
+
 	"lxi",	"stax",	"inx",	"inr",	"dcr",	"mvi",	"dad",	"ldax",	"dcx",
 	"ral",	"rar",	"shld",	"lhld",	"cma",	"sta",	"stc",	"lda",	"cmc",
 	"rnz",	"jnz",	"jmp",	"cnz",	"adi",	"rz",	"jz",	"cz",	"aci",	"rnc",	"jnc",	"cnc",
 	"sui",	"rc",	"jc",	"cc",	"sbi",	"rpo",	"jpo",	"xthl",	"cpo",	"ani",	"rpe",	"pchl",
-	"jpe",	"xchg",	"cpe",	"xri",	"rp",	"psw",	"ori",	"rm",	"sphl",	"jm",	"cm",	"hlt",
+	"jpe",	"xchg",	"cpe",	"xri",	"rp",	"ori",	"rm",	"sphl",	"jm",	"cm",	"hlt",
 	"sbb",	"ana",	"xra",	"ora",	"cmp",
+
+	"bc",	"de",	"hl",	"sp",	"af",	"af'",
+	"b",	"c",	"d",	"e",	"h",	"l",	"(hl)",	"a",
+	"(bc)",	"(de)",	"r",	"i",	"(c)",	"(sp)",	"pc",	"f",
+	"0",	"1",	"2",	"3",	"4",	"5",	"6",	"7",
+	"0",	"8",	"16",	"24",	"32",	"40",	"48",	"56",
+	"z",	"nz",	"nc",	"po",	"pe",	"m",	"p",	"psw",
+	"N",	"NN",	"(NN)",	"(N)",	"dis",	"cb",	"ed",
+	"ix",	"iy",	"xh",	"xl",	"yh",	"yl",	"(ix+dis)","(iy+dis)",
 };
 
 static_assert(NELEM(word) == NUM_WORD_DEFS, "");
@@ -534,7 +546,7 @@ static inline int z80_illegalXYCB (CpuID cpuid, Byte op)
 	return ILLEGAL_OPCODE;												 // no effect or unknown effect
 }
 
-int z80_opcode_validity (CpuID cpuid, const Byte* core, Address addr)
+int opcode_validity (CpuID cpuid, const Byte* core, Address addr)
 {
 	// get legal state of instruction
 	// op2 and op4 are only used if required (( op2: op1=XY/CB/ED; op4: op1,2=XY,CB ))
@@ -725,7 +737,284 @@ cstr disassemble (CpuID cpuid, const Byte* core, Address& addr)
 }
 
 
+// ===================================================================================
+// Major Opcode:
 
+static inline void skip_space (cptr& q)
+{
+	while (is_space(*q)) { q++; }
+}
+static inline void skip_word (cptr& q)
+{
+	while (*q>' ' && *q<0x7F && *q!=',') { q++; }
+}
+
+static uint8 i8080_find_cmd (cstr cmd)
+{
+	uint8 a=NIX, e=BC;
+	while (a<e) { if (eq(cmd, word[--e])) return e; }
+	return NIX; // not found
+}
+
+static uint8 i8080_find_arg (cstr arg)
+{
+	uint8 a=BC, e=NUM_WORD_DEFS;
+	while (a<e) { if (eq(arg, word[a++])) return a-1; }
+
+	// N and NN can't be found because they are uppercase in words[]:
+	if (eq(arg,"n")) return N;
+	if (eq(arg,"nn")) return NN;
+
+	return NIX; // not found
+}
+
+static uint8 z80_find_cmd (cstr cmd)
+{
+	uint8 a=NIX, e=LXI;
+	while (a<e) { if (eq(cmd, word[a++])) return a-1; }
+	return NIX; // not found
+}
+
+static uint8 z80_find_arg (cstr arg)
+{
+	uint8 a=BC, e=IX;
+	while (a<e) { if (eq(arg, word[a++])) return a-1; }
+
+	static struct { uint8 arg; char idf[10]; } alias[] =
+	{
+		{N,"n"}, {NN,"nn"}, {XN,"(n)"}, {XNN,"(nn)"},
+		{DIS, "offs"}, // in JR
+		{XHL,"(ix+dis)"}, {HL,"ix"}, {XHL,"(iy+dis)"}, {HL,"iy"},
+
+		{N00, "0x00"}, {N00, "$00"}, {N00, "&00"}, {N00, "00h"}, {N00, "0h"},
+		{N08, "0x08"}, {N08, "$08"}, {N08, "&08"}, {N08, "08h"}, {N08, "8h"},
+		{N10, "0x10"}, {N10, "$10"}, {N10, "&10"}, {N10, "10h"},
+		{N18, "0x18"}, {N18, "$18"}, {N18, "&18"}, {N18, "18h"},
+		{N20, "0x20"}, {N20, "$20"}, {N20, "&20"}, {N20, "20h"},
+		{N28, "0x28"}, {N28, "$28"}, {N28, "&28"}, {N28, "28h"},
+		{N30, "0x30"}, {N30, "$30"}, {N30, "&30"}, {N30, "30h"},
+		{N38, "0x38"}, {N38, "$38"}, {N38, "&38"}, {N38, "38h"},
+
+		// these may lead to wrong detections, e.g. impossible "ld xh,(iy+dis)" == "ld h,(hl)":
+		// {H,"xh"}, {L,"xl"},
+		// {H,"yh"}, {L,"yl"},
+	};
+
+	a=0; e=NELEM(alias);
+	while (a<e) { if (eq(arg, alias[a++].idf)) return alias[a-1].arg; }
+
+	return NIX; // not found
+}
+
+static inline uint8 find (uint8 c, const uint8 list[8])
+{
+	for (uint8 i=0; i<8; i++) { if (list[i]==c) return i; } return 8;
+}
+
+uint8 major_opcode (cstr q) throws
+{
+	// calculate major opcode of instruction
+	// this is the opcode byte for opcodes without prefix
+	// the 2nd byte after CB, ED, IX and IY instructions
+	// or the 4th byte after IXCB or IYCB instructions.
+
+	// input: "ld a,N", "jr dis", "bit 0,(hl)", "ld (N),hl", etc.
+
+	// illegals and index registers:
+	// "ld a,(ix+dis)" etc. is recognized but deprecated: better use "ld a,(hl)" etc. instead.
+	// "ld a,xh" etc. is not recognized: use "ld a,h" etc. instead.
+	// "bit 0,(ix+dis),r" etc. is not recognized: use "bit 0,r" etc. instead.
+
+	q = lowerstr(q);
+
+	uint8 cmd  = NIX;
+	uint8 arg1 = NIX;
+	uint8 arg2 = NIX;
+
+	skip_space(q);
+	cptr q0 = q;
+	skip_word(q);
+	cmd = z80_find_cmd(*q?substr(q0,q):q0);
+	if (cmd == NIX) throw DataError("unknown opcode");
+	skip_space(q);
+
+	if (*q) // arg1
+	{
+		q0 = q;
+		skip_word(q);
+		arg1 = z80_find_arg(*q?substr(q0,q):q0);
+		if (arg1==NIX) throw DataError("unknown argument #1");
+		skip_space(q);
+
+		if (*q==',') // arg2
+		{
+			q++;
+			skip_space(q);
+			q0 = q;
+			skip_word(q);
+			arg2 = z80_find_arg(*q?substr(q0,q):q0);
+			if (arg2==NIX) throw DataError("unknown argument #2");
+			skip_space(q);
+		}
+
+		if (*q) throw DataError("end of opcode expected");
+	}
+
+	// Search for Instruction:
+
+	// 0x40++
+	if (cmd==LD && arg1>=B && arg1<=A && arg2>=B && arg2<=A)
+	{
+		if (arg1!=XHL || arg2!=XHL) return Z80::LD_B_B + (arg1-B)*8 + (arg2-B);
+	}
+	// 0x80++
+	if (cmd>=ADD && cmd<=CP && arg1==A && arg2>=B && arg2<=A)
+	{
+		return Z80::ADD_B + (cmd-ADD)*8 + (arg2-B);
+	}
+	if (cmd>=ADD && cmd<=CP && arg1>=B && arg1<=A && arg2==NIX) // alternate syntax
+	{
+		return Z80::ADD_B + (cmd-ADD)*8 + (arg1-B);
+	}
+
+	// 0x00++
+	for (uint i=0;i<0x40;i++)
+	{
+		const uchar* spec = z80_cmd_00[i];
+		if(cmd !=spec[0]) continue;
+		if(arg1!=spec[1]) continue;
+		if(arg2!=spec[2]) continue;
+		return uint8(i);
+	}
+
+	// 0xC0++
+	for (uint8 i=0;i<0x40;i++)
+	{
+		const uchar* spec = z80_cmd_C0[i];
+		if(cmd !=spec[0]) continue;
+		if(arg1!=spec[1]) continue;
+		if(arg2!=spec[2]) continue;
+		return 0xc0 + i;
+	}
+
+	if (cmd==RST && arg1>=N0 && arg1<=N7 && arg2==NIX) return Z80::RST00 + (arg1-N0)*8;
+	if (cmd==HALT && arg1==NIX) return Z80::HALT;
+	if (cmd==JP && arg1==XHL && arg2==NIX) return Z80::JP_HL;
+
+	// 0xCB00++
+	if (cmd>=RLC && cmd<=SRL && arg1>=B && arg1<=A && arg2==NIX)
+	{
+		return Z80::RLC_B + (cmd-RLC)*8 + (arg1-B);
+	}
+
+	// 0xCB40++
+	if (arg1>=N0 && arg1<=N7 && arg2>=B && arg2<=A)
+	{
+		if (cmd==BIT) return Z80::BIT0_B + (arg1-N0)*8 + (arg2-B);
+		if (cmd==SET) return Z80::SET0_B + (arg1-N0)*8 + (arg2-B);
+		if (cmd==RES) return Z80::RES0_B + (arg1-N0)*8 + (arg2-B);
+	}
+
+	// 0xED:
+	for (uint8 i=0;i<0xC0;i++)
+	{
+		const uchar* spec = z180_cmd_ED[i];	// <-- include the new Z180 opcodes!
+		if(cmd !=spec[0]) continue;
+		if(arg1!=spec[1]) continue;
+		if(arg2!=spec[2]) continue;
+		return i;
+	}
+
+	// error:
+	throw DataError("unsuitable argument for opcode");
+}
+
+uint8 major_opcode_8080 (cstr q) throws
+{
+	// calculate major opcode of instruction.
+	// this is the first byte of the instruction.
+
+	q = lowerstr(q);
+
+	uint8 cmd  = NIX;
+	uint8 arg1 = NIX;
+	uint8 arg2 = NIX;
+
+	skip_space(q);
+	cptr q0 = q;
+	skip_word(q);
+	cmd = i8080_find_cmd(*q?substr(q0,q):q0);
+	if (cmd == NIX) throw DataError("unknown opcode");
+	skip_space(q);
+
+	if (*q) // arg1:
+	{
+		q0 = q;
+		skip_word(q);
+		arg1 = i8080_find_arg(q?substr(q0,q):q0);
+		if (arg1==NIX) throw DataError("unknown argument #1");
+		skip_space(q);
+
+		if (*q==',') // arg2:
+		{
+			q++;
+			skip_space(q);
+			q0 = q;
+			skip_word(q);
+			arg2 = i8080_find_arg(q?substr(q0,q):q0);
+			if (arg2==NIX) throw DataError("unknown argument #2");
+			skip_space(q);
+		}
+
+		if (*q) throw DataError("end of opcode expected");
+	}
+
+	// Search for Instruction:
+
+	static const uint8 regs[8]={B,C,D,E,H,L,M,A};
+	static const uint8 cmds[8]={ADD,ADC,SUB,SBB,ANA,XRA,ORA,CMP};
+
+	// 0x40++
+	if (cmd==LD)
+	{
+		uint8 z = find(arg1,regs);
+		uint8 q = find(arg2,regs);
+		if (z<8 && q<8 && (z!=6 || q!=6)) return Z80::LD_B_B + z*8 + q;
+	}
+
+	// 0x80++
+	uint8 c = find(cmd,cmds);
+	if (c<8 && (arg1==A || arg2==NIX))
+	{
+		uint8 q = find(arg2==NIX?arg1:arg2,regs);
+		if (q<8) { return Z80::ADD_B + c*8 + q; }
+	}
+
+	// 0x00++
+	for (uint i=0;i<0x40;i++)
+	{
+		const uchar* spec = i8080_cmd_00[i];
+		if(cmd !=spec[0]) continue;
+		if(arg1!=spec[1]) continue;
+		if(arg2!=spec[2]) continue;
+		return uint8(i);
+	}
+
+	// 0xC0++
+	for (uint8 i=0;i<0x40;i++)
+	{
+		const uchar* spec = i8080_cmd_C0[i];
+		if(cmd !=spec[0]) continue;
+		if(arg1!=spec[1]) continue;
+		if(arg2!=spec[2]) continue;
+		return 0xc0 + i;
+	}
+
+	if (cmd==HLT && arg1==NIX) return Z80::HALT;
+
+	// error:
+	throw DataError("unsuitable argument for opcode");
+}
 
 
 

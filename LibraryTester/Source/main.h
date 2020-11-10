@@ -31,7 +31,7 @@ extern void test_relational_operators(uint& num_tests, uint& num_errors);
 extern void test_kio_util (uint& num_tests, uint& num_errors);
 extern void test_z80_disass(uint& num_tests, uint& num_errors);
 extern void test_z80_opcode_length (uint& num_tests, uint& num_errors);
-
+extern void test_z80_major_opcode (uint& num_tests, uint& num_errors);
 
 #undef  assert
 #define assert(X) do { if(!(X)){throw InternalError(__FILE__, __LINE__, "FAILED: " #X);} } while(0)
