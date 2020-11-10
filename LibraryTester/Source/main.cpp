@@ -40,6 +40,7 @@ int main(int, const char**)
 	TestStringClass(num_tests, num_errors);
 	test_z80_disass(num_tests, num_errors);
 	test_z80_opcode_length (num_tests, num_errors);
+	test_z80_major_opcode (num_tests, num_errors);
 
 	std::cout << "\n" << num_tests << " tests run, " << num_errors << " errors.\n";
 

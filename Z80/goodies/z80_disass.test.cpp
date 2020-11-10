@@ -845,23 +845,23 @@ static bool same(cstr a, cstr b)
 
 static void run_tests (uint& num_tests, uint& num_errors, CpuID cpu_id, TestSet* tests, uint nelem)
 {
-	for (uint i=0; i < nelem; )
-	{
-		TestSet& test = tests[i++];
-		log("%02x%02x%02x%02x ", test.code[0],test.code[1],test.code[2],test.code[3]);
-		if ((i&15)==0) logNl();
+	TRY
+		for (uint i=0; i < nelem; )
+		{
+			TestSet& test = tests[i++];
+			log("%02x%02x%02x%02x ", test.code[0],test.code[1],test.code[2],test.code[3]);
+			if ((i&15)==0) logNl();
 
-		TRY
 			uint16 addr = 0;
 			cstr disassembly = disassemble(cpu_id, test.code, addr);
 			assert_same(test.expected,disassembly);
 			assert(addr>0 && addr<=4);
 
 			//assert(!!strchr(disassembly,'*') == (opcode_legal_state(cpu_id,test.code,0x0000) > UNDOCUMENTED_OPCODE));
-			if (!!strchr(disassembly,'*') != (z80_opcode_validity(cpu_id,test.code,0x0000) > UNDOCUMENTED_OPCODE))
+			if (!!strchr(disassembly,'*') != (opcode_validity(cpu_id,test.code,0x0000) > UNDOCUMENTED_OPCODE))
 			{
 				static cstr name[]={"LEGAL","UNDOCUMENTED","DEPRECATED","ILLEGAL"};
-				log("\n\"%s\": wrong opcode legal state: he: %s ", disassembly, name[z80_opcode_validity(cpu_id, test.code, 0)]);
+				log("\n\"%s\": wrong opcode legal state: he: %s ", disassembly, name[opcode_validity(cpu_id, test.code, 0)]);
 				num_errors++;
 			}
 
@@ -871,8 +871,8 @@ static void run_tests (uint& num_tests, uint& num_errors, CpuID cpu_id, TestSet*
 				log("\nwrong opcode length: me: %i, he: %i ", addr,opcode_length(cpu_id, test.code));
 				num_errors++;
 			}
-		END
-	}
+		}
+	END
 	logline("##");
 }
 
@@ -892,7 +892,7 @@ static void test_disass_asm8080 (uint& num_tests, uint& num_errors)
 			assert_same(test.expected,disassembly);
 			assert(addr>0 && addr<=4);
 			assert(addr==opcode_length(Cpu8080, test.code));
-			assert(!!strchr(disassembly,';') == !!z80_opcode_validity(Cpu8080,test.code,0x0000));
+			assert(!!strchr(disassembly,';') == !!opcode_validity(Cpu8080,test.code,0x0000));
 		END
 	}
 	logline("##");

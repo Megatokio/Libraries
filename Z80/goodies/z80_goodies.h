@@ -45,6 +45,7 @@ extern uint i8080_opcode_length (const Byte* ip) noexcept;
 	• prefix ED instruction "ld hl,(NN)" is never returned,
 	  because the non-prefix version is returned instead
 */
+__attribute__((deprecated))	// use major_opcode() in disass.h
 extern uint8 z80_major_opcode (cstr q) throws;
 
 

@@ -25,7 +25,6 @@ typedef uint16 Address;
 typedef uint8  Byte;
 typedef uint16 Word;
 
-enum __attribute__((deprecated)) { LegalOpcode, IllegalOpcode, WeirdOpcode };	// deprecated: use enum below
 enum
 {
 	LEGAL_OPCODE,
@@ -43,7 +42,7 @@ inline Byte peek (const Byte* core, Address addr) { return core[addr]; }
 
 // get info about the legal state of an opcode:
 // return: LEGAL_OPCODE .. ILLEGAL_OPCODE
-extern int z80_opcode_validity (CpuID, const Byte* core, Address addr);
+extern int opcode_validity (CpuID, const Byte* core, Address addr);
 
 // disassemble 8080, Z80 or Z180 opcode using Z80 syntax:
 extern cstr disassemble (CpuID, const Byte* core, Address& addr);
@@ -52,14 +51,27 @@ extern cstr disassemble (CpuID, const Byte* core, Address& addr);
 extern cstr disassemble_8080 (const Byte* core, Address& addr, bool asm8080=yes);
 
 
+/*	Calculate the "major" opcode of an instruction mnemonic.
+	-> byte 1 of simple instructions
+	-> byte 2 of instructions prefixed with ED, CB, IX or IY
+	-> byte 4 of instructions with prefix IXCB or IYCB
+*/
+extern uint8 major_opcode (cstr q) throws;		// z80 syntax: 8080, Z80, Z180
+extern uint8 major_opcode_8080 (cstr q) throws;	// asm8080 syntax: 8080 only
 
 
-__attribute__((deprecated))	// use z80_opcode_validity()
-inline int opcode_legal_state (CpuID id, const Byte* core, Address addr) { return z80_opcode_validity(id,core,addr); }
+
+enum __attribute__((deprecated)) // use enum above
+{ LegalOpcode, IllegalOpcode, WeirdOpcode };
+
+__attribute__((deprecated))	// use opcode_validity()
+inline int opcode_legal_state (CpuID id, const Byte* core, Address addr) { return opcode_validity(id,core,addr); }
 
 __attribute__((deprecated)) // use real disassemble()
 extern cstr opcode_mnemo (CpuID, const Byte* core, Address addr);
 
+__attribute__((deprecated))	// use major_opcode()
+extern uint8 z80_major_opcode (cstr q) throws;
 
 
 
