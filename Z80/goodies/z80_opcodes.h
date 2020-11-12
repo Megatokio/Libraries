@@ -168,17 +168,16 @@ enum CodesED
 	IN0_F_xN = ED30,					  TST_xHL = ED34,
 	IN0_A_xN = ED38, 	OUT0_xN_A = ED39, TST_A = ED3C,
 
-	//ED44,
 	MLT_BC = ED4C,
-	//ED54,
 	MLT_DE = ED5C,
-	TST_N  = ED64,
 	MLT_HL = ED6C,
-	TSTIO  = ED74,		SLP = ED76,
 	MLT_SP = ED7C,
+	TST_N  = ED64,
+	TSTIO  = ED74,
+	SLP    = ED76,
 
-	OTIM = ED83,
-	OTDM = ED8B,
+	OTIM  = ED83,
+	OTDM  = ED8B,
 	OTIMR = ED93,
 	OTDMR = ED9B,
 };
