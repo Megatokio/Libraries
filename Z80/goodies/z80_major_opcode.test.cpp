@@ -25,7 +25,6 @@
 #include "Templates/Array.h"
 #include "kio/util/defines.h"
 #include "main.h"
-#include "z80_disass.h"
 #include "z80_goodies.h"
 #include "z80_opcodes.h"
 
@@ -72,23 +71,23 @@ static TestSet asm8080_tests[] =
 	{RLCA, "rlc"},  {RRCA, "rrc"},  {RLA, "ral"},  {RRA, "rar"},
 	{DAA,  "daa"},  {CPL,  "cma"},  {SCF, "stc"},  {CCF, "cmc"},
 
-	{LD_B_B,  "ld b,b"},  {LD_B_C,  "ld b,c"},  {LD_B_D,  "ld b,d"},  {LD_B_E,  "ld b,e"},
-	{LD_C_B,  "ld c,b"},  {LD_C_C,  "ld c,c"},  {LD_C_D,  "ld c,d"},  {LD_C_E,  "ld c,e"},
-	{LD_D_B,  "ld d,b"},  {LD_D_C,  "ld d,c"},  {LD_D_D,  "ld d,d"},  {LD_D_E,  "ld d,e"},
-	{LD_E_B,  "ld e,b"},  {LD_E_C,  "ld e,c"},  {LD_E_D,  "ld e,d"},  {LD_E_E,  "ld e,e"},
-	{LD_H_B,  "ld h,b"},  {LD_H_C,  "ld h,c"},  {LD_H_D,  "ld h,d"},  {LD_H_E,  "ld h,e"},
-	{LD_L_B,  "ld l,b"},  {LD_L_C,  "ld l,c"},  {LD_L_D,  "ld l,d"},  {LD_L_E,  "ld l,e"},
-	{LD_A_B,  "ld a,b"},  {LD_A_C,  "ld a,c"},  {LD_A_D,  "ld a,d"},  {LD_A_E,  "ld a,e"},
-	{LD_xHL_B,"ld m,b"},  {LD_xHL_C,"ld m,c"},  {LD_xHL_D,"ld m,d"},  {LD_xHL_E,"ld m,e"},
+	{LD_B_B,  "mov b,b"},  {LD_B_C,  "mov b,c"},  {LD_B_D,  "mov b,d"},  {LD_B_E,  "mov b,e"},
+	{LD_C_B,  "mov c,b"},  {LD_C_C,  "mov c,c"},  {LD_C_D,  "mov c,d"},  {LD_C_E,  "mov c,e"},
+	{LD_D_B,  "mov d,b"},  {LD_D_C,  "mov d,c"},  {LD_D_D,  "mov d,d"},  {LD_D_E,  "mov d,e"},
+	{LD_E_B,  "mov e,b"},  {LD_E_C,  "mov e,c"},  {LD_E_D,  "mov e,d"},  {LD_E_E,  "mov e,e"},
+	{LD_H_B,  "mov h,b"},  {LD_H_C,  "mov h,c"},  {LD_H_D,  "mov h,d"},  {LD_H_E,  "mov h,e"},
+	{LD_L_B,  "mov l,b"},  {LD_L_C,  "mov l,c"},  {LD_L_D,  "mov l,d"},  {LD_L_E,  "mov l,e"},
+	{LD_A_B,  "mov a,b"},  {LD_A_C,  "mov a,c"},  {LD_A_D,  "mov a,d"},  {LD_A_E,  "mov a,e"},
+	{LD_xHL_B,"mov m,b"},  {LD_xHL_C,"mov m,c"},  {LD_xHL_D,"mov m,d"},  {LD_xHL_E,"mov m,e"},
 
-	{LD_B_H,  "ld b,h"},  {LD_B_L,  "ld b,l"},  {LD_B_A,  "ld b,a"},  {LD_B_xHL, "ld b,m"},
-	{LD_C_H,  "ld c,h"},  {LD_C_L,  "ld c,l"},  {LD_C_A,  "ld c,a"},  {LD_C_xHL, "ld c,m"},
-	{LD_D_H,  "ld d,h"},  {LD_D_L,  "ld d,l"},  {LD_D_A,  "ld d,a"},  {LD_D_xHL, "ld d,m"},
-	{LD_E_H,  "ld e,h"},  {LD_E_L,  "ld e,l"},  {LD_E_A,  "ld e,a"},  {LD_E_xHL, "ld e,m"},
-	{LD_H_H,  "ld h,h"},  {LD_H_L,  "ld h,l"},  {LD_H_A,  "ld h,a"},  {LD_H_xHL, "ld h,m"},
-	{LD_L_H,  "ld l,h"},  {LD_L_L,  "ld l,l"},  {LD_L_A,  "ld l,a"},  {LD_L_xHL, "ld l,m"},
-	{LD_A_H,  "ld a,h"},  {LD_A_L,  "ld a,l"},  {LD_A_A,  "ld a,a"},  {LD_A_xHL, "ld a,m"},
-	{LD_xHL_H,"ld m,h"},  {LD_xHL_L,"ld m,l"},  {LD_xHL_A,"ld m,a"},  {HALT, "hlt"},
+	{LD_B_H,  "mov b,h"},  {LD_B_L,  "mov b,l"},  {LD_B_A,  "mov b,a"},  {LD_B_xHL, "mov b,m"},
+	{LD_C_H,  "mov c,h"},  {LD_C_L,  "mov c,l"},  {LD_C_A,  "mov c,a"},  {LD_C_xHL, "mov c,m"},
+	{LD_D_H,  "mov d,h"},  {LD_D_L,  "mov d,l"},  {LD_D_A,  "mov d,a"},  {LD_D_xHL, "mov d,m"},
+	{LD_E_H,  "mov e,h"},  {LD_E_L,  "mov e,l"},  {LD_E_A,  "mov e,a"},  {LD_E_xHL, "mov e,m"},
+	{LD_H_H,  "mov h,h"},  {LD_H_L,  "mov h,l"},  {LD_H_A,  "mov h,a"},  {LD_H_xHL, "mov h,m"},
+	{LD_L_H,  "mov l,h"},  {LD_L_L,  "mov l,l"},  {LD_L_A,  "mov l,a"},  {LD_L_xHL, "mov l,m"},
+	{LD_A_H,  "mov a,h"},  {LD_A_L,  "mov a,l"},  {LD_A_A,  "mov a,a"},  {LD_A_xHL, "mov a,m"},
+	{LD_xHL_H,"mov m,h"},  {LD_xHL_L,"mov m,l"},  {LD_xHL_A,"mov m,a"},  {HALT, "hlt"},
 
 	{ADD_B, "add b"},  {ADD_C, "add c"},  {ADD_D, "add d"},  {ADD_E, "add e"},
 	{ADC_B, "adc b"},  {ADC_C, "adc c"},  {ADC_D, "adc d"},  {ADC_E, "adc e"},

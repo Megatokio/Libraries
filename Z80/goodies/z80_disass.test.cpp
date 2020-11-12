@@ -25,7 +25,6 @@
 #include "Templates/Array.h"
 #include "kio/util/defines.h"
 #include "main.h"
-#include "z80_disass.h"
 #include "z80_goodies.h"
 #include "z80_opcodes.h"
 
@@ -904,28 +903,43 @@ static void test_disass_z80 (uint& num_tests, uint& num_errors, CpuID cpu_id)
 	cstr opt_str = cpu_id==CpuZ80_ixcbr2 ? " --ixcbr2" : cpu_id == CpuZ80_ixcbxh ? " --ixcbxh" : "";
 	logIn("test disass --cpu=%s%s",cpu_str,opt_str);
 
+	logline("%s: common tests",cpu_str);
 	run_tests(num_tests,num_errors,cpu_id,common_tests,NELEM(common_tests));
 
 	if (cpu_id == Cpu8080)
 	{
+		logline("i8080 tests");
 		run_tests(num_tests,num_errors,cpu_id,i8080_tests,NELEM(i8080_tests));
 	}
 	else if (cpu_id == CpuZ180)
 	{
+		logline("z180 tests");
 		run_tests(num_tests,num_errors,cpu_id,z180_tests,NELEM(z180_tests));
+		logline("z180: z80/z180 tests");
 		run_tests(num_tests,num_errors,cpu_id,z80_z180_tests,NELEM(z80_z180_tests));
 	}
 	else // if (cpu_id == CpuZ80)
 	{
+		logline("z80 tests");
 		run_tests(num_tests,num_errors,cpu_id,z80_tests,NELEM(z80_tests));
+		logline("z80: z80/z180 tests");
 		run_tests(num_tests,num_errors,cpu_id,z80_z180_tests,NELEM(z80_z180_tests));
 
 		if (cpu_id == CpuZ80_ixcbr2)
+		{
+			logline("z80 ixcbr2 tests");
 			run_tests(num_tests,num_errors,cpu_id,z80_ixcbr2_tests,NELEM(z80_ixcbr2_tests));
+		}
 		else if (cpu_id == CpuZ80_ixcbxh)
+		{
+			logline("z80 ixcbxh tests");
 			run_tests(num_tests,num_errors,cpu_id,z80_ixcbxh_tests,NELEM(z80_ixcbxh_tests));
+		}
 		else
+		{
+			logline("z80 no-opt tests");
 			run_tests(num_tests,num_errors,cpu_id,z80_noopt_tests,NELEM(z80_noopt_tests));
+		}
 	}
 
 }

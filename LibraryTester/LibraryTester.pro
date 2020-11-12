@@ -24,8 +24,8 @@ INCLUDEPATH +=  \
 
 SOURCES += \
 	Libraries/Templates/relational_operators.test.cpp \
-	Libraries/Z80/goodies/z180_clock_cycles.cpp \
 	Libraries/Z80/goodies/z80_clock_cycles.cpp \
+	Libraries/Z80/goodies/z80_clock_cycles.test.cpp \
 	Libraries/Z80/goodies/z80_disass.cpp \
 	Libraries/Z80/goodies/z80_disass.test.cpp \
 	Libraries/Z80/goodies/z80_major_opcode.test.cpp \
@@ -58,7 +58,6 @@ SOURCES += \
 
 HEADERS += \
 	Libraries/Z80/goodies/CpuID.h \
-	Libraries/Z80/goodies/z80_disass.h \
 	Libraries/Z80/goodies/z80_goodies.h \
 	Libraries/Z80/goodies/z80_opcodes.h \
 	Libraries/kio/util/count1bits.h \

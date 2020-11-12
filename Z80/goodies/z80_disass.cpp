@@ -16,7 +16,6 @@
 	TO THE EXTENT PERMITTED BY APPLICABLE LAW.
 */
 
-#include "z80_disass.h"
 #include "z80_goodies.h"
 namespace Z80 { // wg. enum collissions
 #include "z80_opcodes.h"
@@ -51,7 +50,7 @@ enum
 	RNZ,JNZ,JMP,CNZ,ADI,RZ,JZ,CZ,ACI,RNC,JNC,CNC,
 	SUI,RC,JC,CC,SBI,RPO,JPO,XTHL,CPO,ANI,RPE,PCHL,
 	JPE,XCHG,CPE,XRI,RP,ORI,RM,SPHL,JM,CM,HLT,
-	SBB,ANA,XRA,ORA,CMP,
+	MOV,SBB,ANA,XRA,ORA,CMP,
 
 	// Register / Argument:
 	BC,		DE,		HL,		SP,		AF,		AF2,
@@ -85,7 +84,7 @@ static const char word[][9] =
 	"rnz",	"jnz",	"jmp",	"cnz",	"adi",	"rz",	"jz",	"cz",	"aci",	"rnc",	"jnc",	"cnc",
 	"sui",	"rc",	"jc",	"cc",	"sbi",	"rpo",	"jpo",	"xthl",	"cpo",	"ani",	"rpe",	"pchl",
 	"jpe",	"xchg",	"cpe",	"xri",	"rp",	"ori",	"rm",	"sphl",	"jm",	"cm",	"hlt",
-	"sbb",	"ana",	"xra",	"ora",	"cmp",
+	"mov",	"sbb",	"ana",	"xra",	"ora",	"cmp",
 
 	"bc",	"de",	"hl",	"sp",	"af",	"af'",
 	"b",	"c",	"d",	"e",	"h",	"l",	"(hl)",	"a",
@@ -427,7 +426,7 @@ cstr opcode_mnemo (CpuID cpuid, const Byte* core, Address addr)
 // ================================================================================
 // Opcode Legal State:
 
-static inline int z80_illegalCB (CpuID cpuid, Byte op)
+static inline OpcodeValidity z80_illegalCB (CpuID cpuid, Byte op)
 {
 	// get legal state of 0xCB instruction
 	// all instructions LEGAL except SLL is UNDOCUMENTED
@@ -435,18 +434,18 @@ static inline int z80_illegalCB (CpuID cpuid, Byte op)
 	return op>=0x30 && op<0x38 ? cpuid==CpuZ180?ILLEGAL_OPCODE:UNDOCUMENTED_OPCODE : LEGAL_OPCODE;
 }
 
-static inline int z80_illegalED (CpuID cpuid, Byte op)
+static inline OpcodeValidity z80_illegalED (CpuID cpuid, Byte op)
 {
 	// get legal state of ED instruction
 	// LEGAL:        all documented opcodes
 	// UNDOCUMENTED: out (c),0
 	// ILLEGAL:      all others: ill. NOP or ill. aliases
 
-	static constexpr uint8 L = LEGAL_OPCODE;
-	static constexpr uint8 U = UNDOCUMENTED_OPCODE;
-	static constexpr uint8 i = ILLEGAL_OPCODE;
+	static constexpr OpcodeValidity L = LEGAL_OPCODE;
+	static constexpr OpcodeValidity U = UNDOCUMENTED_OPCODE;
+	static constexpr OpcodeValidity i = ILLEGAL_OPCODE;
 
-	static const uint8 state_40[64] =
+	static const OpcodeValidity state_40[64] =
 	{
 		L,L,L,L, L,L,L,L, // IN_B_xC,	OUT_xC_B, SBC_HL_BC, LD_xNN_BC,   NEG,  RETN, IM_0, LD_I_A,
 		L,L,L,L, i,L,i,L, // IN_C_xC,	OUT_xC_C, ADC_HL_BC, LD_BC_xNN,   ED4C, RETI, ED4E, LD_R_A,
@@ -458,7 +457,7 @@ static inline int z80_illegalED (CpuID cpuid, Byte op)
 		L,L,L,L, i,i,i,i, // IN_A_xC,	OUT_xC_A, ADC_HL_SP, LD_SP_xNN,   ED7C, ED7D, ED7E, ED7F,
 	};
 
-	static const uint8 state_140[64] =
+	static const OpcodeValidity state_140[64] =
 	{
 		L,L,L,L, L,L,L,L, // IN_B_xC,	OUT_xC_B, SBC_HL_BC, LD_xNN_BC,   NEG,  RETN, IM_0, LD_I_A,
 		L,L,L,L, L,L,i,L, // IN_C_xC,	OUT_xC_C, ADC_HL_BC, LD_BC_xNN,   *MLT,  RETI, ED4E, LD_R_A,
@@ -487,7 +486,7 @@ static inline int z80_illegalED (CpuID cpuid, Byte op)
 	}
 }
 
-static inline int z80_illegalXY (CpuID cpuid, Byte op)
+static inline OpcodeValidity z80_illegalXY (CpuID cpuid, Byte op)
 {
 	// get legal state of IX/IY instruction
 	// LEGAL:		 instructions which use (hl)
@@ -495,11 +494,11 @@ static inline int z80_illegalXY (CpuID cpuid, Byte op)
 	// ILLEGAL:		 all others: prefix no effect!
 	//				 note: prefix 0xCB is also reported as illegal
 
-	static constexpr uint8 L = LEGAL_OPCODE;
-	static constexpr uint8 U = UNDOCUMENTED_OPCODE;
-	static constexpr uint8 i = ILLEGAL_OPCODE;
+	static constexpr OpcodeValidity L = LEGAL_OPCODE;
+	static constexpr OpcodeValidity U = UNDOCUMENTED_OPCODE;
+	static constexpr OpcodeValidity i = ILLEGAL_OPCODE;
 
-	static const uint8 state_00[64] =
+	static const OpcodeValidity state_00[64] =
 	{
 		i,i,i,i, i,i,i,i,	//	NOP,	 LD_BC_NN,	LD_xBC_A,	INC_BC,		INC_B,	DEC_B,	LD_B_N,	 RLCA,
 		i,L,i,i, i,i,i,i,	//	EX_AF_AF ADD_HL_BC,	LD_A_xBC,	DEC_BC,		INC_C,	DEC_C,	LD_C_N,	 RRCA,
@@ -513,7 +512,7 @@ static inline int z80_illegalXY (CpuID cpuid, Byte op)
 
 	if (op < 0x40)
 	{
-		int rval = state_00[op];
+		OpcodeValidity rval = state_00[op];
 		return rval == LEGAL_OPCODE || cpuid != CpuZ180 ? rval : ILLEGAL_OPCODE;
 	}
 
@@ -533,7 +532,7 @@ static inline int z80_illegalXY (CpuID cpuid, Byte op)
 	else return ILLEGAL_OPCODE;
 }
 
-static inline int z80_illegalXYCB (CpuID cpuid, Byte op)
+static inline OpcodeValidity z80_illegalXYCB (CpuID cpuid, Byte op)
 {
 	// get legal state of IXCB/IYCB instruction
 	// all instructions which do not use IX are weird
@@ -546,7 +545,7 @@ static inline int z80_illegalXYCB (CpuID cpuid, Byte op)
 	return ILLEGAL_OPCODE;												 // no effect or unknown effect
 }
 
-int opcode_validity (CpuID cpuid, const Byte* core, Address addr)
+OpcodeValidity opcode_validity (CpuID cpuid, const Byte* core, Address addr)
 {
 	// get legal state of instruction
 	// op2 and op4 are only used if required (( op2: op1=XY/CB/ED; op4: op1,2=XY,CB ))
@@ -590,7 +589,7 @@ static cstr expand_word (const Byte* core, Address& addr, uint8 token)
 	{
 	case DIS:
 		n  = NEXTBYTE;
-		nn = Word(addr + int8(n));
+		nn = uint16(addr + int8(n));
 		s = tempstr(14);							// "$+123 ; $FFFF"
 		sprintf(s, "$%+i ; $%04X", int8(n)+2, nn);	// "$+dis ; $dest"
 		return s;
@@ -814,9 +813,9 @@ static inline uint8 find (uint8 c, const uint8 list[8])
 uint8 major_opcode (cstr q) throws
 {
 	// calculate major opcode of instruction
-	// this is the opcode byte for opcodes without prefix
-	// the 2nd byte after CB, ED, IX and IY instructions
-	// or the 4th byte after IXCB or IYCB instructions.
+	// -> this is the opcode byte for opcodes without prefix
+	// -> the 2nd byte after CB, ED, IX and IY instructions
+	// -> or the 4th byte after IXCB or IYCB instructions.
 
 	// input: "ld a,N", "jr dis", "bit 0,(hl)", "ld (N),hl", etc.
 
@@ -932,7 +931,7 @@ uint8 major_opcode (cstr q) throws
 uint8 major_opcode_8080 (cstr q) throws
 {
 	// calculate major opcode of instruction.
-	// this is the first byte of the instruction.
+	// -> this is the first byte of the instruction.
 
 	q = lowerstr(q);
 
@@ -975,7 +974,7 @@ uint8 major_opcode_8080 (cstr q) throws
 	static const uint8 cmds[8]={ADD,ADC,SUB,SBB,ANA,XRA,ORA,CMP};
 
 	// 0x40++
-	if (cmd==LD)
+	if (cmd==MOV)
 	{
 		uint8 z = find(arg1,regs);
 		uint8 q = find(arg2,regs);

@@ -164,7 +164,7 @@ void test_z80_opcode_length (uint& num_tests, uint& num_errors)
 		for (uint i=0;i<256;i++)
 		{
 			uint8 z[4]={uint8(i),0,0,0};
-			assert(i8080_opcode_length(z) == i8080_len[i]);
+			assert(opcode_length(Cpu8080,z) == i8080_len[i]);
 		}
 	END
 
@@ -173,7 +173,7 @@ void test_z80_opcode_length (uint& num_tests, uint& num_errors)
 		for (uint i=0;i<256;i++)
 		{
 			uint8 z[4]={uint8(i),0,0,0};
-			if (z80_len[i]) assert(z80_opcode_length(z) == z80_len[i]);
+			if (z80_len[i]) assert(opcode_length(CpuZ80,z) == z80_len[i]);
 		}
 	END
 
@@ -182,7 +182,7 @@ void test_z80_opcode_length (uint& num_tests, uint& num_errors)
 		for (uint i=0;i<256;i++)
 		{
 			uint8 z[4]={uint8(i),0,0,0};
-			if (z80_len[i]) assert(z180_opcode_length(z) == z80_len[i]);
+			if (z80_len[i]) assert(opcode_length(CpuZ180,z) == z80_len[i]);
 		}
 	END
 
@@ -191,7 +191,7 @@ void test_z80_opcode_length (uint& num_tests, uint& num_errors)
 		for (uint i=0;i<256;i++)
 		{
 			uint8 z[4]={0xcb,uint8(i),0,0};
-			assert(z80_opcode_length(z) == 2);
+			assert(opcode_length(CpuZ80,z) == 2);
 		}
 	END
 
@@ -200,7 +200,7 @@ void test_z80_opcode_length (uint& num_tests, uint& num_errors)
 		for (uint i=0;i<256;i++)
 		{
 			uint8 z[4]={0xcb,uint8(i),0,0};
-			assert(z180_opcode_length(z) == 2);
+			assert(opcode_length(CpuZ180,z) == 2);
 		}
 	END
 
@@ -209,7 +209,7 @@ void test_z80_opcode_length (uint& num_tests, uint& num_errors)
 		for (uint i=0;i<256;i++)
 		{
 			uint8 z[4]={uint8(i&1?0xdd:0xfd),0xcb,0,uint8(i)};
-			assert(z80_opcode_length(z) == 4);
+			assert(opcode_length(CpuZ80,z) == 4);
 		}
 	END
 
@@ -218,7 +218,7 @@ void test_z80_opcode_length (uint& num_tests, uint& num_errors)
 		for (uint i=0;i<256;i++)
 		{
 			uint8 z[4]={uint8(i&1?0xfd:0xdd),0xcb,0,uint8(i)};
-			assert(z180_opcode_length(z) == 4);		// sll as for z80 too
+			assert(opcode_length(CpuZ180,z) == 4);		// sll as for z80 too
 		}
 	END
 
@@ -228,8 +228,8 @@ void test_z80_opcode_length (uint& num_tests, uint& num_errors)
 		{
 			if (i==0xcb) continue;
 			uint8 z[4]={uint8(i&1?0xdd:0xfd),uint8(i),0,0};
-			if (z80_opcode_length(z) != z80_ix_len[i]) logline("z80: ix,%02x failed",i);
-			assert(z80_opcode_length(z) == z80_ix_len[i]);
+			if (opcode_length(CpuZ80,z) != z80_ix_len[i]) logline("z80: ix,%02x failed",i);
+			assert(opcode_length(CpuZ80,z) == z80_ix_len[i]);
 		}
 	END
 
@@ -240,8 +240,8 @@ void test_z80_opcode_length (uint& num_tests, uint& num_errors)
 		{
 			if (i==0xcb) continue;
 			uint8 z[4]={uint8(i&1?0xfd:0xdd),uint8(i),0,0};
-			if (z180_opcode_length(z) != z80_ix_len[i]) logline("z180: ix,%02x failed",i);
-			assert(z180_opcode_length(z) == z80_ix_len[i]);
+			if (opcode_length(CpuZ180,z) != z80_ix_len[i]) logline("z180: ix,%02x failed",i);
+			assert(opcode_length(CpuZ180,z) == z80_ix_len[i]);
 		}
 	END
 
@@ -250,7 +250,7 @@ void test_z80_opcode_length (uint& num_tests, uint& num_errors)
 		for (uint i=0;i<256;i++)
 		{
 			uint8 z[4]={0xed,uint8(i),0,0};
-			assert(z80_opcode_length(z) == z80_ed_len[i]);
+			assert(opcode_length(CpuZ80,z) == z80_ed_len[i]);
 		}
 	END
 
@@ -259,23 +259,23 @@ void test_z80_opcode_length (uint& num_tests, uint& num_errors)
 		for (uint i=0;i<256;i++)
 		{
 			uint8 z[4]={0xed,uint8(i),0,0};
-			if (z180_opcode_length(z) != z180_ed_len[i]) logline("z180: ed,%02x failed",i);
-			assert(z180_opcode_length(z) == z180_ed_len[i]);
+			if (opcode_length(CpuZ180,z) != z180_ed_len[i]) logline("z180: ed,%02x failed",i);
+			assert(opcode_length(CpuZ180,z) == z180_ed_len[i]);
 		}
 	END
 
 	TRY
-		static const Byte ld_a_xix[] = {0xdd,LD_A_xHL,0};	assert(z180_opcode_length(ld_a_xix)==3);
-		static const Byte ld_xix_a[] = {0xdd,LD_xHL_A,0};	assert(z180_opcode_length(ld_xix_a)==3);
-		static const Byte ld_b_xix[] = {0xdd,LD_B_xHL,0};	assert(z180_opcode_length(ld_b_xix)==3);
-		static const Byte ld_xix_b[] = {0xdd,LD_xHL_B,0};	assert(z180_opcode_length(ld_xix_b)==3);
-		static const Byte ld_c_xix[] = {0xdd,LD_C_xHL,0};	assert(z180_opcode_length(ld_c_xix)==3);
-		static const Byte ld_xix_c[] = {0xdd,LD_xHL_C,0};	assert(z180_opcode_length(ld_xix_c)==3);
-		static const Byte ld_ix_halt[] = {0xdd,HALT,0};  	assert(z180_opcode_length(ld_ix_halt)==2);
-		static const Byte or_xix[]   = {0xdd,OR_xHL,0};		assert(z180_opcode_length(or_xix)==3);
-		static const Byte xor_xix[]  = {0xdd,XOR_xHL,0};	assert(z180_opcode_length(xor_xix)==3);
-		static const Byte or_xh[]    = {0xdd,OR_H,0};		assert(z80_opcode_length(or_xh)==2);
-		static const Byte xor_xl[]   = {0xdd,XOR_L,0};		assert(z80_opcode_length(xor_xl)==2);
+		static const Byte ld_a_xix[] = {0xdd,LD_A_xHL,0};	assert(opcode_length(CpuZ180,ld_a_xix)==3);
+		static const Byte ld_xix_a[] = {0xdd,LD_xHL_A,0};	assert(opcode_length(CpuZ180,ld_xix_a)==3);
+		static const Byte ld_b_xix[] = {0xdd,LD_B_xHL,0};	assert(opcode_length(CpuZ180,ld_b_xix)==3);
+		static const Byte ld_xix_b[] = {0xdd,LD_xHL_B,0};	assert(opcode_length(CpuZ180,ld_xix_b)==3);
+		static const Byte ld_c_xix[] = {0xdd,LD_C_xHL,0};	assert(opcode_length(CpuZ180,ld_c_xix)==3);
+		static const Byte ld_xix_c[] = {0xdd,LD_xHL_C,0};	assert(opcode_length(CpuZ180,ld_xix_c)==3);
+		static const Byte ld_ix_halt[] = {0xdd,HALT,0};  	assert(opcode_length(CpuZ180,ld_ix_halt)==2);
+		static const Byte or_xix[]   = {0xdd,OR_xHL,0};		assert(opcode_length(CpuZ180,or_xix)==3);
+		static const Byte xor_xix[]  = {0xdd,XOR_xHL,0};	assert(opcode_length(CpuZ180,xor_xix)==3);
+		static const Byte or_xh[]    = {0xdd,OR_H,0};		assert(opcode_length(CpuZ80,or_xh)==2);
+		static const Byte xor_xl[]   = {0xdd,XOR_L,0};		assert(opcode_length(CpuZ80,xor_xl)==2);
 	END
 }
 
