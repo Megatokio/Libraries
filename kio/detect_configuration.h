@@ -167,6 +167,8 @@
 
 	note: the "_sizeof_*" macros could replaced with "uint(sizeof(T))"
 	but then they would be not usable in preprocessor "#if" statements.
+
+	https://sourceforge.net/p/predef/wiki/Architectures/
 */
 
 #if defined(__i386__) || defined(__i386)
@@ -217,6 +219,21 @@
 	#define	_sizeof_pointer			4
 	#define	_MAX_ALIGNMENT			4
 	#define	_ALIGNMENT_REQUIRED		0		// since ARMv4
+
+#elif defined(_M_ARM64) || defined(__aarch64__)
+	#define _ARM64 1
+	#define _PROCESSOR "ARM64"
+	#define _bits_per_byte			8
+	#define _sizeof_char			1
+	#define	_sizeof_short			2
+	#define	_sizeof_int				4
+	#define	_sizeof_long			8
+	#define	_sizeof_float			4
+	#define	_sizeof_double			8
+	#define	_sizeof_long_double		16
+	#define	_sizeof_pointer			8
+	#define	_MAX_ALIGNMENT			8
+	#define	_ALIGNMENT_REQUIRED		1		// FIXME
 
 #elif defined(__ppc__) || defined(__PPC__) || defined(__powerpc__)
 	#define	_POWERPC 1
