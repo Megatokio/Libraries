@@ -1,5 +1,5 @@
 #pragma once
-/*	Copyright  (c)	Günter Woigk 1995 - 2020
+/*	Copyright  (c)	Günter Woigk 1995 - 2021
 					mailto:kio@little-bat.de
 
 	This file is free software.

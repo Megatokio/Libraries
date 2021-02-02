@@ -1,5 +1,5 @@
 #pragma once
-/*	Copyright  (c)	Günter Woigk 2018 - 2020
+/*	Copyright  (c)	Günter Woigk 2018 - 2021
 					mailto:kio@little-bat.de
 
 	This program is distributed in the hope that it is useful.
@@ -190,7 +190,7 @@ inline float numeric_value (cptr p) noexcept
 	// everything for which has_numeric_value() returned true.
 	// some fractionals. one negative. two NaNs.
 
-	return is_ascii(*p) ? ::dec_digit_value(*p) : ucs4::numeric_value(utf8_to_ucs4char(p));
+	return is_ascii(*p) ? float(::dec_digit_value(*p)) : ucs4::numeric_value(utf8_to_ucs4char(p));
 }
 
 
