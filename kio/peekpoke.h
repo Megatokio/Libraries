@@ -10,10 +10,10 @@
 	that both that copyright notice, this permission notice and the
 	following disclaimer appear in supporting documentation.
 
-	THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT ANY WARRANTY, NOT EVEN THE
-	IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
-	AND IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DAMAGES
-	ARISING FROM THE USE OF THIS SOFTWARE,
+	THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT ANY WARRANTY,
+	NOT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR
+	A PARTICULAR PURPOSE, AND IN NO EVENT SHALL THE COPYRIGHT HOLDER
+	BE LIABLE FOR ANY DAMAGES ARISING FROM THE USE OF THIS SOFTWARE,
 	TO THE EXTENT PERMITTED BY APPLICABLE LAW.
 
 
@@ -93,21 +93,21 @@
 		unaligned peek and Poke on PDP machines is braindead anyway.
 */
 #ifdef _BIG_ENDIAN
-	inline uint8  peek1 (void const* p)		noexcept { return Peek1X(p); }
+	inline uint8  peek1 (void const* p)		noexcept { return peek1X(p); }
 	inline uint16 peek2 (void const* p)		noexcept { return peek2X(p); }
-	inline uint32 peek3 (void const* p)		noexcept { return Peek3X(p); }
+	inline uint32 peek3 (void const* p)		noexcept { return peek3X(p); }
 	inline uint32 peek4 (void const* p)		noexcept { return peek4X(p); }
 	inline uint64 peek8 (void const* p)		noexcept { return peek8X(p); }
 
-	inline void   poke1 (void* p, int8 n)	noexcept { Poke1X(p,n); }
+	inline void   poke1 (void* p, int8 n)	noexcept { poke1X(p,n); }
 	inline void   poke2 (void* p, int16 n)	noexcept { poke2X(p,n); }
-	inline void   poke3 (void* p, int32 n)	noexcept { Poke3X(p,n); }
+	inline void   poke3 (void* p, int32 n)	noexcept { poke3X(p,n); }
 	inline void   poke4 (void* p, int32 n)	noexcept { poke4X(p,n); }
 	inline void   poke8 (void* p, int64 n)	noexcept { poke8X(p,n); }
 
-	inline void   poke1 (void* p, uint8 n)  noexcept { Poke1X(p,n); }
+	inline void   poke1 (void* p, uint8 n)  noexcept { poke1X(p,n); }
 	inline void   poke2 (void* p, uint16 n) noexcept { poke2X(p,n); }
-	inline void   poke3 (void* p, uint32 n) noexcept { Poke3X(p,n); }
+	inline void   poke3 (void* p, uint32 n) noexcept { poke3X(p,n); }
 	inline void   poke4 (void* p, uint32 n) noexcept { poke4X(p,n); }
 	inline void   poke8 (void* p, uint64 n) noexcept { poke8X(p,n); }
 #else
