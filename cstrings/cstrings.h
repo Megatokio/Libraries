@@ -167,13 +167,11 @@ inline	str	 timestr	(float secs)		noexcept  { return timestr(time_t(secs)); }
 extern	str	 datetimestr (time_t secs)		noexcept; // returned string is in local time
 inline	str	 datetimestr (double secs)		noexcept  { return datetimestr(time_t(secs)); }
 extern	time_t dateval	 (cstr localtimestr) noexcept;
+
 extern	str	 durationstr (time_t secs)		noexcept;
-inline	str	 durationstr (int secs)			noexcept { return durationstr(time_t(secs)); }
-#ifndef _LINUX
-inline	str	 durationstr (int64 secs)		noexcept { return durationstr(time_t(secs)); }
-#endif
 extern	str	 durationstr (double secs)		noexcept;
 inline	str	 durationstr (float secs)		noexcept { return durationstr(double(secs)); }
+template<typename T> inline str durationstr (T secs) noexcept { return durationstr(time_t(secs)); }
 
 // NOTE: split() reuses the source buffer and overwrites line delimiters with 0, evtl. overwriting char at ptr e!
 extern	void _split (Array<str>& z, ptr a, ptr e)			throws; // split at line breaks
