@@ -70,9 +70,12 @@
 #define HAVE_MNTENT_H 1         // <mntent.h>
 #endif
 
+#if defined(_OPENBSD)
+#define HAVE_MACHINE_VMPARAM_H 1// <machine/vmparam.h>	maybe _MACOSX
+#define HAVE_DIRENT_H 1			// <dirent.h>			--> 2021 bug#7
 
-#if defined(_BSD)
-#define HAVE_MACHINE_VMPARAM_H 1// <machine/vmparam.h> maybe _MACOSX
+#elif defined(_BSD)
+#define HAVE_MACHINE_VMPARAM_H 1// <machine/vmparam.h>	maybe _MACOSX
 #define HAVE_SYS_DIRENT_H 1		// <sys/dirent.h>
 #endif
 
