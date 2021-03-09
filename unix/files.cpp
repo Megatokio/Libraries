@@ -1201,7 +1201,7 @@ void copy_file(cstr qpath, cstr zpath, bool overwrite) THF
 }
 
 
-#ifdef _LINUX
+#if defined(_LINUX) || defined(_OPENBSD)
 int set_file_permissions(cstr path, mode_t who, mode_t what)
 {
 	path = quick_fullpath(path);
@@ -1328,7 +1328,11 @@ MyVolumeInfo::MyVolumeInfo(struct statfs& fs)
 	this->filesfree 	= fs.f_ffree;
 	this->fsid 			= fs.f_fsid;
 	this->owner 		= fs.f_owner;
+#if defined(_OPENBSD)
+	this->fstype 		= 0;						// fs type not available
+#else
 	this->fstype 		= fs.f_type;
+#endif
 	this->flags			= fs.f_flags;
 #if __DARWIN_64_BIT_INO_T
 	this->fs_subtype	= fs.f_fssubtype;
