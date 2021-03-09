@@ -46,9 +46,9 @@
 
 // --- DATA ---------------------------
 
-FD FD::stdin (0,"STDIN" );
-FD FD::stdout(1,"STDOUT");
-FD FD::stderr(2,"STDERR");
+FD FD::_stdin (0,"STDIN" );
+FD FD::_stdout(1,"STDOUT");
+FD FD::_stderr(2,"STDERR");
 
 
 // --- HELPER ---------------------------

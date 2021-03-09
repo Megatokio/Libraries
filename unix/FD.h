@@ -10,10 +10,10 @@
 	that both that copyright notice, this permission notice and the
 	following disclaimer appear in supporting documentation.
 
-	THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT ANY WARRANTY, NOT EVEN THE
-	IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
-	AND IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DAMAGES
-	ARISING FROM THE USE OF THIS SOFTWARE,
+	THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT ANY WARRANTY,
+	NOT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR
+	A PARTICULAR PURPOSE, AND IN NO EVENT SHALL THE COPYRIGHT HOLDER
+	BE LIABLE FOR ANY DAMAGES ARISING FROM THE USE OF THIS SOFTWARE,
 	TO THE EXTENT PERMITTED BY APPLICABLE LAW.
 */
 
@@ -66,9 +66,9 @@ public:
 			FD& operator= (FD&&) noexcept;
 
 // standard input and output:
-	static	FD	stdin;
-	static	FD	stdout;
-	static	FD	stderr;
+	static	FD	_stdin;			// 2021-03-09 changed from "stdin"
+	static	FD	_stdout;		// because stdin, stdout, stderr are macros by C89/C99
+	static	FD	_stderr;
 
 // open file:
 // mode can be found in fnctl.h

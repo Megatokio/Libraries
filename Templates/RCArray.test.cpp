@@ -78,11 +78,11 @@ public:
 	RCObjectWithPrint (uint n=0)					:RCObject(n),v2(n){}
 	explicit RCObjectWithPrint (RCObject const& q)	:RCObject(q),v2(value){}
 	RCObjectWithPrint (RCObject&& q)				:RCObject(std::move(q)),v2(value){}
-	virtual RCObjectWithPrint& operator= (RCObject const& q)	{ value=v2=q.value; return *this; }
-	virtual RCObjectWithPrint& operator= (RCObject&& q)			{ value=v2=q.value; return *this; }
+	virtual RCObjectWithPrint& operator= (RCObject const& q) override	{ value=v2=q.value; return *this; }
+	virtual RCObjectWithPrint& operator= (RCObject&& q) override		{ value=v2=q.value; return *this; }
 
-	virtual void serialize (FD&) const;
-	virtual void deserialize (FD&);
+	virtual void serialize (FD&) const override;
+	virtual void deserialize (FD&) override;
 };
 uint RCObject::retained=0;
 uint RCObject::released=0;
@@ -585,7 +585,7 @@ void RCObject::test1(uint& num_tests, uint& num_errors)
 	TRY // print
 		clear();
 		RCArray a; a << new RCObject(12) << new RCObjectWithPrint(34) << nullptr;
-		a.print(FD::stdout,"•");
+		a.print(FD::_stdout,"•");
 
 		// note: RCPtr<RCObject>::print() uses tostr() for both items because it tests for RCObject::print()
 		FD fd; fd.open_tempfile();
@@ -607,7 +607,7 @@ void RCObject::test1(uint& num_tests, uint& num_errors)
 	TRY // print
 		::RCArray<RCObjectWithPrint> a;
 		a << new RCObjectWithPrint(12) << new RCObjectWithPrint(34) << nullptr;
-		a.print(FD::stdout,"•");
+		a.print(FD::_stdout,"•");
 
 		// note: RCPtr<RCObjectWithPrint>::print() tests for and uses RCObjectWithPrint::print()
 		FD fd; fd.open_tempfile();
@@ -676,7 +676,7 @@ class RCObject2 : public RCObject // use template
 {
 public:
 	RCObject2()noexcept{rc2_objects++;}
-	~RCObject2(){rc2_objects--;}
+	~RCObject2() override {rc2_objects--;}
 };
 
 static int rc3_objects = 0;
