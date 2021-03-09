@@ -194,7 +194,7 @@ static void test1(uint& num_tests, uint& num_errors)
 	HashMap<cstr,uint> a;
 	a.add("Aaa",33).add("Ccc",22).add("Bbb",44);
 
-	a.print(FD::stdout,"•");
+	a.print(FD::_stdout,"•");
 
 	FD fd; fd.open_tempfile();
 	a.print(fd,"•");
