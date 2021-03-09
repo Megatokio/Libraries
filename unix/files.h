@@ -138,7 +138,7 @@ enum
 	NOBODY		= 0000
 };
 
-#ifdef _LINUX
+#if defined(_LINUX) || defined(_OPENBSD)
 EXT	int	set_file_permissions(cstr path, mode_t who, mode_t perm);
 #else
 EXT	int	set_file_permissions(cstr path, mode_t who, mode_t perm, bool resolve_last_symlink=yes);
