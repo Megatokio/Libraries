@@ -40,15 +40,17 @@
 
 
 // test for DEBUG and RELEASE are preferred:
-#ifdef DEBUG
-  #if defined NDEBUG || defined RELEASE || defined FINAL
-	#error ""
-  #endif
+#if defined(NDEBUG) || defined(RELEASE) || defined(FINAL)
+#  ifdef DEBUG
+#    error ""
+#  endif
+#  undef NDEBUG
+#  undef RELEASE
+#  define NDEBUG
+#  define RELEASE
 #else
-  #undef  NDEBUG
-  #define NDEBUG
-  #undef  RELEASE
-  #define RELEASE
+#  undef DEBUG
+#  define DEBUG
 #endif
 
 
