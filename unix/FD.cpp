@@ -605,9 +605,9 @@ void FD::read_file(Array<str>& a, uint32 maxsize) THF
 	off_t sz = file_remaining();
 	if (sz>maxsize) throw FileError(fd,fpath,limiterror,"fd547");
 	uint32 n = uint32(sz);
-	str s = tempstr(n);
+	ptr s = tempmem(n+1);
 	read_bytes(s,n);
-	split(a,s,s+n);
+	_split(a,s,s+n);
 }
 
 /*	read file into StrArray
