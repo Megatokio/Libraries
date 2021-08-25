@@ -212,7 +212,7 @@ TPL	uint32	write			(T const& n)				THF		{ return write_bytes(_cptr(&n),SOT); }	/
 
 // read/write network byte order, msb first, big endian:
 
-#ifdef _LITTLE_ENDIAN
+#ifdef __LITTLE_ENDIAN__
 	uint32	read_bytes_x	(void* p, uint sz)			THF		{ return(read_bytes_reverted(p,sz)); }
 	uint32	write_bytes_x	(void const* p, uint sz)	THF		{ return(write_bytes_reverted(p,sz)); }
 TPL	uint32	read_data_x		(T* p, uint cnt)			THF		{ return(read_data_reverted(p,cnt,SOT)); }
@@ -251,7 +251,7 @@ TPL	uint32	write_x			(T const& n)				THF		{ return write_bytes_x(&n,SOT); }
 
 // read/write intel byte order (lsb first, little endian)
 
-#ifdef _LITTLE_ENDIAN
+#ifdef __LITTLE_ENDIAN__
 	uint32	read_bytes_z	(void* p, uint sz)			THF		{ return(read_bytes(p,sz)); }
 	uint32	write_bytes_z	(void const* p, uint sz)	THF		{ return(write_bytes(p,sz)); }
 TPL	uint32	read_data_z		(T* p, uint cnt)			THF		{ return(read_data(p,cnt)); }

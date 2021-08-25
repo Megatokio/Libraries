@@ -419,9 +419,9 @@ void FD::skip_utf8_bom() THF
 	uint8* bu = reinterpret_cast<uint8*>(&n);
 	off_t num = read_bytes(bu,3,1); // no throw on eof
 
-#if defined(_BIG_ENDIAN)
+#if defined(__BIG_ENDIAN__)
 	if (n == 0xEFBBBF00) return;
-#elif defined(_LITTLE_ENDIAN)
+#elif defined(__LITTLE_ENDIAN__)
 	if (n == 0x00BFBBEF) return;
 #else
 	if (bu[0] == 0xEF && bu[1] == 0xBB && bu[2] == 0xBF) return;

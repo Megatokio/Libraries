@@ -44,12 +44,12 @@
 #  ifdef DEBUG
 #    error ""
 #  endif
-#  undef NDEBUG
-#  undef RELEASE
+#  undef  NDEBUG
 #  define NDEBUG
+#  undef  RELEASE
 #  define RELEASE
 #else
-#  undef DEBUG
+#  undef  DEBUG
 #  define DEBUG
 #endif
 

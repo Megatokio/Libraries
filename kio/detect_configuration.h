@@ -40,7 +40,7 @@
 	_PROCESSOR								e.g. "i386"
 
 	endianess:
-	_LITTLE_ENDIAN, _BIG_ENDIAN
+	__LITTLE_ENDIAN__, __BIG_ENDIAN__		2021-08-25: changed due to OpenBSD. than you OpenBSD!
 	_BYTEORDER								e.g. "big endian (msb first)"
 
 	data alignment:
@@ -321,60 +321,84 @@
 /*
 	Detect endianess of processor
 	As soon as in C++20 we'll get language support for this. Yippie! I'm so glad, glad, glad...
+
+	https://sourceforge.net/p/predef/wiki/Endianness/
+
+	2021-08-25:
+	OpenBSD #defines _LITTLE_ENDIAN 1234 etc. in <endian.h> where others use __LITTLE_ENDIAN.
+	This is particularly incompatible with SUN's <sys/isa_defs.h> which i used so far.
+	So i'll change "guaranteed macro" names to the macros __LITTLE_ENDIAN__ etc. used by gcc,
+	hoping that noone dares to use them in a different way. Compiler warnings may bother.
 */
 
-#if defined(_LITTLE_ENDIAN) + defined(_BIG_ENDIAN) != 1
-
-	#undef _LITTLE_ENDIAN
-	#undef _BIG_ENDIAN
-
-	#if defined(__LITTLE_ENDIAN__) && __LITTLE_ENDIAN__
-		#define _LITTLE_ENDIAN 1
-
-	#elif defined(__BIG_ENDIAN__) && __BIG_ENDIAN__
-		#define _BIG_ENDIAN 1
-
-	#elif defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-		#define _LITTLE_ENDIAN 1
-
-	#elif defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-		#define _BIG_ENDIAN 1
-
-	#elif defined(__FreeBSD__) || defined(__NetBSD__)
-		#include <sys/endian.h>
-		#if _BYTE_ORDER == _LITTLE_ENDIAN
-			#undef _BIG_ENDIAN
-		#elif _BYTE_ORDER == _BIG_ENDIAN
-			#undef _LITTLE_ENDIAN
-		#endif
-
-	#elif defined(__sun__)
-		#include <sys/isa_defs.h>  // defines what we want
-	#endif
-
-	#if defined(_WIN32)
-		#define _LITTLE_ENDIAN 1
-	#endif
-
+#if !defined(__LITTLE_ENDIAN__) && !defined(__BIG_ENDIAN__)  && !defined(__PDP_ENDIAN__)
+#
+#  if defined(__BYTE_ORDER__)
+#    if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#      define __LITTLE_ENDIAN__ 1
+#    elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#      define __BIG_ENDIAN__ 1
+#    elif __BYTE_ORDER__ == __ORDER_PDP_ENDIAN__
+#      define __PDP_ENDIAN__ 1
+#    endif
+#
+#  elif defined(__FreeBSD__) || defined(__NetBSD__)
+#    include <sys/endian.h>
+#    if defined(_BYTE_ORDER)
+#      if _BYTE_ORDER == _LITTLE_ENDIAN
+#        define __LITTLE_ENDIAN__ 1
+#      elif _BYTE_ORDER == _BIG_ENDIAN
+#        define __BIG_ENDIAN__ 1
+#      elif _BYTE_ORDER == _PDP_ENDIAN
+#        define __PDP_ENDIAN__ 1
+#      endif
+#    endif
+#
+#  elif defined(_WIN32)
+#    define __LITTLE_ENDIAN__ 1
+#
+#  elif defined(__sun__)
+#    include <sys/isa_defs.h>
+#    if defined(_LITTLE_ENDIAN) && !defined(_BIG_ENDIAN)
+#      define __LITTLE_ENDIAN__ 1
+#    elif defined(_BIG_ENDIAN) && !defined(_LITTLE_ENDIAN)
+#      define __BIG_ENDIAN__ 1
+#    endif
+#  endif
+#
+#  if !defined(__LITTLE_ENDIAN__) && !defined(__BIG_ENDIAN__)  && !defined(__PDP_ENDIAN__)
+#    include <endian.h>
+#    if defined(BYTE_ORDER)
+#      if BYTE_ORDER == LITTLE_ENDIAN
+#       define __LITTLE_ENDIAN__ 1
+#      elif BYTE_ORDER == BIG_ENDIAN
+#        define __BIG_ENDIAN__ 1
+#      elif defined(BYTE_ORDER) && BYTE_ORDER == PDP_ENDIAN
+#        define __PDP_ENDIAN__ 1
+#      endif
+#    elif defined(__BYTE_ORDER)
+#      if __BYTE_ORDER == __LITTLE_ENDIAN
+#        define __LITTLE_ENDIAN__ 1
+#      elif __BYTE_ORDER == __BIG_ENDIAN
+#        define __BIG_ENDIAN__ 1
+#      elif __BYTE_ORDER == __PDP_ENDIAN
+#        define __PDP_ENDIAN__ 1
+#      endif
+#    elif defined(_BYTE_ORDER)
+#      if _BYTE_ORDER == _LITTLE_ENDIAN
+#        define __LITTLE_ENDIAN__ 1
+#      elif _BYTE_ORDER == _BIG_ENDIAN
+#        define __BIG_ENDIAN__ 1
+#      elif _BYTE_ORDER == _PDP_ENDIAN
+#        define __PDP_ENDIAN__ 1
+#      endif
+#    endif
+#  endif
 #endif
 
-
-#if defined(_LITTLE_ENDIAN) + defined(_BIG_ENDIAN) != 1
-
-	#undef _LITTLE_ENDIAN
-	#undef _BIG_ENDIAN
-
-	#include <endian.h>
-	#if __BYTE_ORDER == __LITTLE_ENDIAN
-		#define _LITTLE_ENDIAN 1
-	#elif __BYTE_ORDER == __BIG_ENDIAN
-		#define _BIG_ENDIAN    1
-	#else
-		#error unable to detect endianess
-	#endif
-
+#if defined(__LITTLE_ENDIAN__) + defined(__BIG_ENDIAN__) + defined(__PDP_ENDIAN__) != 1
+#  error "unable to detect endianess"
 #endif
-
 
 enum ByteOrder
 {
@@ -384,15 +408,15 @@ enum ByteOrder
 	ByteOrderUndefined
 };
 
-#if defined(_LITTLE_ENDIAN)
+#if defined(__LITTLE_ENDIAN__)
 	#define native_byteorder LittleEndian
 	#define _BYTEORDER "little endian (lsb first)"
 
-#elif defined(_BIG_ENDIAN)
+#elif defined(__BIG_ENDIAN__)
 	#define native_byteorder BigEndian
 	#define _BYTEORDER "big endian (msb first)"
 
-#elif defined(_PDP_ENDIAN)
+#elif defined(__PDP_ENDIAN__)
 	#define native_byteorder PdpEndian
 	#define _BYTEORDER "pdp endian (lsb first + msw first)"
 #endif

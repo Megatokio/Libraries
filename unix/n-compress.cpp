@@ -72,10 +72,10 @@
 
 
 // the following is hopefully the right way:
-#ifdef _BIG_ENDIAN
-#define	BYTEORDER	4321
+#ifdef __BIG_ENDIAN__
+#define	BYTEORDER 4321
 #endif
-#ifdef _LITTLE_ENDIAN
+#ifdef __LITTLE_ENDIAN__
 #define BYTEORDER 1234
 #endif
 #if _ALIGNMENT_REQUIRED
