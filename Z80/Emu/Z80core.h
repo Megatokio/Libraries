@@ -55,7 +55,7 @@ static uint8 zlog_flags[256] =
 
 	uint16*	rzp;						// pointer to double register, mostly IX or IY
 	#define	rz		(*rzp)				// IX or IY
-	#ifdef _BIG_ENDIAN
+	#ifdef __BIG_ENDIAN__
 	#define	rzh		(((uint8*)rzp)[0])	// XH or YH
 	#define	rzl		(((uint8*)rzp)[1])	// XL or YL
 	#else

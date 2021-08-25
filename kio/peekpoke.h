@@ -34,7 +34,7 @@
 // peek / poke in Big Endian or Network Byte Order: High Byte first:
 // this is also the native byte order of 68000 and PPC CPUs.
 //
-#if defined(_BIG_ENDIAN) && !_ALIGNMENT_REQUIRED
+#if defined(__BIG_ENDIAN__) && !_ALIGNMENT_REQUIRED
 	inline uint8  peek1X (void const* p)		noexcept { return *u8ptr(p);  }
 	inline uint16 peek2X (void const* p)		noexcept { return *u16ptr(p); }
 	inline uint32 peek4X (void const* p)		noexcept { return *u32ptr(p); }
@@ -60,7 +60,7 @@
 // peek / poke in Little Endian Byte Order: Low Byte first:
 // this is the native byte order of Z80 and i386 CPUs.
 //
-#if defined(_LITTLE_ENDIAN) && !_ALIGNMENT_REQUIRED
+#if defined(__LITTLE_ENDIAN__) && !_ALIGNMENT_REQUIRED
 	inline uint8  peek1Z (void const* p)		noexcept { return *u8ptr(p);  }
 	inline uint16 peek2Z (void const* p)		noexcept { return *u16ptr(p); }
 	inline uint32 peek4Z (void const* p)		noexcept { return *u32ptr(p); }
@@ -92,7 +92,7 @@
 		note: on PDP machines data is stored in little endian order.
 		unaligned peek and Poke on PDP machines is braindead anyway.
 */
-#ifdef _BIG_ENDIAN
+#ifdef __BIG_ENDIAN__
 	inline uint8  peek1 (void const* p)		noexcept { return peek1X(p); }
 	inline uint16 peek2 (void const* p)		noexcept { return peek2X(p); }
 	inline uint32 peek3 (void const* p)		noexcept { return peek3X(p); }

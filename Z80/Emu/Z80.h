@@ -32,10 +32,10 @@
 // ----	helper ----
 
 #include "kio/detect_configuration.h"
-#ifdef _BIG_ENDIAN  // m68k, ppc
+#ifdef __BIG_ENDIAN__  // m68k, ppc
 static inline uint8& lowbyte(CoreByte& n) noexcept { return *(((uint8*)&n)+(sizeof(CoreByte)-1)); }
 #endif
-#ifdef _LITTLE_ENDIAN // i386
+#ifdef __LITTLE_ENDIAN__ // i386
 static inline uint8& lowbyte(CoreByte& n) noexcept { return reinterpret_cast<uint8&>(n); }
 #endif
 
@@ -56,10 +56,10 @@ union Z80Registers
 {
 	uint16 nn[16];
 	struct { uint16 af,bc,de,hl, af2,bc2,de2,hl2, ix,iy,pc,sp, iff, ir; };
-	#if BYTE_ORDER == BIG_ENDIAN // m68k, ppc
+	#ifdef __BIG_ENDIAN__ // m68k, ppc
 	struct { uint8 a,f,b,c,d,e,h,l, a2,f2,b2,c2,d2,e2,h2,l2, xh,xl,yh,yl,pch,pcl,sph,spl, iff1,iff2, i,r, im,xxx; };
 	#endif
-	#if BYTE_ORDER == LITTLE_ENDIAN // i386
+	#ifdef __LITTLE_ENDIAN__ // i386
 	struct { uint8 f,a,c,b,e,d,l,h, f2,a2,c2,b2,e2,d2,l2,h2, xl,xh,yl,yh,pcl,pch,spl,sph, iff1,iff2, r,i, im,xxx; };
 	#endif
 };
