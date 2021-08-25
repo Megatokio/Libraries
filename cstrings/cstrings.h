@@ -173,9 +173,11 @@ extern	str	 durationstr (double secs)		noexcept;
 inline	str	 durationstr (float secs)		noexcept { return durationstr(double(secs)); }
 template<typename T> inline str durationstr (T secs) noexcept { return durationstr(time_t(secs)); }
 
-// NOTE: split() reuses the source buffer and overwrites line delimiters with 0, evtl. overwriting char at ptr e!
+// NOTE: _split() reuses the source buffer and overwrites line delimiters with 0, evtl. overwriting char at ptr e!
 extern	void _split (Array<str>& z, ptr a, ptr e)			throws; // split at line breaks
 extern	void _split (Array<str>& z, ptr a, ptr e, char c)	throws; // split at char
+inline	void _split (Array<cstr>& z, ptr a, ptr e)			throws { _split(reinterpret_cast<Array<str>&>(z),a,e); }
+inline	void _split (Array<cstr>& z, ptr a, ptr e, char c)	throws { _split(reinterpret_cast<Array<str>&>(z),a,e,c); }
 
 extern	void split (Array<str>& z, cptr a, cptr e)			throws; // split at line breaks
 extern	void split (Array<str>& z, cptr a, cptr e, char c)	throws; // split at char
