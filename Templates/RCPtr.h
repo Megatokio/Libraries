@@ -67,7 +67,7 @@ class RCPtr
 
 protected:
 	T*		p;
-
+private:
 	void	retain () const				noexcept { if(p) p->retain(); }
 	void	release () const			noexcept { if(p) p->release(); }
 
@@ -292,6 +292,12 @@ public:
 
 	void remove (const T* item, bool fast=0) noexcept { removeitem(item,fast); }
 	void remove (uint idx, bool fast=0)	noexcept { this->removeat(idx,fast); }
+
+	using Array<RCPtr<T>>::append;
+	RCPtr<T>& append (T* q) throws { return RCArray<T>::append(RCPtr<T>(q)); }
+
+	using Array<RCPtr<T>>::operator<<;
+	RCArray& operator<< (T* q) throws { append(q); return *this; }
 };
 
 template<class KEY, class ITEM> class HashMap;
