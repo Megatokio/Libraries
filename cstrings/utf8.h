@@ -4,13 +4,8 @@
 // https://opensource.org/licenses/BSD-2-Clause
 
 #include "cstrings.h"
-#include "unicode.h"
 #include "ucs4.h"
 
-
-typedef uint8  ucs1char;
-typedef uint16 ucs2char;
-typedef uint32 ucs4char;
 
 /*
 	namespace utf8 enhances some functions in cstrings.cpp
@@ -197,7 +192,8 @@ inline ptr  prevchar (ptr p)		noexcept { while (is_fup(*--p)) {} return p; }
 inline cptr prevchar (cptr a, cptr p) noexcept { while (--p >= a && is_fup(*p)) {} return p; }
 
 
-extern uint charcount (cstr)		noexcept; // count characters in utf-8 string
+extern uint charcount (cstr)		noexcept; // count characters in utf-8 string; 0-terminated
+extern uint charcount (cptr q, uint qsize) noexcept; // count characters in utf-8 string
 extern uint max_css	  (cstr)		noexcept; // character size shift required for utf-8 string
 inline uint max_csz	  (cstr s)		noexcept { return 1u << max_css(s); }
 extern bool fits_in_ucs1 (cstr)		noexcept;
@@ -220,10 +216,13 @@ extern ptr ucs2_to_utf8 (const ucs2char* q, uint qcnt, ptr z) noexcept;
 extern ptr ucs4_to_utf8 (const ucs4char* q, uint qcnt, ptr z) noexcept;
 
 // write into existing buffer:
-// _not_ 0-terminated. returns ptr _behind_ z[]
-extern ucs1char* utf8_to_ucs1 (cstr q, ucs1char* z)	noexcept; // set errno
-extern ucs2char* utf8_to_ucs2 (cstr q, ucs2char* z)	noexcept; // set errno
-extern ucs4char* utf8_to_ucs4 (cstr q, ucs4char* z)	noexcept; // set errno
+// destination string _not_ 0-terminated. returns ptr _behind_ z[]
+extern ucs1char* utf8_to_ucs1 (cstr q, uint qsize, ucs1char* z)	noexcept; // set errno	source can contain char(0)
+extern ucs2char* utf8_to_ucs2 (cstr q, uint qsize, ucs2char* z)	noexcept; // set errno
+extern ucs4char* utf8_to_ucs4 (cstr q, uint qsize, ucs4char* z)	noexcept; // set errno
+inline ucs1char* utf8_to_ucs1 (cstr q, ucs1char* z)	noexcept { return utf8_to_ucs1(q,strLen(q),z); } // set errno	source 0-terminated
+inline ucs2char* utf8_to_ucs2 (cstr q, ucs2char* z)	noexcept { return utf8_to_ucs2(q,strLen(q),z); } // set errno
+inline ucs4char* utf8_to_ucs4 (cstr q, ucs4char* z)	noexcept { return utf8_to_ucs4(q,strLen(q),z); } // set errno
 
 // allocate in tempmem:
 // 0-terminated. returns ptr to str

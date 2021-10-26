@@ -67,6 +67,21 @@ uint charcount (cstr q) noexcept
 	}
 	return rval;
 }
+uint charcount (cptr q, uint qsize) noexcept
+{
+	// count characters in utf-8 string
+	// the "Golden Rule": every non-fup makes a char
+
+	cptr e = q + qsize;
+	uint rval = 0;
+	while (q < e)
+	{
+		char c = *q++;
+		if (no_fup(c)) rval++;
+	}
+	return rval;
+}
+
 uint max_css (cstr q) noexcept
 {
 	// calculate size shift for required character size (ucs1, ucs2 or ucs4) to store utf-8 string
@@ -267,7 +282,7 @@ ucs4char utf8_to_ucs4char (cptr q) noexcept
 	return c;
 }
 
-ucs4char* utf8_to_ucs4 (cptr q, ucs4char* z) noexcept
+ucs4char* utf8_to_ucs4 (cptr q, uint qsize, ucs4char* z) noexcept
 {
 	// decode utf-8 string into ucs4 buffer
 	// the buffer must be large enough to hold the decoded text
@@ -281,8 +296,11 @@ ucs4char* utf8_to_ucs4 (cptr q, ucs4char* z) noexcept
 	// • precalculate required size of buffer[] with char_count()
 	// • provide buffer[strlen(q)] and truncate at size returned by this function
 
-	if (q) while (uint32 c = *cuptr(q++))
+	cptr e = q+qsize;
+
+	while (q < e)
 	{
+		uint32 c = *cuptr(q++);
 		uint n;
 		if (c < 0x80) { *z++ = c; continue; }
 		if (c < 0xC0) { errno = unexpectedfup; continue; }
@@ -294,7 +312,7 @@ ucs4char* utf8_to_ucs4 (cptr q, ucs4char* z) noexcept
 					  {            n = 5; }			// full 32 bit decoded
 		do
 		{
-			if (is_fup(*q))
+			if (q < e && is_fup(*q))
 			{
 				c = (c<<6) + (*cuptr(q++) & 0x3F);
 				continue;
@@ -313,7 +331,8 @@ ucs4char* utf8_to_ucs4 (cptr q, ucs4char* z) noexcept
 
 	return z;
 }
-ucs2char* utf8_to_ucs2 (cptr q, ucs2char* z) noexcept
+
+ucs2char* utf8_to_ucs2 (cptr q, uint qsize, ucs2char* z) noexcept
 {
 	// decode utf-8 string into ucs2 buffer
 	// the buffer must be large enough to hold the decoded text
@@ -321,8 +340,11 @@ ucs2char* utf8_to_ucs2 (cptr q, ucs2char* z) noexcept
 	// • illegal overlong encodings are not trapped
 	// • combining characters etc. are not handled
 
-	if (q) while (uint c = *cuptr(q++))
+	cptr e = q+qsize;
+
+	while (q < e)
 	{
+		uint c = *cuptr(q++);
 		uint n;
 		if (c < 0x80) { *z++ = ucs2char(c); continue; }
 		if (c < 0xC0) { errno = unexpectedfup; continue; }
@@ -333,15 +355,13 @@ ucs2char* utf8_to_ucs2 (cptr q, ucs2char* z) noexcept
 		{
 			errno = notindestcharset;
 			*z++ = replacementchar;
-			//n = c <= 0xF7 ? 3 : c <= 0xFB ? 4	: 5;
-			//while (n-- && is_fup(*q)) { q++; }	no need to limit fups, we already set errno
-			while (is_fup(*q)) { q++; }
+			while (q < e && is_fup(*q)) { q++; }
 			continue;
 		}
 
 		while (n--)
 		{
-			if (is_fup(*q))
+			if (q < e && is_fup(*q))
 			{
 				c = (c<<6) + (*cuptr(q++) & 0x3F);
 				continue;
@@ -359,19 +379,24 @@ ucs2char* utf8_to_ucs2 (cptr q, ucs2char* z) noexcept
 
 	return z;
 }
-ucs1char* utf8_to_ucs1 (cptr q, ucs1char* z) noexcept
+
+ucs1char* utf8_to_ucs1 (cptr q, uint qsize, ucs1char* z) noexcept
 {
 	// decode utf-8 string into ucs1 buffer
 	// the buffer must be large enough to hold the decoded text
 
-	if (q) while (uint c = *cuptr(q++))
+	cptr e = q+qsize;
+
+	while (q < e)
 	{
+		uint c = *cuptr(q++);
+
 		if (c <= 0x7F) { *z++ = ucs1char(c); continue; }
 		if (c <= 0xBF) { errno = unexpectedfup; continue; }
 
 		if (c <= 0xc3)	// %110000xx + %10xxxxxx
 		{
-			if (is_fup(*q))
+			if (q < e && is_fup(*q))
 			{
 				*z++ = ucs1char((c<<6) + (*cuptr(q++) & 0x3F));
 			}
@@ -385,10 +410,7 @@ ucs1char* utf8_to_ucs1 (cptr q, ucs1char* z) noexcept
 
 		errno = notindestcharset;
 		*z++ = replacementchar;
-
-		//uint n = c < 0xE0 ? 1 : c < 0xF0 ? 2 : c < 0xF8 ? 3 : c < 0xFC ? 4 : 5;
-		//while (n-- && is_fup(*q)) { q++; }	no need to limit fups, we already set errno
-		while (is_fup(*q)) { q++; }
+		while (q < e && is_fup(*q)) { q++; }
 	}
 
 	return z;
