@@ -187,7 +187,7 @@ str mulstr (cstr q, uint n) throws // LimitError
 	if (!q || !*q || !n) return emptystr;
 
 	size_t len = strlen(q);
-	if (len*n > 0xFFFFFF) throw LimitError("mulstr()",len*n,0xFFFFFF);	// 16 MB
+	if (len*n > 0xFFFFFFu) throw LimitError("mulstr()",len*n,0xFFFFFFu);	// 16 MB
 	str s = tempstr(uint(len*n));
 	ptr z = s;
 
@@ -412,8 +412,6 @@ str speakingNumberStr (double n) throws
 
 /* ----	convert string ------------------------------
 */
-static const char cc[] = "\\\"\a\b\f\n\r\t\v";	// control codes
-static const char ec[] = "\\\"abfnrtv";			// escape characters
 
 static cptr str_comp(cstr a, cstr b) noexcept
 {
@@ -455,6 +453,9 @@ str	escapedstr (cstr s0) noexcept
 	cptr q;
 	ptr  z;
 	char c;
+
+	static const char cc[] = "\\\"\a\b\f\n\r\t\v";	// control codes
+	static const char ec[] = "\\\"abfnrtv";			// escape characters
 
 	if (!s0 || !*s0) return emptystr;
 	z = s = str(s0);
@@ -1220,7 +1221,11 @@ cstr detabstr (cstr s, uint tabstops) noexcept
 #ifdef INCLUDE_DEPRECATED
 
 char NextChar ( char const *& p )
-{	char c;
+{
+	char c;
+	static const char cc[] = "\\\"\a\b\f\n\r\t\v";	// control codes
+	static const char ec[] = "\\\"abfnrtv";			// escape characters
+
 	c = *p++; if (c!='\\') return c;	// plain char
 	c = *p++;
 	if ( (c-'0')&~7 )					// no octal digit
