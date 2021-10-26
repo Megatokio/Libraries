@@ -94,9 +94,9 @@ InternalError::InternalError (cstr file, uint line, int e) noexcept
 //			LimitError
 // ---------------------------------------------
 
-LimitError::LimitError (cstr where, long sz, long max) noexcept
+LimitError::LimitError (cstr where, ulong sz, ulong max) noexcept
 :
-	AnyError(limiterror, usingstr("%s: size %li exceeds maximum of %li", where, sz, max))
+	AnyError(limiterror, usingstr("%s: size %lu exceeds maximum of %lu", where, sz, max))
 {}
 
 

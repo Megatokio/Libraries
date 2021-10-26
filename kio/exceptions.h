@@ -99,8 +99,8 @@ class LimitError : public AnyError
 {
 public:
 	template<typename T>
-	LimitError (cstr where, T sz, T max) noexcept : LimitError(where,long(sz),long(max)){}
-	LimitError (cstr where, long sz, long max)	noexcept;
+	LimitError (cstr where, T sz, T max) noexcept : LimitError(where,ulong(sz),ulong(max)){}
+	LimitError (cstr where, ulong sz, ulong max)	noexcept;
 };
 
 
