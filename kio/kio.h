@@ -381,6 +381,30 @@ uint   random(uint n)	{ return (uint32(n) * uint16(random())) >> 16; } // 16 bit
 #undef FALLTHROUGH
 #define FALLTHROUGH goto CAT(label,__LINE__); CAT(label,__LINE__):
 
+
+// class helper:
+
+#define NO_COPY_MOVE(classname)                      \
+   classname(const classname &) = delete;            \
+   classname &operator=(const classname &) = delete; \
+   classname(classname &&)                 = delete; \
+   classname &operator=(classname &&) = delete
+
+#define NO_COPY(classname)                \
+   classname(const classname &) = delete; \
+   classname &operator=(const classname &) = delete
+
+#define NO_MOVE(classname)           \
+   classname(classname &&) = delete; \
+   classname &operator=(classname &&) = delete
+
+#define DEFAULT_COPY(classname)            \
+   classname(const classname &) = default; \
+   classname &operator=(const classname &) = default
+
+#define DEFAULT_MOVE(classname)       \
+   classname(classname &&) = default; \
+   classname &operator=(classname &&) = default
 #endif
 
 
