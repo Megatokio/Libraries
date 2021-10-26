@@ -25,7 +25,7 @@
 	_PROCESSOR								e.g. "i386"
 
 	endianess:
-	__LITTLE_ENDIAN__, __BIG_ENDIAN__		2021-08-25: changed due to OpenBSD. than you OpenBSD!
+	__LITTLE_ENDIAN__, __BIG_ENDIAN__		2021-08-25: changed due to OpenBSD. thank you OpenBSD!
 	_BYTEORDER								e.g. "big endian (msb first)"
 
 	data alignment:
