@@ -4,7 +4,7 @@
 // https://opensource.org/licenses/BSD-2-Clause
 
 #include "Array.h"
-
+#include <type_traits>
 
 /*	Volatile Objects, Reference Counter and Locking Pointer:
 
@@ -44,7 +44,6 @@
 	This results in a dead lock. The NVPtr must be deleted (reassigned, go out of scope) before.
 */
 
-
 template<class T>
 class RCPtr
 {
@@ -68,6 +67,17 @@ public:
 	RCPtr&	operator= (RCPtr&& q)		noexcept { std::swap(p,q.p); return *this; }
 	RCPtr&	operator= (RCPtr const& q) 	noexcept { q.retain(); release(); p = q.p; return *this; }
 	RCPtr&	operator= (T* q)      		noexcept { if(q) q->retain(); release(); p = q; return *this; }
+
+	#define subclass_only typename std::enable_if<std::is_base_of<T,T2>::value, int>::type = 1
+	template<typename T2, subclass_only>
+	RCPtr&	operator= (RCPtr<T2>&& q)	noexcept { q.retain(); release(); p = q.ptr(); return *this; }
+	template<typename T2, subclass_only>
+	RCPtr&	operator= (RCPtr<T2> const& q) noexcept { q.retain(); release(); p = q.ptr(); return *this; }
+	template<typename T2, subclass_only>
+	RCPtr (RCPtr<T2>& q)				noexcept :p(q.ptr()) { retain(); }
+	template<typename T2, subclass_only>
+	RCPtr (RCPtr<T2>&& q)				noexcept :p(q.ptr()) { retain(); }
+	#undef subclass_only
 
 	// factory method
 	// not needed because RCPtr is final and can't be subclassed. (but the RCObject can.)
@@ -286,8 +296,15 @@ public:
 	RCArray& operator<< (T* q) throws { append(q); return *this; }
 };
 
+
+// TODO: HashMap.h must be included first
 template<class KEY, class ITEM> class HashMap;
-template<class KEY, class T> class RCHashMap : public HashMap<KEY,RCPtr<T>> {};
+template<class KEY, class T> class RCHashMap : public HashMap<KEY,RCPtr<T>>
+{
+public:
+	// default: for up to 1024 items without resizing
+	explicit RCHashMap (uint max=1<<10)	throws : HashMap<KEY,RCPtr<T>>(max) {}
+};
 
 
 
