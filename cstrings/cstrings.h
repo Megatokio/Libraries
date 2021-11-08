@@ -139,6 +139,12 @@ inline	str  hexstr		(cstr s)			noexcept { return hexstr(s,strLen(s)); }	// must 
 //template<class T> str hexstr (T* p, uint cnt) throws AMBIGUITY: reinterpret vs. static cast!
 //template<class T> str hexstr (T n, uint len)  throws AMBIGUITY: reinterpret vs. static cast!
 
+static constexpr char str36[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+extern  str  numstr		(uint32 n, uint base, cstr digits=str36) noexcept;
+extern  str  numstr		(uint64 n, uint base, cstr digits=str36) noexcept;
+template <typename T> inline str_if_Tle4 numstr (T n, uint base, cstr digits=str36) noexcept { return numstr(uint32(n),base,digits); }
+template <typename T> inline str_if_Tgt4 numstr (T n, uint base, cstr digits=str36) noexcept { return numstr(uint64(n),base,digits); }
+
 extern	str	 charstr	(char)				noexcept;
 extern	str	 charstr	(char,char)			noexcept;
 extern	str	 charstr	(char,char,char)	noexcept;

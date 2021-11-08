@@ -247,12 +247,11 @@ str hexstr (uint32 n, uint digits) noexcept
 {
 	// Convert number to hexadecimal string
 
-	static const char hex[] = "0123456789ABCDEF";
 	str c = tempstr(digits);
 
 	while (digits)
 	{
-		c[--digits] = hex[n&0x0f];
+		c[--digits] = str36[n&0x0f];
 		n >>= 4;
 	}
 	return c;
@@ -262,15 +261,36 @@ str hexstr (uint64 n, uint digits) noexcept
 {
 	// Convert number to hexadecimal string
 
-	static const char hex[] = "0123456789ABCDEF";
 	char* c = tempstr(digits);
 
 	while (digits)
 	{
-		c[--digits] = hex[n&0x0f];
+		c[--digits] = str36[n&0x0f];
 		n >>= 4;
 	}
 	return c;
+}
+
+str numstr (uint32 n, uint base, cstr digits) noexcept
+{
+	assert(base >= 2 && digits && base <= strlen(digits));
+
+	const uint bsz = sizeof(uint32) * CHAR_BIT;
+	char bu[bsz+1];
+	ptr p = bu + bsz; *p = 0;
+	do { *--p = digits[n % base]; n /= base; } while(n);
+	return newcopy(p);
+}
+
+str numstr (uint64 n, uint base, cstr digits) noexcept
+{
+	assert(base >= 2 && digits && base <= strlen(digits));
+
+	const uint bsz = sizeof(uint64) * CHAR_BIT;
+	char bu[bsz+1];
+	ptr p = bu + bsz; *p = 0;
+	do { *--p = digits[n % base]; n /= base; } while(n);
+	return newcopy(p);
 }
 
 str binstr (uint value, cstr b0, cstr b1) noexcept
