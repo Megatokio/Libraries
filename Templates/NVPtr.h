@@ -73,7 +73,7 @@ public:
 	NVPtr&	operator=	(NVPtr&& q)			{ assert(this!=&q); unlock(); p=q.p; q.p=nullptr; return *this; }
 //	NVPtr&	operator=	(RCPtr<vT>& q)		{ if(p!=q.p) { unlock(); p=q.p; lock(); } return *this; }
 	NVPtr&	operator=	(vT* q)				{ if(p!=q)   { unlock(); p=q;   lock(); } return *this; }
-	NVPtr&	operator=	(ptr p)				{ assert(p==nullptr); unlock(); p=nullptr; return *this; }
+	NVPtr&	operator=	(ptr q)				{ assert(q==nullptr); unlock(); p=nullptr; return *this; }
 
 
 	T*		operator->	()					{ return p; }
