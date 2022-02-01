@@ -9,6 +9,7 @@
 #include "unix/FD.h"
 #include "template_helpers.h"
 #include "sort.h"
+#include <stdexcept>
 
 /*	Array for items and cstr
 

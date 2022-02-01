@@ -69,6 +69,11 @@ public:
 	RCPtr&	operator= (T* q)      		noexcept { if(q) q->retain(); release(); p = q; return *this; }
 
 	#define subclass_only typename std::enable_if<std::is_base_of<T,T2>::value, int>::type = 1
+#ifdef _GCC
+	template<typename T2, subclass_only> friend class ::RCPtr;
+#else
+	template<typename T2> friend class ::RCPtr;
+#endif
 	template<typename T2, subclass_only>
 	RCPtr&	operator= (RCPtr<T2>&& q)	noexcept { q.retain(); release(); p = q.ptr(); return *this; }
 	template<typename T2, subclass_only>
