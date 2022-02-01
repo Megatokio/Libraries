@@ -32,7 +32,7 @@ hierarchy:
 
 		AnyError;					//							base class for own errors: includes error code
 			InternalError			// #include "kio/abort.h"	ABORT, TRAP, assert, IERR, TODO
-			LimitError;			//							Array<T>: array too large
+			LimitError --> std::length_error //					Array<T>: array too large
 			DataError;				//							data parsers, e.g. for input data from file
 			FileError;				// "unix/file_utilities.h"
 
@@ -97,9 +97,14 @@ public:
 
 class LimitError : public AnyError
 {
+	// deprecated. use:
+	// std::length_error(usingstr("WHERE: size %lu exceeds maximum of %lu",SIZE,MAX))
+
 public:
 	template<typename T>
+	__attribute__((deprecated))
 	LimitError (cstr where, T sz, T max) noexcept : LimitError(where,ulong(sz),ulong(max)){}
+	__attribute__((deprecated))
 	LimitError (cstr where, ulong sz, ulong max)	noexcept;
 };
 

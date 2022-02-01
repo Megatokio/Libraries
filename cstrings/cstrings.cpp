@@ -180,14 +180,14 @@ bool islowerstr	(cstr s) noexcept
 	return yes;
 }
 
-str mulstr (cstr q, uint n) throws // LimitError
+str mulstr (cstr q, uint n) throws // std::length_error
 {
 	// Repeate string n times
 
 	if (!q || !*q || !n) return emptystr;
 
 	size_t len = strlen(q);
-	if (len*n > 0xFFFFFFu) throw LimitError("mulstr()",len*n,0xFFFFFFu);	// 16 MB
+	if (len*n > 16 MB) throw std::length_error(usingstr("mulstr(): size = %lu exceeds maximum of 16 MB", long(len*n)));
 	str s = tempstr(uint(len*n));
 	ptr z = s;
 

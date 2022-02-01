@@ -163,7 +163,7 @@ template<typename T>
 T* Array<T>::allocate (uint n) throws
 {
 	if (n <= maxCount) return n ? reinterpret_cast<T*>(new char[n*sizeof(T)]) : nullptr;
-	throw LimitError("Array<T>", n, maxCount);
+	throw std::length_error(usingstr("Array::allocate(): new count = %u exceeds maximum of %u", n, maxCount));
 }
 
 template<typename T>
