@@ -1,4 +1,4 @@
-// Copyright (c) 2009 - 2021 kio@little-bat.de
+// Copyright (c) 2009 - 2022 kio@little-bat.de
 // BSD-2-Clause license
 // https://opensource.org/licenses/BSD-2-Clause
 
