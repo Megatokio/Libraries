@@ -79,7 +79,7 @@ extern	str	 whitestr	(cstr, char c=' ')	noexcept;
 
 extern	str	 substr		(cptr a, cptr e)	noexcept;
 inline	str	 substr		(cuptr a, cuptr e)	noexcept { return substr(cptr(a),cptr(e)); }	// convenience method
-extern	str  mulstr 	(cstr, uint n)		throws;	  // LimitError
+extern	str  mulstr 	(cstr, uint n)		throws;	  // std::length_error
 extern	str  catstr 	(cstr, cstr)		noexcept;
 extern	str  catstr 	(cstr, cstr, cstr, cstr=nullptr, cstr=nullptr, cstr=nullptr) noexcept;
 extern	str  catstr 	(cstr, cstr, cstr, cstr, cstr, cstr, cstr, cstr=nullptr, cstr=nullptr, cstr=nullptr) noexcept;
