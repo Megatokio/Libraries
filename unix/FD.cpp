@@ -235,10 +235,15 @@ int FD::set_blocking( bool f ) noexcept
 //
 int FD::set_async( bool f ) noexcept
 {
+#ifndef __CYGWIN__
 	int arg = fcntl(fd,F_GETFL,&arg);
 	if (arg==-1) return -1; // errno set
 	if (f) arg |= O_ASYNC; else arg &= ~O_ASYNC;
 	return fcntl(fd,F_SETFL,arg);
+#else
+	errno = ENOSYS; // Function not implemented
+	return -1;
+#endif
 }
 
 

@@ -1,7 +1,7 @@
 ## Kio's Libraries
 
 Files (.h, .cpp and templates) shared among my projects. 
-Should be placed side-by-side with the project(s).
+Should be placed side-by-side with the project(s) if the project doesn't included it as a submodule.
 
 Contains 
 - a c-string library, 

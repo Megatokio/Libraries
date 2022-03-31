@@ -10,7 +10,7 @@
 	_UNIX, _WINDOWS							undef or 1
 
 	sub platform identifier:
-	_LINUX, _BSD, _MINIX, _SOLARIS			undef or 1
+	_LINUX, _BSD, _MINIX, _SOLARIS, _CYGWIN	undef or 1
 	_FREEBSD, _OPENBSD, _NETBSD, _MACOSX	undef or 1
 
 	identifier string:
@@ -110,6 +110,11 @@
 #elif defined(_BSD)
 	#define _UNIX 1
 	#define _PLATFORM "Unix-BSD"
+
+#elif defined (__CYGWIN__)
+	#define _UNIX 1
+	#define _CYGWIN 1
+	#define _PLATFORM "Unix-Cygwin"
 
 #elif defined(__linux__) || defined(_LINUX)
 	#define _UNIX 1
