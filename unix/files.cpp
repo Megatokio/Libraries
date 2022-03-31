@@ -1413,10 +1413,18 @@ MyVolumeInfo::MyVolumeInfo(struct mntent* mntent)
 	this->blocksfree 	= info.f_bavail;
 	this->totalfiles 	= info.f_files;
 	this->filesfree 	= info.f_ffree;
+#ifndef __CYGWIN__
 	this->fsid 			= info.f_fsid;
+#else
+	this->fsid 			= 0;
+#endif
 	this->owner 		= 0; // info.f_owner;       // user that mounted the filesystem
 	this->fstype 		= uint(info.f_type);
+#ifndef __CYGWIN__
 	this->flags			= uint(info.f_flags);
+#else
+	this->flags			= 0;
+#endif
 	this->fs_subtype	= 0; // info.f_fssubtype;   // fs sub-type (flavor)
 	this->fstypename	= newcopy(mntent->mnt_type);
 	this->mountpoint	= newcopy(mpath);
