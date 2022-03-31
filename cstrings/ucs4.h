@@ -45,6 +45,7 @@ inline bool gc_in_range (GeneralCategory a, ucs4char c, GeneralCategory e) { ret
 inline bool is_control	 (ucs4char c) noexcept { return c<0x80 ? c<0x20 || c==0x7f : general_category(c) == GcControl; }
 inline bool is_space	 (ucs4char c) noexcept { return (--c&0x7f) < ' '; } // space, nbsp or ctrl excl. 0 and 0x7F
 inline bool is_letter	 (ucs4char c) noexcept { return c<0x80 ? is_in_range('a',c|0x20,'z') : gc_in_range(GcLetter,c,GcUppercaseLetter); }
+inline bool is_ascii	 (ucs4char c) noexcept { return c <= 0x7F; }
 
 inline bool is_printable (ucs4char c) noexcept { return c<0x700 ? c!=0x7fu && (c&~0x80u)>=0x20 : _is_printable(c); }
 inline bool is_lowercase (ucs4char c) noexcept { return c<0xd7 ? is_in_range('a',c,'z') : general_category(c) == GcLowercaseLetter; }
