@@ -171,7 +171,7 @@
 	#define	_sizeof_long			4
 	#define	_sizeof_float			4
 	#define	_sizeof_double			8
-	#if defined(__linux__)
+	#if defined(__linux__) || defined (__CYGWIN__)
 		#define	_sizeof_long_double	12	// ~ gcc option: -m96bit-long-double
 	#else
 		#define	_sizeof_long_double	16	// ~ gcc option: -m128bit-long-double

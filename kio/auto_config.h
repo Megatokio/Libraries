@@ -66,6 +66,10 @@
 #define HAVE_SYS_DIRENT_H 1		// <sys/dirent.h>
 #endif
 
+#if defined (_CYGWIN)
+#define HAVE_DIRENT_H 1			// <dirent.h>
+#define HAVE_SYS_VFS_H 1		// <sys/vfs.h>
+#endif
 
 #if defined _MACOSX
 #define HAVE_DIRENT_H 1			// <dirent.h>

@@ -28,7 +28,7 @@
 #include <sys/dirent.h>
 #endif
 
-#ifdef HAVE_SYS_VFS_H   // Linux
+#ifdef HAVE_SYS_VFS_H   // Linux or Cygwin
 #include <sys/vfs.h>
 #endif
 #ifdef HAVE_MNTENT_H    // Linux
@@ -43,7 +43,7 @@
 
 
 // these shall bummer if assumptions fail:
-#ifndef _LINUX
+#if !defined(_LINUX) && !defined(_CYGWIN)
 #define	S_IFMT		0170000		/* [XSI] type of file mask */
 #define	S_IFIFO		0010000		/* [XSI] named pipe (fifo) */
 #define	S_IFCHR		0020000		/* [XSI] character special */
@@ -1187,7 +1187,7 @@ void copy_file(cstr qpath, cstr zpath, bool overwrite) THF
 }
 
 
-#if defined(_LINUX) || defined(_OPENBSD)
+#if defined(_LINUX) || defined(_OPENBSD) || defined(_CYGWIN)
 int set_file_permissions(cstr path, mode_t who, mode_t what)
 {
 	path = quick_fullpath(path);
@@ -1257,11 +1257,12 @@ uint get_volume_flags( cstr path )
 	struct statfs fs;
 	int n = statfs(fullpath(path,1,0),&fs);
 	if (n) return vol_wprot;						// error: errno set
-
 	uint rval = 0;
+#ifndef __CYGWIN__
 	if (  fs.f_flags & MNT_RDONLY							  ) rval |= vol_wprot;
 #ifdef MNT_NODEV
 	if ( (fs.f_flags & MNT_NOSUID) && (fs.f_flags & MNT_NODEV) ) rval |= vol_ejectable;
+#endif
 #endif
 	if (  fs.f_blocks>0										  ) rval |= vol_mounted;
 	errno = noerror;

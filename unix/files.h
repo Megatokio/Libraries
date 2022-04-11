@@ -163,7 +163,9 @@ public:
 	uint64	blocksfree;		// fs.f_bavail			free blocks avail to non-superuser
 	uint64	totalfiles;		// fs.f_files			total file nodes in file system
 	uint64	filesfree;		// fs.f_ffree			free file nodes in fs
+#ifndef __CYGWIN__
 	fsid_t	fsid;			// fs.f_fsid 			file system id 					???
+#endif
 	uid_t	owner;			// fs.f_owner			user that mounted the filesystem
 	uint	fstype;			// fs.f_type			type of filesystem				number
 	uint32	flags;			// fs.f_flags			copy of mount exported flags: 	e.g. MNT_RDONLY
