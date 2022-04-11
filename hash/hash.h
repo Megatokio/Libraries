@@ -43,7 +43,7 @@ namespace kio
 //	inline uint32 hash (uint key)		{ return key ^ (key>>16); }
 //	inline uint32 hash (int key)		{ return hash(uint32(key)); }
 
-#ifndef _LINUX
+#if !defined(_LINUX) && !defined(_CYGWIN)
 #if _sizeof_long == 8
 	inline uint32 hash (ulong key)		{ return hash(uint64(key)); }
 	inline uint32 hash (long key)		{ return hash(uint64(key)); }
