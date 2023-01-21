@@ -77,7 +77,9 @@
 
 
 #if defined _MACOSX
-#define HAVE_SYS_LOADAVG_H	// <sys/loadavg.h>
+#define HAVE_DIRENT_H 1			// <dirent.h>
+//#define HAVE_SYS_LOADAVG_H	// <sys/loadavg.h>
+#define HAVE_SYS_SYSCTL_H		// <sys/sysctl.h>
 #endif
 
 
