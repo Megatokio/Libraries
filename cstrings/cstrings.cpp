@@ -3,8 +3,9 @@
 // https://opensource.org/licenses/BSD-2-Clause
 
 #include "kio/kio.h"
-#include <cmath>
 #include "cstrings.h"
+#include <cmath>
+#include <stdexcept>
 #ifndef NO_Kio_Array
 #include "Templates/Array.h"
 #endif
@@ -406,15 +407,15 @@ str usingstr (cstr format, va_list va) noexcept
 
 	int err = errno;							// save errno
 
+	static char bu[1];
 	va_list va2;								// duplicate va_list
 	va_copy(va2,va);
-
-	static char bu[1];
-	int n = vsnprintf( bu, 0, format, va2 );	// calc. req. size
+	int n = vsnprintf(bu, 0, format, va2);		// calc. req. size
+	va_end(va2);
 	assert(n>=0);
 
 	str z = tempstr(n);
-	vsnprintf( z, size_t(n+1), format, va );	// create formatted string
+	vsnprintf(z, size_t(n+1), format, va);		// create formatted string
 
 	errno = err;								// restore errno
 	return z;
@@ -1190,7 +1191,7 @@ uint strcat (ptr z, cptr q, uint sz) noexcept
 
 	ptr za = z, ze = za+sz;
 	while (z<ze && *z) z++;
-	return uint(z-za + strcpy(z,q,uint(ze-z)));
+	return uint(z-za) + strcpy(z,q,uint(ze-z));
 }
 
 cstr detabstr (cstr s, uint tabstops) noexcept
@@ -1222,7 +1223,7 @@ cstr detabstr (cstr s, uint tabstops) noexcept
 		if (c==13 || c==10) { *z++ = c; z0 = z; continue; }
 		if (c != '\t')		{ *z++ = c; continue; }
 
-		uint n = tabstops - (z-z0)%tabstops;
+		uint n = tabstops - uint(z-z0)%tabstops;
 		if (qe-q > zstr+zlen-(z+n))
 		{
 			zlen += tabstops*4;
@@ -1322,6 +1323,72 @@ void test_hexstr_xxx()
 }
 #endif
 
+
+cstr filename_from_path( cstr path ) noexcept
+{
+	// separate filename from path
+	// returned string points into passed path argument  ((guaranteed!))
+	// returned string is empty if path ended with '/'
+
+	assert(path);
+	cstr p = strrchr(path,'/');
+	return p ? p+1 : path;
+}
+
+cstr extension_from_path( cstr path ) noexcept
+{
+	// separate filename extension from path
+	// returned string points into passed path argument  ((guaranteed!))
+	// returned strings includes '.'
+	// if path has no valid extension, then the returned string points to chr(0) at end of path
+
+	path = filename_from_path(path);
+	cstr dot = strrchr(path,'.');
+	cstr spc = strrchr(path,' ');
+	if ( dot>spc ) return dot; else return strchr(path,0);
+}
+
+cstr basename_from_path( cstr path ) noexcept
+{
+	// separate filename basename from path
+	// returns string in cstring pool
+
+	path = filename_from_path(path);
+	return substr( path, extension_from_path(path) );
+}
+
+cstr directory_from_path( cstr path ) noexcept
+{
+	// separate directory path from path
+	// returns string in cstring pool
+	// returned string includes final '/'
+	// returns "./" instead of "" if passed path contains no '/'
+
+	path = substr( path, filename_from_path(path) );
+	return *path ? path : "./";
+}
+
+cstr last_component_from_path( cstr path ) noexcept
+{
+	// separate filename or last directory from path
+	// returned string points into passed path argument  ((guaranteed!))
+
+	assert(path);
+	cstr p = strchr(path,0) -2;
+	while ( p>=path && *p!='/' ) { p--; }
+	return p>=path ? p+1 : path;
+}
+
+cstr parent_directory_from_path (cstr path) noexcept
+{
+	// separate directory path from path
+	// returns string in cstring pool
+	// returned string includes final '/'
+	// returns "./" instead of "" if passed path contains no '/'
+
+	path = substr( path, last_component_from_path(path) );
+	return *path ? path : "./";
+}
 
 
 

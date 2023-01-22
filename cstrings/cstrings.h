@@ -191,6 +191,13 @@ extern str join (Array<cstr> const& q, cstr, bool final=false) throws;
 template<class T>
 inline str numstr (T n) throws { return tostr(n); }
 
+extern cstr	filename_from_path (cstr path) noexcept;		// "…/name.ext" --> "name.ext"	"…/" -> ""
+extern cstr	extension_from_path(cstr path) noexcept;		// "….ext"		--> ".ext"		"…"  -> ""
+extern cstr	basename_from_path (cstr path) noexcept;		// "…/name.ext"	--> "name"
+extern cstr	directory_from_path(cstr path) noexcept;		// "path/…"		--> "path/"		"…"	 -> "./"
+extern cstr	parent_directory_from_path(cstr path) noexcept;	// "path/name/"	--> "path/"		"path/name"	--> "path/"		"…"	 -> "./"
+extern cstr	last_component_from_path(cstr path) noexcept;	// "…/name.ext"	--> "name.ext"	"…/dir/" -> "dir/"
+
 
 // _________________________________________________________________________
 //

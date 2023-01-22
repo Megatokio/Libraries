@@ -33,13 +33,6 @@ class MyVolumeInfoArray;
 
 EXT	cstr	latin1str   			(cstr non_utf8_str);	// requires #define USE_LATIN1_PATH  in "settings.h"
 
-EXT	cstr	filename_from_path		(cstr path) noexcept;	// "…/name.ext" --> "name.ext"	"…/" -> ""
-EXT	cstr	extension_from_path		(cstr path) noexcept;	// "….ext"		--> ".ext"		"…"  -> ""
-EXT	cstr	basename_from_path		(cstr path) noexcept;	// "…/name.ext"	--> "name"
-EXT	cstr	directory_from_path		(cstr path) noexcept;	// "path/…"		--> "path/"		"…"	 -> "./"
-EXT	cstr	parent_directory_from_path(cstr path) noexcept;	// "path/name/"	--> "path/"		"path/name"	--> "path/"		"…"	 -> "./"
-EXT	cstr	last_component_from_path(cstr path) noexcept;	// "…/name.ext"	--> "name.ext"	"…/dir/" -> "dir/"
-
 EXT	str		modestr					(mode_t);
 EXT	str		effmodestr				(mode_t, gid_t, uid_t);
 INL	s_type	classify_file			(mode_t mode) noexcept				{ return s_type(mode>>12); }
