@@ -791,12 +791,12 @@ void test_rc_performance(uint& num_tests, uint& num_errors)
 	logline("RCPtr test: %f sec. (RCObject with plain cnt)", t3);
 	logline("RCPtr test: %f sec. (RCObject with mutex)", t4);
 	logline("RCPtr test: %f sec. (RCObject with std::shared_ptr)", t5);
-	logline("");
+	logNl();
 	logline("RCPtr test: sizeof RCObject1 = %lu", sizeof(RCObject1));
 	logline("RCPtr test: sizeof RCObject2 = %lu", sizeof(RCObject2));
 	logline("RCPtr test: sizeof RCObject3 = %lu", sizeof(RCObject3));
 	logline("RCPtr test: sizeof RCObject4 = %lu", sizeof(RCObject4));
-	logline("");
+	logNl();
 }
 
 void test_RCArray(uint& num_tests, uint& num_errors)

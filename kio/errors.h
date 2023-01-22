@@ -51,7 +51,7 @@
 // os_utilities.cpp:
 	EMAC( childterminatedbysignal,	"child terminated by signal" ),
 	EMAC( childreturnederror,		"child returned error" ),
-	EMAC( datacorrupted,			"data corrupted" ),
+//	EMAC( datacorrupted,			"data corrupted" ),
 	EMAC( wrongfiletype,			"wrong file type" ),
 
 #ifdef CUSTOM_ERRORS

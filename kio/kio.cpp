@@ -184,7 +184,7 @@ void waitDelay (double delay)	// TODO: rework to use one of the various clocks
 
 #include <sys/select.h>
 
-void waitDelay (double delay)	// TODO: rework to use one of the various clocks
+void waitDelay (double delay) noexcept	// TODO: rework to use one of the various clocks
 {
 	double delay_fract, delay_int;
 	delay_fract = modf(delay, &delay_int);
