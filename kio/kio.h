@@ -37,7 +37,7 @@
 #  define RELEASE
 #else
 #  undef  DEBUG
-#  define DEBUG
+#  define DEBUG 1
 #endif
 
 
