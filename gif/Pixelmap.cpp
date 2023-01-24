@@ -1,4 +1,4 @@
-// Copyright (c) 2007 - 2022 kio@little-bat.de
+// Copyright (c) 2007 - 2023 kio@little-bat.de
 // BSD-2-Clause license
 // https://opensource.org/licenses/BSD-2-Clause
 
@@ -16,7 +16,7 @@ void Pixelmap::init( cPixelmap& q ) throws/*bad alloc*/
 	box  = q.box;
 	dy	 = width();
 
-	for( int y=box.Y1(); y<box.Y2(); y++ )
+	for( int y=box.top(); y<box.bottom(); y++ )
 	{
 		memcpy( getPixelRow(y), q.getPixelRow(y), dy/*w*/ );
 	}
@@ -142,7 +142,7 @@ void Pixelmap::reduceColors( Colormap& cmap )
 */
 void Pixelmap::setToDiff ( cPixelmap& neu, int transp_color )
 {
-	box ^= neu.box;
+	box.intersectWith(neu.box);
 
 	int h  = height();
 	int w  = width();
@@ -213,7 +213,7 @@ void Pixelmap::setToDiff ( cPixelmap& neu, int transp_color )
 */
 void Pixelmap::reduceToDiff ( cPixelmap& old, int transp_color )
 {
-	box ^= old.box;
+	box.intersectWith(old.box);
 
 	int h  = height();
 	int w  = width();

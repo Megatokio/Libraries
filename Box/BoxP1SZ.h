@@ -28,7 +28,8 @@ typedef struct Box;		typedef Box const  cBox;
 
 // ====	offsets, sizes, distances: struct Dist ================================
 
-struct Dist
+struct __attribute__((deprecated)) // use geometry.h
+Dist
 {
 	Cord	dx,dy;
 
@@ -47,7 +48,8 @@ struct Dist
 
 // ====	coordinates: struct Loc =========================================
 
-struct Loc
+struct __attribute__((deprecated)) // use geometry.h
+Loc
 {
 	Cord	x,y;
 
@@ -95,7 +97,8 @@ inline Loc	operator- ( Loc p, cDist& d )	{ return p-=d; }				// Loc - Dist = Loc
 	but this is not strictly enforced.
 */
 
-struct Box
+struct __attribute__((deprecated)) // use geometry.h
+Box
 {
 	Loc		p1;			// top left corner
 	Dist	sz;			// width and height

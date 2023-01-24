@@ -1,10 +1,10 @@
 #pragma once
-// Copyright (c) 2007 - 2022 kio@little-bat.de
+// Copyright (c) 2007 - 2023 kio@little-bat.de
 // BSD-2-Clause license
 // https://opensource.org/licenses/BSD-2-Clause
 
 #include "kio/kio.h"
-#include "BoxP1SZ.h"
+#include "graphics/geometry.h"
 #include "Colormap.h"
 
 
@@ -14,6 +14,15 @@ typedef Pixelmap const cPixelmap;
 
 class Pixelmap
 {
+	using Box = geometry::Rect<int>;
+	using cBox = const Box;
+	using Loc = geometry::Point<int>;
+	using cLoc = const Loc;
+	using Dist = geometry::Dist<int>;
+	using cDist = const Dist;
+	using Size = geometry::Size<int>;
+	using cSize = const Size;
+
 protected:
 
 	void		kill()				{ delete[] data; data=nullptr; }
@@ -45,35 +54,35 @@ public:
 	Pixelmap&	operator=		( cPixelmap& q )				{ if(this!=&q) { kill(); init(q); } return *this; }
 
 	cBox&		getBox			() const						{ return box; }         // was: Frame()
-	int			x1				() const						{ return box.X1(); }
-	int			y1				() const 						{ return box.Y1(); }
-	int			x2				() const						{ return box.X2(); }
-	int			y2				() const 						{ return box.Y2(); }
-	int			width			() const						{ return box.Width(); }
-	int			height			() const						{ return box.Height(); }
+	int			x1				() const						{ return box.left(); }
+	int			y1				() const 						{ return box.top(); }
+	int			x2				() const						{ return box.right(); }
+	int			y2				() const 						{ return box.bottom(); }
+	int			width			() const						{ return box.width(); }
+	int			height			() const						{ return box.height(); }
 	int			rowOffset		() const						{ return dy; }          // was: DY()
-	cLoc&		p1				() const						{ return box.P1(); }
-	Dist		getSize			() const						{ return box.Size(); }
+	cLoc&		p1				() const						{ return box.topLeft(); }
+	Dist		getSize			() const						{ return box.size(); }
 
-	bool		isEmpty			() const						{ return box.IsEmpty(); }
-	bool		isNotEmpty		() const						{ return box.IsNotEmpty(); }
+	bool		isEmpty			() const						{ return box.isEmpty(); }
+	bool		isNotEmpty		() const						{ return !box.isEmpty(); }
 
 // Reposition frame:
 // This affects which pixels are enclosed.
 // Pixel coordinates are not affected!
-	void		setX			( int x )						{ box.SetX1(x); }
-	void		setY			( int y )						{ box.SetY1(y); }
-	void		setP1			( cLoc& p )						{ box.SetP1(p); }
-	void		setP1			( int x, int y )				{ box.SetP1(x,y); }
-	void		setP2			( cLoc& p )						{ box.SetP2(p); }
-	void		setP2			( int x, int y )				{ box.SetP2(x,y); }
-	void		setW			( int w )						{ box.SetWidth(w); }
-	void		setH			( int h )						{ box.SetHeight(h); }
-	void		setSize			( cDist& d )					{ box.SetSize(d); }
-	void		setSize			( int w, int h )				{ box.SetSize(w,h); }
+	void		setX			( int x )						{ box.setLeft(x); }
+	void		setY			( int y )						{ box.setTop(y); }
+	void		setP1			( cLoc& p )						{ box.setTopLeft(p); }
+	void		setP1			( int x, int y )				{ box.setTopLeft(Loc(x,y)); }
+	void		setP2			( cLoc& p )						{ box.setBottomRight(p); }
+	void		setP2			( int x, int y )				{ box.setBottomRight(Loc(x,y)); }
+	void		setW			( int w )						{ box.setWidth(w); }
+	void		setH			( int h )						{ box.setHeight(h); }
+	void		setSize			( cDist& d )					{ box.setSize(d); }
+	void		setSize			( int w, int h )				{ box.setSize(Size(w,h)); }
 	void		setFrame		( cBox& b )						{ box = b; }
-	void		setFrame		( int x, int y, int w, int h )	{ box.SetP1(x,y); box.SetSize(w,h); }
-	void		setFrame		( cLoc& p1, cLoc& p2 )			{ box.p1=p1; box.sz=p2-p1; }
+	void		setFrame		( int x, int y, int w, int h )	{ box = Box(x,y,w,h); }
+	void		setFrame		( cLoc& p1, cLoc& p2 )			{ box = Box(p1,p2); }
 
 	void		set_data_ptr	( uptr p )						{ data = p; }		// use with care...
 	void		set_pixel_ptr	( uptr p )						{ pixels = p; }		// caveat: check data, p1 and p2!
@@ -106,8 +115,8 @@ public:
 // Change the pixel coordinate system.
 // Thereafter all pixel coordinates, including the frame rect coordinates are shifted!
 // This does not reposition the frame rect: it does not affect which pixels are enclosed.
-	void		offsetAddresses	( int DX, int DY )			{ box.Move(DX,DY); pixels -= DX+DY*dy; }
-	void		offsetAddresses	( cDist& d )				{ box.Move(d);     pixels -= d.dx+d.dy*dy; }
+	void		offsetAddresses	( int dx, int dy )			{ offsetAddresses(Dist(dx,dy)); }
+	void		offsetAddresses	( cDist& d )				{ box.move(d); pixels -= d.dx+d.dy*dy; }
 	void		setAddressForP1	( cLoc& p )					{ offsetAddresses(p-box.p1); }
 
 // Color tools:
@@ -118,7 +127,7 @@ public:
 // Special resizing:
 	void		setToDiff		( cPixelmap& new_pixmap, int transp_index = Colormap::unset ) __attribute__((deprecated));
 	void		reduceToDiff	( cPixelmap& old_pixmap, int transp_index = Colormap::unset );
-	void		shrinkToRect	( cBox& new_box )			{ box ^= new_box; }
+	void		shrinkToRect	( cBox& new_box )			{ box.intersectWith(new_box); }
 	void		cropBackground	( int bgcolor );
 
 	void		clear			( int color );
