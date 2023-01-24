@@ -149,7 +149,7 @@ char *CAStreamBasicDescription::AsString(char *buf, size_t _bufsize, bool brief 
 				desc = "Float64";
 				break;
 			default:
-				desc = NULL;
+				desc = nullptr;
 				break;
 			}
 			if (desc) {
@@ -333,7 +333,7 @@ void	CAStreamBasicDescription::GetSimpleName(const AudioStreamBasicDescription& 
 	{
 		case kAudioFormatLinearPCM:
 			{
-				const char* theEndianString = NULL;
+				const char* theEndianString = nullptr;
 				if((inDescription.mFormatFlags & kAudioFormatFlagIsBigEndian) != 0)
 				{
 					#if	TARGET_RT_LITTLE_ENDIAN
@@ -347,7 +347,7 @@ void	CAStreamBasicDescription::GetSimpleName(const AudioStreamBasicDescription& 
 					#endif
 				}
 				
-				const char* theKindString = NULL;
+				const char* theKindString = nullptr;
 				if((inDescription.mFormatFlags & kAudioFormatFlagIsFloat) != 0)
 				{
 					theKindString = (inAbbreviate ? "Float" : "Floating Point");
@@ -361,7 +361,7 @@ void	CAStreamBasicDescription::GetSimpleName(const AudioStreamBasicDescription& 
 					theKindString = (inAbbreviate ? "UInt" : "Unsigned Integer");
 				}
 				
-				const char* thePackingString = NULL;
+				const char* thePackingString = nullptr;
 				if((inDescription.mFormatFlags & kAudioFormatFlagIsPacked) == 0)
 				{
 					if((inDescription.mFormatFlags & kAudioFormatFlagIsAlignedHigh) != 0)
@@ -374,7 +374,7 @@ void	CAStreamBasicDescription::GetSimpleName(const AudioStreamBasicDescription& 
 					}
 				}
 				
-				const char* theMixabilityString = NULL;
+				const char* theMixabilityString = nullptr;
 				if((inDescription.mFormatFlags & kIsNonMixableFlag) == 0)
 				{
 					theMixabilityString = "Mixable";
@@ -386,9 +386,9 @@ void	CAStreamBasicDescription::GetSimpleName(const AudioStreamBasicDescription& 
 				
 				if(inAbbreviate)
 				{
-					if(theEndianString != NULL)
+					if(theEndianString != nullptr)
 					{
-						if(thePackingString != NULL)
+						if(thePackingString != nullptr)
 						{
 							snprintf(outName, inMaxNameLength, "%s %d Ch %s %s %s%d/%s%d", theMixabilityString, (int)inDescription.mChannelsPerFrame, theEndianString, thePackingString, theKindString, (int)inDescription.mBitsPerChannel, theKindString, (int)(inDescription.mBytesPerFrame / inDescription.mChannelsPerFrame) * 8);
 						}
@@ -399,7 +399,7 @@ void	CAStreamBasicDescription::GetSimpleName(const AudioStreamBasicDescription& 
 					}
 					else
 					{
-						if(thePackingString != NULL)
+						if(thePackingString != nullptr)
 						{
 							snprintf(outName, inMaxNameLength, "%s %d Ch %s %s%d/%s%d", theMixabilityString, (int)inDescription.mChannelsPerFrame, thePackingString, theKindString, (int)inDescription.mBitsPerChannel, theKindString, (int)((inDescription.mBytesPerFrame / inDescription.mChannelsPerFrame) * 8));
 						}
@@ -411,9 +411,9 @@ void	CAStreamBasicDescription::GetSimpleName(const AudioStreamBasicDescription& 
 				}
 				else
 				{
-					if(theEndianString != NULL)
+					if(theEndianString != nullptr)
 					{
-						if(thePackingString != NULL)
+						if(thePackingString != nullptr)
 						{
 							snprintf(outName, inMaxNameLength, "%s %d Channel %d Bit %s %s Aligned %s in %d Bits", theMixabilityString, (int)inDescription.mChannelsPerFrame, (int)inDescription.mBitsPerChannel, theEndianString, theKindString, thePackingString, (int)(inDescription.mBytesPerFrame / inDescription.mChannelsPerFrame) * 8);
 						}
@@ -424,7 +424,7 @@ void	CAStreamBasicDescription::GetSimpleName(const AudioStreamBasicDescription& 
 					}
 					else
 					{
-						if(thePackingString != NULL)
+						if(thePackingString != nullptr)
 						{
 							snprintf(outName, inMaxNameLength, "%s %d Channel %d Bit %s Aligned %s in %d Bits", theMixabilityString, (int)inDescription.mChannelsPerFrame, (int)inDescription.mBitsPerChannel, theKindString, thePackingString, (int)(inDescription.mBytesPerFrame / inDescription.mChannelsPerFrame) * 8);
 						}

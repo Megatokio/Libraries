@@ -23,12 +23,12 @@
 
 AudioDecoder::AudioDecoder()
 :
-	filename(NULL),
+	filename(nullptr),
 	num_frames(0),
 	frames_per_second(0),
 	num_channels(0),
 	sizeof_sample(0),
-	audiofile(NULL),
+	audiofile(nullptr),
 	frame_position(0)
 {
 	bzero(&client_format,sizeof(client_format));
@@ -47,10 +47,10 @@ AudioDecoder::~AudioDecoder()
 OSStatus AudioDecoder::close()
 {
 	delete[] filename;
-	filename = NULL;
+	filename = nullptr;
 
 	OSStatus e = audiofile ? ExtAudioFileDispose(audiofile) : ok;
-	audiofile = NULL;
+	audiofile = nullptr;
 
 	return e;
 }
@@ -69,11 +69,11 @@ void AudioDecoder::open(cstr filename) noexcept(false)
 
 	// open the audio file
 	CFStringRef urlStr = CFStringCreateWithCString(kCFAllocatorDefault, filename, kCFStringEncodingUTF8);
-	CFURLRef urlRef = CFURLCreateWithFileSystemPath(NULL, urlStr, kCFURLPOSIXPathStyle, false);
+	CFURLRef urlRef = CFURLCreateWithFileSystemPath(nullptr, urlStr, kCFURLPOSIXPathStyle, false);
 	err = ExtAudioFileOpenURL(urlRef, &audiofile);
 	CFRelease(urlStr);
 	CFRelease(urlRef);
-	if(err) { audiofile=NULL; throw AnyError("AudioDecoder: Error opening file."); }
+	if(err) { audiofile=nullptr; throw AnyError("AudioDecoder: Error opening file."); }
 	this->filename = newcopy(filename);
 	frame_position = 0;
 	client_format.mBitsPerChannel = 0;
@@ -280,7 +280,7 @@ cstr* AudioDecoder::supportedFileExtensions()
 //	kAudioFile3GP2Type	= '3gp2',
 //	kAudioFileAMRType	= 'amrf'
 
-	static cstr list[] = {"mp3","m4a","mp2","aiff","wav",NULL};
+	static cstr list[] = {"mp3","m4a","mp2","aiff","wav",nullptr};
 	return list;
 }
 
