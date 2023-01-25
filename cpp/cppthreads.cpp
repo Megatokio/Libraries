@@ -127,14 +127,14 @@ static void* execute_every_proc( void* data )
 	double now = ::now();
 	do { waitUntil( now += x->delay ); } while( x->fu(x->arg) );
 	delete x;
-	return NULL;
+	return nullptr;
 }
 
 pthread_t executeEvery( double delay, bool(*fu)(void*), void* arg )
 {
 	pthread_t thread;
 	exec_every_t* spawn_data = new exec_every_t(fu,arg,delay);
-	int e = pthread_create( &thread, NULL /*attr*/, execute_every_proc, spawn_data );
+	int e = pthread_create( &thread, nullptr /*attr*/, execute_every_proc, spawn_data );
 	if(e) abort("executeEvery: %s", strerror(e));
 	return thread;
 }
@@ -144,14 +144,14 @@ static void* execute_with_delay_proc( void* arg )
 	exec_every_t* x = static_cast<exec_every_t*>(arg);
 	do { waitUntil( now() + x->delay ); } while( x->fu(x->arg) );
 	delete x;
-	return NULL;
+	return nullptr;
 }
 
 pthread_t executeWithDelay( double delay, bool(*fu)(void*), void* arg )
 {
 	pthread_t thread;
 	exec_every_t* spawn_data = new exec_every_t(fu,arg,delay);
-	int e = pthread_create( &thread, NULL /*attr*/, execute_with_delay_proc, spawn_data );
+	int e = pthread_create( &thread, nullptr /*attr*/, execute_with_delay_proc, spawn_data );
 	if(e) abort("executeWithDelay: %s", strerror(e));
 	return thread;
 }
@@ -185,14 +185,14 @@ static void* execute_at_proc( void* arg )
 		else		    x->time = d;			// time returned
 	}
 	delete x;
-	return NULL;
+	return nullptr;
 }
 
 pthread_t executeAt( double time, double(*fu)(void*), void* arg )
 {
 	pthread_t thread;
 	exec_at_t* spawn_data = new exec_at_t(fu,arg,time);
-	int e = pthread_create( &thread, NULL /*attr*/, execute_at_proc, spawn_data );
+	int e = pthread_create( &thread, nullptr /*attr*/, execute_at_proc, spawn_data );
 	if(e) abort("executeAt: %s", strerror(e));
 	return thread;
 }

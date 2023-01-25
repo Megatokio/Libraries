@@ -99,7 +99,7 @@ public:				PSemaphore	(cstr static_name_str="", uint32 _avail = 0);
 	fu() is called exactly in the defined interval independently how long fu() runs itself.
 	the created thread is returned in case the caller needs it.
 */
-extern std::thread executeEvery	( double delay, bool(*fu)(void*), void* arg = NULL );
+extern std::thread executeEvery	( double delay, bool(*fu)(void*), void* arg = nullptr );
 
 
 /*	in a loop, wait 'delay' and execute function fu() until fu() returns false.
@@ -107,7 +107,7 @@ extern std::thread executeEvery	( double delay, bool(*fu)(void*), void* arg = NU
 	fu() is re-scheduled with 'delay' after fu() returns, not in exact intervals.
 	the created thread is returned in case the caller needs it.
 */
-extern std::thread executeWithDelay	( double delay, bool(*fu)(void*), void* arg = NULL );
+extern std::thread executeWithDelay	( double delay, bool(*fu)(void*), void* arg = nullptr );
 
 
 /*	wait until 'time' and then execute fu().
@@ -115,7 +115,7 @@ extern std::thread executeWithDelay	( double delay, bool(*fu)(void*), void* arg 
 	else wait until the returned time or wait the returned delay (auto-detected)
 	and call fu() again until it returns ≤ 0.0.
 */
-extern std::thread executeAt	( double time,  double(*fu)(void*), void* arg = NULL );
+extern std::thread executeAt	( double time,  double(*fu)(void*), void* arg = nullptr );
 
 
 /*	wait 'delay' and then execute fu().
@@ -123,7 +123,7 @@ extern std::thread executeAt	( double time,  double(*fu)(void*), void* arg = NUL
 	else wait until the returned time or wait the returned delay (auto-detected)
 	and call fu() again until it returns ≤ 0.0.
 */
-extern std::thread executeAfter	( double delay, double(*fu)(void*), void* arg = NULL );
+extern std::thread executeAfter	( double delay, double(*fu)(void*), void* arg = nullptr );
 
 
 

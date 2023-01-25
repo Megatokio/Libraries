@@ -104,11 +104,11 @@ uint numCPUs() noexcept
 	int    n;
 	size_t size = sizeof(n);
 	int mib[4] = { CTL_HW, HW_AVAILCPU };
-	sysctl( mib, 2, &n, &size, NULL, 0);
+	sysctl( mib, 2, &n, &size, nullptr, 0);
 	if(n>=1) return n;
 
 	mib[1] = HW_NCPU;
-	sysctl( mib, NELEM(mib), &n, &size, NULL, 0 );
+	sysctl( mib, NELEM(mib), &n, &size, nullptr, 0 );
 
 	return n>=1 ? n : 1;
 

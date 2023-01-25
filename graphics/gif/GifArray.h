@@ -100,7 +100,7 @@ private:
   static size_t	sz			( size_t n )				noexcept		{ return n*sizeof(T); }		// convert item count to memory size
   static void	copy		( T* z, T const* q, int n ) noexcept		{ memcpy(z,q,sz(n)); }		// flat copy n items
   static void	clear		( T* z, int n )				noexcept		{ memset(z,0,sz(n)); }		// clear n items with 0
-  static T*		malloc		( int n )			  throws/*bad alloc*/	{ return n?new T[n]:NULL; }	// allocate memory for n items
+  static T*		malloc		( int n )			  throws/*bad alloc*/	{ return n?new T[n]:nullptr; }	// allocate memory for n items
   static T*		newcopy		( T const* q, int n ) throws/*bad alloc*/	{ if(!n) return 0; T* z = new T[n]; copy(z,q,n); return z; }
   static T*		newcleared	( int n )			  throws/*bad alloc*/	{ if(!n) return 0; T* z = new T[n]; clear(z,n); return z; }
   static void	release		( T* array )				noexcept		{ delete[] array; array=0; }

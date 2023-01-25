@@ -90,7 +90,7 @@
 			void OpenDebugPrintfSideFile();
 			extern FILE* sDebugPrintfSideFile;
 			#define	DebugPrintfRtn	fprintf
-			#define	DebugPrintfFile	((sDebugPrintfSideFile != NULL) ? sDebugPrintfSideFile : stderr)
+			#define	DebugPrintfFile	((sDebugPrintfSideFile != nullptr) ? sDebugPrintfSideFile : stderr)
 			#define	DebugPrintfLineEnding	"\n"
 			#define	DebugPrintfFileComma	DebugPrintfFile,
 		#else

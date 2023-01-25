@@ -94,7 +94,7 @@
 
 #if	DEBUG || CoreAudio_Debug
 	// can be used to break into debugger immediately, also see CADebugger
-	#define BusError()		{ long* p=NULL; *p=0; }
+	#define BusError()		{ long* p=nullptr; *p=0; }
 	
 	//	basic debugging print routines
 	#if	TARGET_OS_MAC && !TARGET_API_MAC_CARBON
@@ -240,7 +240,7 @@ void	LogWarning(const char *fmt, ...);		// writes to syslog (and stderr if debug
 
 #define	AssertNotNULL(inPtr, inMessage)													\
 			{																			\
-				if((inPtr) == NULL)														\
+				if((inPtr) == nullptr)														\
 				{																		\
 					DebugMessage(inMessage);											\
 					__ASSERT_STOP;														\
@@ -265,7 +265,7 @@ void	LogWarning(const char *fmt, ...);		// writes to syslog (and stderr if debug
 			}
 
 #define	FailIfNULL(inPointer, inAction, inHandler, inMessage)							\
-			if((inPointer) == NULL)														\
+			if((inPointer) == nullptr)														\
 			{																			\
 				DebugMessage(inMessage);												\
 				STOP;																	\
@@ -314,7 +314,7 @@ void	LogWarning(const char *fmt, ...);		// writes to syslog (and stderr if debug
 			}
 
 #define	FailIfNULLNoMessage(inPointer, inAction, inHandler, inMessage)					\
-			if((inPointer) == NULL)														\
+			if((inPointer) == nullptr)														\
 			{																			\
 				STOP;																	\
 				{ inAction; }															\
@@ -355,7 +355,7 @@ void	LogWarning(const char *fmt, ...);		// writes to syslog (and stderr if debug
 			}
 
 #define	ThrowIfNULL(inPointer, inException, inMessage)									\
-			if((inPointer) == NULL)														\
+			if((inPointer) == nullptr)														\
 			{																			\
 				DebugMessage(inMessage);												\
 				Throw(inException);														\
@@ -434,7 +434,7 @@ void	LogWarning(const char *fmt, ...);		// writes to syslog (and stderr if debug
 
 #define	AssertNotNULL(inPtr, inMessage)													\
 			{																			\
-				if((inPtr) == NULL)														\
+				if((inPtr) == nullptr)														\
 				{																		\
 					__ASSERT_STOP;														\
 				}																		\
@@ -456,7 +456,7 @@ void	LogWarning(const char *fmt, ...);		// writes to syslog (and stderr if debug
 			}
 
 #define	FailIfNULL(inPointer, inAction, inHandler, inMessage)							\
-			if((inPointer) == NULL)														\
+			if((inPointer) == nullptr)														\
 			{																			\
 				STOP;																	\
 				{ inAction; }															\
@@ -495,7 +495,7 @@ void	LogWarning(const char *fmt, ...);		// writes to syslog (and stderr if debug
 			}
 
 #define	FailIfNULLNoMessage(inPointer, inAction, inHandler, inMessage)					\
-			if((inPointer) == NULL)														\
+			if((inPointer) == nullptr)														\
 			{																			\
 				STOP;																	\
 				{ inAction; }															\
@@ -535,7 +535,7 @@ void	LogWarning(const char *fmt, ...);		// writes to syslog (and stderr if debug
 			}
 
 #define	ThrowIfNULL(inPointer, inException, inMessage)									\
-			if((inPointer) == NULL)														\
+			if((inPointer) == nullptr)														\
 			{																			\
 				Throw(inException);														\
 			}

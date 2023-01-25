@@ -227,7 +227,7 @@ public:
 		return this->NumberChannels() == a.NumberChannels() && this->IsInterleaved() == a.IsInterleaved();
 	}
 	
-	bool	IdentifyCommonPCMFormat(CommonPCMFormat &outFormat, bool *outIsInterleaved=NULL) const
+	bool	IdentifyCommonPCMFormat(CommonPCMFormat &outFormat, bool *outIsInterleaved=nullptr) const
 	{	// return true if it's a valid PCM format.
 	
 		outFormat = kPCMFormatOther;
@@ -235,7 +235,7 @@ public:
 		if (mFormatID != kAudioFormatLinearPCM || mFramesPerPacket != 1 || mBytesPerFrame != mBytesPerPacket || mBitsPerChannel/8 > mBytesPerFrame || mChannelsPerFrame == 0)
 			return false;
 		bool interleaved = (mFormatFlags & kAudioFormatFlagIsNonInterleaved) == 0;
-		if (outIsInterleaved != NULL) *outIsInterleaved = interleaved;
+		if (outIsInterleaved != nullptr) *outIsInterleaved = interleaved;
 		unsigned wordsize = mBytesPerFrame;
 		if (interleaved) {
 			if (wordsize % mChannelsPerFrame != 0) return false;
@@ -265,19 +265,19 @@ public:
 		return true;
 	}
 
-	bool IsCommonFloat32(bool *outIsInterleaved=NULL) const {
+	bool IsCommonFloat32(bool *outIsInterleaved=nullptr) const {
 		CommonPCMFormat fmt;
 		return IdentifyCommonPCMFormat(fmt, outIsInterleaved) && fmt == kPCMFormatFloat32;
 	}
-	bool IsCommonFloat64(bool *outIsInterleaved=NULL) const {
+	bool IsCommonFloat64(bool *outIsInterleaved=nullptr) const {
 		CommonPCMFormat fmt;
 		return IdentifyCommonPCMFormat(fmt, outIsInterleaved) && fmt == kPCMFormatFloat64;
 	}
-	bool IsCommonFixed824(bool *outIsInterleaved=NULL) const {
+	bool IsCommonFixed824(bool *outIsInterleaved=nullptr) const {
 		CommonPCMFormat fmt;
 		return IdentifyCommonPCMFormat(fmt, outIsInterleaved) && fmt == kPCMFormatFixed824;
 	}
-	bool IsCommonInt16(bool *outIsInterleaved=NULL) const {
+	bool IsCommonInt16(bool *outIsInterleaved=nullptr) const {
 		CommonPCMFormat fmt;
 		return IdentifyCommonPCMFormat(fmt, outIsInterleaved) && fmt == kPCMFormatInt16;
 	}
