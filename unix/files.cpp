@@ -729,7 +729,7 @@ bool is_executable( cstr path, bool resolve_last_symlink, bool for_user )
 // ----------------------------------------------------------------------
 
 
-void create_file(cstr path, mode_t mode) THF
+void create_file(cstr path, mode_t mode)
 {
 	FD(path,O_CREAT,mode);
 }
@@ -741,7 +741,7 @@ void create_file(cstr path, mode_t mode) THF
 			 ENOTDIR	encountered non-directory
 			 ELOOP		infinite symlink loop
 */
-void create_dir( cstr path, mode_t mode, bool autocreatedirs ) THF
+void create_dir( cstr path, mode_t mode, bool autocreatedirs )
 {
 	while (path&&lastchar(path)=='/') path = substr(path,strchr(path,0)-1);
 
@@ -768,7 +768,7 @@ void create_dir( cstr path, mode_t mode, bool autocreatedirs ) THF
 			 ENOTDIR	encountered non-directory
 			 ELOOP		infinite symlink loop
 */
-void create_pipe( cstr path, mode_t mode ) THF
+void create_pipe( cstr path, mode_t mode )
 {
 	path = fullpath(path,yes/*follow_symlink*/);
 
@@ -787,7 +787,7 @@ void create_pipe( cstr path, mode_t mode ) THF
 		in:	 path, dest
 		throws on error
 */
-void create_symlink (cstr linkpath, cstr destpath) THF
+void create_symlink (cstr linkpath, cstr destpath)
 {
 	linkpath = fullpath(linkpath,no);
 	if (errno && errno!=ENOENT) goto x;
@@ -803,7 +803,7 @@ x:	throw FileError(linkpath, errno, "create symlink");
 }
 
 
-void create_hardlink (cstr newpath, cstr oldpath) THF
+void create_hardlink (cstr newpath, cstr oldpath)
 {
 	// create hard link to file
 	// create another hard link to 'oldpath' at position 'newpath'
@@ -819,7 +819,7 @@ void create_hardlink (cstr newpath, cstr oldpath) THF
 }
 
 
-void create_hardlinked_copy (cstr newdir, cstr olddir, bool copy_dir_owner) THF
+void create_hardlinked_copy (cstr newdir, cstr olddir, bool copy_dir_owner)
 {
 	// create copy of directory tree
 	// files are hard linked
@@ -877,7 +877,7 @@ void create_hardlinked_copy (cstr newdir, cstr olddir, bool copy_dir_owner) THF
 
 /* ----	delete file or folder -----------------------------------------
 */
-void delete_node( cstr path, bool follow_symlink, s_type typ ) THF
+void delete_node( cstr path, bool follow_symlink, s_type typ )
 {
 	path = fullpath(path,follow_symlink);
 	if (errno) goto x;
@@ -929,7 +929,7 @@ static int remove_tree( cstr dpath )
 /* ----	delete directory / tree -----------------------------------------
 		throws on error
 */
-void delete_dir( cstr path, bool fulltree ) THF
+void delete_dir( cstr path, bool fulltree )
 {
 	path = fullpath(path,yes/*follow_symlink*/);
 	if (errno) goto x;
@@ -950,7 +950,7 @@ x:	throw FileError(path, errno, "delete dir");
 			if it is a dir, then it must be empty
 			if it is a symlink, then the link will be overwritten
 */
-void rename_node( cstr oldpath, cstr newpath, bool overwrite ) THF
+void rename_node( cstr oldpath, cstr newpath, bool overwrite )
 {
 	oldpath = fullpath(oldpath,no/*!follow_symlink*/);
 	if (errno) goto x;
@@ -968,7 +968,7 @@ x:	throw FileError(oldpath, errno, usingstr("rename to \"%s\"",newpath));
 /* ----	swap two files ------------------------------------------
 		throws on error
 */
-void swap_files( cstr path1, cstr path2 ) THF
+void swap_files( cstr path1, cstr path2 )
 {
 	path1 = fullpath(path1,1);	if (errno) goto x;
 	path2 = fullpath(path2,1);	if (errno) goto x;
@@ -990,7 +990,7 @@ x:	throw FileError(path1, errno, usingstr("swap with file \"%s\"",path2));
 		throws on error accessing the dir itself
 		names of sub directories in this directory have no trailing '/'
 */
-void read_dir( cstr path, MyFileInfoArray& v, bool resolve_symlinks ) THF
+void read_dir( cstr path, MyFileInfoArray& v, bool resolve_symlinks )
 {
 	v.purge();
 	path = fullpath(path,yes);
@@ -1076,13 +1076,13 @@ str read_link( cstr path )
 }
 
 
-void read_file(cstr path, Array<str>& a, uint32 maxsize) THF
+void read_file(cstr path, Array<str>& a, uint32 maxsize)
 {
 	FD fd(path,'r');
 	fd.read_file(a,maxsize);
 }
 
-void read_file(cstr path, StrArray& a, uint32 maxsize) THF
+void read_file(cstr path, StrArray& a, uint32 maxsize)
 {
 	FD fd(path,'r');
 	fd.read_file(a,maxsize);
@@ -1092,14 +1092,14 @@ void read_file(cstr path, StrArray& a, uint32 maxsize) THF
 /* ----	create regular file ---------------------------------------
 		in: flags = 'n'=new, 'w'=write or 'a'=append or combination of O_WRONLY, O_CREAT, O_APPEND etc.
 */
-void write_file (cstr path, cptr data, uint32 cnt, int flags, mode_t perm) THF
+void write_file (cstr path, cptr data, uint32 cnt, int flags, mode_t perm)
 {
 	FD fd(path,flags,perm);
 	fd.write_bytes(data,cnt);
 	fd.close_file();
 }
 
-void write_file (cstr path, Array<str>& a, int flags, mode_t perm) THF
+void write_file (cstr path, Array<str>& a, int flags, mode_t perm)
 {
 	FD fd(path,flags,perm);
 	fd.write_file(a);
@@ -1107,7 +1107,7 @@ void write_file (cstr path, Array<str>& a, int flags, mode_t perm) THF
 }
 
 
-void copy_file(cstr qpath, cstr zpath, bool overwrite) THF
+void copy_file(cstr qpath, cstr zpath, bool overwrite)
 {
 	FD q(qpath,'r');
 	FD z(zpath, overwrite ? 'w' : 'n');

@@ -462,7 +462,7 @@ endlop:			if (fcode.e.ent >= FIRST && rpos < rsize)
  * be stored in the compressed file.  The tables used herein are shared
  * with those of the compress() routine.  See the definitions above.
  */
-void decompress(cstr qfilepath, cstr zfilepath) THF
+void decompress(cstr qfilepath, cstr zfilepath)
 {
 	int32	code;
 	int		finchar = 0;

@@ -101,8 +101,8 @@ public:
 //	bool	operator==	(const T* p) const	{ return p == this->p; }		ohne geht's besser
 
 	void	print		(FD&, cstr indent) const;
-	void	writeToFile	(FD&, void* data=nullptr) const		THF;
-// 	void	readFromFile(FD&, void* data=nullptr)			THF;
+	void	writeToFile	(FD&, void* data=nullptr) const;
+// 	void	readFromFile(FD&, void* data=nullptr);
 };
 
 
@@ -121,7 +121,7 @@ void NVPtr<T>::print( FD& fd, cstr indent ) const
 }
 
 template<class T>
-void NVPtr<T>::writeToFile(FD& fd, void* data) const THF
+void NVPtr<T>::writeToFile(FD& fd, void* data) const
 {
 	fd.write_uint8(p!=nullptr);
 	if(p) p->writeToFile(fd,data);

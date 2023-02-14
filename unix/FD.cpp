@@ -60,7 +60,7 @@ FD FD::_stderr(2,"STDERR");
 //	error:
 //	• throws FileError
 //
-int FD::open_file( cstr path, int mode, mode_t perm ) THF
+int FD::open_file( cstr path, int mode, mode_t perm )
 {
 	assert(path!=nullptr);
 	assert(fd==-1);
@@ -99,7 +99,7 @@ a:	fd = open(path, mode, perm);
 //	The path supplied by the first environment variable found in the list
 //	TMPDIR, TMP, TEMP, TEMPDIR. If none of these are found, "/tmp".
 //
-void FD::open_tempfile() THF
+void FD::open_tempfile()
 {
 	assert(fd==-1);
 
@@ -206,7 +206,7 @@ FD::~FD() noexcept
 //	note: should only fail if the fd is invalid
 //	fd = -1, stdin, stdout and stderr are silently ignored
 //
-int FD::close_file( bool thf ) THF
+int FD::close_file( bool thf )
 {
 	int f=fd; fd=-1;
 	if (f<=2) return ok;
@@ -377,7 +377,7 @@ int FD::set_permissions( mode_t perm ) noexcept
 
 //	Truncate or grow file to new file size 'size';
 //
-off_t FD::resize_file( off_t size ) THF
+off_t FD::resize_file( off_t size )
 {
 	while (ftruncate(fd,size)!=0)
 	{
@@ -388,14 +388,14 @@ off_t FD::resize_file( off_t size ) THF
 }
 
 
-off_t FD::seek_fpos( off_t fpos, int whence ) THF
+off_t FD::seek_fpos( off_t fpos, int whence )
 {
 	fpos = lseek(fd, fpos, whence);
 	if (fpos != -1) return fpos;
 	else THROW_FILE_ERROR("fd383");
 }
 
-off_t FD::file_position() const THF
+off_t FD::file_position() const
 {
 	off_t fpos = lseek(fd, 0, SEEK_CUR);
 	if (fpos != -1) return fpos;
@@ -403,7 +403,7 @@ off_t FD::file_position() const THF
 }
 
 
-void FD::skip_utf8_bom() THF
+void FD::skip_utf8_bom()
 {
 	//assert(file_position() == 0);
 
@@ -422,7 +422,7 @@ void FD::skip_utf8_bom() THF
 	skip_bytes(-num);
 }
 
-uint32 FD::write_fmt( cstr format, ... ) THF
+uint32 FD::write_fmt( cstr format, ... )
 {
 	va_list va;
 	va_start(va,format);
@@ -461,7 +461,7 @@ uint32 FD::write_fmt( cstr format, ... ) THF
 //	returns: NULL on endoffile			2014-02-06
 //	throws on error except eof
 //
-str FD::read_str() THF
+str FD::read_str()
 {
 	static const uint line_separators = 0x3411; // 0b0011010000010001
 	str s;
@@ -543,7 +543,7 @@ a:		uint32 n = read_bytes(bu,100,no), i;
 }
 
 
-void FD::write_nstr( cstr s ) THF
+void FD::write_nstr( cstr s )
 {
 	if (s)
 	{
@@ -559,7 +559,7 @@ void FD::write_nstr( cstr s ) THF
 	else write_uint8(253);			// 253 => NULL !
 }
 
-str FD::read_nstr() THF
+str FD::read_nstr()
 {
 	uint32 len = read_uint8();
 	if (len>=253)
@@ -572,7 +572,7 @@ str FD::read_nstr() THF
 	return s;
 }
 
-str FD::read_new_nstr() THF
+str FD::read_new_nstr()
 {
 	uint32 len = read_uint8();
 	if (len>=253)
@@ -592,7 +592,7 @@ str FD::read_new_nstr() THF
 /*	read file into Array of str
 	the strings in the array are in temp mem
 */
-void FD::read_file(Array<str>& a, uint32 maxsize) THF
+void FD::read_file(Array<str>& a, uint32 maxsize)
 {
 	off_t sz = file_remaining();
 	if (sz>maxsize) throw FileError(fd,fpath,limiterror,"fd547");
@@ -605,7 +605,7 @@ void FD::read_file(Array<str>& a, uint32 maxsize) THF
 /*	read file into StrArray
 	the strings in the array are allocated with new()
 */
-void FD::read_file(StrArray& a, uint32 maxsize) THF
+void FD::read_file(StrArray& a, uint32 maxsize)
 {
 	TempMemPool tmp;
 	Array<str> z;
@@ -618,7 +618,7 @@ void FD::read_file(StrArray& a, uint32 maxsize) THF
 	the lines are separated with '\n'
 	NULL strings are not written
 */
-void FD::write_file(const Array<str>& a) THF
+void FD::write_file(const Array<str>& a)
 {
 	for (uint i=0;i<a.count();i++)
 	{
@@ -633,7 +633,7 @@ void FD::write_file(const Array<str>& a) THF
 // 		read/write native byte order:
 // ----------------------------------------
 
-uint32 FD::read_bytes( void* p, uint32 bytes, int ) THF
+uint32 FD::read_bytes( void* p, uint32 bytes, int )
 {
 	// read n bytes or up to eof or throw
 	// does not throw on eof
@@ -656,7 +656,7 @@ r:	uint32 n = uint32(::read(fd,p,m));
 	THROW_FILE_ERROR("fd516");						// anything else
 }
 
-uint32 FD::read_bytes( void* p, uint32 bytes ) THF
+uint32 FD::read_bytes( void* p, uint32 bytes )
 {
 	// read n bytes or throw
 	// may suspend thread while waiting for slow devices
@@ -676,7 +676,7 @@ r:	uint32 n = uint32(::read(fd,p,m));
 x:	THROW_FILE_ERROR("fd536");						// anything else
 }
 
-uint32 FD::read_bytes_reverted (void* p, uint sz) THF
+uint32 FD::read_bytes_reverted (void* p, uint sz)
 {
 	// read bytes and revert order
 
@@ -685,7 +685,7 @@ uint32 FD::read_bytes_reverted (void* p, uint sz) THF
 	return sz;
 }
 
-uint32 FD::read_data_reverted(void* p, uint n, uint sz) THF
+uint32 FD::read_data_reverted(void* p, uint n, uint sz)
 {
 	// read data[] and revert byte order in each item
 
@@ -719,7 +719,7 @@ r:	int n = select(fd+1/*nfds*/, &fdset/*readfds*/, nullptr/*writefds*/, nullptr/
 	else return no;	// error
 }
 
-uint32 FD::write_bytes( const void* p, uint32 bytes ) THF
+uint32 FD::write_bytes( const void* p, uint32 bytes )
 {
 	// write n bytes or throw
 	// may suspend thread while waiting for slow devices
@@ -734,7 +734,7 @@ w:	uint32 n = uint32(::write(fd,p,m));
 	THROW_FILE_ERROR("fd551");
 }
 
-uint32 FD::write_bytes_reverted(void const* p, uint sz) THF
+uint32 FD::write_bytes_reverted(void const* p, uint sz)
 {
 	// write bytes in reverted order
 
@@ -747,7 +747,7 @@ uint32 FD::write_bytes_reverted(void const* p, uint sz) THF
 	return write_data(bu,sz);
 }
 
-uint32 FD::write_data_reverted(void const* p, uint cnt, uint sz) THF
+uint32 FD::write_data_reverted(void const* p, uint cnt, uint sz)
 {
 	// write data[] with reverted bytes in each item
 
@@ -763,28 +763,28 @@ uint32 FD::write_data_reverted(void const* p, uint cnt, uint sz) THF
 // read/write internet byte order (msb first, big endian)
 // ------------------------------------------------------
 
-int16 FD::read_int16_x() THF
+int16 FD::read_int16_x()
 {
 	int8 bu[2];
 	read_bytes(bu,2);
 	return int16(peek2X(bu));
 }
 
-uint32 FD::write_int16_x( int16 n ) THF
+uint32 FD::write_int16_x( int16 n )
 {
 	int8 bu[2];
 	poke2X(bu,uint16(n));
 	return write_bytes(bu,2);
 }
 
-uint32 FD::read_uint24_x() THF
+uint32 FD::read_uint24_x()
 {
 	int8 bu[4]={0,0,0,0};
 	read_bytes(bu+1,3);
 	return peek4X(bu);
 }
 
-int32 FD::read_int24_x() THF
+int32 FD::read_int24_x()
 {
 	int8 bu[4]={0,0,0,0};
 	read_bytes(bu+1,3);
@@ -792,35 +792,35 @@ int32 FD::read_int24_x() THF
 	return int32(peek4X(bu));
 }
 
-uint32 FD::write_int24_x( int32 n ) THF
+uint32 FD::write_int24_x( int32 n )
 {
 	int8 bu[4];
 	poke4X(bu,uint32(n));
 	return write_bytes(bu+1,3);
 }
 
-int32 FD::read_int32_x() THF
+int32 FD::read_int32_x()
 {
 	int8 bu[4];
 	read_bytes(bu,4);
 	return int32(peek4X(bu));
 }
 
-uint32 FD::write_int32_x( int32 n ) THF
+uint32 FD::write_int32_x( int32 n )
 {
 	int8 bu[4];
 	poke4X(bu,uint32(n));
 	return write_bytes(bu,4);
 }
 
-int64 FD::read_int64_x() THF
+int64 FD::read_int64_x()
 {
 	int8 bu[8];
 	read_bytes(bu,8);
 	return int64(peek8X(bu));
 }
 
-uint32 FD::write_int64_x( int64 n ) THF
+uint32 FD::write_int64_x( int64 n )
 {
 	int8 bu[8];
 	poke8X(bu,uint64(n));
@@ -832,28 +832,28 @@ uint32 FD::write_int64_x( int64 n ) THF
 // read/write intel byte order (lsb first, little endian)
 // ------------------------------------------------------
 
-int16 FD::read_int16_z() THF
+int16 FD::read_int16_z()
 {
 	int8 bu[2];
 	read_bytes(bu,2);
 	return int16(peek2Z(bu));
 }
 
-uint32 FD::write_int16_z( int16 n ) THF
+uint32 FD::write_int16_z( int16 n )
 {
 	int8 bu[2];
 	poke2Z(bu,uint16(n));
 	return write_bytes(bu,2);
 }
 
-uint32 FD::read_uint24_z() THF
+uint32 FD::read_uint24_z()
 {
 	int8 bu[4]={0,0,0,0};
 	read_bytes(bu,3);
 	return peek4Z(bu);
 }
 
-int32 FD::read_int24_z() THF
+int32 FD::read_int24_z()
 {
 	int8 bu[4]={0,0,0,0};
 	read_bytes(bu,3);
@@ -861,35 +861,35 @@ int32 FD::read_int24_z() THF
 	return int32(peek4Z(bu));
 }
 
-uint32 FD::write_int24_z( int32 n ) THF
+uint32 FD::write_int24_z( int32 n )
 {
 	int8 bu[4];
 	poke4Z(bu,uint32(n));
 	return write_bytes(bu,3);
 }
 
-int32 FD::read_int32_z() THF
+int32 FD::read_int32_z()
 {
 	int8 bu[4];
 	read_bytes(bu,4);
 	return int32(peek4Z(bu));
 }
 
-uint32 FD::write_int32_z( int32 n ) THF
+uint32 FD::write_int32_z( int32 n )
 {
 	int8 bu[4];
 	poke4Z(bu,uint32(n));
 	return write_bytes(bu,4);
 }
 
-int64 FD::read_int64_z() THF
+int64 FD::read_int64_z()
 {
 	int8 bu[8];
 	read_bytes(bu,8);
 	return int64(peek8Z(bu));
 }
 
-uint32 FD::write_int64_z( int64 n ) THF
+uint32 FD::write_int64_z( int64 n )
 {
 	int8 bu[8];
 	poke8Z(bu,uint64(n));
@@ -913,7 +913,7 @@ uint32 FD::write_int64_z( int64 n ) THF
 		.. 2^16-1 (65535)		3 bytes
 		.. 2^32-1 (4294967295)	5 bytes
 */
-uint32 FD::write_vuint32(uint32 n) THF
+uint32 FD::write_vuint32(uint32 n)
 {
 /*
 	$00	 %0000.0000 …
@@ -930,7 +930,7 @@ uint32 FD::write_vuint32(uint32 n) THF
 
 /*	read unsigned 32 bit integer with variable size
 */
-uint32 FD::read_vuint32() THF
+uint32 FD::read_vuint32()
 {
 	uint8 n;
 	read_bytes(&n,1);
@@ -944,14 +944,14 @@ uint32 FD::read_vuint32() THF
 /*	write signed 32 bit integer with variable size
 	intended for numbers which are expected but not guaranteed to be small
 */
-uint32 FD::write_vint32(int32 n) THF
+uint32 FD::write_vint32(int32 n)
 {
 	return write_vuint32(uint32(n<0 ? ~(n<<1) : (n<<1)));
 }
 
 /*	read signed 32 bit integer with variable size
 */
-int32 FD::read_vint32() THF
+int32 FD::read_vint32()
 {
 	uint32 n = read_vuint32();
 	return n&1 ? ~(n>>1) : (n>>1);
@@ -1066,7 +1066,7 @@ int FD::set_terminal_size( int rows, int cols ) noexcept
 // may also copy inside a single file:
 // overlapping blocks are copied non-destructively!
 //
-void copy( FD& q, FD& z, off_t count ) THF
+void copy( FD& q, FD& z, off_t count )
 {
 	const int32 max_bu_size = 128*1024*1024;	// 128 MB
 
