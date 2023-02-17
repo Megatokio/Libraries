@@ -79,49 +79,50 @@ class TempMemPool
 	TempMemData* data;
 	TempMemPool* prev;
 
-	TempMemPool (const TempMemPool&) = delete;
-	void operator= (const TempMemPool&) = delete;
+	TempMemPool(const TempMemPool&)	   = delete;
+	void operator=(const TempMemPool&) = delete;
 
 public:
-	TempMemPool  () noexcept;
-	~TempMemPool () noexcept;
+	TempMemPool() noexcept;
+	~TempMemPool() noexcept;
 
-	void  purge () noexcept;
-	char* alloc (uint size) noexcept;	// unaligned, uncleared
+	void  purge() noexcept;
+	char* alloc(uint size) noexcept; // unaligned, uncleared
 
-	char* allocStr (uint len) noexcept
+	char* allocStr(uint len) noexcept
 	{
 		// get a 0-terminated string with strlen len
 		// allocate 1 byte more and set it to 0
 		// string contents are not cleared
 
-		char* p = alloc(len+1);
-		p[len] = 0;
+		char* p = alloc(len + 1);
+		p[len]	= 0;
 		return p;
 	}
 
-	char* allocMem (uint bytes) noexcept
+	char* allocMem(uint bytes) noexcept
 	{
 		// allocate 'bytes' bytes of data aligned to sizeof(ptr)
 		// memory contents are not cleared
 
-		static const uint mask = sizeof(ptr)-1;
-		this->size &= ~mask;					// align what we have
-		bytes = (bytes + mask) & ~mask;			// align requested size
-		return alloc(bytes);					// now must be aligned as well
+		static const uint mask = sizeof(ptr) - 1;
+		this->size &= ~mask;			// align what we have
+		bytes = (bytes + mask) & ~mask; // align requested size
+		return alloc(bytes);			// now must be aligned as well
 	}
 
-	template<typename T> T* alloc (uint count) noexcept
+	template<typename T>
+	T* alloc(uint count) noexcept
 	{
 		// get 'count' elements of type T aligned to sizeof(T)
 		// memory contents are not cleared
 
-		this->size &= ~(sizeof(T)-1);			// align
-		return reinterpret_cast<T*>(alloc(count*sizeof(T)));
+		this->size &= ~(sizeof(T) - 1); // align
+		return reinterpret_cast<T*>(alloc(count * sizeof(T)));
 	}
 
-	static TempMemPool*	getPool () noexcept;
-	static TempMemPool*	getXPool () noexcept;
+	static TempMemPool* getPool() noexcept;
+	static TempMemPool* getXPool() noexcept;
 };
 
 
@@ -129,20 +130,21 @@ public:
 
 extern str emptystr; // non-const version of ""
 
-extern char* tempmem (uint size) noexcept;	// allocate in current pool: aligned, not cleared
-extern char* xtempmem (uint size) noexcept;	// allocate in outer pool
+extern char* tempmem(uint size) noexcept;  // allocate in current pool: aligned, not cleared
+extern char* xtempmem(uint size) noexcept; // allocate in outer pool
 
-extern str tempstr (uint size) noexcept;	// allocate in current pool: 0-terminated, not cleared
-extern str xtempstr (uint size) noexcept;	// allocate in outer pool
+extern str tempstr(uint size) noexcept;	 // allocate in current pool: 0-terminated, not cleared
+extern str xtempstr(uint size) noexcept; // allocate in outer pool
 
-extern str dupstr (cstr) noexcept;			// copy string into the current pool
-extern str xdupstr (cstr) noexcept;			// copy string into the outer pool
+extern str dupstr(cstr) noexcept;  // copy string into the current pool
+extern str xdupstr(cstr) noexcept; // copy string into the outer pool
 
-extern str newstr (uint n) noexcept;		// allocate memory with new[]
-extern str newcopy (cstr) noexcept;			// allocate memory with new[] and copy string
+extern str newstr(uint n) noexcept; // allocate memory with new[]
+extern str newcopy(cstr) noexcept;	// allocate memory with new[] and copy string
 
 
-template<typename T> inline T* temp (uint count) noexcept
+template<typename T>
+inline T* temp(uint count) noexcept
 {
 	// allocate 'count' elements of type T in current pool
 	// aligned to sizeof(T), not cleared
@@ -150,7 +152,8 @@ template<typename T> inline T* temp (uint count) noexcept
 	return TempMemPool::getPool()->alloc<T>(count);
 }
 
-template<typename T> inline T* xtemp (uint count) noexcept
+template<typename T>
+inline T* xtemp(uint count) noexcept
 {
 	// allocate 'count' elements of type T in outer pool
 	// aligned to sizeof(T), not cleared
@@ -158,46 +161,10 @@ template<typename T> inline T* xtemp (uint count) noexcept
 	return TempMemPool::getXPool()->alloc<T>(count);
 }
 
-inline void __attribute((deprecated)) purgeTempMem () noexcept
+inline void __attribute((deprecated)) purgeTempMem() noexcept
 {
 	// Purge current pool
 	// deprecated: better create a local pool
 
 	TempMemPool::getPool()->purge();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

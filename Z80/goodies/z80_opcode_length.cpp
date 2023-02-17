@@ -32,7 +32,7 @@ static uchar const len3[64] = // opcodes 0xC0 - 0xFF: prefixes are 0
 };
 
 
-uint opcode_length (CpuID cpuid, const Byte* core, Address a) noexcept
+uint opcode_length(CpuID cpuid, const Byte* core, Address a) noexcept
 {
 	// Calculate length [bytes] of instruction
 	// op2 is only used if op1 is a prefix instruction
@@ -44,26 +44,28 @@ uint opcode_length (CpuID cpuid, const Byte* core, Address a) noexcept
 	// prefix IX/IY opcodes as for z80;       illegal opcodes not using HL as for z80.
 	// prefix IXCB/IYCB opcodes as for z80;   illegal SLL and opcodes not using HL as for z80.
 
-	uint8 op = peek(core,a);
+	uint8 op = peek(core, a);
 
-	if (op < 0x40)					// 0x00 - 0x3F:	from table
+	if (op < 0x40) // 0x00 - 0x3F:	from table
 	{
-		if (cpuid==Cpu8080 && (op&7)==0) return 1;	// 8080: NOP and aliases => len=1
-		else return len0[op];
+		if (cpuid == Cpu8080 && (op & 7) == 0)
+			return 1; // 8080: NOP and aliases => len=1
+		else
+			return len0[op];
 	}
-	if (op < 0xC0) return 1;		// 0x40 - 0xBF: ld r,r and arith/logic
-	uint n = len3[op & 0x3F];		// 0xC0 .. 0xFF: from table, except prefixes
-	if (n) return n;				// 8080: 0xD9=RET: same length as Z80:EXX
+	if (op < 0xC0) return 1;  // 0x40 - 0xBF: ld r,r and arith/logic
+	uint n = len3[op & 0x3F]; // 0xC0 .. 0xFF: from table, except prefixes
+	if (n) return n;		  // 8080: 0xD9=RET: same length as Z80:EXX
 
-	if (cpuid == Cpu8080) return 3;	// 8080: Z80 prefixes are JP_NN or CALL_NN => len=3
+	if (cpuid == Cpu8080) return 3; // 8080: Z80 prefixes are JP_NN or CALL_NN => len=3
 
 	// Z80 or Z180:
 
-	if (op == 0xcb) return 2;		// prefix 0xCB
+	if (op == 0xcb) return 2; // prefix 0xCB
 
-	uint8 op2 = peek(core,a+1);
+	uint8 op2 = peek(core, a + 1);
 
-	if (op == 0xed)					// prefix 0xED
+	if (op == 0xed) // prefix 0xED
 	{
 		// Z80: prefix 0xED: 2 bytes except "ld rr,(NN)" and "ld (NN),rr"
 		if (cpuid != CpuZ180) return (op2 & 0xc7) == 0x43 ? 4 : 2;
@@ -75,37 +77,30 @@ uint opcode_length (CpuID cpuid, const Byte* core, Address a) noexcept
 		// except those new opcodes which require an immediate byte argument:
 		//	 "out0 (N),r", "in0 r,(N)", "tst N" and "tstio N".
 
-		if (op2 < 0x40) return 2 + (((op2&7) < 2) && op2 != 0x31); // add +1 for IN0_r_xN / OUT0_xN_r
-		if ((op2 & 0xC7) == 0x43) return 4;		// LD_rr_xNN / LD_xNN_rr
-		if ((op2 | 0x10) == 0x74) return 3;		// TST_n, TSTIO_xN
+		if (op2 < 0x40) return 2 + (((op2 & 7) < 2) && op2 != 0x31); // add +1 for IN0_r_xN / OUT0_xN_r
+		if ((op2 & 0xC7) == 0x43) return 4;							 // LD_rr_xNN / LD_xNN_rr
+		if ((op2 | 0x10) == 0x74) return 3;							 // TST_n, TSTIO_xN
 		return 2;
 	}
 
 	// prefix IX / IY:
-	assert(op==0xdd || op==0xfd);
+	assert(op == 0xdd || op == 0xfd);
 
 	// 0x00 - 0x3F: add +1 for dis in "inc(hl)", "dec(hl)", "ld(hl),N"
-	if (op2 < 0x40) return 1 + len0[op2] + (op2>=0x34 && op2<=0x36);
+	if (op2 < 0x40) return 1 + len0[op2] + (op2 >= 0x34 && op2 <= 0x36);
 
 	// 0x40 - 0xBF: add +1 for dis in "ari a,(hl)" and "ld r,(hl)" and "ld (hl),r" except "halt"
-	if (op2 < 0xC0) return 2 + (((op2&0x07)==6) != ((op2&0x0F8)==0x70));
+	if (op2 < 0xC0) return 2 + (((op2 & 0x07) == 6) != ((op2 & 0x0F8) == 0x70));
 
 	// 0xC0 - 0xFF: from table, except prefixes:
 
 	// prefix CB: 4 bytes
 	// note: options --ixcbr2 and --ixcbxh have no effect on the opcode length
-	if (op2==0xcb) return 4;
+	if (op2 == 0xcb) return 4;
 
 	// note on prefix ED, IX and IY:
 	// the current IX/IY prefix has no effect and is handled like a NOP
 	// so their length is 1 byte which is what we get when we add 1 (for prefix IX/IY)
 	// to the value 0 from the table anyway. So no special handling for them needed.
-	return 1 + len3[op2&0x3F];
+	return 1 + len3[op2 & 0x3F];
 }
-
-
-
-
-
-
-

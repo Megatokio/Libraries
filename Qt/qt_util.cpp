@@ -16,11 +16,11 @@
 	TO THE EXTENT PERMITTED BY APPLICABLE LAW.
 */
 
-#include "kio/kio.h"
 #include "qt_util.h"
-#include <QPalette>
-#include <QAudioFormat>
+#include "kio/kio.h"
 #include <QAudioDeviceInfo>
+#include <QAudioFormat>
+#include <QPalette>
 
 /*
 QPalette::ColorGroup
@@ -53,9 +53,7 @@ QPalette::BrightText	A text color that is very different from WindowText, and co
 */
 void setColors(QWidget* widget, QRgb foregroundcolor, QRgb backgroundcolor)
 {
-
-
-/*	TODO:
+	/*	TODO:
 	Qt forum:
 	QColor color = QColorDialog::getColor(Qt::white, this);
 	QPalette palette = ui->label->palette();
@@ -64,15 +62,14 @@ void setColors(QWidget* widget, QRgb foregroundcolor, QRgb backgroundcolor)
 */
 
 
+	// sanity check for alpha channel:
+	if ((backgroundcolor >> 24) == 0 && backgroundcolor != 0) backgroundcolor |= 0xff000000;
+	if ((foregroundcolor >> 24) == 0) foregroundcolor |= 0xff000000;
 
-// sanity check for alpha channel:
-	if((backgroundcolor>>24)==0 && backgroundcolor!=0) backgroundcolor |= 0xff000000;
-	if((foregroundcolor>>24)==0) foregroundcolor |= 0xff000000;
-
-// build a palette:
+	// build a palette:
 	QPalette palette;
-	QBrush brush = QColor(foregroundcolor);
-	QBrush brush1 = QColor(backgroundcolor);
+	QBrush	 brush	= QColor(foregroundcolor);
+	QBrush	 brush1 = QColor(backgroundcolor);
 
 	//set text color
 	palette.setBrush(QPalette::Active, QPalette::Text, brush);
@@ -86,7 +83,7 @@ void setColors(QWidget* widget, QRgb foregroundcolor, QRgb backgroundcolor)
 	palette.setBrush(QPalette::Active, QPalette::Window, brush1);
 	palette.setBrush(QPalette::Inactive, QPalette::Window, brush1);
 
-// apply palette to widget:
+	// apply palette to widget:
 	widget->setPalette(palette);
 }
 
@@ -199,36 +196,38 @@ cstr selectSaveFile(QWidget* parent, cstr headline, cstr filefilterlist)
 #endif
 
 
-cstr tostr (QAudioFormat::Endian endi) noexcept  // helper
+cstr tostr(QAudioFormat::Endian endi) noexcept // helper
 {
-	return	endi==QAudioFormat::BigEndian ? "big endian" :
-			endi==QAudioFormat::LittleEndian ? "little endian" : "illegal endianess";
+	return endi == QAudioFormat::BigEndian	  ? "big endian" :
+		   endi == QAudioFormat::LittleEndian ? "little endian" :
+												"illegal endianess";
 }
 
-cstr tostr (QAudioFormat::SampleType styp) noexcept  // helper
+cstr tostr(QAudioFormat::SampleType styp) noexcept // helper
 {
-	return	styp==QAudioFormat::Float ? "float" :
-			styp==QAudioFormat::SignedInt ? "signed int" :
-			styp==QAudioFormat::UnSignedInt ? "unsigned int" : "unknown";
+	return styp == QAudioFormat::Float		 ? "float" :
+		   styp == QAudioFormat::SignedInt	 ? "signed int" :
+		   styp == QAudioFormat::UnSignedInt ? "unsigned int" :
+											   "unknown";
 }
 
-cstr tostr (const QAudioFormat& afmt) noexcept  // helper
+cstr tostr(const QAudioFormat& afmt) noexcept // helper
 {
 	// e.g.: "audio/pcm 44100hz, 16bit, 2ch, signed int (little endian)"
 
 	if (!afmt.isValid()) return "invalid audio format";
 
 	QString codec = afmt.codec();
-	cstr endi  = tostr(afmt.byteOrder());
-	cstr styp = tostr(afmt.sampleType());
-	int cpf = afmt.channelCount();	// channels / frame
-	int sps  = afmt.sampleRate();	// samples / sec
-	int bps = afmt.sampleSize();	// bits / sample
+	cstr	endi  = tostr(afmt.byteOrder());
+	cstr	styp  = tostr(afmt.sampleType());
+	int		cpf	  = afmt.channelCount(); // channels / frame
+	int		sps	  = afmt.sampleRate();	 // samples / sec
+	int		bps	  = afmt.sampleSize();	 // bits / sample
 
 	return usingstr("%s %ihz, %ibit, %ich, %s (%s)", codec.toUtf8().data(), sps, bps, cpf, styp, endi);
 }
 
-void print_QAudioFormat (cstr title, const QAudioFormat& afmt)
+void print_QAudioFormat(cstr title, const QAudioFormat& afmt)
 {
 	logIn("%s:", title ? title : "QAudioFormat");
 
@@ -242,59 +241,49 @@ void print_QAudioFormat (cstr title, const QAudioFormat& afmt)
 	logline("sample type = %s", tostr(afmt.sampleType()));
 }
 
-void print_QAudioDeviceInfo (cstr title, const QAudioDeviceInfo& info)
+void print_QAudioDeviceInfo(cstr title, const QAudioDeviceInfo& info)
 {
 	assert(!info.isNull());
 
 	logIn("%s:", title ? title : "QAudioDeviceInfo");
 
-	logline("devcie name = %s",info.deviceName().toUtf8().data());
+	logline("devcie name = %s", info.deviceName().toUtf8().data());
 	cstr s;
 
-	s = "";
+	s							 = "";
 	QStringList supported_codecs = info.supportedCodecs();
 	if (supported_codecs.size() == 0)
 	{
-		logline("@@not usable"); return;
+		logline("@@not usable");
+		return;
 	}
-	for (int i=0; i<supported_codecs.size(); i++)
-		s = catstr(s,", ", supported_codecs[i].toUtf8().data());
-	logline("supported codecs:       %s", s+2);
+	for (int i = 0; i < supported_codecs.size(); i++) s = catstr(s, ", ", supported_codecs[i].toUtf8().data());
+	logline("supported codecs:       %s", s + 2);
 
-	s= "";
+	s												 = "";
 	QList<QAudioFormat::Endian> supported_byteorders = info.supportedByteOrders();
-	for (int i=0; i<supported_byteorders.size(); i++)
-		s = catstr(s, ", ", tostr(supported_byteorders[i]));
-	logline("supported byte orders:  %s", s+2);
+	for (int i = 0; i < supported_byteorders.size(); i++) s = catstr(s, ", ", tostr(supported_byteorders[i]));
+	logline("supported byte orders:  %s", s + 2);
 
-	s = "";
+	s									= "";
 	QList<int> supported_channel_counts = info.supportedChannelCounts();
-	for (int i=0; i<supported_channel_counts.size(); i++)
-		s = catstr(s, ", ", numstr(supported_channel_counts[i]));
-	logline("supported num. channel: %s", s+2);
+	for (int i = 0; i < supported_channel_counts.size(); i++) s = catstr(s, ", ", numstr(supported_channel_counts[i]));
+	logline("supported num. channel: %s", s + 2);
 
-	s = "";
+	s								 = "";
 	QList<int> supported_samplerates = info.supportedSampleRates();
-	for (int i=0; i<supported_samplerates.size(); i++)
-		s = catstr(s, ", ", numstr(supported_samplerates[i]));
-	logline("supported sample rates: %s", s+2);
+	for (int i = 0; i < supported_samplerates.size(); i++) s = catstr(s, ", ", numstr(supported_samplerates[i]));
+	logline("supported sample rates: %s", s + 2);
 
-	s = "";
+	s								 = "";
 	QList<int> supported_samplesizes = info.supportedSampleSizes();
-	for (int i=0; i<supported_samplesizes.size(); i++)
-		s = catstr(s, ", ", numstr(supported_samplesizes[i]));
-	logline("supported sample sizes: %s", s+2);
+	for (int i = 0; i < supported_samplesizes.size(); i++) s = catstr(s, ", ", numstr(supported_samplesizes[i]));
+	logline("supported sample sizes: %s", s + 2);
 
-	s = "";
+	s													   = "";
 	QList<QAudioFormat::SampleType> supported_sample_types = info.supportedSampleTypes();
-	for (int i=0; i<supported_sample_types.size(); i++)
-		s = catstr(s, ", ", tostr(supported_sample_types[i]));
-	logline("supported sample types: %s", s+2);
+	for (int i = 0; i < supported_sample_types.size(); i++) s = catstr(s, ", ", tostr(supported_sample_types[i]));
+	logline("supported sample types: %s", s + 2);
 
 	logline("preferred format: %s", tostr(info.preferredFormat()));
 }
-
-
-
-
-

@@ -8,30 +8,6 @@
 #include "unix/FD.h"
 
 
-extern void calc_md5  (FD& fd, uint64 start, uint64 count, uint8 md5[16]) throws;
-extern void calc_md5  (const uint8 data[], uint32 count, uint8 md5[16]);
-extern void check_md5 (const uint8 data[], uint32 count, const uint8 md5[16], cstr msg) throws;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+extern void calc_md5(FD& fd, uint64 start, uint64 count, uint8 md5[16]) throws;
+extern void calc_md5(const uint8 data[], uint32 count, uint8 md5[16]);
+extern void check_md5(const uint8 data[], uint32 count, const uint8 md5[16], cstr msg) throws;

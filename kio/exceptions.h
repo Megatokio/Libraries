@@ -10,8 +10,8 @@
 
 
 #include "kio/kio.h"
-#include <new>
 #include <exception>
+#include <new>
 class FD;
 
 
@@ -56,26 +56,25 @@ hierarchy:
 class AnyError : public std::exception
 {
 protected:
-	cstr	msg = nullptr;	// allocated
-	int		err;			// errno
-	int		dummy;			// padding
+	cstr msg = nullptr; // allocated
+	int	 err;			// errno
+	int	 dummy;			// padding
 
 public:
-	explicit AnyError (cstr msg, ...)	noexcept __printflike(2,3);
-	AnyError (cstr msg, va_list va)		noexcept __printflike(2,0);
-	explicit AnyError (int err)			noexcept :err(err){}
-	AnyError (int err, cstr msg)		noexcept;
-	~AnyError ()						noexcept override;
+	explicit AnyError(cstr msg, ...) noexcept __printflike(2, 3);
+	AnyError(cstr msg, va_list va) noexcept __printflike(2, 0);
+	explicit AnyError(int err) noexcept : err(err) {}
+	AnyError(int err, cstr msg) noexcept;
+	~AnyError() noexcept override;
 
-	cstr what () const					noexcept override;
-	int error() const noexcept { return err; }
+	cstr what() const noexcept override;
+	int	 error() const noexcept { return err; }
 
-	AnyError (const AnyError&)			noexcept;
-	AnyError (AnyError&&)				noexcept;
-	AnyError& operator= (const AnyError&) = delete;
-	AnyError& operator= (AnyError&&) = delete;
+	AnyError(const AnyError&) noexcept;
+	AnyError(AnyError&&) noexcept;
+	AnyError& operator=(const AnyError&) = delete;
+	AnyError& operator=(AnyError&&)		 = delete;
 };
-
 
 
 // ---------------------------------------------
@@ -85,10 +84,9 @@ public:
 class InternalError : public AnyError
 {
 public:
-	InternalError (cstr file, uint line, int err=internalerror) noexcept;
-	InternalError (cstr file, uint line, cstr msg) noexcept;
+	InternalError(cstr file, uint line, int err = internalerror) noexcept;
+	InternalError(cstr file, uint line, cstr msg) noexcept;
 };
-
 
 
 // ---------------------------------------------
@@ -102,12 +100,10 @@ class LimitError : public AnyError
 
 public:
 	template<typename T>
-	__attribute__((deprecated))
-	LimitError (cstr where, T sz, T max) noexcept : LimitError(where,ulong(sz),ulong(max)){}
-	__attribute__((deprecated))
-	LimitError (cstr where, ulong sz, ulong max)	noexcept;
+	__attribute__((deprecated)) LimitError(cstr where, T sz, T max) noexcept : LimitError(where, ulong(sz), ulong(max))
+	{}
+	__attribute__((deprecated)) LimitError(cstr where, ulong sz, ulong max) noexcept;
 };
-
 
 
 // ---------------------------------------------
@@ -117,12 +113,11 @@ public:
 class DataError : public AnyError
 {
 public:
-	 DataError ()						noexcept : AnyError(dataerror){}
-	 DataError (int error)				noexcept : AnyError(error){}
-	 DataError (int error, cstr text)	noexcept : AnyError(error,text){}
-	 DataError (cstr msg, ...)			noexcept __printflike(2,3);
+	DataError() noexcept : AnyError(dataerror) {}
+	DataError(int error) noexcept : AnyError(error) {}
+	DataError(int error, cstr text) noexcept : AnyError(error, text) {}
+	DataError(cstr msg, ...) noexcept __printflike(2, 3);
 };
-
 
 
 // ---------------------------------------------
@@ -133,54 +128,22 @@ class FileError : public AnyError
 {
 public:
 	cstr filepath;
-	int  fd;
+	int	 fd;
 
 public:
-	FileError (cstr path, int error)				noexcept;
-	FileError (cstr path, int error, cstr msg)	noexcept;
-	FileError (int fd, cstr path, int error)		noexcept;
-	FileError (int fd, cstr path, int error, cstr msg) noexcept;
-	FileError (const FD&, int error)				noexcept;
-	FileError (const FD&, int error, cstr msg)	noexcept;
+	FileError(cstr path, int error) noexcept;
+	FileError(cstr path, int error, cstr msg) noexcept;
+	FileError(int fd, cstr path, int error) noexcept;
+	FileError(int fd, cstr path, int error, cstr msg) noexcept;
+	FileError(const FD&, int error) noexcept;
+	FileError(const FD&, int error, cstr msg) noexcept;
 
-	FileError (FileError const&)					noexcept;
-	FileError (FileError&&)						noexcept;
+	FileError(const FileError&) noexcept;
+	FileError(FileError&&) noexcept;
 
-	FileError& operator= (FileError const&)	= delete;
-	FileError& operator= (FileError&&)		= delete;
-	~FileError ()								noexcept override;
+	FileError& operator=(const FileError&) = delete;
+	FileError& operator=(FileError&&)	   = delete;
+	~FileError() noexcept override;
 
-	cstr what() const							noexcept override;
+	cstr what() const noexcept override;
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

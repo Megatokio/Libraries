@@ -4,49 +4,17 @@
 
 
 #undef NDEBUG
-#define SAFETY 2
+#define SAFETY	 2
 #define LOGLEVEL 1
 #include "kio/kio.h"
 #include "main.h"
 
-void test_whatever (uint& num_tests, uint& num_errors)
+void test_whatever(uint& num_tests, uint& num_errors)
 {
 	logIn("test whatever");
 
-	TRY
-		char const abcd[5]="abcd";
-		assert( peek4X(abcd) == 'abcd' );
-		assert( peek4Z(abcd) == 'dcba' );
+	TRY const char abcd[5] = "abcd";
+	assert(peek4X(abcd) == 'abcd');
+	assert(peek4Z(abcd) == 'dcba');
 	END
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

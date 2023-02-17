@@ -11,4 +11,4 @@
 // ADD_NONE ( blk_start, blk_size, 0 )
 
 
-ADD_NONE(0x010000,1048576,0)
+ADD_NONE(0x010000, 1048576, 0)

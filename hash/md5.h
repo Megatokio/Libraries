@@ -32,10 +32,6 @@ struct MD5Context
 	uint32 in[16];
 };
 
-extern void MD5Init(struct MD5Context *context);
-extern void MD5Update(struct MD5Context *context, md5byte const *buf, unsigned len);
-extern void MD5Final(struct MD5Context *context, unsigned char digest[16]);
-
-
-
-
+extern void MD5Init(struct MD5Context* context);
+extern void MD5Update(struct MD5Context* context, const md5byte* buf, unsigned len);
+extern void MD5Final(struct MD5Context* context, unsigned char digest[16]);

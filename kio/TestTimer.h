@@ -15,25 +15,19 @@ public:
 	TestTimer();
 
 	void test(double maxdelay, cstr sourceposition);
-		// mod. 2018:
-		// TestTimer::test(maxdelay, "... <program location> ... <printformat> <timeunit>");
-		// should be replaced with:
-		// TestTimer::test(maxdelay, <program location>");
+	// mod. 2018:
+	// TestTimer::test(maxdelay, "... <program location> ... <printformat> <timeunit>");
+	// should be replaced with:
+	// TestTimer::test(maxdelay, <program location>");
 
 	void start();
 };
 
 
 #if XLOG
-	#define TT			TestTimer tt;
-	#define TTest(T,S)	tt.test(T,S)
+  #define TT		  TestTimer tt;
+  #define TTest(T, S) tt.test(T, S)
 #else
-	#define TT
-	#define TTest(T,S)
+  #define TT
+  #define TTest(T, S)
 #endif
-
-
-
-
-
-

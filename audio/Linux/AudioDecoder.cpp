@@ -10,7 +10,12 @@
 
 
 AudioDecoder::AudioDecoder() :
-	filename(nullptr), num_frames(0), frames_per_second(0), num_channels(0), sizeof_sample(0), frame_position(0)
+	filename(nullptr),
+	num_frames(0),
+	frames_per_second(0),
+	num_channels(0),
+	sizeof_sample(0),
+	frame_position(0)
 {
 	debugstr("AudioDecoder\n");
 }
@@ -43,6 +48,7 @@ int AudioDecoder::close()
 */
 void AudioDecoder::open(cstr filename)
 {
+	(void)filename;
 	debugstr("AudioDecoder::open\n");
 	TODO();
 }
@@ -52,6 +58,7 @@ void AudioDecoder::open(cstr filename)
  */
 void AudioDecoder::seekSamplePosition(uint32 frameposition)
 {
+	(void)frameposition;
 	debugstr("AudioDecoder::seekSamplePosition\n");
 	TODO();
 }
@@ -64,7 +71,14 @@ void AudioDecoder::seekSamplePosition(uint32 frameposition)
 		  if the file has less channels than requested, then the missing channels are cleared with silence
 	returns number of frames actually read
 */
-uint32 AudioDecoder::read_buffer(void* bu, uint numchannels, uint32 numframes, uint sizeofsample) { TODO(); }
+uint32 AudioDecoder::read_buffer(void* bu, uint numchannels, uint32 numframes, uint sizeofsample)
+{
+	(void)bu;
+	(void)numchannels;
+	(void)numframes;
+	(void)sizeofsample;
+	TODO();
+}
 
 
 /*	read samples from file into buffer
@@ -77,6 +91,9 @@ uint32 AudioDecoder::read_buffer(void* bu, uint numchannels, uint32 numframes, u
 */
 uint32 AudioDecoder::read(int16* bu, uint32 maxframes, uint numchannels)
 {
+	(void)bu;
+	(void)maxframes;
+	(void)numchannels;
 	debugstr("AudioDecoder::read\n");
 	assert(numchannels >= 1 && numchannels <= 7);
 	TODO();
@@ -93,6 +110,9 @@ uint32 AudioDecoder::read(int16* bu, uint32 maxframes, uint numchannels)
 */
 uint32 AudioDecoder::read(float32* bu, uint32 maxframes, uint numchannels)
 {
+	(void)bu;
+	(void)maxframes;
+	(void)numchannels;
 	debugstr("AudioDecoder::read\n");
 	assert(numchannels >= 1 && numchannels <= 7);
 	TODO();

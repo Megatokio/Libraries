@@ -56,15 +56,15 @@
 	thread-safe encapulation in C++ class by kio@little-bat.de
 */
 
-#include "kio/kio.h"
 #include "MersenneTwister64.h"
 #include "hash/md5.h"
+#include "kio/kio.h"
 
 
-#define UM 		INT64_C(0xFFFFFFFF80000000U)	 	// Most significant 33 bits
-#define LM 		INT64_C(0x000000007FFFFFFFU) 		// Least significant 31 bits
+#define UM INT64_C(0xFFFFFFFF80000000U) // Most significant 33 bits
+#define LM INT64_C(0x000000007FFFFFFFU) // Least significant 31 bits
 
-static 	uint64	mag01[2] = {0U, INT64_C(0xB5026F5AA96619E9U)};
+static uint64 mag01[2] = {0U, INT64_C(0xB5026F5AA96619E9U)};
 
 
 /*	Globale Instanz für Zufallszahlen die nicht reproduzierbar sein müssen:
@@ -73,35 +73,43 @@ static 	uint64	mag01[2] = {0U, INT64_C(0xB5026F5AA96619E9U)};
 MersenneTwister64 static_twister(INT64_C(5489U));
 
 
-
-
 /* 	Initialize with array
 	Recommended method
 */
-void MersenneTwister64::init( uint64 seed[], uint seed_length )
+void MersenneTwister64::init(uint64 seed[], uint seed_length)
 {
 	init(INT64_C(19650218U));
 
 	uint64 i = 1;
 	uint64 j = 0;
-	uint64 k = min(uint(NN),seed_length);
+	uint64 k = min(uint(NN), seed_length);
 
 	for (; k; k--)
 	{
-		mt[i] = (mt[i] ^ ((mt[i-1] ^ (mt[i-1] >> 62)) * INT64_C(3935559000370003845U))) + seed[j] + j; /* non linear */
-		i++; j++;
-		if (i>=NN) { mt[0] = mt[NN-1]; i=1; }
-		if (j>=seed_length) j=0;
-	}
-
-	for (k=NN-1; k; k--)
-	{
-		mt[i] = (mt[i] ^ ((mt[i-1] ^ (mt[i-1] >> 62)) * INT64_C(2862933555777941757U))) - i; /* non linear */
+		mt[i] =
+			(mt[i] ^ ((mt[i - 1] ^ (mt[i - 1] >> 62)) * INT64_C(3935559000370003845U))) + seed[j] + j; /* non linear */
 		i++;
-		if (i>=NN) { mt[0] = mt[NN-1]; i=1; }
+		j++;
+		if (i >= NN)
+		{
+			mt[0] = mt[NN - 1];
+			i	  = 1;
+		}
+		if (j >= seed_length) j = 0;
 	}
 
-	mt[0] |= INT64_C(1U) << 63; 	// MSB is 1; assuring non-zero initial array
+	for (k = NN - 1; k; k--)
+	{
+		mt[i] = (mt[i] ^ ((mt[i - 1] ^ (mt[i - 1] >> 62)) * INT64_C(2862933555777941757U))) - i; /* non linear */
+		i++;
+		if (i >= NN)
+		{
+			mt[0] = mt[NN - 1];
+			i	  = 1;
+		}
+	}
+
+	mt[0] |= INT64_C(1U) << 63; // MSB is 1; assuring non-zero initial array
 }
 
 
@@ -111,37 +119,39 @@ void MersenneTwister64::init( uint64 seed[], uint seed_length )
 */
 void MersenneTwister64::init(cstr qstr)
 {
-	if (qstr==nullptr||*qstr==0) { init(uint64(0)); return; }
+	if (qstr == nullptr || *qstr == 0)
+	{
+		init(uint64(0));
+		return;
+	}
 
 	uint qlen = uint(strlen(qstr));
-	uint zlen = (qlen+7)/8;
+	uint zlen = (qlen + 7) / 8;
 
-	uint64 z[zlen]; z[zlen-1] = 0;
-	memcpy(z,qstr,qlen);
-	init(z,zlen);
+	uint64 z[zlen];
+	z[zlen - 1] = 0;
+	memcpy(z, qstr, qlen);
+	init(z, zlen);
 }
 
 
 /* 	Initialize with uint32 seed
 	Wenn nur 4 Bytes für ein Seed zur Verfügung stehen
 */
-void MersenneTwister64::init( uint32 seed )
-{
-	init( seed ? uint64(~seed)<<32 | uint64(seed) : 0UL );
-}
+void MersenneTwister64::init(uint32 seed) { init(seed ? uint64(~seed) << 32 | uint64(seed) : 0UL); }
 
 
 /* 	Initialize with uint64 seed
 	Wenn nur 8 Bytes für ein Seed zur Verfügung stehen
 */
-void MersenneTwister64::init( uint64 seed )
+void MersenneTwister64::init(uint64 seed)
 {
 	while (!seed) seed = random64();
 
 	mt[0] = seed;
-	for (mti=1; mti<NN; mti++)
+	for (mti = 1; mti < NN; mti++)
 	{
-		mt[mti] = (INT64_C(6364136223846793005U) * (mt[mti-1] ^ (mt[mti-1] >> 62)) + mti);
+		mt[mti] = (INT64_C(6364136223846793005U) * (mt[mti - 1] ^ (mt[mti - 1] >> 62)) + mti);
 	}
 }
 
@@ -150,23 +160,23 @@ void MersenneTwister64::init( uint64 seed )
 */
 void MersenneTwister64::next_table()
 {
-	int i;
+	int	   i;
 	uint64 x;
 
-	for (i=0;i<NN-MM;i++)
+	for (i = 0; i < NN - MM; i++)
 	{
-		x = (mt[i]&UM) | (mt[i+1]&LM);
-		mt[i] = mt[i+MM] ^ (x>>1) ^ mag01[int(x)&1];
+		x	  = (mt[i] & UM) | (mt[i + 1] & LM);
+		mt[i] = mt[i + MM] ^ (x >> 1) ^ mag01[int(x) & 1];
 	}
 
-	for (;i<NN-1;i++)
+	for (; i < NN - 1; i++)
 	{
-		x = (mt[i]&UM) | (mt[i+1]&LM);
-		mt[i] = mt[i+(MM-NN)] ^ (x>>1) ^ mag01[int(x)&1];
+		x	  = (mt[i] & UM) | (mt[i + 1] & LM);
+		mt[i] = mt[i + (MM - NN)] ^ (x >> 1) ^ mag01[int(x) & 1];
 	}
 
-	x = (mt[NN-1]&UM) | (mt[0]&LM);
-	mt[NN-1] = mt[MM-1] ^ (x>>1) ^ mag01[int(x)&1];
+	x		   = (mt[NN - 1] & UM) | (mt[0] & LM);
+	mt[NN - 1] = mt[MM - 1] ^ (x >> 1) ^ mag01[int(x) & 1];
 
 	mti = mti0;
 }
@@ -240,10 +250,6 @@ void MersenneTwister64::next_table()
 //	for (uint i=0;i<count;i++) mt[i] ^= key2[i];
 //	return spread_key2();
 //}
-
-
-
-
 
 
 ///*	encrypt or decrypt buffer bu[sz]
@@ -369,35 +375,3 @@ void MersenneTwister64::next_table()
 //};
 //
 //#endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

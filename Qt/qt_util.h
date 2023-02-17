@@ -17,22 +17,22 @@
 	TO THE EXTENT PERMITTED BY APPLICABLE LAW.
 */
 
+#include "kio/kio.h"
+#include <QAudioDeviceInfo>
+#include <QAudioFormat>
 #include <QRgb>
 #include <QWidget>
-#include <QAudioFormat>
-#include <QAudioDeviceInfo>
-#include "kio/kio.h"
 
 
-extern void setColors   (QWidget* widget, QRgb foregroundcolor, QRgb backgroundcolor = 0/*transparent*/);
+extern void setColors(QWidget* widget, QRgb foregroundcolor, QRgb backgroundcolor = 0 /*transparent*/);
 
 #if 0 // TODO
 extern cstr selectLoadFile(QWidget* parent, cstr title, cstr filefilterstr);
 extern cstr selectSaveFile(QWidget* parent, cstr title, cstr filefilterstr);
 #endif
 
-extern cstr tostr (QAudioFormat::Endian endi) noexcept;
-extern cstr tostr (QAudioFormat::SampleType styp) noexcept;
-extern cstr tostr (const QAudioFormat& afmt) noexcept;
-extern void print_QAudioFormat (cstr title, const QAudioFormat& afmt);
-extern void print_QAudioDeviceInfo (cstr title, const QAudioDeviceInfo& info);
+extern cstr tostr(QAudioFormat::Endian endi) noexcept;
+extern cstr tostr(QAudioFormat::SampleType styp) noexcept;
+extern cstr tostr(const QAudioFormat& afmt) noexcept;
+extern void print_QAudioFormat(cstr title, const QAudioFormat& afmt);
+extern void print_QAudioDeviceInfo(cstr title, const QAudioDeviceInfo& info);

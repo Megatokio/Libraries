@@ -12,17 +12,13 @@
 */
 
 
-
-unsigned short crc16( const unsigned char* q, unsigned int count )
+unsigned short crc16(const unsigned char* q, unsigned int count)
 {
 	unsigned int data, crc = 0xffff;
 
-	while(count--)
+	while (count--)
 	{
-		for( data = 0x0100 + *q++; data>1; data >>= 1 )
-		{
-			crc = (crc^data) & 1 ? (crc >> 1) ^ POLY : crc >> 1;
-		}
+		for (data = 0x0100 + *q++; data > 1; data >>= 1) { crc = (crc ^ data) & 1 ? (crc >> 1) ^ POLY : crc >> 1; }
 	}
 
 	crc = ~crc;

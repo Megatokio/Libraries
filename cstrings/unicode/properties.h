@@ -1,9 +1,8 @@
 
-	// enums for boolean, enumerated and catalog properties
-	// created 2019-05-08 15:16:14 by script create_all.vs
+// enums for boolean, enumerated and catalog properties
+// created 2019-05-08 15:16:14 by script create_all.vs
 
-enum Block
-{
+enum Block {
 	BlkNone,
 	BlkAdlam,
 	BlkAegeanNumbers,
@@ -308,8 +307,7 @@ enum Block
 	BlkZanabazarSquare,
 };
 
-enum Age
-{
+enum Age {
 	AgeV11,
 	AgeV20,
 	AgeV21,
@@ -335,8 +333,7 @@ enum Age
 	AgeUnassigned,
 };
 
-enum BidiClass
-{
+enum BidiClass {
 	BcArabicLetter,
 	BcArabicNumber,
 	BcParagraphSeparator,
@@ -362,15 +359,13 @@ enum BidiClass
 	BcWhiteSpace,
 };
 
-enum BidiPairedBracketType
-{
+enum BidiPairedBracketType {
 	BptClose,
 	BptNone,
 	BptOpen,
 };
 
-enum CanonicalCombiningClass
-{
+enum CanonicalCombiningClass {
 	CccNotReordered,
 	CccOverlay,
 	CccNukta,
@@ -430,8 +425,7 @@ enum CanonicalCombiningClass
 	CccIotaSubscript,
 };
 
-enum DecompositionType
-{
+enum DecompositionType {
 	DtCanonical,
 	DtCompat,
 	DtCircle,
@@ -452,8 +446,7 @@ enum DecompositionType
 	DtWide,
 };
 
-enum EastAsianWidth
-{
+enum EastAsianWidth {
 	EaAmbiguous,
 	EaFullwidth,
 	EaHalfwidth,
@@ -462,8 +455,7 @@ enum EastAsianWidth
 	EaWide,
 };
 
-enum GeneralCategory
-{
+enum GeneralCategory {
 	GcOther,
 	GcControl,
 	GcFormat,
@@ -504,8 +496,7 @@ enum GeneralCategory
 	GcSpaceSeparator,
 };
 
-enum GraphemeClusterBreak
-{
+enum GraphemeClusterBreak {
 	GCBControl,
 	GCBCR,
 	GCBEBase,
@@ -526,8 +517,7 @@ enum GraphemeClusterBreak
 	GCBZWJ,
 };
 
-enum HangulSyllableType
-{
+enum HangulSyllableType {
 	HstLeadingJamo,
 	HstLVSyllable,
 	HstLVTSyllable,
@@ -536,8 +526,7 @@ enum HangulSyllableType
 	HstVowelJamo,
 };
 
-enum IndicPositionalCategory
-{
+enum IndicPositionalCategory {
 	InPCBottom,
 	InPCBottomAndLeft,
 	InPCBottomAndRight,
@@ -555,8 +544,7 @@ enum IndicPositionalCategory
 	InPCVisualOrderLeft,
 };
 
-enum IndicSyllabicCategory
-{
+enum IndicSyllabicCategory {
 	InSCAvagraha,
 	InSCBindu,
 	InSCBrahmiJoiningNumber,
@@ -595,8 +583,7 @@ enum IndicSyllabicCategory
 	InSCVowelIndependent,
 };
 
-enum JamoShortName
-{
+enum JamoShortName {
 	JSNA,
 	JSNAE,
 	JSNB,
@@ -651,8 +638,7 @@ enum JamoShortName
 	JSNYU,
 };
 
-enum JoiningGroup
-{
+enum JoiningGroup {
 	JgAfricanFeh,
 	JgAfricanNoon,
 	JgAfricanQaf,
@@ -757,8 +743,7 @@ enum JoiningGroup
 	JgZhain,
 };
 
-enum JoiningType
-{
+enum JoiningType {
 	JtJoinCausing,
 	JtDualJoining,
 	JtLeftJoining,
@@ -767,8 +752,7 @@ enum JoiningType
 	JtNonJoining,
 };
 
-enum LineBreak
-{
+enum LineBreak {
 	LbAmbiguous,
 	LbAlphabetic,
 	LbBreakBoth,
@@ -814,30 +798,26 @@ enum LineBreak
 	LbZWJ,
 };
 
-enum NFCQuickCheck
-{
+enum NFCQuickCheck {
 	NFCQCMaybe,
 	NFCQCNo,
 	NFCQCYes,
 };
 
-enum NFKCQuickCheck
-{
+enum NFKCQuickCheck {
 	NFKCQCMaybe,
 	NFKCQCNo,
 	NFKCQCYes,
 };
 
-enum NumericType
-{
+enum NumericType {
 	NtDecimal,
 	NtDigit,
 	NtNone,
 	NtNumeric,
 };
 
-enum Script
-{
+enum Script {
 	ScAdlam,
 	ScCaucasianAlbanian,
 	ScAhom,
@@ -994,8 +974,7 @@ enum Script
 	ScUnknown,
 };
 
-enum SentenceBreak
-{
+enum SentenceBreak {
 	SBATerm,
 	SBClose,
 	SBCR,
@@ -1013,16 +992,14 @@ enum SentenceBreak
 	SBOther,
 };
 
-enum VerticalOrientation
-{
+enum VerticalOrientation {
 	VoRotated,
 	VoTransformedRotated,
 	VoTransformedUpright,
 	VoUpright,
 };
 
-enum WordBreak
-{
+enum WordBreak {
 	WBCR,
 	WBDoubleQuote,
 	WBEBase,
@@ -1047,4 +1024,3 @@ enum WordBreak
 	WBOther,
 	WBZWJ,
 };
-

@@ -10,7 +10,8 @@
 
 // macro returns the type of the compare function for item type:
 #define REForVALUE(T) typename kio::select_type<std::is_class<T>::value, T const&, T>::type
-#define COMPARATOR(T) typename kio::select_type<std::is_class<T>::value, bool(*)(T const&,T const&), bool(*)(T,T)>::type
+#define COMPARATOR(T) \
+  typename kio::select_type<std::is_class<T>::value, bool (*)(T const&, T const&), bool (*)(T, T)>::type
 
 
 // undefine macros needed by old sort.h. TODO: remove
@@ -22,18 +23,17 @@
 //					Sort range [a ... [e
 // ------------------------------------------------------------
 
-template<typename TYPE> inline void sort(TYPE* a, TYPE* e, COMPARATOR(TYPE) gt)
+template<typename TYPE>
+inline void sort(TYPE* a, TYPE* e, COMPARATOR(TYPE) gt)
 #include "sorter.h"
 
-template<typename TYPE> inline void sort(TYPE* a, TYPE* e)  { sort(a,e,gt); }
-template<typename TYPE> inline void rsort(TYPE* a, TYPE* e) { sort(a,e,lt); }
-
-
-
-
-
-
-
-
-
-
+	template<typename TYPE>
+	inline void sort(TYPE* a, TYPE* e)
+{
+	sort(a, e, gt);
+}
+template<typename TYPE>
+inline void rsort(TYPE* a, TYPE* e)
+{
+	sort(a, e, lt);
+}

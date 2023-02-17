@@ -4,17 +4,16 @@
 
 
 #undef NDEBUG
-#define SAFETY 2
+#define SAFETY	 2
 #define LOGLEVEL 1
+#include "Z80/goodies/z80_goodies.h"
+#include "Z80/goodies/z80_opcodes.h"
 #include "kio/kio.h"
 #include "main.h"
-#include "Z80/goodies/z80_opcodes.h"
-#include "Z80/goodies/z80_goodies.h"
 
-static const uint8 cc_i8080[256] =
-{
-	#undef Z
-	#define Z(A,B) A
+static const uint8 cc_i8080[256] = {
+#undef Z
+#define Z(A, B) A
 	// NOP, 		LD_BC_NN,	LD_xBC_A,	INC_BC,		INC_B,		DEC_B,		LD_B_N,		RLCA,
 	// NOP**,		ADD_HL_BC,	LD_A_xBC,	DEC_BC,		INC_C,		DEC_C,		LD_C_N,		RRCA,
 	// NOP**,		LD_DE_NN,	LD_xDE_A,	INC_DE,		INC_D,		DEC_D,		LD_D_N,		RLA,

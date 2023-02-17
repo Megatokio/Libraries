@@ -10,30 +10,41 @@ See <http://creativecommons.org/publicdomain/zero/1.0/>.
 See	<http://prng.di.unimi.it>
 */
 
+#include "Xoshiro256.h"
 #include "kio/kio.h"
-#include <stdint.h>
-#include <stdlib.h>
 #include <math.h>
 #include <random>
-#include "Xoshiro256.h"
+#include <stdint.h>
+#include <stdlib.h>
 
 
-static inline uint64 rotl (const uint64 x, int k) noexcept
+static inline uint64 rotl(const uint64 x, int k) noexcept { return (x << k) | (x >> (64 - k)); }
+
+static inline int msbit(uint32 n) noexcept // 0 .. 31
 {
-	return (x << k) | (x >> (64 - k));
-}
-
-static inline int msbit (uint32 n) noexcept // 0 .. 31
-{
-	int b=0, i=16;
-	do { if (n>>i) { n>>=i; b+=i; } } while (i>>=1);
+	int b = 0, i = 16;
+	do {
+		if (n >> i)
+		{
+			n >>= i;
+			b += i;
+		}
+	}
+	while (i >>= 1);
 	return b;
 }
 
-static inline int msbit (uint64 n) noexcept // 0 .. 63
+static inline int msbit(uint64 n) noexcept // 0 .. 63
 {
-	int b=0, i=32;
-	do { if (n>>i) { n>>=i; b+=i; } } while (i>>=1);
+	int b = 0, i = 32;
+	do {
+		if (n >> i)
+		{
+			n >>= i;
+			b += i;
+		}
+	}
+	while (i >>= 1);
 	return b;
 }
 
@@ -52,7 +63,7 @@ static inline int msbit (uint64 n) noexcept // 0 .. 63
 uint64 xoshiro256p(uint64* s) noexcept
 {
 	const uint64 result = s[0] + s[3];
-	const uint64 t = s[1] << 17;
+	const uint64 t		= s[1] << 17;
 
 	s[2] ^= s[0];
 	s[3] ^= s[1];
@@ -74,10 +85,10 @@ uint64 xoshiro256p(uint64* s) noexcept
 	For generating just floating-point numbers, xoshiro256+ is even faster.
 	The state must be seeded so that it is not everywhere zero.
 */
-uint64 xoshiro256pp (uint64* s) noexcept
+uint64 xoshiro256pp(uint64* s) noexcept
 {
 	const uint64 result = rotl(s[0] + s[3], 23) + s[0];
-	const uint64 t = s[1] << 17;
+	const uint64 t		= s[1] << 17;
 
 	s[2] ^= s[0];
 	s[3] ^= s[1];
@@ -99,10 +110,10 @@ uint64 xoshiro256pp (uint64* s) noexcept
 	For generating just floating-point numbers, xoshiro256+ is even faster.
 	The state must be seeded so that it is not everywhere zero.
 */
-uint64 xoshiro256ss (uint64* s) noexcept
+uint64 xoshiro256ss(uint64* s) noexcept
 {
 	const uint64 result = rotl(s[1] * 5, 7) * 9;
-	const uint64 t = s[1] << 17;
+	const uint64 t		= s[1] << 17;
 
 	s[2] ^= s[0];
 	s[3] ^= s[1];
@@ -117,21 +128,21 @@ uint64 xoshiro256ss (uint64* s) noexcept
 }
 
 
-inline double random (uint64 rand) noexcept
+inline double random(uint64 rand) noexcept
 {
 	// interval [0 .. [1
 
-	return ldexp(double(rand),-64);
+	return ldexp(double(rand), -64);
 }
 
-inline double random (uint64 rand, double max) noexcept
+inline double random(uint64 rand, double max) noexcept
 {
 	// interval [0 .. [max
 
 	return ldexp(double(rand) * max, -64);
 }
 
-uint32 Xoshiro256::random (uint32 max) noexcept
+uint32 Xoshiro256::random(uint32 max) noexcept
 {
 	// interval [0 .. [max
 
@@ -139,14 +150,14 @@ uint32 Xoshiro256::random (uint32 max) noexcept
 
 	const int n = 31 - msbit(max);
 
-	for(;;)
+	for (;;)
 	{
 		uint32 r = uint32(next()) >> n;
 		if (r < max) return r;
 	}
 }
 
-uint64 Xoshiro256::random (uint64 max) noexcept
+uint64 Xoshiro256::random(uint64 max) noexcept
 {
 	// interval [0 .. [max
 
@@ -154,14 +165,14 @@ uint64 Xoshiro256::random (uint64 max) noexcept
 
 	const int n = 63 - msbit(max);
 
-	for(;;)
+	for (;;)
 	{
 		uint64 r = next() >> n;
 		if (r < max) return r;
 	}
 }
 
-void Xoshiro256::skip (const uint64 bits[4]) noexcept
+void Xoshiro256::skip(const uint64 bits[4]) noexcept
 {
 	// helper for jump() and jump_long():
 
@@ -170,18 +181,18 @@ void Xoshiro256::skip (const uint64 bits[4]) noexcept
 	uint64 s2 = 0;
 	uint64 s3 = 0;
 
-	for (uint i = 0; i < 256/64; i++)
-	for (uint b = 0; b < 64; b++)
-	{
-		if (bits[i] & UINT64_C(1) << b)
+	for (uint i = 0; i < 256 / 64; i++)
+		for (uint b = 0; b < 64; b++)
 		{
-			s0 ^= s[0];
-			s1 ^= s[1];
-			s2 ^= s[2];
-			s3 ^= s[3];
+			if (bits[i] & UINT64_C(1) << b)
+			{
+				s0 ^= s[0];
+				s1 ^= s[1];
+				s2 ^= s[2];
+				s3 ^= s[3];
+			}
+			next();
 		}
-		next();
-	}
 
 	s[0] = s0;
 	s[1] = s1;
@@ -189,44 +200,36 @@ void Xoshiro256::skip (const uint64 bits[4]) noexcept
 	s[3] = s3;
 }
 
-void Xoshiro256::skip128 () noexcept
+void Xoshiro256::skip128() noexcept
 {
 	// This is the short jump function for the generator. It is equivalent
 	// to 2^128 calls to next(); it can be used to generate 2^128
 	// non-overlapping subsequences for parallel computations.
 
-	static const uint64 bits[4] =
-	{
-		0x180ec6d33cfd0aba, 0xd5a61266f0c9392c,
-		0xa9582618e03fc9aa, 0x39abdc4529b1661c
-	};
+	static const uint64 bits[4] = {0x180ec6d33cfd0aba, 0xd5a61266f0c9392c, 0xa9582618e03fc9aa, 0x39abdc4529b1661c};
 
 	skip(bits);
 }
 
-void Xoshiro256::skip192 () noexcept
+void Xoshiro256::skip192() noexcept
 {
 	// This is the long jump function for the generator. It is equivalent to
 	// 2^192 calls to next(); it can be used to generate 2^64 starting points,
 	// from each of which skip128() will generate 2^64 non-overlapping
 	// subsequences for parallel distributed computations.
 
-	static const uint64 bits[4] =
-	{
-		0x76e15d3efefdcbbf, 0xc5004e441c522fb3,
-		0x77710069854ee241, 0x39109bb02acbe635
-	};
+	static const uint64 bits[4] = {0x76e15d3efefdcbbf, 0xc5004e441c522fb3, 0x77710069854ee241, 0x39109bb02acbe635};
 
 	skip(bits);
 }
 
-Xoshiro256::Xoshiro256 (const void* q) noexcept
+Xoshiro256::Xoshiro256(const void* q) noexcept
 {
-	memcpy(s,q,sizeof s);
+	memcpy(s, q, sizeof s);
 	next();
 }
 
-Xoshiro256::Xoshiro256 (uint32 seed) noexcept
+Xoshiro256::Xoshiro256(uint32 seed) noexcept
 {
 	srand(seed);
 	s[0] = unsigned(rand());
@@ -236,26 +239,4 @@ Xoshiro256::Xoshiro256 (uint32 seed) noexcept
 	next();
 }
 
-Xoshiro256::Xoshiro256() noexcept :
-	Xoshiro256(std::random_device{}())
-{}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Xoshiro256::Xoshiro256() noexcept : Xoshiro256(std::random_device {}()) {}

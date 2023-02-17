@@ -2,35 +2,33 @@
 // BSD-2-Clause license
 // https://opensource.org/licenses/BSD-2-Clause
 
+#include "cppthreads.h"
 #include "kio/kio.h"
 #include <math.h>
 #include <sys/time.h>
 #include <thread>
-#include "cppthreads.h"
 
 DEBUG_INIT_MSG
 
-const  std::thread::id		main_thread = std::this_thread::get_id();
+const std::thread::id main_thread = std::this_thread::get_id();
 
 
 /* ----	PSemaphore ----------------------------------------
 */
-PSemaphore::PSemaphore( cstr name, uint32 avail )
-:
+PSemaphore::PSemaphore(cstr name, uint32 avail) :
 	name(name),
 	avail(avail),
-	mutex(),		// can throw std::system_error
-	cond()			// can throw std::system_error
+	mutex(), // can throw std::system_error
+	cond()	 // can throw std::system_error
 {}
 
 
-PSemaphore::~PSemaphore()
-{}
+PSemaphore::~PSemaphore() {}
 
-void PSemaphore::release( uint32 n )
+void PSemaphore::release(uint32 n)
 {
 	{
-		std::lock_guard<std::mutex> l(mutex);	// std::system_error
+		std::lock_guard<std::mutex> l(mutex); // std::system_error
 		avail += n;
 	}
 	cond.notify_all(); // noexcept
@@ -39,7 +37,7 @@ void PSemaphore::release( uint32 n )
 void PSemaphore::release()
 {
 	{
-		std::lock_guard<std::mutex> l(mutex);	// std::system_error
+		std::lock_guard<std::mutex> l(mutex); // std::system_error
 		avail += 1;
 	}
 	cond.notify_one(); // noexcept
@@ -48,39 +46,37 @@ void PSemaphore::release()
 void PSemaphore::request(uint32 n)
 {
 	std::unique_lock<std::mutex> lock(mutex);
-	cond.wait(lock, [=]{return avail >= n;});
+	cond.wait(lock, [=] { return avail >= n; });
 	avail -= n;
 }
 
 uint32 PSemaphore::request(uint32 n_min, uint32 n_max)
 {
 	std::unique_lock<std::mutex> lock(mutex);
-	cond.wait(lock, [=]{return avail >= n_min;});
-	uint32 n = min(avail,n_max);
+	cond.wait(lock, [=] { return avail >= n_min; });
+	uint32 n = min(avail, n_max);
 	avail -= n;
 	return n;
 }
 
 bool PSemaphore::tryRequest()
 {
-	if( avail==0 ) return false;
+	if (avail == 0) return false;
 	std::lock_guard<std::mutex> l(mutex);
-	if(avail==0) return false;
+	if (avail == 0) return false;
 	avail -= 1;
 	return true;
 }
 
-bool PSemaphore::tryRequest( double timeout )
+bool PSemaphore::tryRequest(double timeout)
 {
 	std::unique_lock<std::mutex> lock(mutex);
-//	cond.wait_for(lock, std::chrono::nanoseconds(int64(timeout/1000000000.0)), [=]{return avail;});
-	cond.wait_for(lock, std::chrono::duration<double>(timeout), [=]{return avail;});
-	if(avail==0) return false;
+	//	cond.wait_for(lock, std::chrono::nanoseconds(int64(timeout/1000000000.0)), [=]{return avail;});
+	cond.wait_for(lock, std::chrono::duration<double>(timeout), [=] { return avail; });
+	if (avail == 0) return false;
 	avail -= 1;
 	return true;
 }
-
-
 
 
 /* ----	PTimer ----------------------------------------
@@ -104,8 +100,6 @@ void waitUntil ( double time )
 	wait_cond.wait_until(lock, time_point<system_clock,duration<double>>(duration<double>(time)), []{return false;});
 }
 #endif
-
-
 
 
 #if 0
@@ -203,16 +197,3 @@ pthread_t executeAfter( double delay, double(*fu)(void*), void* arg )
 }
 
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-

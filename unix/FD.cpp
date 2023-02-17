@@ -9,39 +9,38 @@
 */
 
 
+#include "FD.h"
+#include "Templates/StrArray.h"
 #include "kio/kio.h"
 #include <fcntl.h>
-#include <sys/stat.h>
 #include <sys/ioctl.h>
-#include <termios.h>
-#include "Templates/StrArray.h"
-#include "FD.h"
-#include <unistd.h>
 #include <sys/select.h>
+#include <sys/stat.h>
+#include <termios.h>
+#include <unistd.h>
 
 
 #if !defined(_POSIX_SOURCE) && !defined(_SOLARIS)
-	#define M_TIME(TS) ((TS).st_mtimespec.tv_sec)
-	#define A_TIME(TS) ((TS).st_atimespec.tv_sec)
-	#define C_TIME(TS) ((TS).st_ctimespec.tv_sec)
+  #define M_TIME(TS) ((TS).st_mtimespec.tv_sec)
+  #define A_TIME(TS) ((TS).st_atimespec.tv_sec)
+  #define C_TIME(TS) ((TS).st_ctimespec.tv_sec)
 #else
-	#define M_TIME(TS) ((TS).st_mtime /* +(TS).st_mtimesec/1e9 */)
-	#define A_TIME(TS) ((TS).st_atime /* +(TS).st_atimesec/1e9 */)
-	#define C_TIME(TS) ((TS).st_ctime /* +(TS).st_ctimesec/1e9 */)
+  #define M_TIME(TS) ((TS).st_mtime /* +(TS).st_mtimesec/1e9 */)
+  #define A_TIME(TS) ((TS).st_atime /* +(TS).st_atimesec/1e9 */)
+  #define C_TIME(TS) ((TS).st_ctime /* +(TS).st_ctimesec/1e9 */)
 #endif
 
 
 // --- DATA ---------------------------
 
-FD FD::_stdin (0,"STDIN" );
-FD FD::_stdout(1,"STDOUT");
-FD FD::_stderr(2,"STDERR");
+FD FD::_stdin(0, "STDIN");
+FD FD::_stdout(1, "STDOUT");
+FD FD::_stderr(2, "STDERR");
 
 
 // --- HELPER ---------------------------
 
-#define THROW_FILE_ERROR(WHERE) 	throw FileError(fd, fpath, errno, WHERE)
-
+#define THROW_FILE_ERROR(WHERE) throw FileError(fd, fpath, errno, WHERE)
 
 
 // --- CREATE & DESTUCT ---------------------------
@@ -60,34 +59,35 @@ FD FD::_stderr(2,"STDERR");
 //	error:
 //	• throws FileError
 //
-int FD::open_file( cstr path, int mode, mode_t perm )
+int FD::open_file(cstr path, int mode, mode_t perm)
 {
-	assert(path!=nullptr);
-	assert(fd==-1);
+	assert(path != nullptr);
+	assert(fd == -1);
 
-	if (path[0]=='~' && path[1]=='/')			// test: add user's home directory path?
+	if (path[0] == '~' && path[1] == '/') // test: add user's home directory path?
 	{
 		cstr home = getenv("HOME");
-		if (home && home[0]=='/')				// home dir known?
+		if (home && home[0] == '/') // home dir known?
 		{
-			int f = home[strlen(home)-1]=='/';	// ends with '/' ?
-			path = catstr(home, path+1+f);		// prepend home dir to path
+			int f = home[strlen(home) - 1] == '/'; // ends with '/' ?
+			path  = catstr(home, path + 1 + f);	   // prepend home dir to path
 		}
 	}
 
-	if (mode=='r') mode = O_RDONLY;					else
-	if (mode=='m') mode = O_RDWR|O_CREAT;			else
-	if (mode=='n') mode = O_WRONLY|O_CREAT|O_EXCL;   else
-	if (mode=='a') mode = O_WRONLY|O_CREAT|O_APPEND; else
-	if (mode=='w') mode = O_WRONLY|O_CREAT|O_TRUNC;  // else mode = mode;
+	if (mode == 'r') mode = O_RDONLY;
+	else if (mode == 'm') mode = O_RDWR | O_CREAT;
+	else if (mode == 'n') mode = O_WRONLY | O_CREAT | O_EXCL;
+	else if (mode == 'a') mode = O_WRONLY | O_CREAT | O_APPEND;
+	else if (mode == 'w') mode = O_WRONLY | O_CREAT | O_TRUNC; // else mode = mode;
 
 	path = newcopy(path);
 	delete[] fpath;
 	fpath = path;
 
-a:	fd = open(path, mode, perm);
-	if (fd>=0) return ok;
-	if (errno==EINTR) goto a;					// WebDAV
+a:
+	fd = open(path, mode, perm);
+	if (fd >= 0) return ok;
+	if (errno == EINTR) goto a; // WebDAV
 	THROW_FILE_ERROR("fd108");
 }
 
@@ -101,40 +101,41 @@ a:	fd = open(path, mode, perm);
 //
 void FD::open_tempfile()
 {
-	assert(fd==-1);
+	assert(fd == -1);
 
-	static cstr envnames[] = { "TMPDIR", "TMP", "TEMP", "TEMPDIR" };
+	static cstr envnames[] = {"TMPDIR", "TMP", "TEMP", "TEMPDIR"};
 
-	for (uint i=0;i<5;i++)
+	for (uint i = 0; i < 5; i++)
 	{
-		cstr tmpdir = i<4 ? getenv(envnames[i]) : "/tmp/";
+		cstr tmpdir = i < 4 ? getenv(envnames[i]) : "/tmp/";
 		if (!tmpdir) continue;
-		if (lastchar(tmpdir)!='/') tmpdir = catstr(tmpdir,"/");
+		if (lastchar(tmpdir) != '/') tmpdir = catstr(tmpdir, "/");
 
-		do
-		{
+		do {
 			delete[] fpath;
-			fpath = newcopy(catstr(tmpdir, hexstr(uint32(random()),8)));
+			fpath = newcopy(catstr(tmpdir, hexstr(uint32(random()), 8)));
 
-			fd = open(fpath,O_RDWR|O_CREAT|O_EXCL,0600);
-			if (fd>=0) { unlink(fpath); return; }		// opened ok
+			fd = open(fpath, O_RDWR | O_CREAT | O_EXCL, 0600);
+			if (fd >= 0)
+			{
+				unlink(fpath);
+				return;
+			} // opened ok
 		}
-		while (errno==EEXIST);
+		while (errno == EEXIST);
 	}
 
-	THROW_FILE_ERROR("fd145");					// can't create temp file!
+	THROW_FILE_ERROR("fd145"); // can't create temp file!
 }
 
 
-FD::FD (FD&& q) noexcept :
-	fd(q.fd),
-	fpath(q.fpath)
+FD::FD(FD&& q) noexcept : fd(q.fd), fpath(q.fpath)
 {
-	q.fd    = -1;
+	q.fd	= -1;
 	q.fpath = nullptr;
 }
 
-FD& FD::operator= (FD&& q) noexcept
+FD& FD::operator=(FD&& q) noexcept
 {
 	// Move assignment operator
 	// q.fd = -1
@@ -142,21 +143,19 @@ FD& FD::operator= (FD&& q) noexcept
 	assert(this != &q);
 
 	this->~FD();
-	new(this) FD(std::move(q));
+	new (this) FD(std::move(q));
 	return *this;
 }
 
-FD::FD (const FD& q) noexcept :
-	fd(q.fd),
-	fpath(newcopy(q.fpath))
+FD::FD(const FD& q) noexcept : fd(q.fd), fpath(newcopy(q.fpath))
 {
 	// Copy constructor
 	// stdin, stdout, stderr only
 
-	assert (q.fd <= 2);
+	assert(q.fd <= 2);
 }
 
-FD& FD::operator= (const FD& q) noexcept
+FD& FD::operator=(const FD& q) noexcept
 {
 	// Copy assignment operator
 	// stdin, stdout, stderr only
@@ -165,7 +164,7 @@ FD& FD::operator= (const FD& q) noexcept
 	if (this != &q)
 	{
 		this->~FD();
-		new(this) FD(q);
+		new (this) FD(q);
 	}
 
 	return *this;
@@ -177,7 +176,7 @@ FD& FD::operator= (const FD& q) noexcept
 //
 void FD::set_file_id(int fd, cstr fpath) noexcept
 {
-	assert(this->fd==-1);
+	assert(this->fd == -1);
 
 	this->fd = fd;
 	delete[] this->fpath;
@@ -192,7 +191,7 @@ void FD::set_file_id(int fd, cstr fpath) noexcept
 //
 FD::~FD() noexcept
 {
-	if (close_file(0)) logline("file \"%s\" failed to close: %s", fpath, strerror(errno) );
+	if (close_file(0)) logline("file \"%s\" failed to close: %s", fpath, strerror(errno));
 	delete[] fpath;
 }
 
@@ -206,12 +205,14 @@ FD::~FD() noexcept
 //	note: should only fail if the fd is invalid
 //	fd = -1, stdin, stdout and stderr are silently ignored
 //
-int FD::close_file( bool thf )
+int FD::close_file(bool thf)
 {
-	int f=fd; fd=-1;
-	if (f<=2) return ok;
-a:	if (close(f)==0) return ok;
-	if (errno==EINTR) goto a;		// slow device only
+	int f = fd;
+	fd	  = -1;
+	if (f <= 2) return ok;
+a:
+	if (close(f) == 0) return ok;
+	if (errno == EINTR) goto a; // slow device only
 	if (thf) THROW_FILE_ERROR("fd209");
 	return errno;
 }
@@ -220,12 +221,13 @@ a:	if (close(f)==0) return ok;
 // set/clear blocking io
 //	=> errno EAGAIN wenn input empty/output full
 //
-int FD::set_blocking( bool f ) noexcept
+int FD::set_blocking(bool f) noexcept
 {
-	int arg = fcntl(fd,F_GETFL,&arg);
-	if (arg==-1) return -1;  // errno set
-	if (f) arg &= ~O_NONBLOCK; else arg |= O_NONBLOCK;
-	return fcntl(fd,F_SETFL,arg);
+	int arg = fcntl(fd, F_GETFL, &arg);
+	if (arg == -1) return -1; // errno set
+	if (f) arg &= ~O_NONBLOCK;
+	else arg |= O_NONBLOCK;
+	return fcntl(fd, F_SETFL, arg);
 }
 
 // set/clear async io mode ----------
@@ -233,19 +235,19 @@ int FD::set_blocking( bool f ) noexcept
 //	***???*** lt. dt. man page geht das mit fcntl() nicht!
 //	***!!!*** lt. engl. man page geht es.
 //
-int FD::set_async( bool f ) noexcept
+int FD::set_async(bool f) noexcept
 {
 #ifndef __CYGWIN__
-	int arg = fcntl(fd,F_GETFL,&arg);
-	if (arg==-1) return -1; // errno set
-	if (f) arg |= O_ASYNC; else arg &= ~O_ASYNC;
-	return fcntl(fd,F_SETFL,arg);
+	int arg = fcntl(fd, F_GETFL, &arg);
+	if (arg == -1) return -1; // errno set
+	if (f) arg |= O_ASYNC;
+	else arg &= ~O_ASYNC;
+	return fcntl(fd, F_SETFL, arg);
 #else
 	errno = ENOSYS; // Function not implemented
 	return -1;
 #endif
 }
-
 
 
 // --- QUERIES -------------------------------
@@ -255,7 +257,7 @@ int FD::set_async( bool f ) noexcept
 time_t FD::file_mtime() const noexcept
 {
 	struct stat fs;
-	fstat(fd,&fs);
+	fstat(fd, &fs);
 	return M_TIME(fs);
 }
 
@@ -263,7 +265,7 @@ time_t FD::file_mtime() const noexcept
 time_t FD::file_atime() const noexcept
 {
 	struct stat fs;
-	fstat(fd,&fs);
+	fstat(fd, &fs);
 	return A_TIME(fs);
 }
 
@@ -271,7 +273,7 @@ time_t FD::file_atime() const noexcept
 time_t FD::file_ctime() const noexcept
 {
 	struct stat fs;
-	fstat(fd,&fs);
+	fstat(fd, &fs);
 	return C_TIME(fs);
 }
 
@@ -280,13 +282,12 @@ time_t FD::file_ctime() const noexcept
 off_t FD::file_size() const noexcept
 {
 	struct stat fs;
-	if (fstat(fd,&fs)) return -1;			// error
+	if (fstat(fd, &fs)) return -1; // error
 	return fs.st_size;
 }
 
 // helper
-inline
-bool is_writable( mode_t mode, gid_t gid, uid_t uid) noexcept
+inline bool is_writable(mode_t mode, gid_t gid, uid_t uid) noexcept
 {
 	// File mode
 	// Read, write, execute/search by owner
@@ -305,15 +306,11 @@ bool is_writable( mode_t mode, gid_t gid, uid_t uid) noexcept
 	// #define	S_IWOTH		0000002		/* [XSI] W for other */
 	// #define	S_IXOTH		0000001		/* [XSI] X for other */
 
-	return (mode & S_IWOTH) || ((gid==getegid())&&(mode & S_IWGRP)) || ((uid==geteuid())&&(mode & S_IWUSR));
+	return (mode & S_IWOTH) || ((gid == getegid()) && (mode & S_IWGRP)) || ((uid == geteuid()) && (mode & S_IWUSR));
 }
 
 // helper
-inline
-s_type classify_file(mode_t mode) noexcept
-{
-	return s_type(mode>>12);
-}
+inline s_type classify_file(mode_t mode) noexcept { return s_type(mode >> 12); }
 
 // test whether file is writeable for process
 // based on unix file permissions
@@ -324,8 +321,8 @@ s_type classify_file(mode_t mode) noexcept
 bool FD::is_writable() const noexcept
 {
 	struct stat data;
-	if (fstat(fd, &data)) return no;		// error
-	else return ::is_writable(data.st_mode,data.st_gid,data.st_uid);
+	if (fstat(fd, &data)) return no; // error
+	else return ::is_writable(data.st_mode, data.st_gid, data.st_uid);
 }
 
 // classify file
@@ -351,25 +348,22 @@ s_type FD::classify_file() const noexcept
 // • writable   = 0222
 // • executable = 0111
 //
-int FD::set_permissions( mode_t who, mode_t perm ) noexcept
+int FD::set_permissions(mode_t who, mode_t perm) noexcept
 {
 	struct stat fs;
-	int err = fstat(fd,&fs);
+	int			err = fstat(fd, &fs);
 	if (err) return errno;
 
 	perm = (fs.st_mode & ~who) | (perm & who);
 
-	if (perm==fs.st_mode) return ok;
-	return fchmod(fd,perm) ? errno : ok;
+	if (perm == fs.st_mode) return ok;
+	return fchmod(fd, perm) ? errno : ok;
 }
 
 // set permissions for file
 // returns errno
 //
-int FD::set_permissions( mode_t perm ) noexcept
-{
-	return fchmod(fd,perm) ? errno : ok;
-}
+int FD::set_permissions(mode_t perm) noexcept { return fchmod(fd, perm) ? errno : ok; }
 
 
 // --- READ AND WRITE FILE ------------------------------
@@ -377,18 +371,18 @@ int FD::set_permissions( mode_t perm ) noexcept
 
 //	Truncate or grow file to new file size 'size';
 //
-off_t FD::resize_file( off_t size )
+off_t FD::resize_file(off_t size)
 {
-	while (ftruncate(fd,size)!=0)
+	while (ftruncate(fd, size) != 0)
 	{
-		if (errno==EINTR) continue;
+		if (errno == EINTR) continue;
 		THROW_FILE_ERROR("fd374");
 	}
-	return size;	// for command chaining
+	return size; // for command chaining
 }
 
 
-off_t FD::seek_fpos( off_t fpos, int whence )
+off_t FD::seek_fpos(off_t fpos, int whence)
 {
 	fpos = lseek(fd, fpos, whence);
 	if (fpos != -1) return fpos;
@@ -407,9 +401,9 @@ void FD::skip_utf8_bom()
 {
 	//assert(file_position() == 0);
 
-	uint32 n = 0;
-	uint8* bu = reinterpret_cast<uint8*>(&n);
-	off_t num = read_bytes(bu,3,1); // no throw on eof
+	uint32 n   = 0;
+	uint8* bu  = reinterpret_cast<uint8*>(&n);
+	off_t  num = read_bytes(bu, 3, 1); // no throw on eof
 
 #if defined(__BIG_ENDIAN__)
 	if (n == 0xEFBBBF00) return;
@@ -422,34 +416,34 @@ void FD::skip_utf8_bom()
 	skip_bytes(-num);
 }
 
-uint32 FD::write_fmt( cstr format, ... )
+uint32 FD::write_fmt(cstr format, ...)
 {
 	va_list va;
-	va_start(va,format);
+	va_start(va, format);
 
-	int err = errno;
-	va_list va2;								// duplicate va_list
-	va_copy(va2,va);
+	int		err = errno;
+	va_list va2; // duplicate va_list
+	va_copy(va2, va);
 
 	char bu[256];
-	int n = vsnprintf(bu, 256, format, va2);	// calc. req. size
-	assert(n>=0);
+	int	 n = vsnprintf(bu, 256, format, va2); // calc. req. size
+	assert(n >= 0);
 	va_end(va2);
 
 	if (uint(n) < sizeof(bu))
 	{
 		errno = err;
 		va_end(va);
-		return write_bytes(bu,uint(n));
+		return write_bytes(bu, uint(n));
 	}
 	else
 	{
-		std::unique_ptr<char[]> s(new char[n+1]);
-		vsnprintf( s.get(), uint(n+1), format, va );	// try again
+		std::unique_ptr<char[]> s(new char[n + 1]);
+		vsnprintf(s.get(), uint(n + 1), format, va); // try again
 
 		errno = err;
 		va_end(va);
-		return write_bytes(s.get(),uint(n));
+		return write_bytes(s.get(), uint(n));
 	}
 }
 
@@ -464,129 +458,139 @@ uint32 FD::write_fmt( cstr format, ... )
 str FD::read_str()
 {
 	static const uint line_separators = 0x3411; // 0b0011010000010001
-	str s;
+	str				  s;
 
-	if (is_file())		// regular file
+	if (is_file()) // regular file
 	{
-		s = nullptr;		// rval
-		char bu[100+1];
-a:		uint32 n = read_bytes(bu,100,no), i;
-		char c = 0;
+		s = nullptr; // rval
+		char bu[100 + 1];
+	a:
+		uint32 n = read_bytes(bu, 100, no), i;
+		char   c = 0;
 
-		if (n==0) return s;		// n==0  =>  endoffile: s may be NULL
+		if (n == 0) return s; // n==0  =>  endoffile: s may be NULL
 
-		for (i=0;i<n;i++)		// search for eol
+		for (i = 0; i < n; i++) // search for eol
 		{
 			c = bu[i];
-			if (uchar(c)<=13 && (line_separators & (1<<c))) break;
+			if (uchar(c) <= 13 && (line_separators & (1 << c))) break;
 		}
 		bu[i] = 0;
-		s = s ? catstr(s,bu) : substr(bu,bu+i);
-		if (i==n) goto a;			// no eol found
+		s	  = s ? catstr(s, bu) : substr(bu, bu + i);
+		if (i == n) goto a; // no eol found
 
 		// found eol at bu[i]:
 
-		skip_bytes(int32(i+1-n));	// reposition file behind eol
+		skip_bytes(int32(i + 1 - n)); // reposition file behind eol
 
-		if (c==10||c==13)			// test for \n\r or \r\n
+		if (c == 10 || c == 13) // test for \n\r or \r\n
 		{
-			if (i+1<n)				// next char already in bu[] ?
+			if (i + 1 < n) // next char already in bu[] ?
 			{
-				if (c+bu[i+1]==23) skip_bytes(+1);		// skip if \n\r or \r\n
+				if (c + bu[i + 1] == 23) skip_bytes(+1); // skip if \n\r or \r\n
 				return s;
 			}
-			else					// next char not in bu[] => need to read it
+			else // next char not in bu[] => need to read it
 			{
-				n = read_bytes(bu,1,no);				// read next char
-				if (n && c+bu[0]!=23) skip_bytes(-1);	// undo if not \n\r or \r\n
+				n = read_bytes(bu, 1, no);				  // read next char
+				if (n && c + bu[0] != 23) skip_bytes(-1); // undo if not \n\r or \r\n
 				return s;
 			}
 		}
-
 	}
 
 	else // serial device
 	{
-		uint n = 0;
-		uint sz = 100;				// initial max. size
-		s  = tempstr(sz);
+		uint n	= 0;
+		uint sz = 100; // initial max. size
+		s		= tempstr(sz);
 
-	// read character-by-character and break on linebreak
-		for(;;)
+		// read character-by-character and break on linebreak
+		for (;;)
 		{
-			int8 c;
-			ssize_t m = ::read(fd,&c,1);
+			int8	c;
+			ssize_t m = ::read(fd, &c, 1);
 
-			if (m>0)
+			if (m > 0)
 			{
-				if (uchar(c)<=13 && (line_separators & (1<<c))) break;
+				if (uchar(c) <= 13 && (line_separators & (1 << c))) break;
 
-				if (n==sz)			// s[] full => need more!
+				if (n == sz) // s[] full => need more!
 				{
 					str z = s;
-					sz += sz/2;
+					sz += sz / 2;
 					s = tempstr(sz);
-					memcpy(s,z,n);
+					memcpy(s, z, n);
 				}
 
 				s[n++] = c;
 			}
-			if (n==0) throw FileError(fd,fpath,endoffile,"fd483");	// cannot happen
-			if (errno==EINTR) continue;							// read from slow device interrupted TODO: wait
-			if (errno==EAGAIN) { usleep(5000); continue; }		// non-blocking dev only
+			if (n == 0) throw FileError(fd, fpath, endoffile, "fd483"); // cannot happen
+			if (errno == EINTR) continue;								// read from slow device interrupted TODO: wait
+			if (errno == EAGAIN)
+			{
+				usleep(5000);
+				continue;
+			} // non-blocking dev only
 			THROW_FILE_ERROR("fd924");
 		}
-		s[n] = 0;		// string delimiter
+		s[n] = 0; // string delimiter
 	}
 
-	return s;		// tempstr
+	return s; // tempstr
 }
 
 
-void FD::write_nstr( cstr s )
+void FD::write_nstr(cstr s)
 {
 	if (s)
 	{
 		uint32 len = uint32(strlen(s));
 
-		if (len>=253)
-			if (len>>16)	{ write_uint8(255); write_uint32_z(len); }
-			else		{ write_uint8(254); write_uint16_z(uint16(len)); }
-		else			{					write_uint8(uint8(len)); }
+		if (len >= 253)
+			if (len >> 16)
+			{
+				write_uint8(255);
+				write_uint32_z(len);
+			}
+			else
+			{
+				write_uint8(254);
+				write_uint16_z(uint16(len));
+			}
+		else { write_uint8(uint8(len)); }
 
-		write_data(s,len);
+		write_data(s, len);
 	}
-	else write_uint8(253);			// 253 => NULL !
+	else write_uint8(253); // 253 => NULL !
 }
 
 str FD::read_nstr()
 {
 	uint32 len = read_uint8();
-	if (len>=253)
+	if (len >= 253)
 	{
-		if (len==253) return nullptr;
-		else len = len==255 ? read_uint32_z() : read_uint16_z();
+		if (len == 253) return nullptr;
+		else len = len == 255 ? read_uint32_z() : read_uint16_z();
 	}
 	str s = tempstr(len);
-	read_data(s,len);
+	read_data(s, len);
 	return s;
 }
 
 str FD::read_new_nstr()
 {
 	uint32 len = read_uint8();
-	if (len>=253)
+	if (len >= 253)
 	{
-		if (len==253) return nullptr;
-		else len = len==255 ? read_uint32_z() : read_uint16_z();
+		if (len == 253) return nullptr;
+		else len = len == 255 ? read_uint32_z() : read_uint16_z();
 	}
-	str s = new char[len+1]; s[len]=0;
-	read_data(s,len);
+	str s  = new char[len + 1];
+	s[len] = 0;
+	read_data(s, len);
 	return s;
 }
-
-
-
 
 
 /*	read file into Array of str
@@ -595,11 +599,11 @@ str FD::read_new_nstr()
 void FD::read_file(Array<str>& a, uint32 maxsize)
 {
 	off_t sz = file_remaining();
-	if (sz>maxsize) throw FileError(fd,fpath,limiterror,"fd547");
+	if (sz > maxsize) throw FileError(fd, fpath, limiterror, "fd547");
 	uint32 n = uint32(sz);
-	ptr s = tempmem(n+1);
-	read_bytes(s,n);
-	_split(a,s,s+n);
+	ptr	   s = tempmem(n + 1);
+	read_bytes(s, n);
+	_split(a, s, s + n);
 }
 
 /*	read file into StrArray
@@ -608,9 +612,9 @@ void FD::read_file(Array<str>& a, uint32 maxsize)
 void FD::read_file(StrArray& a, uint32 maxsize)
 {
 	TempMemPool tmp;
-	Array<str> z;
-	read_file(z,maxsize);
-	for (uint i=0;i<z.count();i++) a.append(z[i]);
+	Array<str>	z;
+	read_file(z, maxsize);
+	for (uint i = 0; i < z.count(); i++) a.append(z[i]);
 }
 
 
@@ -620,10 +624,10 @@ void FD::read_file(StrArray& a, uint32 maxsize)
 */
 void FD::write_file(const Array<str>& a)
 {
-	for (uint i=0;i<a.count();i++)
+	for (uint i = 0; i < a.count(); i++)
 	{
-		if (*a[i]==0) continue;
-		write_bytes(a[i],uint32(strlen(a[i])));
+		if (*a[i] == 0) continue;
+		write_bytes(a[i], uint32(strlen(a[i])));
 		write_uint8('\n');
 	}
 }
@@ -633,7 +637,7 @@ void FD::write_file(const Array<str>& a)
 // 		read/write native byte order:
 // ----------------------------------------
 
-uint32 FD::read_bytes( void* p, uint32 bytes, int )
+uint32 FD::read_bytes(void* p, uint32 bytes, int)
 {
 	// read n bytes or up to eof or throw
 	// does not throw on eof
@@ -647,16 +651,34 @@ uint32 FD::read_bytes( void* p, uint32 bytes, int )
 	// if endoffile returned value < requested value
 
 	uint32 m = bytes;
-r:	uint32 n = uint32(::read(fd,p,m));
-	if (n==m) { errno=noerror; return bytes; }		// most common case
-	if (n==0) { errno=endoffile; return bytes - m; }	// end of file
-	if (n<m)  { p=ptr(p)+n; m-=n; goto r; }			// n>0 => some bytes read before interrupted
-	if (errno==EINTR)  { goto r; }					// interrupted. slow device only
-	if (errno==EAGAIN) { usleep(5000); goto r; }		// not ready. non-blocking dev only
-	THROW_FILE_ERROR("fd516");						// anything else
+r:
+	uint32 n = uint32(::read(fd, p, m));
+	if (n == m)
+	{
+		errno = noerror;
+		return bytes;
+	} // most common case
+	if (n == 0)
+	{
+		errno = endoffile;
+		return bytes - m;
+	} // end of file
+	if (n < m)
+	{
+		p = ptr(p) + n;
+		m -= n;
+		goto r;
+	}								// n>0 => some bytes read before interrupted
+	if (errno == EINTR) { goto r; } // interrupted. slow device only
+	if (errno == EAGAIN)
+	{
+		usleep(5000);
+		goto r;
+	}						   // not ready. non-blocking dev only
+	THROW_FILE_ERROR("fd516"); // anything else
 }
 
-uint32 FD::read_bytes( void* p, uint32 bytes )
+uint32 FD::read_bytes(void* p, uint32 bytes)
 {
 	// read n bytes or throw
 	// may suspend thread while waiting for slow devices
@@ -667,16 +689,35 @@ uint32 FD::read_bytes( void* p, uint32 bytes )
 	// because this variant is used heavily for reading ints
 
 	uint32 m = bytes;
-r:	uint32 n = uint32(::read(fd,p,m));
-	if (n==m) { errno=noerror; return bytes; }		// most common case
-	if (n==0) { errno=endoffile; goto x; }			// eof: throw
-	if (n<m)  { p=ptr(p)+n; m-=n; goto r; }			// n<m => some bytes read before interrupted
-	if (errno==EINTR)  { goto r; }					// interrupted. slow device only
-	if (errno==EAGAIN) { usleep(5000); goto r; }		// not ready. non-blocking dev only
-x:	THROW_FILE_ERROR("fd536");						// anything else
+r:
+	uint32 n = uint32(::read(fd, p, m));
+	if (n == m)
+	{
+		errno = noerror;
+		return bytes;
+	} // most common case
+	if (n == 0)
+	{
+		errno = endoffile;
+		goto x;
+	} // eof: throw
+	if (n < m)
+	{
+		p = ptr(p) + n;
+		m -= n;
+		goto r;
+	}								// n<m => some bytes read before interrupted
+	if (errno == EINTR) { goto r; } // interrupted. slow device only
+	if (errno == EAGAIN)
+	{
+		usleep(5000);
+		goto r;
+	} // not ready. non-blocking dev only
+x:
+	THROW_FILE_ERROR("fd536"); // anything else
 }
 
-uint32 FD::read_bytes_reverted (void* p, uint sz)
+uint32 FD::read_bytes_reverted(void* p, uint sz)
 {
 	// read bytes and revert order
 
@@ -689,14 +730,10 @@ uint32 FD::read_data_reverted(void* p, uint n, uint sz)
 {
 	// read data[] and revert byte order in each item
 
-	read_bytes(p, sz*n);
+	read_bytes(p, sz * n);
 
-	for (uint i=0; i<sz*n; i+=sz)
-	{
-		revert_bytes(ptr(p)+i, sz);
-	}
-	return sz*n;
-
+	for (uint i = 0; i < sz * n; i += sz) { revert_bytes(ptr(p) + i, sz); }
+	return sz * n;
 }
 
 bool FD::data_available() const noexcept
@@ -710,52 +747,68 @@ bool FD::data_available() const noexcept
 
 	fd_set fdset;
 	FD_ZERO(&fdset);
-	FD_SET(fd,&fdset);
-	struct timeval timeout = {0,0};
+	FD_SET(fd, &fdset);
+	struct timeval timeout = {0, 0};
 
-r:	int n = select(fd+1/*nfds*/, &fdset/*readfds*/, nullptr/*writefds*/, nullptr/*exceptfds*/, &timeout);
-	if (n>=0) { errno=noerror; return n; }
-	if (errno==EINTR) goto r;
-	else return no;	// error
+r:
+	int n = select(fd + 1 /*nfds*/, &fdset /*readfds*/, nullptr /*writefds*/, nullptr /*exceptfds*/, &timeout);
+	if (n >= 0)
+	{
+		errno = noerror;
+		return n;
+	}
+	if (errno == EINTR) goto r;
+	else return no; // error
 }
 
-uint32 FD::write_bytes( const void* p, uint32 bytes )
+uint32 FD::write_bytes(const void* p, uint32 bytes)
 {
 	// write n bytes or throw
 	// may suspend thread while waiting for slow devices
 	// returned value is always the requested value
 
 	uint32 m = bytes;
-w:	uint32 n = uint32(::write(fd,p,m));
-	if (n==m) { errno=noerror; return bytes; }
-	if (n<m)	 { p = cptr(p)+n; m -= n; goto w; }		// n<m  <=>  n!=-1  => some bytes written
-	if (errno==EINTR) { goto w; }					// slow device only
-	if (errno==EAGAIN) { usleep(5000); goto w; }		// non-blocking dev only
+w:
+	uint32 n = uint32(::write(fd, p, m));
+	if (n == m)
+	{
+		errno = noerror;
+		return bytes;
+	}
+	if (n < m)
+	{
+		p = cptr(p) + n;
+		m -= n;
+		goto w;
+	}								// n<m  <=>  n!=-1  => some bytes written
+	if (errno == EINTR) { goto w; } // slow device only
+	if (errno == EAGAIN)
+	{
+		usleep(5000);
+		goto w;
+	} // non-blocking dev only
 	THROW_FILE_ERROR("fd551");
 }
 
-uint32 FD::write_bytes_reverted(void const* p, uint sz)
+uint32 FD::write_bytes_reverted(const void* p, uint sz)
 {
 	// write bytes in reverted order
 
-	assert(sz<=16);		// float128
+	assert(sz <= 16); // float128
 	char bu[16];
 	cptr q = cptr(p);
-	ptr  z = bu+sz;
+	ptr	 z = bu + sz;
 
-	while (z>bu) *--z = *q++;
-	return write_data(bu,sz);
+	while (z > bu) *--z = *q++;
+	return write_data(bu, sz);
 }
 
-uint32 FD::write_data_reverted(void const* p, uint cnt, uint sz)
+uint32 FD::write_data_reverted(const void* p, uint cnt, uint sz)
 {
 	// write data[] with reverted bytes in each item
 
-	for (uint i=0; i<sz*cnt; i+=sz)
-	{
-		write_bytes_reverted(cptr(p)+i,sz);
-	}
-	return sz*cnt;
+	for (uint i = 0; i < sz * cnt; i += sz) { write_bytes_reverted(cptr(p) + i, sz); }
+	return sz * cnt;
 }
 
 
@@ -766,65 +819,65 @@ uint32 FD::write_data_reverted(void const* p, uint cnt, uint sz)
 int16 FD::read_int16_x()
 {
 	int8 bu[2];
-	read_bytes(bu,2);
+	read_bytes(bu, 2);
 	return int16(peek2X(bu));
 }
 
-uint32 FD::write_int16_x( int16 n )
+uint32 FD::write_int16_x(int16 n)
 {
 	int8 bu[2];
-	poke2X(bu,uint16(n));
-	return write_bytes(bu,2);
+	poke2X(bu, uint16(n));
+	return write_bytes(bu, 2);
 }
 
 uint32 FD::read_uint24_x()
 {
-	int8 bu[4]={0,0,0,0};
-	read_bytes(bu+1,3);
+	int8 bu[4] = {0, 0, 0, 0};
+	read_bytes(bu + 1, 3);
 	return peek4X(bu);
 }
 
 int32 FD::read_int24_x()
 {
-	int8 bu[4]={0,0,0,0};
-	read_bytes(bu+1,3);
-	if (bu[1]<0) bu[0] = int8(0xff);
+	int8 bu[4] = {0, 0, 0, 0};
+	read_bytes(bu + 1, 3);
+	if (bu[1] < 0) bu[0] = int8(0xff);
 	return int32(peek4X(bu));
 }
 
-uint32 FD::write_int24_x( int32 n )
+uint32 FD::write_int24_x(int32 n)
 {
 	int8 bu[4];
-	poke4X(bu,uint32(n));
-	return write_bytes(bu+1,3);
+	poke4X(bu, uint32(n));
+	return write_bytes(bu + 1, 3);
 }
 
 int32 FD::read_int32_x()
 {
 	int8 bu[4];
-	read_bytes(bu,4);
+	read_bytes(bu, 4);
 	return int32(peek4X(bu));
 }
 
-uint32 FD::write_int32_x( int32 n )
+uint32 FD::write_int32_x(int32 n)
 {
 	int8 bu[4];
-	poke4X(bu,uint32(n));
-	return write_bytes(bu,4);
+	poke4X(bu, uint32(n));
+	return write_bytes(bu, 4);
 }
 
 int64 FD::read_int64_x()
 {
 	int8 bu[8];
-	read_bytes(bu,8);
+	read_bytes(bu, 8);
 	return int64(peek8X(bu));
 }
 
-uint32 FD::write_int64_x( int64 n )
+uint32 FD::write_int64_x(int64 n)
 {
 	int8 bu[8];
-	poke8X(bu,uint64(n));
-	return write_bytes(bu,8);
+	poke8X(bu, uint64(n));
+	return write_bytes(bu, 8);
 }
 
 
@@ -835,67 +888,66 @@ uint32 FD::write_int64_x( int64 n )
 int16 FD::read_int16_z()
 {
 	int8 bu[2];
-	read_bytes(bu,2);
+	read_bytes(bu, 2);
 	return int16(peek2Z(bu));
 }
 
-uint32 FD::write_int16_z( int16 n )
+uint32 FD::write_int16_z(int16 n)
 {
 	int8 bu[2];
-	poke2Z(bu,uint16(n));
-	return write_bytes(bu,2);
+	poke2Z(bu, uint16(n));
+	return write_bytes(bu, 2);
 }
 
 uint32 FD::read_uint24_z()
 {
-	int8 bu[4]={0,0,0,0};
-	read_bytes(bu,3);
+	int8 bu[4] = {0, 0, 0, 0};
+	read_bytes(bu, 3);
 	return peek4Z(bu);
 }
 
 int32 FD::read_int24_z()
 {
-	int8 bu[4]={0,0,0,0};
-	read_bytes(bu,3);
-	if (bu[2]<0) bu[3] = int8(0xff);
+	int8 bu[4] = {0, 0, 0, 0};
+	read_bytes(bu, 3);
+	if (bu[2] < 0) bu[3] = int8(0xff);
 	return int32(peek4Z(bu));
 }
 
-uint32 FD::write_int24_z( int32 n )
+uint32 FD::write_int24_z(int32 n)
 {
 	int8 bu[4];
-	poke4Z(bu,uint32(n));
-	return write_bytes(bu,3);
+	poke4Z(bu, uint32(n));
+	return write_bytes(bu, 3);
 }
 
 int32 FD::read_int32_z()
 {
 	int8 bu[4];
-	read_bytes(bu,4);
+	read_bytes(bu, 4);
 	return int32(peek4Z(bu));
 }
 
-uint32 FD::write_int32_z( int32 n )
+uint32 FD::write_int32_z(int32 n)
 {
 	int8 bu[4];
-	poke4Z(bu,uint32(n));
-	return write_bytes(bu,4);
+	poke4Z(bu, uint32(n));
+	return write_bytes(bu, 4);
 }
 
 int64 FD::read_int64_z()
 {
 	int8 bu[8];
-	read_bytes(bu,8);
+	read_bytes(bu, 8);
 	return int64(peek8Z(bu));
 }
 
-uint32 FD::write_int64_z( int64 n )
+uint32 FD::write_int64_z(int64 n)
 {
 	int8 bu[8];
-	poke8Z(bu,uint64(n));
-	return write_bytes(bu,8);
+	poke8Z(bu, uint64(n));
+	return write_bytes(bu, 8);
 }
-
 
 
 // ---------------------------------------
@@ -915,17 +967,38 @@ uint32 FD::write_int64_z( int64 n )
 */
 uint32 FD::write_vuint32(uint32 n)
 {
-/*
+	/*
 	$00	 %0000.0000 …
   …	$ED	 %1110.1101		as is		almost 8 bit: 256-18 values
 	$EE	 %1110.1110		+2 bytes	16 bit
 	$EF	 %1110.1111		+4 bytes	32 bit
 	$Fx	 %1111.xxxx		+1 byte		12 bit
 */
-	if (n<=0x00ED)  { uint8 byte = uint8(n); return write_bytes(&byte,1); }
-	if (n<=0x0FFF)  { uint8 bu[2]; poke2Z(bu,uint16(0xF000|n));  return write_bytes(bu,2); }
-	if (n<=0x0FFFF) { uint8 bu[3]; bu[0]=0xEE; poke2Z(bu+1,uint16(n)); return write_bytes(bu,3); }
-	else		   { uint8 bu[5]; bu[0]=0xEF; poke4Z(bu+1,n); return write_bytes(bu,5); }
+	if (n <= 0x00ED)
+	{
+		uint8 byte = uint8(n);
+		return write_bytes(&byte, 1);
+	}
+	if (n <= 0x0FFF)
+	{
+		uint8 bu[2];
+		poke2Z(bu, uint16(0xF000 | n));
+		return write_bytes(bu, 2);
+	}
+	if (n <= 0x0FFFF)
+	{
+		uint8 bu[3];
+		bu[0] = 0xEE;
+		poke2Z(bu + 1, uint16(n));
+		return write_bytes(bu, 3);
+	}
+	else
+	{
+		uint8 bu[5];
+		bu[0] = 0xEF;
+		poke4Z(bu + 1, n);
+		return write_bytes(bu, 5);
+	}
 }
 
 /*	read unsigned 32 bit integer with variable size
@@ -933,33 +1006,28 @@ uint32 FD::write_vuint32(uint32 n)
 uint32 FD::read_vuint32()
 {
 	uint8 n;
-	read_bytes(&n,1);
+	read_bytes(&n, 1);
 
-	if (n<=0xED)	{ return n; }
-	if (n>=0xF0)	{ return ((n & 0x0Fu) << 8) + read_uint8(); }
-	if (n==0xEE) { return read_uint16_z(); }
-	/*n==0xEF*/	{ return read_uint32_z(); }
+	if (n <= 0xED) { return n; }
+	if (n >= 0xF0) { return ((n & 0x0Fu) << 8) + read_uint8(); }
+	if (n == 0xEE) { return read_uint16_z(); }
+	/*n==0xEF*/ {
+		return read_uint32_z();
+	}
 }
 
 /*	write signed 32 bit integer with variable size
 	intended for numbers which are expected but not guaranteed to be small
 */
-uint32 FD::write_vint32(int32 n)
-{
-	return write_vuint32(uint32(n<0 ? ~(n<<1) : (n<<1)));
-}
+uint32 FD::write_vint32(int32 n) { return write_vuint32(uint32(n < 0 ? ~(n << 1) : (n << 1))); }
 
 /*	read signed 32 bit integer with variable size
 */
 int32 FD::read_vint32()
 {
 	uint32 n = read_vuint32();
-	return n&1 ? ~(n>>1) : (n>>1);
+	return n & 1 ? ~(n >> 1) : (n >> 1);
 }
-
-
-
-
 
 
 // ---------------------------------------------------
@@ -976,10 +1044,10 @@ int32 FD::read_vint32()
 // sets dims to -1,-1 on error
 // used in vipsi
 //
-int FD::get_terminal_size( int& rows, int& cols ) noexcept
+int FD::get_terminal_size(int& rows, int& cols) noexcept
 {
 	struct winsize data;
-	int r = ::ioctl(fd, TIOCGWINSZ, &data);
+	int			   r = ::ioctl(fd, TIOCGWINSZ, &data);
 	if (r)
 	{
 		rows = cols = -1;
@@ -987,9 +1055,9 @@ int FD::get_terminal_size( int& rows, int& cols ) noexcept
 	}
 	else
 	{
-		rows = data.ws_row;
-		cols = data.ws_col;
-		return errno=noerror;
+		rows		 = data.ws_row;
+		cols		 = data.ws_col;
+		return errno = noerror;
 	}
 }
 
@@ -1047,18 +1115,18 @@ int FD::terminal_height() noexcept
 // sets|clears errno
 // returns errno
 //
-int FD::set_terminal_size( int rows, int cols ) noexcept
+int FD::set_terminal_size(int rows, int cols) noexcept
 {
 	struct winsize data;
 	if (ioctl(fd, TIOCGWINSZ, &data)) return errno;
 
-	data.ws_xpixel = data.ws_xpixel/data.ws_col*ushort(cols);		// superfluous
-	data.ws_ypixel = data.ws_ypixel/data.ws_row*ushort(rows);		// superfluous
-	data.ws_row    = ushort(rows);
-	data.ws_col    = ushort(cols);
+	data.ws_xpixel = data.ws_xpixel / data.ws_col * ushort(cols); // superfluous
+	data.ws_ypixel = data.ws_ypixel / data.ws_row * ushort(rows); // superfluous
+	data.ws_row	   = ushort(rows);
+	data.ws_col	   = ushort(cols);
 	if (ioctl(fd, TIOCSWINSZ, &data)) return errno;
 
-	return errno=noerror;
+	return errno = noerror;
 }
 
 // copy block at current file position from one file to another
@@ -1066,32 +1134,34 @@ int FD::set_terminal_size( int rows, int cols ) noexcept
 // may also copy inside a single file:
 // overlapping blocks are copied non-destructively!
 //
-void copy( FD& q, FD& z, off_t count )
+void copy(FD& q, FD& z, off_t count)
 {
-	const int32 max_bu_size = 128*1024*1024;	// 128 MB
+	const int32 max_bu_size = 128 * 1024 * 1024; // 128 MB
 
 	// copy 1 block?
-	if (count<=max_bu_size)
+	if (count <= max_bu_size)
 	{
 		try
 		{
 			std::unique_ptr<int8[]> bu(new int8[count]);
-			q.read_bytes (&bu[0],uint32(count));
-			z.write_bytes(&bu[0],uint32(count));
+			q.read_bytes(&bu[0], uint32(count));
+			z.write_bytes(&bu[0], uint32(count));
 			return;
 		}
-		catch (std::bad_alloc&){}
+		catch (std::bad_alloc&)
+		{}
 	}
 
 	// more than one copy cycle required:
 	// different handling for 2 files or single file required:
 
-	if (&q!=&z)	// 2 files:
+	if (&q != &z) // 2 files:
 	{
 		// copy block in 2 chunks:
 
-a:		copy(q,z,count/2);
-		copy(q,z,count-count/2);
+	a:
+		copy(q, z, count / 2);
+		copy(q, z, count - count / 2);
 		return;
 	}
 
@@ -1099,24 +1169,22 @@ a:		copy(q,z,count/2);
 
 	off_t qpos = q.file_position();
 	off_t zpos = z.file_position();
-	if (zpos <= qpos || zpos >= qpos+count) goto a;	// no overlap or qpos>=zpos => copy upward
+	if (zpos <= qpos || zpos >= qpos + count) goto a; // no overlap or qpos>=zpos => copy upward
 
 	// same file, blocks overlap and qpos<zpos
 	// => copy 2nd block first!
 
-	off_t n1 = count/2;			// calc block sizes
+	off_t n1 = count / 2; // calc block sizes
 	off_t n2 = count - n1;
 
-	q.seek_fpos(qpos+n1);		// copy 2nd block
-	z.seek_fpos(zpos+n1);
-	copy(q,z,n2);
+	q.seek_fpos(qpos + n1); // copy 2nd block
+	z.seek_fpos(zpos + n1);
+	copy(q, z, n2);
 
-	q.seek_fpos(qpos);			// copy 1st block
+	q.seek_fpos(qpos); // copy 1st block
 	z.seek_fpos(zpos);
-	copy(q,z,n1);
+	copy(q, z, n1);
 
-	q.seek_fpos(qpos+count);	// adjust final file positions
-	z.seek_fpos(zpos+count);
+	q.seek_fpos(qpos + count); // adjust final file positions
+	z.seek_fpos(zpos + count);
 }
-
-

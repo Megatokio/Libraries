@@ -4,9 +4,5 @@
 // https://opensource.org/licenses/BSD-2-Clause
 
 #include "Array.h"
-#include "RCPtr.h"
 #include "RCObject.h"
-
-
-
-
+#include "RCPtr.h"

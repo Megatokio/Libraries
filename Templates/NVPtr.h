@@ -46,93 +46,119 @@
 */
 
 
-template <class T>
+template<class T>
 class NVPtr
 {
-	typedef volatile T	vT;
+	typedef volatile T vT;
 
-	T*		p;
+	T* p;
 
-	void	lock		()					{ if(p) p->lock(); }
-	void	unlock		()					{ if(p) p->unlock(); }
+	void lock()
+	{
+		if (p) p->lock();
+	}
+	void unlock()
+	{
+		if (p) p->unlock();
+	}
 
 	// semantically impossible:
-			NVPtr		(NVPtr&)			= delete;
-			NVPtr		(NVPtr const&)		= delete;
-	NVPtr&	operator=	(NVPtr&)			= delete;
-	NVPtr&	operator=	(NVPtr const&)		= delete;
+	NVPtr(NVPtr&)				   = delete;
+	NVPtr(const NVPtr&)			   = delete;
+	NVPtr& operator=(NVPtr&)	   = delete;
+	NVPtr& operator=(const NVPtr&) = delete;
 
 public:
-			NVPtr		()					:p(nullptr) {}
-			NVPtr		(NVPtr&& q)			:p(q.p) { q.p=nullptr; }
-//			NVPtr		(RCPtr<vT>& q)		:p(const_cast<T*>(q.p)) { lock(); }
-			NVPtr		(vT* p)      		:p(const_cast<T*>(p))  { lock(); }
-			NVPtr		(vT& q)      		:p(const_cast<T*>(&q)) { lock(); }
-			~NVPtr		()					{ unlock(); }
+	NVPtr() : p(nullptr) {}
+	NVPtr(NVPtr&& q) : p(q.p) { q.p = nullptr; }
+	//			NVPtr		(RCPtr<vT>& q)		:p(const_cast<T*>(q.p)) { lock(); }
+	NVPtr(vT* p) : p(const_cast<T*>(p)) { lock(); }
+	NVPtr(vT& q) : p(const_cast<T*>(&q)) { lock(); }
+	~NVPtr() { unlock(); }
 
-	NVPtr&	operator=	(NVPtr&& q)			{ assert(this!=&q); unlock(); p=q.p; q.p=nullptr; return *this; }
-//	NVPtr&	operator=	(RCPtr<vT>& q)		{ if(p!=q.p) { unlock(); p=q.p; lock(); } return *this; }
-	NVPtr&	operator=	(vT* q)				{ if(p!=q)   { unlock(); p=q;   lock(); } return *this; }
-	NVPtr&	operator=	(ptr q)				{ assert(q==nullptr); unlock(); p=nullptr; return *this; }
+	NVPtr& operator=(NVPtr&& q)
+	{
+		assert(this != &q);
+		unlock();
+		p	= q.p;
+		q.p = nullptr;
+		return *this;
+	}
+	//	NVPtr&	operator=	(RCPtr<vT>& q)		{ if(p!=q.p) { unlock(); p=q.p; lock(); } return *this; }
+	NVPtr& operator=(vT* q)
+	{
+		if (p != q)
+		{
+			unlock();
+			p = q;
+			lock();
+		}
+		return *this;
+	}
+	NVPtr& operator=(ptr q)
+	{
+		assert(q == nullptr);
+		unlock();
+		p = nullptr;
+		return *this;
+	}
 
 
-	T*		operator->	()					{ return p; }
-	T&		operator*	()					{ return *p; }
-	T*		ptr			()					{ return p; }
-	T&		ref			()					{ return *p; }
+	T* operator->() { return p; }
+	T& operator*() { return *p; }
+	T* ptr() { return p; }
+	T& ref() { return *p; }
 
-	T*		operator->	() const			{ return p; }
-	T&		operator*	() const			{ return *p; }
-	T*		ptr			() const			{ return p; }
-	T&		ref			() const			{ return *p; }
+	T* operator->() const { return p; }
+	T& operator*() const { return *p; }
+	T* ptr() const { return p; }
+	T& ref() const { return *p; }
 
-			operator T&	()					{ return *p; }
-			operator T*	()					{ return p; }
+	operator T&() { return *p; }
+	operator T*() { return p; }
 
-			operator T& () const			{ return *p; }
-			operator T* () const			{ return p; }
+	operator T&() const { return *p; }
+	operator T*() const { return p; }
 
-	uint	refcnt		()					{ return p ? p->refcnt() : 0; }
-	void	swap		(NVPtr& q)			{ T* z=p; p=q.p; q.p=z; }
+	uint refcnt() { return p ? p->refcnt() : 0; }
+	void swap(NVPtr& q)
+	{
+		T* z = p;
+		p	 = q.p;
+		q.p	 = z;
+	}
 
-	bool	isNotNull	() const			{ return p!=nullptr; }
-	bool	isNull		() const			{ return p==nullptr; }
-	operator bool		() const			{ return p; }
-//	bool	operator==	(const T* p) const	{ return p == this->p; }		ohne geht's besser
+	bool isNotNull() const { return p != nullptr; }
+	bool isNull() const { return p == nullptr; }
+		 operator bool() const { return p; }
+	//	bool	operator==	(const T* p) const	{ return p == this->p; }		ohne geht's besser
 
-	void	print		(FD&, cstr indent) const;
-	void	writeToFile	(FD&, void* data=nullptr) const;
-// 	void	readFromFile(FD&, void* data=nullptr);
+	void print(FD&, cstr indent) const;
+	void writeToFile(FD&, void* data = nullptr) const;
+	// 	void	readFromFile(FD&, void* data=nullptr);
 };
 
 
 // helper:
 // intended usage:  nvptr(my_vol_obj_ptr)->call_non_vol_member_function();
 //
-template<class T> NVPtr<T> nvptr(volatile T* o) { return NVPtr<T>(o); }
-
+template<class T>
+NVPtr<T> nvptr(volatile T* o)
+{
+	return NVPtr<T>(o);
+}
 
 
 template<class T>
-void NVPtr<T>::print( FD& fd, cstr indent ) const
+void NVPtr<T>::print(FD& fd, cstr indent) const
 {
-	if(p) p->print(fd,indent);
-	else fd.write_fmt("%sNULL\n",indent);
+	if (p) p->print(fd, indent);
+	else fd.write_fmt("%sNULL\n", indent);
 }
 
 template<class T>
 void NVPtr<T>::writeToFile(FD& fd, void* data) const
 {
-	fd.write_uint8(p!=nullptr);
-	if(p) p->writeToFile(fd,data);
+	fd.write_uint8(p != nullptr);
+	if (p) p->writeToFile(fd, data);
 }
-
-
-
-
-
-
-
-
-
-

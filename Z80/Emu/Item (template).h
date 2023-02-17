@@ -19,15 +19,14 @@
 	because the Z80 calls these functions for all attached Items.
 */
 
-typedef unsigned char uint8;
+typedef unsigned char	   uint8;
 typedef unsigned short int uint16;
-typedef unsigned int uint;
-typedef int int32;
+typedef unsigned int	   uint;
+typedef int				   int32;
 static_assert(sizeof(int32) == 4, "");
 static_assert(sizeof(uint16) == 2, "");
 
-enum IsaID
-{
+enum IsaID {
 	isa_none = 0,
 	isa_unknown,
 	isa_Screen,
@@ -49,27 +48,27 @@ class Item
 	friend class Machine;
 
 protected:
-	IsaID	id;
-	Machine	*machine;
-	Item	*next, *prev;		// linked list of Items. Z80 should be the first Item.
-	uint	in_mask, in_bits;	// address and decoded bits mask for input
-	uint	out_mask, out_bits;	// address and decoded bits mask for output
+	IsaID	 id;
+	Machine* machine;
+	Item *	 next, *prev;		 // linked list of Items. Z80 should be the first Item.
+	uint	 in_mask, in_bits;	 // address and decoded bits mask for input
+	uint	 out_mask, out_bits; // address and decoded bits mask for output
 
-	bool	irpt;				// Item asserts interrupt
-	uint8	int_ack_byte;		// byte read in int ack cycle (0 = no interupts)
-	uint	int0_call_address;	// mostly unused
+	bool  irpt;				 // Item asserts interrupt
+	uint8 int_ack_byte;		 // byte read in int ack cycle (0 = no interupts)
+	uint  int0_call_address; // mostly unused
 
-	int32	cc_next_update;		// next time to call update()
+	int32 cc_next_update; // next time to call update()
 
 public:
-	Item (Machine*, IsaID);
-	Item (Machine*, IsaID, uint o_addr, uint o_mask, uint i_addr, uint i_mask);
+	Item(Machine*, IsaID);
+	Item(Machine*, IsaID, uint o_addr, uint o_mask, uint i_addr, uint i_mask);
 	virtual ~Item();
-	Item (const Item&) = delete;
-	Item& operator= (const Item&) = delete;
+	Item(const Item&)			 = delete;
+	Item& operator=(const Item&) = delete;
 
-	inline bool matches_in  (uint addr) const { return (addr & in_mask)  == in_bits;  }
-	inline bool matches_out (uint addr) const { return (addr & out_mask) == out_bits; }
+	inline bool matches_in(uint addr) const { return (addr & in_mask) == in_bits; }
+	inline bool matches_out(uint addr) const { return (addr & out_mask) == out_bits; }
 
 	// ==============
 	// Item interface
@@ -78,7 +77,7 @@ public:
 	/**	Initialize Item. Cpu cycle count cc = 0 and real-world time = 0 sec.
 		Called to "power up" the machine.
 	*/
-	virtual void init (/*int32 cc=0*/) {}
+	virtual void init(/*int32 cc=0*/) {}
 
 	/**	Reset the Item.
 		The reset occurs at cc and Items which interact with the outside world
@@ -87,7 +86,7 @@ public:
 		Do _not_ reset cpu cycle count and real-world time to 0 after reset()!
 		reset() should be called after init() was called for all Items for power-up reset.
 	*/
-	virtual void reset (int32 cc) {}
+	virtual void reset(int32 cc) {}
 
 	/**	Handle IN opcode.
 		input() is called for all Items behind the Z80 for which matches_in() returns true
@@ -97,7 +96,7 @@ public:
 		of multiple devices responding to an IN opcode.
 		Return true if the Item needs a scheduled call at cc_next_update.
 	*/
-	virtual bool input (int32 cc, uint addr, uint8& byte) { return false; }
+	virtual bool input(int32 cc, uint addr, uint8& byte) { return false; }
 
 	/**	Handle OUT opcode.
 		output() is called for all Items behind the Z80 for which matches_out() returns true
@@ -106,7 +105,7 @@ public:
 		Then handle the byte.
 		Return true if the Item needs a scheduled call at cc_next_update.
 	*/
-	virtual bool output (int32 cc, uint addr, uint8 byte)  { return false; }
+	virtual bool output(int32 cc, uint addr, uint8 byte) { return false; }
 
 	/**	Perform a scheduled update.
 		update() is called by the Z80 when the cpu cycle counter cc reaches cc_next_update.
@@ -116,7 +115,7 @@ public:
 		Update cc_next_update.
 		Set cc_next_update = NEVER if no more updates are needed.
 	*/
-	virtual void update (int32 cc) {}
+	virtual void update(int32 cc) {}
 
 	/**	Shift the cpu cycle base.
 		At 4 MHz the cpu cycle counter overflows an int32 after 20 minutes approximately.
@@ -127,14 +126,7 @@ public:
 		The passed cc_offset must be a positive value which must be subtracted.
 		shift_cc() may be called for the system timer interrupt or for a monitor frame flyback.
 	*/
-	virtual void shift_cc (int32 cc, int32 cc_offset) {}
+	virtual void shift_cc(int32 cc, int32 cc_offset) {}
 
 	enum { NEVER = 0x7fffffff };
 };
-
-
-
-
-
-
-

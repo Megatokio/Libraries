@@ -4,14 +4,22 @@
 // https://opensource.org/licenses/BSD-2-Clause
 
 #include "kio/kio.h"
-#include <mutex>
 #include <condition_variable>
+#include <mutex>
 #include <thread>
 
 
 // convenience:
-template<class T> T* NV(volatile T* o) { return const_cast<T*>(o); }
-template<class T> T& NV(volatile T& o) { return const_cast<T&>(o); }
+template<class T>
+T* NV(volatile T* o)
+{
+	return const_cast<T*>(o);
+}
+template<class T>
+T& NV(volatile T& o)
+{
+	return const_cast<T&>(o);
+}
 
 
 // =====================================================================
@@ -22,9 +30,9 @@ template<class T> T& NV(volatile T& o) { return const_cast<T&>(o); }
 class PLock : public std::mutex
 {
 public:
-	void lock()		volatile { NV(this)->mutex::lock(); }
-	void unlock()	volatile { NV(this)->mutex::unlock(); }
-	bool trylock()	volatile { return NV(this)->mutex::try_lock(); }  // true = success
+	void lock() volatile { NV(this)->mutex::lock(); }
+	void unlock() volatile { NV(this)->mutex::unlock(); }
+	bool trylock() volatile { return NV(this)->mutex::try_lock(); } // true = success
 };
 
 
@@ -32,9 +40,9 @@ public:
 class RPLock : public std::mutex
 {
 public:
-	void lock()		volatile { NV(this)->mutex::lock(); }
-	void unlock()	volatile { NV(this)->mutex::unlock(); }
-	bool trylock()	volatile { return NV(this)->mutex::try_lock(); }  // true = success
+	void lock() volatile { NV(this)->mutex::lock(); }
+	void unlock() volatile { NV(this)->mutex::unlock(); }
+	bool trylock() volatile { return NV(this)->mutex::try_lock(); } // true = success
 };
 
 
@@ -45,11 +53,8 @@ public:
 class PLocker : public std::lock_guard<PLock>
 {
 public:
-	PLocker(volatile PLock& lock)	:lock_guard(NV(lock)){}
+	PLocker(volatile PLock& lock) : lock_guard(NV(lock)) {}
 };
-
-
-
 
 
 // =====================================================================
@@ -60,32 +65,32 @@ public:
 
 class PSemaphore
 {
-	const cstr		name;
-	volatile uint32	avail;
-	std::mutex		mutex;
-	std::condition_variable	cond;
+	const cstr				name;
+	volatile uint32			avail;
+	std::mutex				mutex;
+	std::condition_variable cond;
 
-					PSemaphore	(const PSemaphore&) = delete;
-	PSemaphore&     operator=   (const PSemaphore&) = delete;
+	PSemaphore(const PSemaphore&)			 = delete;
+	PSemaphore& operator=(const PSemaphore&) = delete;
 
-public:				PSemaphore	(cstr static_name_str="", uint32 _avail = 0);
-					~PSemaphore	();
+public:
+	PSemaphore(cstr static_name_str = "", uint32 _avail = 0);
+	~PSemaphore();
 
-	uint32			clear		()					{ return request(0,~0u); }
-	void			request		(uint32 n = 1);
-	uint32			request		(uint32 min, uint32 max);
-	uint32			requestAll	()					{ return request(1,~0u); }
-	bool			tryRequest	();					// return 1  =>  got it
-	bool			tryRequest	(double timeout);	// return 1  =>  got it
+	uint32 clear() { return request(0, ~0u); }
+	void   request(uint32 n = 1);
+	uint32 request(uint32 min, uint32 max);
+	uint32 requestAll() { return request(1, ~0u); }
+	bool   tryRequest();			   // return 1  =>  got it
+	bool   tryRequest(double timeout); // return 1  =>  got it
 
-	void			release		();
-	void			release		(uint32 n);
+	void release();
+	void release(uint32 n);
 
-	bool			isAvailable	() const			{ return avail; }
-	uint32			available	() const			{ return avail; }
-	cstr			getName		() const			{ return name; }
+	bool   isAvailable() const { return avail; }
+	uint32 available() const { return avail; }
+	cstr   getName() const { return name; }
 };
-
 
 
 // Timer  --> kio.cpp
@@ -99,7 +104,7 @@ public:				PSemaphore	(cstr static_name_str="", uint32 _avail = 0);
 	fu() is called exactly in the defined interval independently how long fu() runs itself.
 	the created thread is returned in case the caller needs it.
 */
-extern std::thread executeEvery	( double delay, bool(*fu)(void*), void* arg = nullptr );
+extern std::thread executeEvery(double delay, bool (*fu)(void*), void* arg = nullptr);
 
 
 /*	in a loop, wait 'delay' and execute function fu() until fu() returns false.
@@ -107,7 +112,7 @@ extern std::thread executeEvery	( double delay, bool(*fu)(void*), void* arg = nu
 	fu() is re-scheduled with 'delay' after fu() returns, not in exact intervals.
 	the created thread is returned in case the caller needs it.
 */
-extern std::thread executeWithDelay	( double delay, bool(*fu)(void*), void* arg = nullptr );
+extern std::thread executeWithDelay(double delay, bool (*fu)(void*), void* arg = nullptr);
 
 
 /*	wait until 'time' and then execute fu().
@@ -115,7 +120,7 @@ extern std::thread executeWithDelay	( double delay, bool(*fu)(void*), void* arg 
 	else wait until the returned time or wait the returned delay (auto-detected)
 	and call fu() again until it returns ≤ 0.0.
 */
-extern std::thread executeAt	( double time,  double(*fu)(void*), void* arg = nullptr );
+extern std::thread executeAt(double time, double (*fu)(void*), void* arg = nullptr);
 
 
 /*	wait 'delay' and then execute fu().
@@ -123,20 +128,10 @@ extern std::thread executeAt	( double time,  double(*fu)(void*), void* arg = nul
 	else wait until the returned time or wait the returned delay (auto-detected)
 	and call fu() again until it returns ≤ 0.0.
 */
-extern std::thread executeAfter	( double delay, double(*fu)(void*), void* arg = nullptr );
-
+extern std::thread executeAfter(double delay, double (*fu)(void*), void* arg = nullptr);
 
 
 // Main thread utilities:
 
-extern const std::thread::id	main_thread;
-inline bool	 isMainThread()		{ return std::this_thread::get_id() == main_thread; }
-
-
-
-
-
-
-
-
-
+extern const std::thread::id main_thread;
+inline bool					 isMainThread() { return std::this_thread::get_id() == main_thread; }

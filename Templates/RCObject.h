@@ -6,7 +6,7 @@
 #include "kio/kio.h"
 #include "unix/FD.h"
 #ifndef NO_THREADS
-#include <atomic>
+  #include <atomic>
 #endif
 
 /*	Simple base class for objects with reference counting
@@ -38,49 +38,48 @@
 
 class RCObject
 {
-	template<class T> friend class RCPtr;
-	template<class T> friend class NVPtr;
+	template<class T>
+	friend class RCPtr;
+	template<class T>
+	friend class NVPtr;
 
 protected:
-	#ifndef NO_THREADS
-	mutable std::atomic<uint> cnt{0};
-	#else
-	mutable uint cnt{0};
-	#endif
+#ifndef NO_THREADS
+	mutable std::atomic<uint> cnt {0};
+#else
+	mutable uint cnt {0};
+#endif
 
-	void retain ()  volatile const			noexcept { ++cnt; }
-	void release () volatile const			noexcept { if (--cnt == 0) delete this; }
+	void retain() const volatile noexcept { ++cnt; }
+	void release() const volatile noexcept
+	{
+		if (--cnt == 0) delete this;
+	}
 
 public:
-	RCObject ()								noexcept {}
-	explicit RCObject (const RCObject&)		noexcept {}
-	RCObject (RCObject&&)					noexcept {}
-	virtual	~RCObject ()					noexcept { if (unlikely(cnt!=0)) { abort("~RCObject(): cnt=%i\n", uint(cnt)); } }
+	RCObject() noexcept {}
+	explicit RCObject(const RCObject&) noexcept {}
+	RCObject(RCObject&&) noexcept {}
+	virtual ~RCObject() noexcept
+	{
+		if (unlikely(cnt != 0)) { abort("~RCObject(): cnt=%i\n", uint(cnt)); }
+	}
 
-	RCObject& operator= (const RCObject&)	noexcept { return *this; }
-	RCObject& operator= (RCObject&&)		noexcept { return *this; }
+	RCObject& operator=(const RCObject&) noexcept { return *this; }
+	RCObject& operator=(RCObject&&) noexcept { return *this; }
 
-	uint refcnt () const					noexcept { return cnt; }
+	uint refcnt() const noexcept { return cnt; }
 
-// implement if required:
-	static	RCObject* restore (FD&)			throws;		// factory method: may return this or any subclass
-	virtual	void print (FD&, cstr /*indent*/) const throws {}
-	virtual	void serialize (FD&) const		throws {}
-	virtual	void deserialize (FD&)			throws {}
+	// implement if required:
+	static RCObject* restore(FD&) throws; // factory method: may return this or any subclass
+	virtual void	 print(FD&, cstr /*indent*/) const throws {}
+	virtual void	 serialize(FD&) const throws {}
+	virtual void	 deserialize(FD&) throws {}
 };
 
 template<typename T>
-cstr tostr (RCObject const&)
+cstr tostr(const RCObject&)
 {
 	// return 1-line description of object for debugging and logging:
 	return "RCObject";
 }
-
-
-
-
-
-
-
-
-

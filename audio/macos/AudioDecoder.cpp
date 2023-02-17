@@ -21,7 +21,12 @@
 
 
 AudioDecoder::AudioDecoder() :
-	filename(nullptr), num_frames(0), frames_per_second(0), num_channels(0), sizeof_sample(0), audiofile(nullptr),
+	filename(nullptr),
+	num_frames(0),
+	frames_per_second(0),
+	num_channels(0),
+	sizeof_sample(0),
+	audiofile(nullptr),
 	frame_position(0)
 {
 	bzero(&client_format, sizeof(client_format));

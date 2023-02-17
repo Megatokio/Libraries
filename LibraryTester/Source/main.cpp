@@ -4,15 +4,15 @@
 
 
 #include "main.h"
-#include <iostream>
-#include "Templates/RCPtr.h"
 #include "Templates/RCObject.h"
+#include "Templates/RCPtr.h"
+#include <iostream>
 
 
 int main(int, const char**)
 {
-	uint num_tests=0;
-	uint num_errors=0;
+	uint num_tests	= 0;
+	uint num_errors = 0;
 
 	test_kio_util(num_tests, num_errors);
 	test_tempmem(num_tests, num_errors);
@@ -25,14 +25,11 @@ int main(int, const char**)
 	test_sort(num_tests, num_errors);
 	TestStringClass(num_tests, num_errors);
 	test_z80_disass(num_tests, num_errors);
-	test_z80_opcode_length (num_tests, num_errors);
-	test_z80_major_opcode (num_tests, num_errors);
-	test_z80_clock_cycles (num_tests, num_errors);
+	test_z80_opcode_length(num_tests, num_errors);
+	test_z80_major_opcode(num_tests, num_errors);
+	test_z80_clock_cycles(num_tests, num_errors);
 
 	std::cout << "\n" << num_tests << " tests run, " << num_errors << " errors.\n";
 
 	return 0;
 }
-
-
-

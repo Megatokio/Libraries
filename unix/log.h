@@ -10,7 +10,7 @@
 
 #include "kio/kio.h"
 #ifndef LOGFILE
-#error define LOGFILE in settings.h if you include log.h/log.cpp
+  #error define LOGFILE in settings.h if you include log.h/log.cpp
 // else don't include log.h/log.cpp and logging will be done in kio.cpp
 #endif
 
@@ -27,8 +27,8 @@
 //   #define LOGFILE_AUX_DIRECTORY			default: "/tmp/"
 
 
-enum LogRotation { NEVER,DAILY,WEEKLY,MONTHLY };	// value for uint logrotate in openLogfile(..)
-extern bool log2console;                            // write access allowed. default: log to console = true.
+enum LogRotation { NEVER, DAILY, WEEKLY, MONTHLY }; // value for uint logrotate in openLogfile(..)
+extern bool log2console;							// write access allowed. default: log to console = true.
 extern bool timestamp_with_date;					// typically set by openLogfile(…); default = no
 extern bool timestamp_with_msec;					// typically set by openLogfile(…); default = no
 
@@ -38,12 +38,3 @@ extern bool timestamp_with_msec;					// typically set by openLogfile(…); defau
 // switch on|off logging to console:
 extern void openLogfile(cstr dirpath, LogRotation, uint max_logfiles, bool log2console, bool with_date, bool with_msec);
 extern void openLogfile(cstr dirpath, LogRotation, uint max_logfiles, bool log2console);
-
-
-
-
-
-
-
-
-

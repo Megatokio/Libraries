@@ -11,34 +11,41 @@
 template<class T>
 class Stack
 {
-	uint	size;
-	uint	used;
-	T*		liste;
+	uint size;
+	uint used;
+	T*	 liste;
 
-	void	Resize		( );
+	void Resize();
+
 public:
-			Stack		( )					{ size=0; used=0; liste=NULL; }
-			~Stack		( )					{ delete[] liste; }
-	void	Push		( const T & item )	{ if(used==size) Resize(); liste[used++] = item; }
-	T &		Pop			( )					{ return liste[--used]; }
-	T &		Top			( )					{ return liste[used-1]; }
-	T &		operator[]	( int i )			{ return liste[i]; }
-	uint	Count		( )					{ return used;    }
-	bool	IsEmpty		( )					{ return used==0; }
-	bool	IsNotEmpty	( )					{ return used!=0; }
-	T *		get_start	( )					{ return liste; }
-	T *		get_end		( )					{ return liste + used; }
+	Stack()
+	{
+		size  = 0;
+		used  = 0;
+		liste = NULL;
+	}
+	~Stack() { delete[] liste; }
+	void Push(const T& item)
+	{
+		if (used == size) Resize();
+		liste[used++] = item;
+	}
+	T&	 Pop() { return liste[--used]; }
+	T&	 Top() { return liste[used - 1]; }
+	T&	 operator[](int i) { return liste[i]; }
+	uint Count() { return used; }
+	bool IsEmpty() { return used == 0; }
+	bool IsNotEmpty() { return used != 0; }
+	T*	 get_start() { return liste; }
+	T*	 get_end() { return liste + used; }
 };
 
 
-
 template<class T>
-void Stack<T>::Resize ( )
+void Stack<T>::Resize()
 {
-	T* alt = liste; liste = new T[(size=size*3/2+10)];
-	for(uint i=0;i<used;i++) liste[i] = alt[i];
+	T* alt = liste;
+	liste  = new T[(size = size * 3 / 2 + 10)];
+	for (uint i = 0; i < used; i++) liste[i] = alt[i];
 	delete[] alt;
 }
-
-
-

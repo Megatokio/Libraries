@@ -22,12 +22,10 @@
 	7	call cc,nnnn				--> 6
 	0	jp cc,nnnn					--> 7
 */
-#define Z(a,b)	a + (((b-a-1)&7) << 5)
+#define Z(a, b) a + (((b - a - 1) & 7) << 5)
 
-__attribute__((unused))
-static const uint8 cc_8080[256] =
-{
-	#if 0
+__attribute__((unused)) static const uint8 cc_8080[256] = {
+#if 0
 	// The 8080 has only 1-byte opcodes
 	// Code points marked with '**' were unused and reassigned later by the Z80
 
@@ -98,11 +96,10 @@ static const uint8 cc_8080[256] =
 		Z(5,11),	4,			Z(10,10),	4,			Z(10,17),	17,			7,			11,
 		Z(5,11),	10,			Z(10,10),	4,			Z(10,17),	11,			7,			11,
 		Z(5,11),	6,			Z(10,10),	4,			Z(10,17),	17,			7,			11,
-	#endif
+#endif
 };
 
-static const uint8 cc_z80[256] =
-{
+static const uint8 cc_z80[256] = {
 	// 1-byte opcodes
 	// time for PFX_IX and PFX_IY are set to 4 which is the time they take if
 	// another PFX_IX, PFX_IY or PFX_ED follows.
@@ -255,11 +252,10 @@ static const uint8 cc_z80_CB[256] =
 		8,			8,			8,			8,			8,			8,			15,			8,
 		8,			8,			8,			8,			8,			8,			15,			8,
 		8,			8,			8,			8,			8,			8,			15,			8
-	#endif
+#endif
 };
 
-static const uint8 cc_z80_ED[256] =
-{
+static const uint8 cc_z80_ED[256] = {
 	// Table for EDxx opcodes:
 	// times are stored for the entire opcode incl. ED
 	// so the minimum time is 8 cycles
@@ -414,10 +410,8 @@ static const uint8 cc_z80_XY[256] =
 		4,			10,			4,			4,			4,			4,			4,			4,
 };
 
-__attribute__((unused))
-static const uint8 cc_z80_XYCB[256] =
-{
-	#if 0
+__attribute__((unused)) static const uint8 cc_z80_XYCB[256] = {
+#if 0
 	// Table for opcode after DDCB / FDCB:
 	// legal ones are only those with memory access (XY+dis)
 	// all other opcodes are illegal.
@@ -495,7 +489,7 @@ static const uint8 cc_z80_XYCB[256] =
 		23,			23,			23,			23,			23,			23,			23,			23,
 		23,			23,			23,			23,			23,			23,			23,			23,
 		23,			23,			23,			23,			23,			23,			23,			23,
-	#endif
+#endif
 };
 
 
@@ -512,10 +506,9 @@ static const uint8 cc_z80_XYCB[256] =
 	Therefore 7 is stored for 10 and must be decoded properly.
 */
 #undef Z
-#define Z(a,b)	a + ((b-a<7?b-a:7) << 5)
+#define Z(a, b) a + ((b - a < 7 ? b - a : 7) << 5)
 
-static const uint8 cc_z180[256] =
-{
+static const uint8 cc_z180[256] = {
 	// normal 1-byte opcodes
 	// Prefix opcodes are set to 0.
 	// The time for the entire opcode is given in their respective sub table.
@@ -590,10 +583,8 @@ static const uint8 cc_z180[256] =
 		Z(5u,10u),	4u,			Z(6u,9u),	3u,			Z(6u,16u),	0u,			6u,			11u,
 };
 
-__attribute__((unused))
-static const uint8 cc_z180_CB[256] =
-{
-	#if 0
+__attribute__((unused)) static const uint8 cc_z180_CB[256] = {
+#if 0
 	// Table for CBxx opcodes:
 	// (this table is easy to compute)
 	// times are for the entire opcode incl. CB
@@ -666,11 +657,10 @@ static const uint8 cc_z180_CB[256] =
 		6u,			6u,			6u,			6u,			6u,			6u,			13u, 		6u,
 		6u,			6u,			6u,			6u,			6u,			6u,			13u, 		6u,
 		6u,			6u,			6u,			6u,			6u,			6u,			13u, 		6u,
-	#endif
+#endif
 };
 
-static const uint8 cc_z180_ED[256] =
-{
+static const uint8 cc_z180_ED[256] = {
 	// Table for EDxx opcodes:
 	// times are for the entire opcode incl. ED
 	// illegal opcodes are trapped by the Z80180
@@ -744,8 +734,7 @@ static const uint8 cc_z180_ED[256] =
 		0,			0,			0,			0,			0,			0,			0,			0,
 };
 
-static const uint8 cc_z180_XY[256] =
-{
+static const uint8 cc_z180_XY[256] = {
 	// Opcodes with prefix DD and FD use the IX resp. IY register instead of HL.
 	// Times are given for the entire opcode incl. DD/FD.
 	// Legal opcodes are only those which would use register HL if not prefixed with DD or FD.
@@ -820,10 +809,8 @@ static const uint8 cc_z180_XY[256] =
 		0,			7u,			0,			0,			0,			0,			0,			0,
 };
 
-__attribute__((unused))
-static const uint8 cc_z180_XYCB[256] =
-{
-	#if 0
+__attribute__((unused)) static const uint8 cc_z180_XYCB[256] = {
+#if 0
 	// Table for opcode after DDCB / FDCB:
 	// Legal ones are only those with memory access (XY+dis).
 	// All other opcodes are illegal and trapped by the Z80180.
@@ -896,33 +883,30 @@ static const uint8 cc_z180_XYCB[256] =
 		0,			0,			0,			0,			0,			0,			19u, 		0,
 		0,			0,			0,			0,			0,			0,			19u, 		0,
 		0,			0,			0,			0,			0,			0,			19u, 		0,
-	#endif
+#endif
 };
 
 
-bool opcode_can_branch (CpuID cpuid, const Byte* core, Address a) noexcept
+bool opcode_can_branch(CpuID cpuid, const Byte* core, Address a) noexcept
 {
 	// test whether this opcode can branch:
 	// (jr cc, jp cc, ret cc, call cc, djnz, ldir, inir, …)
 	// op2 is only used for ED opcodes
 
-	uint8 op1 = peek(core,a);
+	uint8 op1 = peek(core, a);
 
 	switch (cpuid)
 	{
-	case Cpu8080:
-		return op1 >= 0xC0 && cc_z80[op1] >= 32;
+	case Cpu8080: return op1 >= 0xC0 && cc_z80[op1] >= 32;
 
 	default:
-	case CpuZ80:
-		return (op1==0xED ? cc_z80_ED[peek(core,a+1)] : cc_z80[op1]) >= 32;
+	case CpuZ80: return (op1 == 0xED ? cc_z80_ED[peek(core, a + 1)] : cc_z80[op1]) >= 32;
 
-	case CpuZ180:
-		return (op1==0xED ? cc_z180_ED[peek(core,a+1)] : cc_z180[op1]) >= 32;
+	case CpuZ180: return (op1 == 0xED ? cc_z180_ED[peek(core, a + 1)] : cc_z180[op1]) >= 32;
 	}
 }
 
-uint clock_cycles (CpuID cpuid, const Byte* core, Address a) noexcept
+uint clock_cycles(CpuID cpuid, const Byte* core, Address a) noexcept
 {
 	// get execution time for opcode:
 	// if opcode can branch, then this is the time when it does not branch
@@ -930,8 +914,8 @@ uint clock_cycles (CpuID cpuid, const Byte* core, Address a) noexcept
 	// op4 is only used for IXCB or IYCB opcodes
 	// Clock cycles returned for illegal opcodes are meaningless.
 
-	uint8 op1 = peek(core,a);
-	uint8 op2,op4;
+	uint8 op1 = peek(core, a);
+	uint8 op2, op4;
 
 	switch (op1)
 	{
@@ -940,59 +924,66 @@ uint clock_cycles (CpuID cpuid, const Byte* core, Address a) noexcept
 		if (cpuid == Cpu8080)
 		{
 			if ((op1 & 0307) == NOP) return 4;
-			if (op1 == 0xD9) return 10; // RET alias
-			// else use Z80 table
+			if (op1 == 0xD9)
+				return 10; // RET alias
+						   // else use Z80 table
 		}
 		return cc_z80[op1] & 31; // Z80
 
 	case 0xCB:
 		if (cpuid == Cpu8080) return 10; // JP alias
-		op2 = peek(core,a+1);
+		op2 = peek(core, a + 1);
 		if (cpuid == CpuZ180)
 		{
 			// %00xx.xxxx shift ops:    7cc, xHL: 13
 			// %01xx.xxxx bit test ops: 6cc, xHL: 9
 			// %1xxx.xxxx bit set ops:  6cc, xHL: 13
 
-			if ((op2 & 0370) == SLL_B) return 0;		// ill.
-			if ((op2&7)!=6) return (op2&0xC0)==0x00 ? 7 : 6;	// r
-			else            return (op2&0xC0)==0x40 ? 9 : 13;	// (hl)
+			if ((op2 & 0370) == SLL_B) return 0; // ill.
+			if ((op2 & 7) != 6)
+				return (op2 & 0xC0) == 0x00 ? 7 : 6; // r
+			else
+				return (op2 & 0xC0) == 0x40 ? 9 : 13; // (hl)
 		}
 		else // Z80:
 		{
-			if ((op2&7) != 6) return 8;					// r
-			else return (op2&0xC0) == 0x40 ? 12 : 15;	// (hl)
+			if ((op2 & 7) != 6)
+				return 8; // r
+			else
+				return (op2 & 0xC0) == 0x40 ? 12 : 15; // (hl)
 		}
 
 	case 0xED:
 		if (cpuid == Cpu8080) return 17; // CALL alias
-		op2 = peek(core,a+1);
-		if (cpuid == CpuZ180) return cc_z180_ED[op2] & 31;
-		else return cc_z80_ED[op2] & 31; // Z80
+		op2 = peek(core, a + 1);
+		if (cpuid == CpuZ180)
+			return cc_z180_ED[op2] & 31;
+		else
+			return cc_z80_ED[op2] & 31; // Z80
 
 	case 0xDD:
 	case 0xFD:
 		if (cpuid == Cpu8080) return 17; // CALL alias
-		op2 = peek(core,a+1);
+		op2 = peek(core, a + 1);
 		if (cpuid == CpuZ180)
 		{
 			if (op2 != 0xCB) return cc_z180_XY[op2];
 
-			op4 = peek(core,a+3);
-			if ((op4 & 0370) == SLL_B) return 0;	// ill.
-			if ((op4&7)!=6) return 0;				// ill.
-			return (op4&0xC0) == 0x40 ? 15 : 19;
+			op4 = peek(core, a + 3);
+			if ((op4 & 0370) == SLL_B) return 0; // ill.
+			if ((op4 & 7) != 6) return 0;		 // ill.
+			return (op4 & 0xC0) == 0x40 ? 15 : 19;
 		}
 		else // Z80
 		{
-			if (op2!=0xCB) return cc_z80_XY[op2];
-			op4 = peek(core,a+3);
-			return (op4&0xC0)==0x40 ? 20 : 23;		// TODO: --ixcbxh probably cc=17!
+			if (op2 != 0xCB) return cc_z80_XY[op2];
+			op4 = peek(core, a + 3);
+			return (op4 & 0xC0) == 0x40 ? 20 : 23; // TODO: --ixcbxh probably cc=17!
 		}
 	}
 }
 
-uint clock_cycles_on_branch (CpuID cpuid, const Byte* core, Address a) noexcept
+uint clock_cycles_on_branch(CpuID cpuid, const Byte* core, Address a) noexcept
 {
 	// get execution time for branching opcode:
 	// returns the time when the opcode branches.
@@ -1000,9 +991,9 @@ uint clock_cycles_on_branch (CpuID cpuid, const Byte* core, Address a) noexcept
 	// calling this for non-branching opcodes may return wrong value.
 	// (mostly correct time, but not for IX, IY or CB opcodes)
 
-	uint8 op1 = peek(core,a);
+	uint8 op1 = peek(core, a);
 	uint8 op2;
-	uint n;
+	uint  n;
 
 	switch (op1)
 	{
@@ -1010,151 +1001,130 @@ uint clock_cycles_on_branch (CpuID cpuid, const Byte* core, Address a) noexcept
 		if (cpuid == CpuZ180)
 		{
 			n = cc_z180[op1];
-			if (n > (7<<5)) return (n&31) + 10;
-			else            return (n&31) + (n>>5);
+			if (n > (7 << 5))
+				return (n & 31) + 10;
+			else
+				return (n & 31) + (n >> 5);
 		}
 		if (cpuid == Cpu8080)
 		{
-			if ((op1 & 0307) == NOP) return 4;	// NOP and aliases
-			if (op1 == 0xD9) return 10;			// RET alias
-			// else use Z80 table
+			if ((op1 & 0307) == NOP) return 4; // NOP and aliases
+			if (op1 == 0xD9)
+				return 10; // RET alias
+						   // else use Z80 table
 		}
 		n = cc_z80[op1];
-		if (n>31) return (n&31) + (((n>>5)+1)&7);	// Z80
-		else return n;		// non-branching opcode
+		if (n > 31)
+			return (n & 31) + (((n >> 5) + 1) & 7); // Z80
+		else
+			return n; // non-branching opcode
 
 	case 0xDD:
 	case 0xFD:
-	case 0xCB:
-		return clock_cycles(cpuid,core,a);	// usage error: CB, IX and IY opcodes are all non-branching
+	case 0xCB: return clock_cycles(cpuid, core, a); // usage error: CB, IX and IY opcodes are all non-branching
 
 	case 0xED:
-		if (cpuid == Cpu8080) return 17;	// CALL alias
-		op2 = peek(core,a+1);
+		if (cpuid == Cpu8080) return 17; // CALL alias
+		op2 = peek(core, a + 1);
 		if (cpuid == CpuZ180)
 		{
 			n = cc_z180_ED[op2];
-			return (n&31) + (n>>5);
+			return (n & 31) + (n >> 5);
 		}
-		else  // Z80
+		else // Z80
 		{
 			n = cc_z80_ED[op2];
-			if (n>31) return (n&31) + (((n>>5)+1)&7);
-			else return n;		// non-branching opcode
+			if (n > 31)
+				return (n & 31) + (((n >> 5) + 1) & 7);
+			else
+				return n; // non-branching opcode
 		}
 	}
 }
 
 
-
-
-
-
-
-
-
 // deprecated:
-bool i8080_opcode_can_branch (uint8 op) noexcept
+bool i8080_opcode_can_branch(uint8 op) noexcept
 {
 	Byte core[4] = {op};
-	return opcode_can_branch(Cpu8080,core);
+	return opcode_can_branch(Cpu8080, core);
 }
 
 // deprecated:
-bool z80_opcode_can_branch (uint8 op1, uint8 op2) noexcept
+bool z80_opcode_can_branch(uint8 op1, uint8 op2) noexcept
 {
-	Byte core[4] = {op1,op2};
-	return opcode_can_branch(CpuZ80,core);
+	Byte core[4] = {op1, op2};
+	return opcode_can_branch(CpuZ80, core);
 }
 
 // deprecated:
-bool z180_opcode_can_branch (uint8 op1, uint8 op2) noexcept
+bool z180_opcode_can_branch(uint8 op1, uint8 op2) noexcept
 {
-	Byte core[4] = {op1,op2};
-	return opcode_can_branch(CpuZ180,core);
+	Byte core[4] = {op1, op2};
+	return opcode_can_branch(CpuZ180, core);
 }
 
 // deprecated:
-bool opcode_can_branch (CpuID cpuid, uint8 op1, uint8 op2) noexcept
+bool opcode_can_branch(CpuID cpuid, uint8 op1, uint8 op2) noexcept
 {
-	Byte core[4] = {op1,op2};
-	return opcode_can_branch(cpuid,core);
+	Byte core[4] = {op1, op2};
+	return opcode_can_branch(cpuid, core);
 }
 
 
 // deprecated:
-uint i8080_clock_cycles (uint8 op) noexcept
-{
-	Byte core[4] = {op};
-	return clock_cycles(Cpu8080,core);
-}
-
-// deprecated:
-uint z80_clock_cycles (uint8 op1, uint8 op2, uint8 op4) noexcept
-{
-	Byte core[4] = {op1,op2,0,op4};
-	return clock_cycles(CpuZ80,core);
-}
-
-// deprecated:
-uint z180_clock_cycles (uint8 op1, uint8 op2, uint8 op4) noexcept
-{
-	Byte core[4] = {op1,op2,0,op4};
-	return clock_cycles(CpuZ180,core);
-}
-
-// deprecated:
-uint clock_cycles (CpuID cpuid, uint8 op1, uint8 op2, uint8 op4) noexcept
-{
-	Byte core[4] = {op1,op2,33,op4};
-	return clock_cycles(cpuid,core);
-}
-
-
-// deprecated:
-uint i8080_clock_cycles_on_branch (uint8 op) noexcept
+uint i8080_clock_cycles(uint8 op) noexcept
 {
 	Byte core[4] = {op};
-	return clock_cycles_on_branch(Cpu8080,core);
+	return clock_cycles(Cpu8080, core);
 }
 
 // deprecated:
-uint z80_clock_cycles_on_branch (uint8 op1, uint8 op2) noexcept
+uint z80_clock_cycles(uint8 op1, uint8 op2, uint8 op4) noexcept
 {
-	Byte core[4] = {op1,op2};
-	return clock_cycles_on_branch(CpuZ80,core);
+	Byte core[4] = {op1, op2, 0, op4};
+	return clock_cycles(CpuZ80, core);
 }
 
 // deprecated:
-uint z180_clock_cycles_on_branch (uint8 op1, uint8 op2) noexcept
+uint z180_clock_cycles(uint8 op1, uint8 op2, uint8 op4) noexcept
 {
-	Byte core[4] = {op1,op2};
-	return clock_cycles_on_branch(CpuZ180,core);
+	Byte core[4] = {op1, op2, 0, op4};
+	return clock_cycles(CpuZ180, core);
 }
 
 // deprecated:
-uint clock_cycles_on_branch (CpuID cpuid, uint8 op1, uint8 op2) noexcept
+uint clock_cycles(CpuID cpuid, uint8 op1, uint8 op2, uint8 op4) noexcept
 {
-	Byte core[4] = {op1,op2};
-	return clock_cycles_on_branch(cpuid,core);
+	Byte core[4] = {op1, op2, 33, op4};
+	return clock_cycles(cpuid, core);
 }
 
 
+// deprecated:
+uint i8080_clock_cycles_on_branch(uint8 op) noexcept
+{
+	Byte core[4] = {op};
+	return clock_cycles_on_branch(Cpu8080, core);
+}
 
+// deprecated:
+uint z80_clock_cycles_on_branch(uint8 op1, uint8 op2) noexcept
+{
+	Byte core[4] = {op1, op2};
+	return clock_cycles_on_branch(CpuZ80, core);
+}
 
+// deprecated:
+uint z180_clock_cycles_on_branch(uint8 op1, uint8 op2) noexcept
+{
+	Byte core[4] = {op1, op2};
+	return clock_cycles_on_branch(CpuZ180, core);
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// deprecated:
+uint clock_cycles_on_branch(CpuID cpuid, uint8 op1, uint8 op2) noexcept
+{
+	Byte core[4] = {op1, op2};
+	return clock_cycles_on_branch(cpuid, core);
+}

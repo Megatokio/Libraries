@@ -3,14 +3,14 @@
 // https://opensource.org/licenses/BSD-2-Clause
 
 #undef NDEBUG
-#define SAFETY 2
+#define SAFETY	 2
 #define LOGLEVEL 1
-#include "kio/kio.h"
-#include "unix/FD.h"
-#include "cstrings/cstrings.h"
 #include "Templates/Array.h"
+#include "cstrings/cstrings.h"
+#include "kio/kio.h"
 #include "kio/util/defines.h"
 #include "main.h"
+#include "unix/FD.h"
 #include "z80_goodies.h"
 #include "z80_opcodes.h"
 
@@ -18,12 +18,11 @@
 struct TestSet
 {
 	uint8 code[4];		// code to disassemble + 1 byte 0x00
-	char expected[17];	// expected disassembly
+	char  expected[17]; // expected disassembly
 };
 
 
-static TestSet common_tests[] =
-{
+static TestSet common_tests[] = {
 	// tests for i8080, Z80 and Z180
 
 	{{NOP}, "nop"},
@@ -113,8 +112,7 @@ static TestSet common_tests[] =
 	{{CALL_M ,0x45,0x23}, "call m,$2345"},  {{CP_N ,123},  "cp a,123"},
 };
 
-static TestSet asm8080_tests[] =
-{
+static TestSet asm8080_tests[] = {
 	// tests for i8080
 	// asm8080 syntax
 
@@ -217,8 +215,7 @@ static TestSet asm8080_tests[] =
 	{{CALL_M ,0x45,0x23}, "cm $2345"},  {{CP_N ,123}, "cpi 123"},
 };
 
-static TestSet i8080_tests[] =
-{
+static TestSet i8080_tests[] = {
 	// tests for i8080
 	// Z80 syntax
 
@@ -237,8 +234,7 @@ static TestSet i8080_tests[] =
 	{{PFX_IY,1,2}, "call $0201 ;"},
 };
 
-static TestSet z80_z180_tests[] =
-{
+static TestSet z80_z180_tests[] = {
 	// tests for Z80 and Z180:
 	// legal CB, ED and IX opcodes
 

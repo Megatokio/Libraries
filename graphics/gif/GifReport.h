@@ -4,9 +4,4 @@
 // https://opensource.org/licenses/BSD-2-Clause
 
 
-extern void LogGifFile( const char* filepath );
-
-
-
-
-
+extern void LogGifFile(const char* filepath);

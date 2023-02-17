@@ -37,7 +37,7 @@ template<class T>
 class GifArray
 {
 public:
-/*	creator, destructor:
+	/*	creator, destructor:
 			GifArray()				default constructor: empty array
 			GifArray(GifArray&)		copy constructor
 			GifArray(T*,count)		copy caller-supplied memory
@@ -46,164 +46,210 @@ public:
 			operator=(GifArray&)	copy data
 			operator=(T)			create array with one item. deprecated.
 */
-			GifArray		( )			noexcept	{ init(); }
+	GifArray() noexcept { init(); }
 
-			GifArray		( GifArray const& q )	throws/*bad alloc*/	{ init(q); }
-			GifArray		( GifArray const* q )	throws/*bad alloc*/	{ init(*q); }
-			GifArray		( T const*q, int n )	throws/*bad alloc*/	{ init(q,n); }
-			GifArray		( int n )				throws/*bad alloc*/	{ init(n); }
+	GifArray(const GifArray& q) throws /*bad alloc*/ { init(q); }
+	GifArray(const GifArray* q) throws /*bad alloc*/ { init(*q); }
+	GifArray(const T* q, int n) throws /*bad alloc*/ { init(q, n); }
+	GifArray(int n) throws /*bad alloc*/ { init(n); }
 
-			~GifArray		( )			noexcept	{ kill();  }
+	~GifArray() noexcept { kill(); }
 
-	GifArray&	operator=	( const GifArray& q )	throws/*bad alloc*/	{ if( this!=&q ) { kill(); init(q); } return *this; }
-	GifArray&	operator=	( T q )					throws/*bad alloc*/	{ kill(); init(&q,1); return *this;  }
+	GifArray& operator=(const GifArray& q) throws /*bad alloc*/
+	{
+		if (this != &q)
+		{
+			kill();
+			init(q);
+		}
+		return *this;
+	}
+	GifArray& operator=(T q) throws /*bad alloc*/
+	{
+		kill();
+		init(&q, 1);
+		return *this;
+	}
 
 
-/*	access data members:
+	/*	access data members:
 			Size()		get item count
 			Data()		get array base address
 			operator[i]	access item i. checks index during development.
 */
-	int		Count		( )			const noexcept	{ return count; }
-	T*		Data		( )				  noexcept	{ return array; }
-	T const*Data		( )			const noexcept	{ return array; }
-	T&		operator[]	( int i )		  noexcept	{ assert(uint(i) < uint(count)); return array[i]; }
-	T const&operator[]	( int i )	const noexcept	{ assert(uint(i) < uint(count)); return array[i]; }
+	int		 Count() const noexcept { return count; }
+	T*		 Data() noexcept { return array; }
+	const T* Data() const noexcept { return array; }
+	T&		 operator[](int i) noexcept
+	{
+		assert(uint(i) < uint(count));
+		return array[i];
+	}
+	const T& operator[](int i) const noexcept
+	{
+		assert(uint(i) < uint(count));
+		return array[i];
+	}
 
 
-/*	resizing and clearing:
+	/*	resizing and clearing:
 			Shrink		shrink if new_count < count
 			Grow		grow   if new_count > count
 			Purge		purge data and resize to 0
 			Clear		overwrite array with 0s.
 			Clear(T)	overwrite array with Ts.
 */
-	void	Shrink		( int new_count )	noexcept;
-	void	Grow		( int new_count )	throws/*bad alloc*/;
-	void	Purge		( )					noexcept	{ kill(); init(); }
-	void	Clear		( )					noexcept	{ clear( array, count ); }
-	void	Clear		( T q )				noexcept	{ T* p=array; T* e=p+count; while(p<e) *p++=q; }
+	void Shrink(int new_count) noexcept;
+	void Grow(int new_count) throws /*bad alloc*/;
+	void Purge() noexcept
+	{
+		kill();
+		init();
+	}
+	void Clear() noexcept { clear(array, count); }
+	void Clear(T q) noexcept
+	{
+		T* p = array;
+		T* e = p + count;
+		while (p < e) *p++ = q;
+	}
 
-/*	concatenation:
+	/*	concatenation:
 	Append		append user-supplied data to this array. if bad_alloc is thrown, then GifArray remained unmodified.
 	operator+=	append other array to my array. if bad_alloc is thrown, then GifArray remained unmodified.
 	operator=	return concatenation of this array and other array. throws bad_alloc if malloc fails.
 */
-	GifArray&	Append		( T const* q, int n ) throws/*bad alloc*/;
-	GifArray&	operator+=	( GifArray const& q ) throws/*bad alloc*/	{ return Append(q.array,q.count); }
-	GifArray	operator+	( GifArray const& q ) const throws/*bad alloc*/ { return GifArray(this).Append(q.array,q.count); }
+	GifArray& Append(const T* q, int n) throws /*bad alloc*/;
+	GifArray& operator+=(const GifArray& q) throws /*bad alloc*/ { return Append(q.array, q.count); }
+	GifArray operator+(const GifArray& q) const throws /*bad alloc*/ { return GifArray(this).Append(q.array, q.count); }
 
 
 private:
-/*	static methods:
+	/*	static methods:
 */
-  static size_t	sz			( size_t n )				noexcept		{ return n*sizeof(T); }		// convert item count to memory size
-  static void	copy		( T* z, T const* q, int n ) noexcept		{ memcpy(z,q,sz(n)); }		// flat copy n items
-  static void	clear		( T* z, int n )				noexcept		{ memset(z,0,sz(n)); }		// clear n items with 0
-  static T*		malloc		( int n )			  throws/*bad alloc*/	{ return n?new T[n]:nullptr; }	// allocate memory for n items
-  static T*		newcopy		( T const* q, int n ) throws/*bad alloc*/	{ if(!n) return 0; T* z = new T[n]; copy(z,q,n); return z; }
-  static T*		newcleared	( int n )			  throws/*bad alloc*/	{ if(!n) return 0; T* z = new T[n]; clear(z,n); return z; }
-  static void	release		( T* array )				noexcept		{ delete[] array; array=0; }
+	static size_t sz(size_t n) noexcept { return n * sizeof(T); }				  // convert item count to memory size
+	static void	  copy(T* z, const T* q, int n) noexcept { memcpy(z, q, sz(n)); } // flat copy n items
+	static void	  clear(T* z, int n) noexcept { memset(z, 0, sz(n)); }			  // clear n items with 0
+	static T*	  malloc(int n) throws /*bad alloc*/ { return n ? new T[n] : nullptr; } // allocate memory for n items
+	static T*	  newcopy(const T* q, int n) throws										/*bad alloc*/
+	{
+		if (!n) return 0;
+		T* z = new T[n];
+		copy(z, q, n);
+		return z;
+	}
+	static T* newcleared(int n) throws /*bad alloc*/
+	{
+		if (!n) return 0;
+		T* z = new T[n];
+		clear(z, n);
+		return z;
+	}
+	static void release(T* array) noexcept
+	{
+		delete[] array;
+		array = 0;
+	}
 
-/*	init and kill:
+	/*	init and kill:
 */
-  void	init	()					  noexcept	{ array=0; count=0; }						// init empty array
-  void	init	( int n )			  throws/*bad alloc*/		{ array=0; count=n; array=newcleared(n); }	// alloc and clear array
-  void	init	( T const* q, int n ) throws/*bad alloc*/		{ array=0; count=n; array=newcopy(q,n);  }	// init with copy of caller-supplied data
-  void	init	( GifArray const& q ) throws/*bad alloc*/		{ init(q.array,q.count); }					// init with copy
-  void	kill	()					  noexcept	{ release(array); }							// deallocate allocateded data
+	void init() noexcept
+	{
+		array = 0;
+		count = 0;
+	}						// init empty array
+	void init(int n) throws /*bad alloc*/
+	{
+		array = 0;
+		count = n;
+		array = newcleared(n);
+	}									// alloc and clear array
+	void init(const T* q, int n) throws /*bad alloc*/
+	{
+		array = 0;
+		count = n;
+		array = newcopy(q, n);
+	} // init with copy of caller-supplied data
+	void init(const GifArray& q) throws /*bad alloc*/ { init(q.array, q.count); } // init with copy
+	void kill() noexcept { release(array); }									  // deallocate allocateded data
 
 
-/*	data members:
+	/*	data members:
 */
 protected:
-	T*		array;		// -> array[0].	array *may* be NULL for empty array.
-	int		count;		// item count.	count==0 for empty array.
+	T*	array; // -> array[0].	array *may* be NULL for empty array.
+	int count; // item count.	count==0 for empty array.
 };
 
 
-
-template<class T>		/* verified 2006-06-09 kio */
-GifArray<T>&
-GifArray<T>::Append ( T const* q, int n ) throws/*bad alloc*/
+template<class T>										   /* verified 2006-06-09 kio */
+GifArray<T>& GifArray<T>::Append(const T* q, int n) throws /*bad alloc*/
 {
-/*	Append caller-supplied items to my array.
+	/*	Append caller-supplied items to my array.
 	does nothing if item count == 0.
 	can be called to append subarray of own array!
 	if bad_alloc is thrown, then this GifArray remained unmodified.
 */
-	if(n>0)
+	if (n > 0)
 	{
-		T*  old_array = array;
+		T*	old_array = array;
 		int old_count = count;
-		array = malloc(old_count+n);
-		count = old_count + n;
+		array		  = malloc(old_count + n);
+		count		  = old_count + n;
 
-		copy( array,old_array,old_count );	// copy own data
-		copy( array+old_count, q, n );		// copy other data. may be subarray of my own array!
-		release(old_array);					// => release own data after copying other data!
+		copy(array, old_array, old_count); // copy own data
+		copy(array + old_count, q, n);	   // copy other data. may be subarray of my own array!
+		release(old_array);				   // => release own data after copying other data!
 	}
 	return *this;
 }
 
 
-
-template<class T>		/* verified 2006-06-09 kio */
-void
-GifArray<T>::Shrink ( int new_count ) noexcept
+template<class T> /* verified 2006-06-09 kio */
+void GifArray<T>::Shrink(int new_count) noexcept
 {
-/*	Shrink GifArray:
+	/*	Shrink GifArray:
 	does nothing if requested new_count >= current count
 	purges ( deallocates ) data if new_count == 0.
 	silently handles new_count < 0 as new_count == 0.
 	silently keeps the old data if data reallocation fails.
 */
-	if( new_count>=count ) return;			// won't shrink
-	if( new_count<=0 ) { Purge(); return; }	// empty array
+	if (new_count >= count) return; // won't shrink
+	if (new_count <= 0)
+	{
+		Purge();
+		return;
+	} // empty array
 
 	count = new_count;
-	try							// try to reallocate data
+	try // try to reallocate data
 	{
 		T* old_array = array;
-		array = newcopy( old_array, new_count );
+		array		 = newcopy(old_array, new_count);
 		release(old_array);
 	}
-	catch(bad_alloc&){}		// but just don't do it if reallocation fails
+	catch (bad_alloc&)
+	{} // but just don't do it if reallocation fails
 }
 
 
-template<class T>		/* verified 2006-06-09 kio */
-void
-GifArray<T>::Grow ( int new_count ) throws/*bad alloc*/
+template<class T>							 /* verified 2006-06-09 kio */
+void GifArray<T>::Grow(int new_count) throws /*bad alloc*/
 {
-/*	Grow GifArray:
+	/*	Grow GifArray:
 	does nothing if requested new_count <= current count.
 	if bad_alloc is thrown, then GifArray remained unmodified.
 */
-	if( new_count<=count ) return;
+	if (new_count <= count) return;
 
 	int old_count = count;
-	T*  old_array = array;
+	T*	old_array = array;
 
-	array = malloc( new_count );
+	array = malloc(new_count);
 	count = new_count;
 
-	copy ( array, old_array, old_count );
-	clear( array+old_count, new_count-old_count );
+	copy(array, old_array, old_count);
+	clear(array + old_count, new_count - old_count);
 
 	release(old_array);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

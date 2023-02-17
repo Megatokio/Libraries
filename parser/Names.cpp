@@ -19,17 +19,13 @@
 
 // standard names as defined in NameID.h:
 static constexpr cstr stdnames[]
-#define M(A,B) B
+#define M(A, B) B
 #include "NameID.h"
-static constexpr uint32 num_stdnames = NELEM(stdnames);
-static_assert (num_stdnames>0 && *stdnames[0]==0,""); // first name must be the empty string
+	static constexpr uint32 num_stdnames = NELEM(stdnames);
+static_assert(num_stdnames > 0 && *stdnames[0] == 0, ""); // first name must be the empty string
 
 
-Names::Names()
-:
-	pool(nullptr),
-	pool_ptr(nullptr),
-	pool_end(nullptr)
+Names::Names() : pool(nullptr), pool_ptr(nullptr), pool_end(nullptr)
 {
 	// setup hashmap with standard names
 	// => standard names have fixed IDs as enumerated in "NameID.h"
@@ -39,32 +35,24 @@ Names::Names()
 	// => names for IDs can be looked up with hashmap.keys[ID]
 	// IDs for names are looked up with hashmap.get() / hashmap.add()
 
-	for (uint32 id=0; id<num_stdnames; id++)
-	{
-		hashmap.add(stdnames[id],NameID(id));
-	}
+	for (uint32 id = 0; id < num_stdnames; id++) { hashmap.add(stdnames[id], NameID(id)); }
 
-	assert(hashmap.count() == num_stdnames);	// assert: no idf added twice
+	assert(hashmap.count() == num_stdnames); // assert: no idf added twice
 }
 
-Names::~Names()
-{
-	delete pool;
-}
+Names::~Names() { delete pool; }
 
-Names::Names (Names&& q) :
-	pool(q.pool), pool_ptr(q.pool_ptr), pool_end(q.pool_end),
-	hashmap(std::move(q.hashmap))
+Names::Names(Names&& q) : pool(q.pool), pool_ptr(q.pool_ptr), pool_end(q.pool_end), hashmap(std::move(q.hashmap))
 {
-	pool = nullptr;
+	pool	 = nullptr;
 	pool_ptr = pool_end = nullptr; // safety only
 }
 
-Names& Names::operator= (Names&& q)
+Names& Names::operator=(Names&& q)
 {
-	assert (this != &q);
+	assert(this != &q);
 	this->~Names();
-	new(this) Names(std::move(q));
+	new (this) Names(std::move(q));
 	return *this;
 }
 
@@ -72,26 +60,26 @@ void Names::purge()
 {
 	if (hashmap.count() == num_stdnames) return;
 	this->~Names();
-	new(this) Names();
+	new (this) Names();
 }
 
-NameID Names::add (cstr name)
+NameID Names::add(cstr name)
 {
 	// add name if not in list
 	// return ID
 
 	const uint32 mapsize = hashmap.count();
-	NameID id = hashmap.get(name,NameID(mapsize));
-	if (id != mapsize) return id;	// name found
+	NameID		 id		 = hashmap.get(name, NameID(mapsize));
+	if (id != mapsize) return id; // name found
 
 	// not found => add to map:
 
 	size_t slen = strlen(name) + 1;
-	if (pool_ptr+slen > pool_end)
+	if (pool_ptr + slen > pool_end)
 	{
 		assert(slen <= sizeof(pool->data));
 
-		pool = new Chunk(pool);
+		pool	 = new Chunk(pool);
 		pool_ptr = pool->data;
 		pool_end = pool->data + sizeof(pool->data);
 	}
@@ -110,10 +98,7 @@ Array<NameID> Names::merge(const Names& q)
 
 	Array<NameID> map(q.hashmap.count());
 
-	for (uint32 id=0; id<map.count(); id++)
-	{
-		map[id] = add(q.get(NameID(id)));
-	}
+	for (uint32 id = 0; id < map.count(); id++) { map[id] = add(q.get(NameID(id))); }
 
 	return map;
 }
@@ -129,10 +114,7 @@ void Names::serialize(FD& fd) const
 	fd.write_uint32(a);
 	fd.write_uint32(e);
 
-	for (uint32 id=a; id<e; id++)
-	{
-		fd.write_nstr(get(NameID(id)));
-	}
+	for (uint32 id = a; id < e; id++) { fd.write_nstr(get(NameID(id))); }
 }
 
 void Names::deserialize(FD& fd)
@@ -146,27 +128,5 @@ void Names::deserialize(FD& fd)
 
 	purge();
 
-	for (uint32 id=a; id<e; id++)
-	{
-		add(fd.read_nstr());
-	}
+	for (uint32 id = a; id < e; id++) { add(fd.read_nstr()); }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

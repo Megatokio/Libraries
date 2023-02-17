@@ -22,35 +22,27 @@ class MemPool final
 	static const size_t BUFFER_SIZE = 8000;
 	static const size_t MAXREQ_SIZE = 400;
 
-	size_t	freesize;
-	char*	data;
+	size_t freesize;
+	char*  data;
 
-	MemPool (const MemPool&)			= delete;
-	MemPool (MemPool&&)					= delete;
-	MemPool& operator= (const MemPool&)	= delete;
-	MemPool& operator= (MemPool&&)		= delete;
+	MemPool(const MemPool&)			   = delete;
+	MemPool(MemPool&&)				   = delete;
+	MemPool& operator=(const MemPool&) = delete;
+	MemPool& operator=(MemPool&&)	   = delete;
 
-	static ptr new_data (size_t)		noexcept;
-	static void delete_data (ptr)		noexcept;
-	static ptr& prev_data(ptr)			noexcept;
+	static ptr	new_data(size_t) noexcept;
+	static void delete_data(ptr) noexcept;
+	static ptr& prev_data(ptr) noexcept;
 
 public:
-	MemPool ()	noexcept;
-	~MemPool ()	noexcept;
+	MemPool() noexcept;
+	~MemPool() noexcept;
 
-	void	purge ()					noexcept;
-	char*	alloc (size_t size)			throws;
-	char*	allocstr (size_t len )		throws;		// 0-terminated
-	char*	allocmem (size_t size)		throws;		// aligned to _MAX_ALIGNMENT
-	char*	dupstr (cstr)				throws;
+	void  purge() noexcept;
+	char* alloc(size_t size) throws;
+	char* allocstr(size_t len) throws;	// 0-terminated
+	char* allocmem(size_t size) throws; // aligned to _MAX_ALIGNMENT
+	char* dupstr(cstr) throws;
 
 	static void test();
 };
-
-
-
-
-
-
-
-

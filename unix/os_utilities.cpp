@@ -7,51 +7,49 @@
 #include <thread>
 
 #ifdef HAVE_TIME_H
-#include <time.h>
+  #include <time.h>
 #endif
 
 #ifdef HAVE_SYS_TIME_H
-#include <sys/time.h>
+  #include <sys/time.h>
 #endif
 
+#include <pwd.h>
 #include <sys/param.h>
 #include <sys/resource.h>
 #include <termios.h>
-#include <pwd.h>
 
 #ifdef HAVE_MACHINE_VMPARAM_H
-#include <machine/vmparam.h>
+  #include <machine/vmparam.h>
 #endif
 
 #ifdef HAVE_NETDB_H
-#include <netdb.h>
+  #include <netdb.h>
 #endif
 
 #ifdef HAVE_SYS_SYSCTL_H
-#include <sys/sysctl.h>
+  #include <sys/sysctl.h>
 #endif
 
 #ifdef HAVE_SYS_LOADAVG_H
-#include <sys/loadavg.h>
+  #include <sys/loadavg.h>
 #endif
 
 #ifdef HAVE_SYS_WAIT_H
-#include <sys/wait.h>
+  #include <sys/wait.h>
 #endif
 
 #ifdef _MACOSX
 //#include "/usr/include/mach/i386/kern_return.h"		NOT PRESENT IN SIERRA
-#define panic __mach_panic
-#include <mach/mach.h>
-#undef panic
+  #define panic __mach_panic
+  #include <mach/mach.h>
+  #undef panic
 #endif
 
 #include "os_utilities.h"
 
 
-
-
-extern char **environ;					// was required by: Mac OSX (pre 10.5 ?)
+extern char** environ; // was required by: Mac OSX (pre 10.5 ?)
 
 
 cstr getUser()
@@ -78,10 +76,10 @@ cstr getEffUser()
 cstr hostName()
 {
 #ifdef _BSD
-	char s[MAXHOSTNAMELEN];
-	size_t size = MAXHOSTNAMELEN;
-	int mib[4] = { CTL_KERN, KERN_HOSTNAME };
-	sysctl( mib, 2, s, &size, nullptr, 0);
+	char   s[MAXHOSTNAMELEN];
+	size_t size	  = MAXHOSTNAMELEN;
+	int	   mib[4] = {CTL_KERN, KERN_HOSTNAME};
+	sysctl(mib, 2, s, &size, nullptr, 0);
 	return dupstr(s);
 
 #else
@@ -89,7 +87,7 @@ cstr hostName()
 	#define MAXHOSTNAMELEN 256
   #endif
 	char s[MAXHOSTNAMELEN];
-	gethostname(s,MAXHOSTNAMELEN);
+	gethostname(s, MAXHOSTNAMELEN);
 	return dupstr(s);
 #endif
 }
@@ -98,25 +96,25 @@ uint numCPUs() noexcept
 {
 #if 1
 	uint n = std::thread::hardware_concurrency();
-	return n?n:1;
+	return n ? n : 1;
 #else
-#ifdef _BSD
-	int    n;
-	size_t size = sizeof(n);
-	int mib[4] = { CTL_HW, HW_AVAILCPU };
-	sysctl( mib, 2, &n, &size, nullptr, 0);
-	if(n>=1) return n;
+  #ifdef _BSD
+	int	   n;
+	size_t size	  = sizeof(n);
+	int	   mib[4] = {CTL_HW, HW_AVAILCPU};
+	sysctl(mib, 2, &n, &size, nullptr, 0);
+	if (n >= 1) return n;
 
 	mib[1] = HW_NCPU;
-	sysctl( mib, NELEM(mib), &n, &size, nullptr, 0 );
+	sysctl(mib, NELEM(mib), &n, &size, nullptr, 0);
 
-	return n>=1 ? n : 1;
+	return n >= 1 ? n : 1;
 
-#elif defined(_LINUX)||defined(_SOLARIS)
+  #elif defined(_LINUX) || defined(_SOLARIS)
 	return sysconf(_SC_NPROCESSORS_ONLN);
-#else
-	#fixme!
-#endif
+  #else
+	#fixme !
+  #endif
 #endif
 }
 
@@ -127,21 +125,26 @@ uint numCPUs() noexcept
 // kio 2016-02-20: i have never seen values below 1.0 on OS X 10.9 and assume that
 // the sysload is updated on a user thread which doesn't subtract itself.
 //
-void sysLoad ( double load[3] )
+void sysLoad(double load[3])
 {
 	int n = getloadavg(load, 3);
-	if(n<3)
+	if (n < 3)
 	{
-		if(n<1) load[0] = 1.0;
-		if(n<2) load[1] = load[0];
-				load[2] = load[1];
+		if (n < 1) load[0] = 1.0;
+		if (n < 2) load[1] = load[0];
+		load[2] = load[1];
 	}
 #ifdef _MACOSX
 	static bool fixit = true;
-	if(fixit)
+	if (fixit)
 	{
-		if(load[0]<0.99) fixit = false;
-		else { load[0]--; load[1]--; load[2]--; }
+		if (load[0] < 0.99) fixit = false;
+		else
+		{
+			load[0]--;
+			load[1]--;
+			load[2]--;
+		}
 	}
 #endif
 }
@@ -153,33 +156,37 @@ void sysLoad ( double load[3] )
 // normalized (independent) uf num CPUs
 double cpuLoad()
 {
-	static double old_busy  = 0;
+	static double old_busy	= 0;
 	static double old_total = 0;
 
-	natural_t num_cpus;
+	natural_t			   num_cpus;
 	processor_info_array_t cpu_info;
 	mach_msg_type_number_t info_cnt;
-	kern_return_t err;
+	kern_return_t		   err;
 
 	err = host_processor_info(mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &num_cpus, &cpu_info, &info_cnt);
-	if(err != KERN_SUCCESS) { logline("host_processor_info returned %u", uint(err)); return 0; }
+	if (err != KERN_SUCCESS)
+	{
+		logline("host_processor_info returned %u", uint(err));
+		return 0;
+	}
 
-	double new_busy  = 0;
+	double new_busy	 = 0;
 	double new_total = 0;
 
-	for(uint cpu = 0; cpu < num_cpus; ++cpu)
+	for (uint cpu = 0; cpu < num_cpus; ++cpu)
 	{
-		integer_t* info = &cpu_info[cpu*CPU_STATE_MAX];
-		new_busy  += info[CPU_STATE_USER] + info[CPU_STATE_SYSTEM] + info[CPU_STATE_NICE];
+		integer_t* info = &cpu_info[cpu * CPU_STATE_MAX];
+		new_busy += info[CPU_STATE_USER] + info[CPU_STATE_SYSTEM] + info[CPU_STATE_NICE];
 		new_total += new_busy + info[CPU_STATE_IDLE];
 	}
 
 	size_t info_size = sizeof(*cpu_info) * info_cnt;
 	vm_deallocate(mach_task_self(), vm_address_t(cpu_info), info_size);
 
-	double rval = (new_busy-old_busy) / (new_total-old_total);
-	old_busy = new_busy;
-	old_total = new_total;
+	double rval = (new_busy - old_busy) / (new_total - old_total);
+	old_busy	= new_busy;
+	old_total	= new_total;
 	return rval / num_cpus;
 }
 #endif
@@ -193,48 +200,48 @@ time_t intCurrentTime()
 }
 
 
-time_t bootTime ( )
+time_t bootTime()
 {
 #ifdef _BSD
-	int mib[4] = { CTL_KERN, KERN_BOOTTIME };
+	int			   mib[4] = {CTL_KERN, KERN_BOOTTIME};
 	struct timeval data;
-	size_t size = sizeof(data);
-	sysctl ( mib, 2, &data, &size, nullptr, 0 );
+	size_t		   size = sizeof(data);
+	sysctl(mib, 2, &data, &size, nullptr, 0);
 
 	return data.tv_sec;
 
 #elif defined(_LINUX)
 	// Better way to do is use jiffies or get_cycles function
 	// time being will read /proc/uptime
-	FILE *fp;
-	long ut;
-	if((fp=fopen("/proc/uptime","r"))==nullptr)
+	FILE* fp;
+	long  ut;
+	if ((fp = fopen("/proc/uptime", "r")) == nullptr)
 	{
-		printf("Cannot open file /proc/uptime\n");	// -> FILE Stdout
-		return(-1);
+		printf("Cannot open file /proc/uptime\n"); // -> FILE Stdout
+		return (-1);
 	}
-	fscanf(fp,"%ld",&ut);
+	fscanf(fp, "%ld", &ut);
 	fclose(fp);
-	return intCurrentTime()-ut;
+	return intCurrentTime() - ut;
 #else
-	#fixme!
+  #fixme !
 #endif
 }
 
 
 #ifdef _LINUX
-# include <sys/sysinfo.h>
+  #include <sys/sysinfo.h>
 #endif
 
 #ifdef _BSD
-# include <mach/task.h>
-# include <mach/mach_init.h>
+  #include <mach/mach_init.h>
+  #include <mach/task.h>
 #endif
 
 #ifdef _WINDOWS
-# include <windows.h>
+  #include <windows.h>
 #else
-# include <sys/resource.h>
+  #include <sys/resource.h>
 #endif
 
 
@@ -243,7 +250,7 @@ time_t bootTime ( )
 // it will report just the resident set in RAM (if supported on that OS).
 // http://stackoverflow.com/questions/372484/how-do-i-programmatically-check-memory-use-in-a-fairly-portable-way-c-c
 //
-size_t memoryUsage (bool resident)
+size_t memoryUsage(bool resident)
 {
 #if defined(_LINUX)
 	// Ugh, getrusage doesn't work well on Linux.  Try grabbing info
@@ -253,14 +260,14 @@ size_t memoryUsage (bool resident)
 	// shared pages, text/code, data/stack, library, dirty pages.  The
 	// mem sizes should all be multiplied by the page size.
 
-	(void)resident;	// silence warning
+	(void)resident; // silence warning
 
 	FILE* file = fopen("/proc/self/statm", "r");
 	if (!file) return 0;
 
 	unsigned long vm = 0;
-	fscanf (file, "%lu", &vm);  // Just need the first num: vm size
-	fclose (file);
+	fscanf(file, "%lu", &vm); // Just need the first num: vm size
+	fclose(file);
 	return size_t(vm) * size_t(getpagesize());
 
 #elif defined(_BSD)
@@ -277,22 +284,13 @@ size_t memoryUsage (bool resident)
 	// see msdn.microsoft.com/en-us/library/ms683219(VS.85).aspx and the linked example
 	//
 	PROCESS_MEMORY_COUNTERS counters;
-	if (GetProcessMemoryInfo (GetCurrentProcess(), &counters, sizeof (counters)))
-		return counters.PagefileUsage;
+	if (GetProcessMemoryInfo(GetCurrentProcess(), &counters, sizeof(counters))) return counters.PagefileUsage;
 	else return 0;
 
 #else
-	#fixme!
+  #fixme !
 #endif
 }
-
-
-
-
-
-
-
-
 
 
 /* ==== Execute External Command File ===========================
@@ -313,181 +311,189 @@ size_t memoryUsage (bool resident)
 				childreturnederror:		 returned error code is part of custom ErrorText()
 				childterminatedbysignal: signal number is part of custom ErrorText()
 */
-str execCmd ( str const argv[], str const envv[] )
+str execCmd(const str argv[], const str envv[])
 {
 	assert(argv && argv[0] && *argv[0]);
 
-	errno=ok;
+	errno = ok;
 
-	const int R=0,W=1;
-	int pipout[2];
-	if ( pipe(pipout) != 0 )
+	const int R = 0, W = 1;
+	int		  pipout[2];
+	if (pipe(pipout) != 0)
 	{
-		assert(errno!=ok);
+		assert(errno != ok);
 		return nullptr;
 	}
 
-// preset result to "nothing"
+	// preset result to "nothing"
 	char* result = nullptr;
 
-// it seems, that the child can mess up the stdin stream settings
-// (and maybe stderr too) especially if execve() fails
-// so save them here and restore them afterwards							kio 2003-11-25
+	// it seems, that the child can mess up the stdin stream settings
+	// (and maybe stderr too) especially if execve() fails
+	// so save them here and restore them afterwards							kio 2003-11-25
 	struct termios old_stderr_termios;
 	struct termios old_stdin_termios;
-	bool restore_stdin  = tcgetattr(0,&old_stdin_termios ) != -1;
-	bool restore_stderr = tcgetattr(2,&old_stderr_termios) != -1;
+	bool		   restore_stdin  = tcgetattr(0, &old_stdin_termios) != -1;
+	bool		   restore_stderr = tcgetattr(2, &old_stderr_termios) != -1;
 
 	// TODO: ExecCmd() should search for cmd file prior to spawning
 
-// *** DOIT ***
+	// *** DOIT ***
 	pid_t child_id = fork();
-	switch ( child_id )
+	switch (child_id)
 	{
-	case -1:// error happened:
-			close(pipout[R]);
-			close(pipout[W]);
-			assert(errno!=ok);
-			break;
+	case -1: // error happened:
+		close(pipout[R]);
+		close(pipout[W]);
+		assert(errno != ok);
+		break;
 
-	case 0:	// child process:
+	case 0: // child process:
+	{
+		close(pipout[R]); // close unused fd
+		close(1);		  // close stdout
+		dup(pipout[W]);	  // becomes lowest unused fileid: stdout
+		close(pipout[W]); // close unused dup
+
+		// call cmd:
+		xlogline("ExecCmd(): exec %s", argv[0]);
+		execve(argv[0], argv, envv ? envv : (const str*)environ);
+
+		// call failed. try path completion
+		str path = getenv("PATH");
+		if (path && *argv[0] != '/')
 		{
-			close(pipout[R]);	// close unused fd
-			close(1);			// close stdout
-			dup(pipout[W]);		// becomes lowest unused fileid: stdout
-			close(pipout[W]);	// close unused dup
-
-			// call cmd:
-			xlogline("ExecCmd(): exec %s",argv[0]);
-			execve(argv[0],argv,envv?envv:(str const *)environ);
-
-			// call failed. try path completion
-			str path = getenv("PATH");
-			if (path&&*argv[0]!='/')
+			for (;;)
 			{
-				for(;;)
-				{
-					while(*path==':') path++;
-					char* dp = strchr(path,':');
-					if (!dp) dp = strchr(path,0);
-					if(dp==path) break;						// end of env.PATH reached: finally no success
+				while (*path == ':') path++;
+				char* dp = strchr(path, ':');
+				if (!dp) dp = strchr(path, 0);
+				if (dp == path) break; // end of env.PATH reached: finally no success
 
-					str cmd = catstr(substr(path,dp),"/",argv[0]);
-					xlogline("ExecCmd(): exec %s",cmd);
-					execve(cmd,argv,envv?envv:(str const *)environ);	// no return if success
-					path = dp;
-				}
+				str cmd = catstr(substr(path, dp), "/", argv[0]);
+				xlogline("ExecCmd(): exec %s", cmd);
+				execve(cmd, argv, envv ? envv : (const str*)environ); // no return if success
+				path = dp;
 			}
-
-			xlogline( "ExecCmd(%s) failed: %s", quotedstr(argv[0]), strerror(errno) );
-			if(errno==EFAULT) {xlogline("ExecCmd(): HINT: make shure the argv[] is NULL terminated!");}	// kio 2013-03-31
-			exit(errno);
 		}
 
-	default:// parent process
+		xlogline("ExecCmd(%s) failed: %s", quotedstr(argv[0]), strerror(errno));
+		if (errno == EFAULT)
 		{
-			close(pipout[W]);	// close unused fd
-
-			ssize_t result_size = 0;
-			ssize_t result_used = 0;
-			int		status;
-
-			for(;;)
-			{
-				if (result_used+100>result_size)
-				{
-					result_size += result_size/8 + 4000;
-					char* newbu = newstr(int(result_size));
-					memcpy ( newbu,result,result_used );
-					delete[] result;
-					result = newbu;
-				}
-
-				ssize_t n = read ( pipout[R], result+result_used, result_size-result_used-1 ); //log("[%i]",int(n));
-
-				if(n>0)		  { result_used += n; }
-				else if(n==0) { if(waitpid(child_id,&status,0)==child_id) { errno=ok; break; } }
-				else		  { if (errno!=EINTR&&errno!=EAGAIN) break; }
-			}
-
-			close(pipout[R]);	// close fd
-
-			if (errno==ok)
-			{
-				if ( WIFEXITED(status) )			// child process returned normally
-				{
-					if ( WEXITSTATUS(status)!=0 )	// child process returned error code
-					{
-						errno = childreturnederror;
-//                        SetError
-//                        (	childreturnederror,
-//                            usingstr( "%s returned exit code %i", quotedstr(argv[0]), int(WEXITSTATUS(status)) )
-//                        );
-					}
-				}
-				else if ( WIFSIGNALED(status) )		// child process terminated by signal
-				{
-						errno = childterminatedbysignal;
-//                        SetError
-//                        (	childterminatedbysignal,
-//                            usingstr( "%s terminated by signal %i", quotedstr(argv[0]), int(WTERMSIG(status)) )
-//                        );
-				}
-				else IERR();
-			}
-
-			result[result_used] = 0;
-		}
+			xlogline("ExecCmd(): HINT: make shure the argv[] is NULL terminated!");
+		} // kio 2013-03-31
+		exit(errno);
 	}
 
-// restore stream settings
-	if (restore_stderr) { tcsetattr(2,TCSADRAIN,&old_stderr_termios); xlogline("ExecCmd(): restored stderr"); }
-	if (restore_stdin)  { tcsetattr(0,TCSADRAIN,&old_stdin_termios);  xlogline("ExecCmd(): restored stdin");  }
+	default: // parent process
+	{
+		close(pipout[W]); // close unused fd
 
-// return result
+		ssize_t result_size = 0;
+		ssize_t result_used = 0;
+		int		status;
+
+		for (;;)
+		{
+			if (result_used + 100 > result_size)
+			{
+				result_size += result_size / 8 + 4000;
+				char* newbu = newstr(int(result_size));
+				memcpy(newbu, result, result_used);
+				delete[] result;
+				result = newbu;
+			}
+
+			ssize_t n = read(pipout[R], result + result_used, result_size - result_used - 1); //log("[%i]",int(n));
+
+			if (n > 0) { result_used += n; }
+			else if (n == 0)
+			{
+				if (waitpid(child_id, &status, 0) == child_id)
+				{
+					errno = ok;
+					break;
+				}
+			}
+			else
+			{
+				if (errno != EINTR && errno != EAGAIN) break;
+			}
+		}
+
+		close(pipout[R]); // close fd
+
+		if (errno == ok)
+		{
+			if (WIFEXITED(status)) // child process returned normally
+			{
+				if (WEXITSTATUS(status) != 0) // child process returned error code
+				{
+					errno = childreturnederror;
+					//                        SetError
+					//                        (	childreturnederror,
+					//                            usingstr( "%s returned exit code %i", quotedstr(argv[0]), int(WEXITSTATUS(status)) )
+					//                        );
+				}
+			}
+			else if (WIFSIGNALED(status)) // child process terminated by signal
+			{
+				errno = childterminatedbysignal;
+				//                        SetError
+				//                        (	childterminatedbysignal,
+				//                            usingstr( "%s terminated by signal %i", quotedstr(argv[0]), int(WTERMSIG(status)) )
+				//                        );
+			}
+			else IERR();
+		}
+
+		result[result_used] = 0;
+	}
+	}
+
+	// restore stream settings
+	if (restore_stderr)
+	{
+		tcsetattr(2, TCSADRAIN, &old_stderr_termios);
+		xlogline("ExecCmd(): restored stderr");
+	}
+	if (restore_stdin)
+	{
+		tcsetattr(0, TCSADRAIN, &old_stdin_termios);
+		xlogline("ExecCmd(): restored stdin");
+	}
+
+	// return result
 	return result;
 }
 
-str execCmd ( cstr cmd, ... )
+str execCmd(cstr cmd, ...)
 {
 	cstr* argv = new cstr[100];
-	argv[0] = cmd;
-	uint argc = 1;
+	argv[0]	   = cmd;
+	uint argc  = 1;
 
 	va_list va;
-	va_start(va,cmd);
+	va_start(va, cmd);
 
 	cstr arg;
-	do
-	{
-		if ((argc%100)==0)
+	do {
+		if ((argc % 100) == 0)
 		{
-			cstr* newargv = new cstr[argc+100];
-			memcpy(newargv,argv,argc*sizeof(cstr));
-			delete[]argv;
-			argv=newargv;
+			cstr* newargv = new cstr[argc + 100];
+			memcpy(newargv, argv, argc * sizeof(cstr));
+			delete[] argv;
+			argv = newargv;
 		}
 
-		arg = va_arg(va,cstr);
+		arg			 = va_arg(va, cstr);
 		argv[argc++] = arg;
 	}
 	while (arg);
 
 	va_end(va);
 
-	str result = execCmd((char*const*)argv);
-	delete[]argv;
+	str result = execCmd((char* const*)argv);
+	delete[] argv;
 	return result;
 }
-
-
-
-
-
-
-
-
-
-
-
-

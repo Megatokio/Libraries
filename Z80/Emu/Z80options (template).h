@@ -16,7 +16,7 @@
 	to keep the dummy read and write pages for the Z80 small
 	at the expense of some speed when the system is pageing memory.
 */
-#define CPU_PAGEBITS 12  // 4 kB
+#define CPU_PAGEBITS 12 // 4 kB
 
 
 /**	Define datatype used for bytes in the system's memory.
@@ -34,46 +34,18 @@ typedef uint16 CoreByte;
 #ifdef Z80_SOURCE
 // these are the default definitions as defined in Z80macros.h
 // and could be left out here:
-#define	OUTPUT(A,B)		{ INCR_CC(4); this->handle_output(cc-2,A,B); }
-#define	INPUT(A,B)		{ INCR_CC(4); B = this->handle_input(cc-2,A); }
-#define UPDATE()		{ cc_next_update = this->handle_update(cc, cc_exit); }
+  #define OUTPUT(A, B)                   \
+	{                                    \
+	  INCR_CC(4);                        \
+	  this->handle_output(cc - 2, A, B); \
+	}
+  #define INPUT(A, B)                    \
+	{                                    \
+	  INCR_CC(4);                        \
+	  B = this->handle_input(cc - 2, A); \
+	}
+  #define UPDATE()                                       \
+	{                                                    \
+	  cc_next_update = this->handle_update(cc, cc_exit); \
+	}
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

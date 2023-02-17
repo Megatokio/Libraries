@@ -9,44 +9,44 @@
 ucs2table legacy_charset_mac_roman =
 #include "legacy_charsets/mac_roman.h"
 
-ucs2table legacy_charset_ascii_ger =
+	ucs2table legacy_charset_ascii_ger =
 #include "legacy_charsets/ascii_ger.h"
 
-ucs2table legacy_charset_rtos =
+		ucs2table legacy_charset_rtos =
 #include "legacy_charsets/rtos.h"
 
-ucs2table legacy_charset_cp_437 =
+			ucs2table legacy_charset_cp_437 =
 #include "legacy_charsets/cp_437.h"
 
-ucs2table legacy_charset_atari_st =
+				ucs2table legacy_charset_atari_st =
 #include "legacy_charsets/atari_st.h"
 
 
-
-namespace ucs2 {
-
-char to_8bit (ucs2char c, ucs2table t) noexcept
+					namespace ucs2
 {
-	// convert UCS2 char -> 8-bit char
-
-	// quick test for mapping to same code:
-	if (c <= 0xFFu && c == t[c]) return char(c);
-
-	// search legacy table for mapping to c:
-	for (uint i=0; i<256; i++)
+	char to_8bit(ucs2char c, ucs2table t) noexcept
 	{
-		if (t[i] == ucs2char(c)) return char(i);
-	}
+		// convert UCS2 char -> 8-bit char
 
-	return _replacementchar();
-}
+		// quick test for mapping to same code:
+		if (c <= 0xFFu && c == t[c]) return char(c);
+
+		// search legacy table for mapping to c:
+		for (uint i = 0; i < 256; i++)
+		{
+			if (t[i] == ucs2char(c)) return char(i);
+		}
+
+		return _replacementchar();
+	}
 
 } // namespace
 
 
-namespace ucs4 {
+namespace ucs4
+{
 
-char to_8bit (ucs4char c, ucs2table t) noexcept
+char to_8bit(ucs4char c, ucs2table t) noexcept
 {
 	// convert UCS4 char -> 8-bit char
 
@@ -56,7 +56,7 @@ char to_8bit (ucs4char c, ucs2table t) noexcept
 	// search legacy table for mapping to c:
 	if (c <= 0xFFFFu)
 	{
-		for (uint i=0; i<256; i++)
+		for (uint i = 0; i < 256; i++)
 		{
 			if (t[i] == ucs2char(c)) return char(i);
 		}
@@ -65,18 +65,4 @@ char to_8bit (ucs4char c, ucs2table t) noexcept
 	return _replacementchar();
 }
 
-} // namespace
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+} // namespace ucs4

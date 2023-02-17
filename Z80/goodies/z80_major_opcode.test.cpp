@@ -3,14 +3,14 @@
 // https://opensource.org/licenses/BSD-2-Clause
 
 #undef NDEBUG
-#define SAFETY 2
+#define SAFETY	 2
 #define LOGLEVEL 1
-#include "kio/kio.h"
-#include "unix/FD.h"
-#include "cstrings/cstrings.h"
 #include "Templates/Array.h"
+#include "cstrings/cstrings.h"
+#include "kio/kio.h"
 #include "kio/util/defines.h"
 #include "main.h"
+#include "unix/FD.h"
 #include "z80_goodies.h"
 #include "z80_opcodes.h"
 
@@ -18,12 +18,11 @@
 struct TestSet
 {
 	uint8 major_opcode;
-	char instruction[15];
+	char  instruction[15];
 };
 
 
-static TestSet asm8080_tests[] =
-{
+static TestSet asm8080_tests[] = {
 	// tests for i8080
 	// asm8080 syntax
 
@@ -112,25 +111,24 @@ static TestSet asm8080_tests[] =
 	{CALL_M , "cm  NN"},  {CP_N , "cpi N"},
 };
 
-static TestSet z80_tests[] =
-{
+static TestSet z80_tests[] = {
 	// tests for i8080, Z80 and Z180
 
 	{NOP, "nop"},
 
-	{LD_BC_NN,	"ld bc,NN"},
+	{LD_BC_NN, "ld bc,NN"},
 	{ADD_HL_BC, "add hl,bc"},
-	{LD_DE_NN,	"ld de,NN"},
-	{ADD_HL_DE,	"add hl,de"},
-	{LD_HL_NN,	"ld hl,nn"},
-	{ADD_HL_HL,	"add hl,hl"},
-	{LD_SP_NN,	"ld sp,NN"},
-	{ADD_HL_SP,	"add hl,sp"},
+	{LD_DE_NN, "ld de,NN"},
+	{ADD_HL_DE, "add hl,de"},
+	{LD_HL_NN, "ld hl,nn"},
+	{ADD_HL_HL, "add hl,hl"},
+	{LD_SP_NN, "ld sp,NN"},
+	{ADD_HL_SP, "add hl,sp"},
 
-	{LD_xBC_A,  "ld (bc),a"},
-	{LD_A_xBC,  "ld a,(bc)"},
-	{LD_xDE_A,  "ld (de),a"},
-	{LD_A_xDE,  "ld a,(de)"},
+	{LD_xBC_A, "ld (bc),a"},
+	{LD_A_xBC, "ld a,(bc)"},
+	{LD_xDE_A, "ld (de),a"},
+	{LD_A_xDE, "ld a,(de)"},
 	{LD_xNN_HL, "ld (NN),hl"},
 	{LD_HL_xNN, "ld hl,(nn)"},
 	{LD_xNN_A,  "ld (nn),a"},
@@ -204,18 +202,18 @@ static TestSet z80_tests[] =
 
 	// non-prefix opcodes not present in i8080:
 
-	{DJNZ,		"djnz dis"},
-	{JR,		"jr   dis"},
-	{JR_Z,		"jr z, dis"},
-	{JR_NZ,		"jr nz,dis"},
-	{JR_C,		"jr c, dis"},
-	{JR_NC,		"jr nc,dis"},
-	{EX_AF_AF,	"ex af,af'"},
-	{EXX,		"exx"},
+	{DJNZ, "djnz dis"},
+	{JR, "jr   dis"},
+	{JR_Z, "jr z, dis"},
+	{JR_NZ, "jr nz,dis"},
+	{JR_C, "jr c, dis"},
+	{JR_NC, "jr nc,dis"},
+	{EX_AF_AF, "ex af,af'"},
+	{EXX, "exx"},
 
 	// prefix IX/IY opcodes:
 
-	{LD_HL_NN,  "ld ix,NN"},
+	{LD_HL_NN, "ld ix,NN"},
 	{LD_HL_xNN, "ld iy,(NN)"},
 	{LD_xNN_HL, "ld (NN),ix"},
 	{ADD_HL_BC, "add iy,bc"},
@@ -223,16 +221,16 @@ static TestSet z80_tests[] =
 	{ADD_HL_HL, "add iy,iy"},
 	{ADD_HL_HL, "add ix,ix"},
 	{ADD_HL_SP, "add ix,sp"},
-	{PUSH_HL,   "push iy"},
-	{POP_HL,    "pop ix"},
-	{JP_HL,     "jp  iy"},
-	{LD_SP_HL,  "ld sp,ix"},
-	{INC_HL ,   "inc iy"},
-	{DEC_HL ,   "dec ix"},
+	{PUSH_HL, "push iy"},
+	{POP_HL, "pop ix"},
+	{JP_HL, "jp  iy"},
+	{LD_SP_HL, "ld sp,ix"},
+	{INC_HL, "inc iy"},
+	{DEC_HL, "dec ix"},
 
-	{INC_xHL,   "inc (ix+dis)"},
-	{DEC_xHL,   "dec (iy+dis)"},
-	{LD_xHL_N,  "ld (ix+dis),N"},
+	{INC_xHL, "inc (ix+dis)"},
+	{DEC_xHL, "dec (iy+dis)"},
+	{LD_xHL_N, "ld (ix+dis),N"},
 
 	{LD_xHL_B, "ld (ix+dis),b"},
 	{LD_xHL_H, "ld (iy+dis),h"},
@@ -247,8 +245,8 @@ static TestSet z80_tests[] =
 	{SBC_xHL, "sbc a,(iy+dis)"},
 	{AND_xHL, "and a,(iy+dis)"},
 	{XOR_xHL, "xor a,(iy+dis)"},
-	{ OR_xHL,  "or a,(ix+dis)"},
-	{ CP_xHL,  "cp a,(ix+dis)"},
+	{OR_xHL, "or a,(ix+dis)"},
+	{CP_xHL, "cp a,(ix+dis)"},
 
 	// prefix CB opcodes:
 
@@ -322,10 +320,14 @@ static TestSet z80_tests[] =
 
 	// illegal CB and IXCB and ED opcodes
 
-	{SLL_B,  "sll b"},	{SLL_C,  "sll c"},
-	{SLL_D,  "sll d"},	{SLL_E,  "sll e"},
-	{SLL_H,  "sll h"},	{SLL_L,  "sll l"},
-	{SLL_A,  "sll a"},	{SLL_xHL,"sll (hl)"},
+	{SLL_B, "sll b"},
+	{SLL_C, "sll c"},
+	{SLL_D, "sll d"},
+	{SLL_E, "sll e"},
+	{SLL_H, "sll h"},
+	{SLL_L, "sll l"},
+	{SLL_A, "sll a"},
+	{SLL_xHL, "sll (hl)"},
 	{SLL_xHL, "sll (ix+dis)"},
 	{SLL_xHL, "sll (iy+dis)"},
 	//{OUT_xC_0, "out (c),0"},
@@ -352,31 +354,35 @@ static TestSet z80_tests[] =
 
 	{MLT_BC, "mlt bc"},
 	{MLT_DE, "mlt de"},
-	{TST_N,  "tst N"},
+	{TST_N, "tst N"},
 	{MLT_HL, "mlt hl"},
-	{TSTIO,  "tstio N"},
+	{TSTIO, "tstio N"},
 	{MLT_SP, "mlt sp"},
-	{SLP,    "slp"  },
+	{SLP, "slp"},
 
-	{OTIM,  "otim"},
-	{OTDM,  "otdm"},
+	{OTIM, "otim"},
+	{OTDM, "otdm"},
 	{OTIMR, "otimr"},
 	{OTDMR, "otdmr"},
 };
 
 
-
 #undef END
-#define END }catch(std::exception& e){num_errors++; logline("%s: %s",test->instruction,e.what());}
+#define END                                                                                                            \
+  }                                                                                                                    \
+  catch (std::exception & e)                                                                                           \
+  {                                                                                                                    \
+	num_errors++;                                                                                                      \
+	logline("%s: %s", test->instruction, e.what());                                                                    \
+  }
 
 
-static void test_disass_asm8080 (uint& num_tests, uint& num_errors)
+static void test_disass_asm8080(uint& num_tests, uint& num_errors)
 {
 	logIn("test major_opcode -- asm8080 syntax");
 
 	TestSet* test;
-	TRY
-	for (uint i=0; i < NELEM(asm8080_tests); )
+	TRY for (uint i = 0; i < NELEM(asm8080_tests);)
 	{
 		test = &asm8080_tests[i++];
 		assert(test->major_opcode == major_opcode_8080(test->instruction));
@@ -384,13 +390,12 @@ static void test_disass_asm8080 (uint& num_tests, uint& num_errors)
 	END
 }
 
-static void test_disass_z80 (uint& num_tests, uint& num_errors)
+static void test_disass_z80(uint& num_tests, uint& num_errors)
 {
 	logIn("test major_opcode -- Z80 syntax");
 
 	TestSet* test;
-	TRY
-	for (uint i=0; i < NELEM(z80_tests); )
+	TRY for (uint i = 0; i < NELEM(z80_tests);)
 	{
 		test = &z80_tests[i++];
 		assert(test->major_opcode == major_opcode(test->instruction));
@@ -398,17 +403,10 @@ static void test_disass_z80 (uint& num_tests, uint& num_errors)
 	END
 }
 
-void test_z80_major_opcode (uint& num_tests, uint& num_errors)
+void test_z80_major_opcode(uint& num_tests, uint& num_errors)
 {
 	logIn("test z80_major_opcode");
 
-	test_disass_asm8080(num_tests,num_errors);
-	test_disass_z80(num_tests,num_errors);
+	test_disass_asm8080(num_tests, num_errors);
+	test_disass_z80(num_tests, num_errors);
 }
-
-
-
-
-
-
-
