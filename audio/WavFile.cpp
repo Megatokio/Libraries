@@ -11,7 +11,7 @@
 #include "unix/FD.h"
 #include "Templates/Array.h"
 #include "WavFile.h"
-#include "audio/audio.h"
+#include "audio/convert_audio.h"
 
 
 WavFile::WavFile(cstr filepath) noexcept
