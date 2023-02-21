@@ -37,23 +37,28 @@ public:
 
 
 // recursive mutex lock:
-class RPLock : public std::mutex
+class RPLock : public std::recursive_mutex
 {
 public:
-	void lock() volatile { NV(this)->mutex::lock(); }
-	void unlock() volatile { NV(this)->mutex::unlock(); }
-	bool trylock() volatile { return NV(this)->mutex::try_lock(); } // true = success
+	void lock() volatile { NV(this)->recursive_mutex::lock(); }
+	void unlock() volatile { NV(this)->recursive_mutex::unlock(); }
+	bool trylock() volatile { return NV(this)->recursive_mutex::try_lock(); } // true = success
 };
 
 
 // =====================================================================
-// class which locks a PLock in it's ctor and
+// class which locks a PLock or RPLock in it's ctor and
 // unlocks it in it's dtor
 
-class PLocker : public std::lock_guard<PLock>
+class PLocker : public std::lock_guard<std::mutex>
 {
 public:
-	PLocker(volatile PLock& lock) : lock_guard(NV(lock)) {}
+	PLocker(volatile std::mutex& lock) : lock_guard(NV(lock)) {}
+};
+class RPLocker : public std::lock_guard<std::recursive_mutex>
+{
+public:
+	RPLocker(volatile RPLock& lock) : lock_guard(NV(lock)) {}
 };
 
 
