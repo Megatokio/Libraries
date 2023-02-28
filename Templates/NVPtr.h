@@ -5,7 +5,7 @@
 
 #include "kio/kio.h"
 #include "unix/FD.h"
-
+#include <type_traits>
 
 /*	NVPtr<T>
 	retains and locks a volatile object
@@ -95,14 +95,6 @@ public:
 		}
 		return *this;
 	}
-	NVPtr& operator=(ptr q)
-	{
-		assert(q == nullptr);
-		unlock();
-		p = nullptr;
-		return *this;
-	}
-
 
 	T* operator->() { return p; }
 	T& operator*() { return *p; }
@@ -146,6 +138,30 @@ template<class T>
 NVPtr<T> nvptr(volatile T* o)
 {
 	return NVPtr<T>(o);
+}
+
+template<class T>
+NVPtr<T> nvptr(std::shared_ptr<volatile T>& o)
+{
+	return NVPtr<T>(o.get());
+}
+
+
+// const cast for convenience:
+template<class T>
+T* NV(volatile T* o)
+{
+	return const_cast<T*>(o);
+}
+template<class T>
+T& NV(volatile T& o)
+{
+	return const_cast<T&>(o);
+}
+template<class T>
+T* NV(std::shared_ptr<volatile T>& o)
+{
+	return const_cast<T*>(o.get());
 }
 
 

@@ -9,19 +9,6 @@
 #include <thread>
 
 
-// convenience:
-template<class T>
-T* NV(volatile T* o)
-{
-	return const_cast<T*>(o);
-}
-template<class T>
-T& NV(volatile T& o)
-{
-	return const_cast<T&>(o);
-}
-
-
 // =====================================================================
 // mutex (mutually exclusive lockable lock)
 // lock can only be released by lock owner
@@ -29,6 +16,8 @@ T& NV(volatile T& o)
 // non-recursive mutex lock:
 class PLock : public std::mutex
 {
+	static constexpr PLock* NV(volatile PLock* p) { return const_cast<PLock*>(p); }
+
 public:
 	void lock() volatile { NV(this)->mutex::lock(); }
 	void unlock() volatile { NV(this)->mutex::unlock(); }
@@ -39,6 +28,8 @@ public:
 // recursive mutex lock:
 class RPLock : public std::recursive_mutex
 {
+	static constexpr RPLock* NV(volatile RPLock* p) { return const_cast<RPLock*>(p); }
+
 public:
 	void lock() volatile { NV(this)->recursive_mutex::lock(); }
 	void unlock() volatile { NV(this)->recursive_mutex::unlock(); }
@@ -53,12 +44,12 @@ public:
 class PLocker : public std::lock_guard<std::mutex>
 {
 public:
-	PLocker(volatile std::mutex& lock) : lock_guard(NV(lock)) {}
+	PLocker(volatile std::mutex& lock) : lock_guard(const_cast<std::mutex&>(lock)) {}
 };
 class RPLocker : public std::lock_guard<std::recursive_mutex>
 {
 public:
-	RPLocker(volatile RPLock& lock) : lock_guard(NV(lock)) {}
+	RPLocker(volatile std::recursive_mutex& lock) : lock_guard(const_cast<std::recursive_mutex&>(lock)) {}
 };
 
 
