@@ -38,18 +38,15 @@ public:
 
 
 // =====================================================================
-// class which locks a PLock or RPLock in it's ctor and
+// class which locks a mutex, PLock or similar in it's ctor and
 // unlocks it in it's dtor
 
-class PLocker : public std::lock_guard<std::mutex>
+template<typename MUTEX>
+class PLocker : public std::lock_guard<MUTEX>
 {
 public:
-	PLocker(volatile std::mutex& lock) : lock_guard(const_cast<std::mutex&>(lock)) {}
-};
-class RPLocker : public std::lock_guard<std::recursive_mutex>
-{
-public:
-	RPLocker(volatile std::recursive_mutex& lock) : lock_guard(const_cast<std::recursive_mutex&>(lock)) {}
+	PLocker(volatile MUTEX& lock) : std::lock_guard<MUTEX>(const_cast<MUTEX&>(lock)) {}
+	PLocker(volatile MUTEX* lock) : std::lock_guard<MUTEX>(*const_cast<MUTEX*>(lock)) {}
 };
 
 
