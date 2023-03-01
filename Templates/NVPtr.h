@@ -4,8 +4,7 @@
 // https://opensource.org/licenses/BSD-2-Clause
 
 #include "kio/kio.h"
-#include "unix/FD.h"
-#include <type_traits>
+#include <mutex>
 
 
 /*	NVPtr<T>
@@ -60,9 +59,14 @@ public:
 	NO_COPY(NVPtr);
 	NVPtr() : p(nullptr) {}
 	NVPtr(NVPtr&& q) : p(q.p) { q.p = nullptr; }
-	NVPtr(vT* p) : p(const_cast<T*>(p)) { lock(); }
-	NVPtr(vT& q) : p(const_cast<T*>(&q)) { lock(); }
+	NVPtr(vT* p) : p(NV(p)) { lock(); }
+	NVPtr(vT& q) : p(NV(&q)) { lock(); }
 	~NVPtr() { unlock(); }
+
+	NVPtr(vT* p, int nsec) : p(NV(p))
+	{
+		if (p && !p->trylock(nsec)) p = nullptr;
+	}
 
 	NVPtr& operator=(NVPtr&& q)
 	{
@@ -98,9 +102,15 @@ public:
 	operator bool() const { return p; }
 };
 
+template<>
+inline NVPtr<std::timed_mutex>::NVPtr(volatile std::timed_mutex* p, int nsec) : p(NV(p))
+{
+	if (p && !NV(p)->try_lock_for(std::chrono::nanoseconds(nsec))) p = nullptr;
+}
+
 
 // convenience:
-// (auto deduces type)
+// (auto deduced type)
 
 template<class T>
 NVPtr<T> nvptr(volatile T* o)
