@@ -74,7 +74,7 @@ ON_INIT([] {
 // current pool and linked list of all pools:
 static thread_local struct CurrentPoolPtr
 {
-	TempMemPool* pool;
+	TempMemPool* pool = nullptr;
 	CurrentPoolPtr() : pool(new TempMemPool) { debugstr("tempmem: thread-local ctor\n"); }
 	~CurrentPoolPtr()
 	{
