@@ -958,7 +958,8 @@ void openLogfile(
 
 	unlock();
 
-	logline("------------------------------------\nLogfile opened\n");
+	logline("------------------------------------\nLogfile opened");
+	logline("logfile = %s\n", filepath);
 
 	if (logrotate != NEVER && max_logfiles) purge_old_logfiles(filepath + strlen(dirpath));
 }
