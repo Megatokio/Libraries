@@ -218,8 +218,12 @@
   #define _sizeof_int		  4
   #define _sizeof_long		  8
   #define _sizeof_float		  4
-  #define _sizeof_double	  8
-  #define _sizeof_long_double 16
+  #define _sizeof_double	  8  
+  #ifdef _MACOSX
+    #define _sizeof_long_double 8
+  #else
+    #define _sizeof_long_double 16
+  #endif
   #define _sizeof_pointer	  8
   #define _MAX_ALIGNMENT	  8
   #define _ALIGNMENT_REQUIRED 1 // FIXME
