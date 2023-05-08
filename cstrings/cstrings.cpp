@@ -1022,8 +1022,8 @@ str unhexstr(cstr s) noexcept
 	return z - n;
 }
 
-static const int8 base64[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-//static const int8 base64url[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+static const char base64[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+//static const char base64url[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 #define x 0xff
 static const uint8 unbase64[128] = {
 	x,	x,	x,	x,	x,	x,	x,	x,	x,	x,	x,	x,	x,	x,	x,	x,	x,	x,	x,	x,	x,	x,	x,	x,	x,	x,
