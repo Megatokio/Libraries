@@ -21,6 +21,8 @@
   #ifndef EBAS
 	#ifdef ELAST
 	  #define EBAS ELAST
+	#elif defined(__ELASTERROR)
+ 	  #define EBAS __ELASTERROR
 	#else
 	  #define EBAS 7400
 	#endif
