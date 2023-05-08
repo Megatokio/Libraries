@@ -327,15 +327,32 @@ str numstr(uint64 n, uint base, cstr digits) noexcept
 	return newcopy(p);
 }
 
-str binstr(uint value, cstr b0, cstr b1) noexcept
+str binstr(uint32 value, cstr b0, cstr b1) noexcept
 {
 	// Convert number to binary string
 
 	assert(b0 && b1);
 	uint n = uint(strlen(b0));
 	assert(n == strlen(b1));
-	str s = tempstr(n);
-	memcpy(s, b0, n);
+	str s = dupstr(b0);
+
+	while (n--)
+	{
+		if (b0[n] == b1[n]) continue;
+		if (value & 1) s[n] = b1[n];
+		value = value >> 1;
+	}
+	return s;
+}
+
+str binstr(uint64 value, cstr b0, cstr b1) noexcept
+{
+	// Convert number to binary string
+
+	assert(b0 && b1);
+	uint n = uint(strlen(b0));
+	assert(n == strlen(b1));
+	str s = dupstr(b0);
 
 	while (n--)
 	{

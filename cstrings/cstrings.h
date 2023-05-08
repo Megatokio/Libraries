@@ -153,7 +153,8 @@ inline str	tostr(long long n) noexcept { return usingstr("%lli", n); }
 inline str	tostr(unsigned long long n) noexcept { return usingstr("%llu", n); }
 inline cstr tostr(cstr s) noexcept { return s ? quotedstr(s) : "nullptr"; }
 
-extern str binstr(uint n, cstr b0 = "00000000", cstr b1 = "11111111") noexcept;
+extern str binstr(uint32 n, cstr b0 = "00000000", cstr b1 = "11111111") noexcept;
+extern str binstr(uint64 n, cstr b0 = "00000000", cstr b1 = "11111111") noexcept;
 extern str hexstr(uint32 n, uint len) noexcept;
 extern str hexstr(uint64 n, uint len) noexcept;
 
@@ -172,6 +173,16 @@ template<typename T>
 inline str_if_Tgt4 hexstr(T n, uint len) noexcept
 {
 	return hexstr(uint64(n), len);
+}
+template<typename T>
+inline str_if_Tle4 binstr(T n, cstr b0 = "00000000", cstr b1 = "11111111") noexcept
+{
+	return binstr(uint32(n), b0, b1);
+}
+template<typename T>
+inline str_if_Tgt4 binstr(T n, cstr b0 = "00000000", cstr b1 = "11111111") noexcept
+{
+	return binstr(uint64(n), b0, b1);
 }
 
 extern str hexstr(cptr, uint len) noexcept;
