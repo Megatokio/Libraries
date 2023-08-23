@@ -125,6 +125,7 @@ inline void tolower(str s) noexcept
 extern str	upperstr(cstr) noexcept;
 extern str	lowerstr(cstr) noexcept;
 extern str	replacedstr(cstr, char oldchar, char newchar) noexcept;
+extern cstr replacedstr(cstr, cstr oldtext, cstr newtext) noexcept;
 extern str	quotedstr(cstr) noexcept;
 extern str	unquotedstr(cstr) noexcept; // sets errno
 extern str	escapedstr(cstr) noexcept;

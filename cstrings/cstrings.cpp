@@ -155,6 +155,38 @@ str replacedstr(cstr s, char old, char nju) noexcept
 	return t;
 }
 
+cstr replacedstr(cstr q, cstr old, cstr nju) noexcept
+{
+	// Replace any occurance of one text by another
+	// returns the original string if no replacements were made
+
+	assert(old && nju);
+
+	if (!*old) return q;	 // if old is empty (instead of assertion)
+	if (!q || !*q) return q; // if target string is empty
+	if (eq(old, nju)) return q;
+
+	size_t oldlen = strlen(old);
+	size_t njulen = strlen(nju);
+
+	uint count = 0;
+	for (cptr p = find(q, old); p; p = find(p + oldlen, old)) { count++; }
+	if (count == 0) return q;
+
+	str rval = tempstr(strlen(q) - count * oldlen + count * njulen);
+	ptr z	 = rval;
+	for (cptr p = find(q, old); p; p = find(p + oldlen, old))
+	{
+		size_t n = size_t(p - q);
+		memcpy(z, q, n);
+		memcpy(z + n, nju, njulen);
+		z += n + njulen;
+		q += n + oldlen;
+	}
+	strcpy(z, q);
+	return rval;
+}
+
 str lowerstr(cstr s) noexcept
 {
 	// Convert a string to all lower case

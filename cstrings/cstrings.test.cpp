@@ -280,6 +280,22 @@ void test_cstrings(uint& num_tests, uint& num_errors)
 	TRY
 		assert(eq(replacedstr("Beet",'e','o'),"Boot"));
 	END
+			
+	TRY
+		assert(eq(replacedstr("minFooxyz","Foo","Bar"),"minBarxyz"));
+		assert(eq(replacedstr("abcdef","abc","ABC"),"ABCdef"));
+		assert(eq(replacedstr("abcdef","def","DEF"),"abcDEF"));
+		assert(eq(replacedstr("abcdef","abd","fff"),"abcdef"));
+		assert(eq(replacedstr("abcabcabcdef","abc","ABC"),"ABCABCABCdef"));
+		assert(eq(replacedstr("111111111","111","2"),"222"));
+		assert(eq(replacedstr("abcdef","bcde","X"),"aXf"));
+		assert(eq(replacedstr("xyyyz","y","123"),"x123123123z"));		
+		assert(eq(replacedstr("","f00","xx"),""));
+		assert(eq(replacedstr("abcdef","bc","bc"),"abcdef"));
+		assert(eq(replacedstr("abcdef","BC","bc"),"abcdef"));
+		assert(eq(replacedstr("foooo","foo","f"),"foo"));
+		assert(eq(replacedstr("abcdef","cd","xyz"),"abxyzef")); 
+	END 
 
 	TRY
 		assert(eq(escapedstr("123\tabc\n"),"123\\tabc\\n"));
