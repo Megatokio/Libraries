@@ -67,6 +67,17 @@ cptr rfind(cstr target, cstr search) noexcept
 	return nullptr; // not found
 }
 
+cptr rfind(cstr start, cstr end, char c) noexcept
+{
+	// return pointer to last occurence of c or NULL
+
+	while (end >= start)
+	{
+		if (*--end == c) return end;
+	}
+	return nullptr;
+}
+
 str spacestr(int n, char c) noexcept
 {
 	// Create and clear a string

@@ -59,9 +59,11 @@ inline bool le(cstr a, cstr b) noexcept { return !gt(a, b); }
 inline bool ge(cstr a, cstr b) noexcept { return !lt(a, b); }
 
 extern cptr find(cstr target, cstr search) noexcept;
-extern cptr rfind(cstr target, cstr search) noexcept;
 inline ptr	find(str target, cstr search) noexcept { return ptr(find(cstr(target), search)); }
+extern cptr rfind(cstr target, cstr search) noexcept;
 inline ptr	rfind(str target, cstr search) noexcept { return ptr(rfind(cstr(target), search)); }
+extern cptr rfind(cstr start, cstr end, char c) noexcept;
+inline cptr rfind(cstr target, char c) noexcept { return target ? rfind(target, strchr(target, 0), c) : target; }
 extern bool startswith(cstr, cstr) noexcept;
 extern bool endswith(cstr, cstr) noexcept;
 inline bool contains(cstr z, cstr s) noexcept { return find(z, s); }
