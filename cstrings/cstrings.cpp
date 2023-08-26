@@ -67,6 +67,17 @@ cptr rfind(cstr target, cstr search) noexcept
 	return nullptr; // not found
 }
 
+cptr rfind(cstr start, cstr end, char c) noexcept
+{
+	// return pointer to last occurence of c or NULL
+
+	while (end >= start)
+	{
+		if (*--end == c) return end;
+	}
+	return nullptr;
+}
+
 str spacestr(int n, char c) noexcept
 {
 	// Create and clear a string
@@ -340,7 +351,7 @@ str numstr(uint32 n, uint base, cstr digits) noexcept
 		n /= base;
 	}
 	while (n);
-	return newcopy(p);
+	return dupstr(p);
 }
 
 str numstr(uint64 n, uint base, cstr digits) noexcept
@@ -356,7 +367,7 @@ str numstr(uint64 n, uint base, cstr digits) noexcept
 		n /= base;
 	}
 	while (n);
-	return newcopy(p);
+	return dupstr(p);
 }
 
 str binstr(uint32 value, cstr b0, cstr b1) noexcept
@@ -572,11 +583,12 @@ str escapedstr(cstr s0) noexcept
 	static const char ec[] = "\\\"abfnrtv";		   // escape characters
 
 	if (!s0 || !*s0) return emptystr;
-	z = s = str(s0);
+	z = s = const_cast<str>(s0);
 
 	while ((c = *z))
 	{
-		if (uchar(c) >= ' ' && c != 0x7F && c != '\\' && c != '\"')
+		if (uchar(c - 0x20) <= 0x7E - 0x20 && c != '\\' && c != '\"')
+		//if (uchar(c) >= ' ' && c != 0x7F && c != '\\' && c != '\"')
 		{
 			z++;
 			continue;
@@ -594,11 +606,11 @@ str escapedstr(cstr s0) noexcept
 		}
 
 		char oc[] = "\\000";
-		oc[1]	  = '0' + (c >> 6);
+		oc[1]	  = '0' + (uchar(c) >> 6);
 		c &= (1 << 6) - 1;
-		oc[2] = '0' + (c >> 3);
+		oc[2] = '0' + (uchar(c) >> 3);
 		c &= (1 << 3) - 1;
-		oc[3] = '0' + (c >> 0);
+		oc[3] = '0' + (uchar(c) >> 0);
 		q	  = s;
 		s	  = catstr(substr(s, z), oc, z + 1);
 		z += 4 + (s - q);
@@ -981,7 +993,7 @@ bool gt(cptr a, cptr b) noexcept
 	}
 }
 
-bool gt_tolower(cptr a, cptr b) noexcept
+bool lcgt(cptr a, cptr b) noexcept
 {
 	while (*a && to_lower(*a) == to_lower(*b))
 	{
@@ -1016,6 +1028,68 @@ bool ne(cptr s, cptr t) noexcept
 	else
 	{
 		return (s && *s) || (t && *t); // nullptr == ""
+	}
+}
+
+bool lceq(cstr s, cstr t) noexcept
+{
+	if (s && t)
+	{
+		while (*s)
+		{
+			if (to_lower(*s++) != to_lower(*t++)) return false;
+		}
+		return *t == 0;
+	}
+	{
+		return !(s && *s) && !(t && *t); // nullptr == ""
+	}
+}
+
+cptr lcfind(cstr s, char c) noexcept
+{
+	for (c = to_lower(c); *s; s++)
+		if (to_lower(*s) == c) return s;
+	return c == 0 ? s : nullptr;
+}
+
+bool fnmatch(cstr pattern, cstr path, bool casefold) noexcept
+{
+	if (!pattern || !*pattern) return true; // no pattern matches any path
+
+	auto* eq = casefold ? [](char a, char b) { return to_lower(a) == to_lower(b); } : //
+						  [](char a, char b) { return a == b; };
+
+	for (;;)
+	{
+		char c = *pattern++;
+		if (c == 0) return *path == 0;
+
+		if (c == '*')
+		{
+		a:
+			c = *pattern++;			 // next char after '*'
+			if (c == 0) return true; // final '*' matches any remainder in path
+			if (c == '*') goto a;	 // "**"  == "*"
+			if (c == '?')			 // "*?"  ==  "?*"
+			{
+				if (*path++ != 0) goto a;
+				else return false;
+			}
+
+			while ((path = casefold ? lcfind(path, c) : find(path, c)))
+			{
+				if (fnmatch(pattern, ++path, casefold)) return true;
+			}
+
+			return false;
+		}
+
+		if (c == '?')
+		{
+			if (*path++ == 0) return false;
+		}
+		else if (!eq(c, *path++)) return false;
 	}
 }
 

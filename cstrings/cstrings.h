@@ -9,42 +9,50 @@ template<typename T>
 class Array;
 
 
-inline bool is_space(char c) noexcept { return uchar(c) <= ' ' && c != 0; }
-inline bool is_letter(char c) noexcept { return uchar((c | 0x20) - 'a') <= 'z' - 'a'; }
-inline bool is_control(char c) noexcept { return uchar(c) < 0x20 || uchar(c) == 0x7f; }
-inline bool is_printable(char c) noexcept { return uchar(c) >= 0x20 && uchar(c) != 0x7f; }
-inline bool is_ascii(char c) noexcept { return uchar(c) <= 0x7F; }
-inline bool is_utf8_fup(char c) noexcept { return schar(c) < schar(0xc0); } // prefer utf8::is_fup(c) if included
-inline bool is_uppercase(char c) noexcept { return uchar(c - 'A') <= 'Z' - 'A'; }
-inline bool is_lowercase(char c) noexcept { return uchar(c - 'a') <= 'z' - 'a'; }
-inline char to_upper(char c) noexcept { return uchar(c - 'a') <= 'z' - 'a' ? c & ~0x20 : c; }
-inline char to_lower(char c) noexcept { return uchar(c - 'A') <= 'Z' - 'A' ? c | 0x20 : c; }
+inline constexpr bool is_space(char c) noexcept { return uchar(c) <= ' ' && c != 0; }
+inline constexpr bool is_letter(char c) noexcept { return uchar((c | 0x20) - 'a') <= 'z' - 'a'; }
+inline constexpr bool is_control(char c) noexcept { return uchar(c) < 0x20 || uchar(c) == 0x7f; }
+inline constexpr bool is_printable(char c) noexcept { return uchar(c) >= 0x20 && uchar(c) != 0x7f; }
+inline constexpr bool is_ascii(char c) noexcept { return uchar(c) <= 0x7F; }
+inline constexpr bool is_utf8_fup(char c) noexcept
+{
+	return schar(c) < schar(0xc0);
+} // prefer utf8::is_fup(c) if included
+inline constexpr bool is_uppercase(char c) noexcept { return uchar(c - 'A') <= 'Z' - 'A'; }
+inline constexpr bool is_lowercase(char c) noexcept { return uchar(c - 'a') <= 'z' - 'a'; }
+inline constexpr char to_upper(char c) noexcept { return uchar(c - 'a') <= 'z' - 'a' ? c & ~0x20 : c; }
+inline constexpr char to_lower(char c) noexcept { return uchar(c - 'A') <= 'Z' - 'A' ? c | 0x20 : c; }
 
-inline bool is_bin_digit(char c) noexcept { return uchar(c - '0') <= '1' - '0'; } // { return (c|1)=='1'; }
-inline bool is_oct_digit(char c) noexcept { return uchar(c - '0') <= '7' - '0'; } // { return (c|7)=='7'; }
-inline bool is_dec_digit(char c) noexcept { return uchar(c - '0') <= '9' - '0'; }
-inline bool is_hex_digit(char c) noexcept
+inline constexpr bool is_bin_digit(char c) noexcept { return uchar(c - '0') <= '1' - '0'; } // { return (c|1)=='1'; }
+inline constexpr bool is_oct_digit(char c) noexcept { return uchar(c - '0') <= '7' - '0'; } // { return (c|7)=='7'; }
+inline constexpr bool is_dec_digit(char c) noexcept { return uchar(c - '0') <= '9' - '0'; }
+inline constexpr bool is_hex_digit(char c) noexcept
 {
 	return uchar(c - '0') <= '9' - '0' || uchar((c | 0x20) - 'a') <= 'f' - 'a';
 }
 
-inline bool no_bin_digit(char c) noexcept { return uchar(c - '0') > '1' - '0'; } // { return (c|1)=='1'; }
-inline bool no_oct_digit(char c) noexcept { return uchar(c - '0') > '7' - '0'; } // { return (c|7)=='7'; }
-inline bool no_dec_digit(char c) noexcept { return uchar(c - '0') > '9' - '0'; }
-inline bool no_hex_digit(char c) noexcept { return uchar(c - '0') > '9' - '0' && uchar((c | 0x20) - 'a') > 'f' - 'a'; }
+inline constexpr bool no_bin_digit(char c) noexcept { return uchar(c - '0') > '1' - '0'; } // { return (c|1)=='1'; }
+inline constexpr bool no_oct_digit(char c) noexcept { return uchar(c - '0') > '7' - '0'; } // { return (c|7)=='7'; }
+inline constexpr bool no_dec_digit(char c) noexcept { return uchar(c - '0') > '9' - '0'; }
+inline constexpr bool no_hex_digit(char c) noexcept
+{
+	return uchar(c - '0') > '9' - '0' && uchar((c | 0x20) - 'a') > 'f' - 'a';
+}
 
-inline uint digit_val(char c) noexcept __attribute__((deprecated));	  // --> dec_digit_value()
-inline uint digit_value(char c) noexcept __attribute__((deprecated)); // --> hex_digit_value()
+inline constexpr uint digit_val(char c) noexcept __attribute__((deprecated));	// --> dec_digit_value()
+inline constexpr uint digit_value(char c) noexcept __attribute__((deprecated)); // --> hex_digit_value()
 
-inline uint dec_digit_value(char c) noexcept { return uchar(c - '0'); } // char -> digit value: non-digits ≥ 10
-inline uint hex_digit_value(char c) noexcept
+inline constexpr uint dec_digit_value(char c) noexcept
+{
+	return uchar(c - '0');
+} // char -> digit value: non-digits ≥ 10
+inline constexpr uint hex_digit_value(char c) noexcept
 {
 	return c <= '9' ? uchar(c - '0') : uchar((c | 0x20) - 'a') + 10;
 } // non-digits ≥ 36
-inline char hexchar(int n) noexcept
+inline constexpr char hexchar(int n) noexcept
 {
-	n &= 15;
-	return char((n >= 10 ? 'A' - 10 : '0') + n);
+	return char(((n & 15) >= 10 ? 'A' - 10 : '0') + (n & 15));
 } // masked legal
 
 
@@ -52,16 +60,22 @@ inline char hexchar(int n) noexcept
 inline uint strLen(cstr s) noexcept { return s ? uint(strlen(s)) : 0; } // c-string
 extern bool lt(cstr, cstr) noexcept;
 extern bool gt(cstr, cstr) noexcept;
-extern bool gt_tolower(cstr, cstr) noexcept;
 extern bool eq(cstr, cstr) noexcept;
 extern bool ne(cstr, cstr) noexcept;
 inline bool le(cstr a, cstr b) noexcept { return !gt(a, b); }
 inline bool ge(cstr a, cstr b) noexcept { return !lt(a, b); }
+extern bool lcgt(cstr, cstr) noexcept;
+extern bool lceq(cstr s, cstr t) noexcept;
+extern bool fnmatch(cstr pattern, cstr path, bool casefold) noexcept;
 
 extern cptr find(cstr target, cstr search) noexcept;
-extern cptr rfind(cstr target, cstr search) noexcept;
 inline ptr	find(str target, cstr search) noexcept { return ptr(find(cstr(target), search)); }
+inline ptr	find(str target, char c) noexcept { return strchr(target, c); }
+inline cptr find(cstr target, char c) noexcept { return strchr(target, c); }
+extern cptr rfind(cstr target, cstr search) noexcept;
 inline ptr	rfind(str target, cstr search) noexcept { return ptr(rfind(cstr(target), search)); }
+extern cptr rfind(cstr start, cstr end, char c) noexcept;
+inline cptr rfind(cstr target, char c) noexcept { return target ? rfind(target, strchr(target, 0), c) : target; }
 extern bool startswith(cstr, cstr) noexcept;
 extern bool endswith(cstr, cstr) noexcept;
 inline bool contains(cstr z, cstr s) noexcept { return find(z, s); }
@@ -143,6 +157,7 @@ extern cstr detabstr(cstr, uint tabs) noexcept; // may return original string
 extern str usingstr(cstr fmt, va_list) noexcept __printflike(1, 0);
 extern str usingstr(cstr fmt, ...) noexcept __printflike(1, 2);
 
+inline cstr tostr(bool f) noexcept { return f ? "true" : "false"; }
 inline str	tostr(float n) noexcept { return usingstr("%.10g", double(n)); }
 inline str	tostr(double n) noexcept { return usingstr("%.14g", n); }
 inline str	tostr(long double n) noexcept { return usingstr("%.22Lg", n); }
