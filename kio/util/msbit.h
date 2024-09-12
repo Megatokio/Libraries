@@ -13,7 +13,7 @@
 		note:	msbit(n=1) = 0
 		caveat:	msbit(n=0) = 0		// illegal argument!
 */
-inline int msbit(uint8 n) noexcept
+inline constexpr int msbit(uint8 n) noexcept
 {
 	int b = 0, i = 4;
 	do {
@@ -26,7 +26,7 @@ inline int msbit(uint8 n) noexcept
 	while ((i >>= 1));
 	return b;
 } // 0 ..  7
-inline int msbit(uint16 n) noexcept
+inline constexpr int msbit(uint16 n) noexcept
 {
 	int b = 0, i = 8;
 	do {
@@ -39,7 +39,7 @@ inline int msbit(uint16 n) noexcept
 	while ((i >>= 1));
 	return b;
 } // 0 .. 15
-inline int msbit(uint32 n) noexcept
+inline constexpr int msbit(uint32 n) noexcept
 {
 	int b = 0, i = 16;
 	do {
@@ -52,7 +52,7 @@ inline int msbit(uint32 n) noexcept
 	while ((i >>= 1));
 	return b;
 } // 0 .. 31
-inline int msbit(uint64 n) noexcept
+inline constexpr int msbit(uint64 n) noexcept
 {
 	int b = 0, i = 32;
 	do {
