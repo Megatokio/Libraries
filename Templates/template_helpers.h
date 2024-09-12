@@ -22,10 +22,10 @@ struct select_type<true, T1, T2>
 
 
 template<typename T>
-struct has_oper_star
+struct has_operator_star
 {
 	// test whether type T has member function operator*():
-	// has_oper_star<T>::value = true|false
+	// has_operator_star<T>::value = true|false
 
 	struct Foo
 	{};
@@ -33,6 +33,22 @@ struct has_oper_star
 	static Foo test(...);
 	template<typename C>
 	static decltype(*std::declval<C>()) test(int);
+
+	static constexpr bool value = !std::is_same<Foo, decltype(test<T>(99))>::value;
+};
+
+template<typename T>
+struct has_operator_lt
+{
+	// test whether function lt() for type T exists:
+	// has_operator_lt<T>::value = true|false
+
+	struct Foo
+	{};
+	template<typename C>
+	static Foo test(...);
+	template<typename C>
+	static decltype(lt(std::declval<C>(), std::declval<C>())) test(int);
 
 	static constexpr bool value = !std::is_same<Foo, decltype(test<T>(99))>::value;
 };
@@ -157,9 +173,9 @@ static_assert(!has_serialize<Foo>::value, "booboo");
 static_assert(has_deserialize<FooWithDeserialize>::value, "booboo");
 static_assert(!has_deserialize<Foo>::value, "booboo");
 
-static_assert(has_oper_star<int*>::value, "");
-static_assert(!has_oper_star<int>::value, "");
-static_assert(!has_oper_star<int&>::value, "");
+static_assert(has_operator_star<int*>::value, "");
+static_assert(!has_operator_star<int>::value, "");
+static_assert(!has_operator_star<int&>::value, "");
 }; // namespace DebugTemplateHelpers
 
 }; // namespace kio
