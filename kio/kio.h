@@ -115,9 +115,9 @@ static const char nl = '\n';
   #define NELEM(feld) (sizeof(feld) / sizeof((feld)[0])) // UNSIGNED !!
 
   #ifndef __printflike
-		// argument positions start at 1
-		// attn: member functions have an invisible first 'this' argument
-		// use firstvararg=0 for va_arg
+	// argument positions start at 1
+	// attn: member functions have an invisible first 'this' argument
+	// use firstvararg=0 for va_arg
 	#define __printflike(fmtarg, firstvararg) __attribute__((__format__(printf, fmtarg, firstvararg)))
   #endif
 
@@ -157,17 +157,38 @@ struct on_init
 
 /* ==== Code checking depending on SAFETY ====
 */
-  #ifdef RELEASE
-	#undef SAFETY
-	#define SAFETY 0
+// clang-format off
+  #undef assert
+  #ifdef DEBUG
+  #define assert(X) do { if (unlikely(!(X))) abort("%s:%u: assert failed: %s\n", __FILE__, __LINE__, #X); } while (0)
+  #define assert_eq(A, B) ((A) == (B) ? (void)0 : abort("failed: %s:%u: (%li) == (%li)", filename_from_path(__FILE__),__LINE__,long(A),long(B)))
+  #define assert_ne(A, B) ((A) != (B) ? (void)0 : abort("failed: %s:%u: (%li) != (%li)", filename_from_path(__FILE__),__LINE__,long(A),long(B)))
+  #define assert_lt(A, B) ((A) <  (B) ? (void)0 : abort("failed: %s:%u: (%li) < (%li)",  filename_from_path(__FILE__),__LINE__,long(A),long(B)))
+  #define assert_le(A, B) ((A) <= (B) ? (void)0 : abort("failed: %s:%u: (%li) <= (%li)", filename_from_path(__FILE__),__LINE__,long(A),long(B)))
+  #define assert_gt(A, B) ((A) >  (B) ? (void)0 : abort("failed: %s:%u: (%li) > (%li)",  filename_from_path(__FILE__),__LINE__,long(A),long(B)))
+  #define assert_ge(A, B) ((A) >= (B) ? (void)0 : abort("failed: %s:%u: (%li) >= (%li)", filename_from_path(__FILE__),__LINE__,long(A),long(B)))
   #else
-	#ifndef SAFETY
-	  #define SAFETY 1
-	#endif
+	#define assert(...)		((void)0)
+	#define assert_eq(A, B) ((void)0)
+	#define assert_ne(A, B) ((void)0)
+	#define assert_lt(A, B) ((void)0)
+	#define assert_le(A, B) ((void)0)
+	#define assert_gt(A, B) ((void)0)
+	#define assert_ge(A, B) ((void)0)
   #endif
-  #define XSAFE	 (SAFETY >= 1)
-  #define XXSAFE (SAFETY >= 2)
+// clang-format on
 
+//  #ifdef RELEASE
+//	#undef SAFETY
+//	#define SAFETY 0
+//  #else
+//	#ifndef SAFETY
+//	  #define SAFETY 1
+//	#endif
+//  #endif
+//  #define XSAFE	 (SAFETY >= 1)
+//  #define XXSAFE (SAFETY >= 2)
+//
   #if SAFETY == 0
 	#define IFDEBUG(X)
 	#define IFNDEBUG(X) X
@@ -187,17 +208,17 @@ struct on_init
 	  }                                                                                  \
 	  while (0)
   #endif
-
-  #if SAFETY >= 1
-	#define xassert assert
-  #else
-	#define xassert(X) ((void)0)
-  #endif
-  #if SAFETY >= 2
-	#define xxassert assert
-  #else
-	#define xxassert(X) ((void)0)
-  #endif
+//
+//  #if SAFETY >= 1
+//	#define xassert assert
+//  #else
+//	#define xassert(X) ((void)0)
+//  #endif
+//  #if SAFETY >= 2
+//	#define xxassert assert
+//  #else
+//	#define xxassert(X) ((void)0)
+//  #endif
 
 
 /* ==== Logging depending on LOGLEVEL ====
@@ -270,11 +291,11 @@ extern void abort(cstr format, ...) __attribute__((__noreturn__)) __printflike(1
 extern void abort(int error_number) __attribute__((__noreturn__));
 
   #ifdef NDEBUG
-		// catchable in final code:
+	// catchable in final code:
 	#define IERR() throw InternalError(__FILE__, __LINE__, internalerror)
 	#define TODO() throw InternalError(__FILE__, __LINE__, notyetimplemented)
   #else
-		// fail hard if debugging: (--> set breakpoint in abort() in kio.h)
+	// fail hard if debugging: (--> set breakpoint in abort() in kio.h)
 	#define IERR() abort("%s line %u: INTERNAL ERROR", __FILE__, __LINE__)
 	#define TODO() abort("%s line %u: TODO", __FILE__, __LINE__)
   #endif
