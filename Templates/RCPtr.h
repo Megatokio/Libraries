@@ -174,8 +174,8 @@ public:
 #if 0
   #include "RCObject.h"
   #include "template_helpers.h"
-static_assert(kio::has_oper_star<RCPtr<RCObject>>::value,"");
-static_assert(kio::has_oper_star<const RCPtr<const RCObject>>::value,"");
+static_assert(kio::has_operator_star<RCPtr<RCObject>>::value,"");
+static_assert(kio::has_operator_star<const RCPtr<const RCObject>>::value,"");
 #endif
 
 
