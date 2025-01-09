@@ -1,5 +1,5 @@
 #pragma once
-// Copyright (c) 2007 - 2023 kio@little-bat.de
+// Copyright (c) 2007 - 2025 kio@little-bat.de
 // BSD-2-Clause license
 // https://opensource.org/licenses/BSD-2-Clause
 
