@@ -183,7 +183,7 @@ struct on_init
 	#undef assert
 	#define assert(X)                                                                    \
 	  do {                                                                               \
-		if (unlikely(!(X))) abort("%s:%u: assert failed: %s\n", __FILE__, __LINE__, #X); \
+		if (unlikely(!(X))) abort("%s:%i: assert failed: %s\n", __FILE__, __LINE__, #X); \
 	  }                                                                                  \
 	  while (0)
   #endif
@@ -275,8 +275,8 @@ extern void abort(int error_number) __attribute__((__noreturn__));
 	#define TODO() throw InternalError(__FILE__, __LINE__, notyetimplemented)
   #else
 		// fail hard if debugging: (--> set breakpoint in abort() in kio.h)
-	#define IERR() abort("%s line %u: INTERNAL ERROR", __FILE__, __LINE__)
-	#define TODO() abort("%s line %u: TODO", __FILE__, __LINE__)
+	#define IERR() abort("%s line %i: INTERNAL ERROR", __FILE__, __LINE__)
+	#define TODO() abort("%s line %i: TODO", __FILE__, __LINE__)
   #endif
 
 

@@ -49,12 +49,15 @@ protected:
 #else
 	mutable uint cnt {0};
 #endif
-
-	void retain() const volatile noexcept { ++cnt; }
-	void release() const volatile noexcept
-	{
-		if (--cnt == 0) delete this;
-	}
+#if _MAX_ALIGNMENT > _sizeof_int
+    int _padding;
+#endif
+    
+    void retain () noexcept {++cnt;}
+    void release() noexcept {if (--cnt == 0) delete this;}
+    
+    void retain() const volatile noexcept { const_cast<RCObject*>(this)->retain(); }
+	void release() const volatile noexcept { const_cast<RCObject*>(this)->release(); }
 
 public:
 	RCObject() noexcept {}
@@ -62,7 +65,7 @@ public:
 	RCObject(RCObject&&) noexcept {}
 	virtual ~RCObject() noexcept
 	{
-		if (unlikely(cnt != 0)) { abort("~RCObject(): cnt=%i\n", uint(cnt)); }
+		if (unlikely(cnt != 0)) { abort("~RCObject(): cnt=%u\n", uint(cnt)); }
 	}
 
 	RCObject& operator=(const RCObject&) noexcept { return *this; }
