@@ -49,11 +49,12 @@ protected:
 #else
 	mutable uint cnt {0};
 #endif
+	int _padding;
 
-	void retain() const volatile noexcept { ++cnt; }
+	void retain() const volatile noexcept { ++const_cast<uint&>(cnt); }
 	void release() const volatile noexcept
 	{
-		if (--cnt == 0) delete this;
+		if (--const_cast<uint&>(cnt) == 0) delete this;
 	}
 
 public:
@@ -62,7 +63,7 @@ public:
 	RCObject(RCObject&&) noexcept {}
 	virtual ~RCObject() noexcept
 	{
-		if (unlikely(cnt != 0)) { abort("~RCObject(): cnt=%i\n", uint(cnt)); }
+		if (unlikely(cnt != 0)) { abort("~RCObject(): cnt=%u\n", uint(cnt)); }
 	}
 
 	RCObject& operator=(const RCObject&) noexcept { return *this; }
