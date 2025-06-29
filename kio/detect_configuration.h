@@ -194,6 +194,36 @@
   #define _MAX_ALIGNMENT	  8
   #define _ALIGNMENT_REQUIRED 0 // hm hm .. actually required at least for double
 
+#elif defined(__riscv) && __riscv_xlen == 32
+  #define _RV32				  1
+  #define _PROCESSOR		  "RV32"
+  #define _bits_per_byte	  8
+  #define _sizeof_char		  1
+  #define _sizeof_short		  2
+  #define _sizeof_int		  4
+  #define _sizeof_long		  4
+  #define _sizeof_float		  4
+  #define _sizeof_double	  8
+  #define _sizeof_long_double 16
+  #define _sizeof_pointer	  4
+  #define _MAX_ALIGNMENT	  4
+  #define _ALIGNMENT_REQUIRED 1 // FIXME
+
+#elif defined(__riscv) && __riscv_xlen == 64
+  #define _RV64				  1
+  #define _PROCESSOR		  "RV64"
+  #define _bits_per_byte	  8
+  #define _sizeof_char		  1
+  #define _sizeof_short		  2
+  #define _sizeof_int		  4
+  #define _sizeof_long		  8
+  #define _sizeof_float		  4
+  #define _sizeof_double	  8
+  #define _sizeof_long_double 16
+  #define _sizeof_pointer	  8
+  #define _MAX_ALIGNMENT	  8
+  #define _ALIGNMENT_REQUIRED 1 // FIXME
+
 #elif defined(_M_ARM) || defined(__arm__)
   #define _ARM				  1
   #define _PROCESSOR		  "ARM"
@@ -210,19 +240,19 @@
   #define _ALIGNMENT_REQUIRED 0 // since ARMv4
 
 #elif defined(_M_ARM64) || defined(__aarch64__)
-  #define _ARM64			  1
-  #define _PROCESSOR		  "ARM64"
-  #define _bits_per_byte	  8
-  #define _sizeof_char		  1
-  #define _sizeof_short		  2
-  #define _sizeof_int		  4
-  #define _sizeof_long		  8
-  #define _sizeof_float		  4
-  #define _sizeof_double	  8  
+  #define _ARM64		 1
+  #define _PROCESSOR	 "ARM64"
+  #define _bits_per_byte 8
+  #define _sizeof_char	 1
+  #define _sizeof_short	 2
+  #define _sizeof_int	 4
+  #define _sizeof_long	 8
+  #define _sizeof_float	 4
+  #define _sizeof_double 8
   #ifdef _MACOSX
-    #define _sizeof_long_double 8
+	#define _sizeof_long_double 8
   #else
-    #define _sizeof_long_double 16
+	#define _sizeof_long_double 16
   #endif
   #define _sizeof_pointer	  8
   #define _MAX_ALIGNMENT	  8
