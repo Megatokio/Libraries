@@ -5,6 +5,7 @@
 
 #include "Array.h"
 #include <type_traits>
+#include <utility>
 
 /*	Volatile Objects, Reference Counter and Locking Pointer:
 
@@ -134,7 +135,7 @@ public:
 	//static RCPtr newFromFile (FD& fd, void* data=nullptr)	throws { return std::move(RCPtr(fd.read_uint8()?T::newFromFile(fd,data):nullptr)); }
 
 	// see https://stackoverflow.com/questions/11562/how-to-overload-stdswap
-	static void swap(RCPtr<T>& a, RCPtr<T>& b) noexcept { std::swap(a.p, b.p); }
+	friend void swap(RCPtr<T>& a, RCPtr<T>& b) noexcept { std::swap(a.p, b.p); }
 
 	T* operator->() const noexcept { return p; }
 	T& operator*() const noexcept { return *p; }
