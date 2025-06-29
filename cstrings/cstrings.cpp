@@ -71,7 +71,7 @@ cptr rfind(cstr start, cstr end, char c) noexcept
 {
 	// return pointer to last occurence of c or NULL
 
-	while (end >= start)
+	while (end > start)
 	{
 		if (*--end == c) return end;
 	}
