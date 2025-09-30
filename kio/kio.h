@@ -35,9 +35,11 @@
 	#define NDEBUG
 	#undef RELEASE
 	#define RELEASE
+static constexpr bool debug = false;
   #else
 	#undef DEBUG
 	#define DEBUG 1
+static constexpr bool debug	 = true;
   #endif
 
 
