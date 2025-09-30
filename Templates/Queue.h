@@ -26,8 +26,8 @@ class Queue
 
 protected:
 	T				  buffer[SIZE]; // write -> wp++ -> read -> rp++
-	std::atomic<uint> rp = 0;		// only modified by reader
-	std::atomic<uint> wp = 0;		// only modified by writer
+	std::atomic<uint> rp {0};		// only modified by reader
+	std::atomic<uint> wp {0};		// only modified by writer
 
 	static inline void copy(T* z, const T* q, uint n) noexcept // helper: hopefully optimized proper copy
 	{
