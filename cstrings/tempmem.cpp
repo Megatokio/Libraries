@@ -4,6 +4,7 @@
 
 #include "tempmem.h"
 #include "kio/kio.h"
+#include <thread>
 
 #if defined(NO_THREADS)
   #define PTHREADS 0
@@ -75,11 +76,27 @@ ON_INIT([] {
 static thread_local struct CurrentPoolPtr
 {
 	TempMemPool* pool = nullptr;
-	CurrentPoolPtr() : pool(new TempMemPool) { debugstr("tempmem: thread-local ctor\n"); }
+	CurrentPoolPtr() : pool(new TempMemPool(true))
+	{
+		debugstr(
+			"tempmem: thread-local ctor: thread=0x%08x, pool=0x%08x\n",
+			uint32(std::hash<std::thread::id> {}(std::this_thread::get_id())), uint32(size_t(this)));
+	}
 	~CurrentPoolPtr()
 	{
-		debugstr("tempmem: thread-local dtor\n");
-		while (pool) delete pool;
+		debugstr(
+			"tempmem: thread-local dtor: thread=0x%08x, pool=0x%08x\n",
+			uint32(std::hash<std::thread::id> {}(std::this_thread::get_id())), uint32(size_t(this)));
+
+		// If the thread was terminated or aborted then local TempMemPools may be still alive:
+		// Unluckily the thread_local variables are destroyed before local stack variables!
+		// --> !!! Local TempMemPool dtors update the already destroyed current_pool.
+		// --> !!! The last local TempMemPool will store the deleted _auto pool into current_pool.
+
+		auto* p0 = pool && !pool->_auto ? pool : nullptr;
+		while (pool && !pool->_auto) pool = pool->prev;
+		while (pool && pool->_auto) delete pool;
+		pool = p0; // nullptr or restore ptr to current local TempMemPool
 	}
 } current_pool;
 
@@ -104,7 +121,7 @@ static inline void delete_tempmemdata(TempMemData* data) { delete[] reinterpret_
 
 // ---- ctor / dtor ------------------------------------
 
-TempMemPool::TempMemPool() noexcept : size(0), data(nullptr)
+TempMemPool::TempMemPool(bool f) noexcept : size(0), _auto(f), data(nullptr)
 {
 	prev = get_current_pool();
 	set_current_pool(this);
@@ -195,8 +212,8 @@ TempMemPool* TempMemPool::getXPool() noexcept
 	TempMemPool* prev = pool->prev;
 	if (!prev)
 	{
-		prev	   = new TempMemPool(); // automatically create 'outer' pool
-		prev->prev = nullptr;			// 'outer' pool 'unterheben'.
+		prev	   = new TempMemPool(true); // automatically create 'outer' pool
+		prev->prev = nullptr;				// 'outer' pool 'unterheben'.
 		pool->prev = prev;
 		set_current_pool(pool); // aktuellen Pool erneut als 'aktuell' markieren
 	}

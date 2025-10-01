@@ -76,14 +76,18 @@ struct TempMemData;
 class TempMemPool
 {
 	uint		 size;
+	bool		 _auto = false;
+	char		 _padding[3];
 	TempMemData* data;
 	TempMemPool* prev;
 
-	TempMemPool(const TempMemPool&)	   = delete;
-	void operator=(const TempMemPool&) = delete;
+	friend struct CurrentPoolPtr;
+
+	TempMemPool(const TempMemPool&)			   = delete;
+	TempMemPool& operator=(const TempMemPool&) = delete;
 
 public:
-	TempMemPool() noexcept;
+	TempMemPool(bool = false) noexcept;
 	~TempMemPool() noexcept;
 
 	void  purge() noexcept;
