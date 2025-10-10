@@ -92,7 +92,7 @@ static const int error = -1;
   #if defined(_WINDOWS)
 static const char dirsep = '\\';
   #else
-static const char dirsep = '/';
+static const char	  dirsep = '/';
   #endif
 
 
@@ -117,9 +117,9 @@ static const char nl = '\n';
   #define NELEM(feld) (sizeof(feld) / sizeof((feld)[0])) // UNSIGNED !!
 
   #ifndef __printflike
-		// argument positions start at 1
-		// attn: member functions have an invisible first 'this' argument
-		// use firstvararg=0 for va_arg
+	// argument positions start at 1
+	// attn: member functions have an invisible first 'this' argument
+	// use firstvararg=0 for va_arg
 	#define __printflike(fmtarg, firstvararg) __attribute__((__format__(printf, fmtarg, firstvararg)))
   #endif
 
@@ -201,6 +201,25 @@ struct on_init
 	#define xxassert(X) ((void)0)
   #endif
 
+static constexpr const char* filenamefrompath(const char* path)
+{
+	const char* p = path;
+	while (char c = *p++)
+		if (c == '/') path = p;
+	return path;
+}
+
+// clang-format off
+//#undef assert
+//#define assert(COND)    (!debug || (COND)     ? (void)0 : abort("assert: %s:%i", filenamefrompath(__FILE__), __LINE__))
+#define assert_eq(A, B) (!debug || (A) == (B) ? (void)0 : abort("failed: %s:%i: (%li) == (%li)", filenamefrompath(__FILE__),__LINE__,long(A),long(B)))
+#define assert_ne(A, B) (!debug || (A) != (B) ? (void)0 : abort("failed: %s:%i: (%li) != (%li)", filenamefrompath(__FILE__),__LINE__,long(A),long(B)))
+#define assert_lt(A, B) (!debug || (A) <  (B) ? (void)0 : abort("failed: %s:%i: (%li) < (%li)",  filenamefrompath(__FILE__),__LINE__,long(A),long(B)))
+#define assert_le(A, B) (!debug || (A) <= (B) ? (void)0 : abort("failed: %s:%i: (%li) <= (%li)", filenamefrompath(__FILE__),__LINE__,long(A),long(B)))
+#define assert_gt(A, B) (!debug || (A) >  (B) ? (void)0 : abort("failed: %s:%i: (%li) > (%li)",  filenamefrompath(__FILE__),__LINE__,long(A),long(B)))
+#define assert_ge(A, B) (!debug || (A) >= (B) ? (void)0 : abort("failed: %s:%i: (%li) >= (%li)", filenamefrompath(__FILE__),__LINE__,long(A),long(B)))
+// clang-format on
+
 
 /* ==== Logging depending on LOGLEVEL ====
 */
@@ -272,11 +291,11 @@ extern void abort(cstr format, ...) __attribute__((__noreturn__)) __printflike(1
 extern void abort(int error_number) __attribute__((__noreturn__));
 
   #ifdef NDEBUG
-		// catchable in final code:
+	// catchable in final code:
 	#define IERR() throw InternalError(__FILE__, __LINE__, internalerror)
 	#define TODO() throw InternalError(__FILE__, __LINE__, notyetimplemented)
   #else
-		// fail hard if debugging: (--> set breakpoint in abort() in kio.h)
+	// fail hard if debugging: (--> set breakpoint in abort() in kio.h)
 	#define IERR() abort("%s line %i: INTERNAL ERROR", __FILE__, __LINE__)
 	#define TODO() abort("%s line %i: TODO", __FILE__, __LINE__)
   #endif
