@@ -9,11 +9,11 @@
 
 /*	NVPtr<T>
 	retains and locks a volatile object
-	until the NVPtr is destroyed or reassigned 
+	until the NVPtr is destroyed or reassigned
 	operator->() provides access to non-volatile object
 
 	class T must provide:
-		- void lock() 
+		- void lock()
 		- void unlock()
 */
 
@@ -61,12 +61,8 @@ public:
 	NVPtr(NVPtr&& q) : p(q.p) { q.p = nullptr; }
 	NVPtr(vT* p) : p(NV(p)) { lock(); }
 	NVPtr(vT& q) : p(NV(&q)) { lock(); }
+	NVPtr(vT* p, int nsec) : p(p && p->trylock(nsec) ? NV(p) : nullptr) {}
 	~NVPtr() { unlock(); }
-
-	NVPtr(vT* p, int nsec) : p(NV(p))
-	{
-		if (p && !p->trylock(nsec)) p = nullptr;
-	}
 
 	NVPtr& operator=(NVPtr&& q)
 	{
@@ -126,28 +122,28 @@ NVPtr<T> nvptr(std::shared_ptr<volatile T>& o)
 
 
 /*
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 */
