@@ -8,7 +8,6 @@
 #include <sys/time.h>
 #include <thread>
 
-DEBUG_INIT_MSG
 
 const std::thread::id main_thread = std::this_thread::get_id();
 

@@ -135,7 +135,7 @@
 
 		// größeren der subbereiche [a0..e] und [a..e0] pushen, den anderen sofort sortieren
 		// das ist nötig, um stacküberlauf sicher zu vermeiden
-		xassert(pushed < int(NELEM(a_stack)));
+		assert(pushed < int(NELEM(a_stack)));
 		if (e - a0 > e0 - a)
 		{
 			a_stack[pushed] = a0;

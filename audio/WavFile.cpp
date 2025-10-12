@@ -2,8 +2,6 @@
 // BSD-2-Clause license
 // https://opensource.org/licenses/BSD-2-Clause
 
-#define LOGLEVEL 1
-#define SAFETY	 1
 #include "WavFile.h"
 #include "Templates/Array.h"
 #include "audio/convert_audio.h"

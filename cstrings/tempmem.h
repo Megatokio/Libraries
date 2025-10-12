@@ -75,11 +75,11 @@ struct TempMemData;
 
 class TempMemPool
 {
-	uint		 size;
-	bool		 _auto = false;
-	char		 _padding[3];
-	TempMemData* data;
-	TempMemPool* prev;
+	uint		  size;
+	bool		  _auto = false;
+	char __unused _padding[3];
+	TempMemData*  data;
+	TempMemPool*  prev;
 
 	friend struct CurrentPoolPtr;
 
