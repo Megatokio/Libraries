@@ -504,6 +504,16 @@ void abort(int error) // __attribute__((__noreturn__));
 	abort("%s", strerror(error));
 }
 
+namespace kio
+{
+void panic(cstr fmt, ...) // __attribute__((__noreturn__));
+{
+	va_list va;
+	va_start(va, fmt);
+	abort(fmt, va);
+	//va_end(va);
+}
+} // namespace kio
 
 /*  ___________________________________________________________________
 	Init & Shutdown:

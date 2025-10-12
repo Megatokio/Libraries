@@ -272,7 +272,7 @@ ptr _ucs4char_to_utf8(ucs4char c) noexcept
 	// helper: encode ucs4char to 2 .. 6 byte utf8char:
 	// supports full 32 bits
 
-	ptr z					 = tempmem(_MAX_ALIGNMENT < 8 ? c <= 0xffffu ? 3 + 1 : 6 + 1 : 8);
+	ptr z					 = tempmem(native_alignment < 8 ? c <= 0xffffu ? 3 + 1 : 6 + 1 : 8);
 	*_ucs4char_to_utf8(c, z) = 0;
 	return z;
 }

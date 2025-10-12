@@ -26,23 +26,6 @@
   #define kioDomain	 "k1.spdns.de"
 
 
-// test for DEBUG and RELEASE are preferred:
-  #if defined(NDEBUG) || defined(RELEASE) || defined(FINAL)
-	#ifdef DEBUG
-	  #error ""
-	#endif
-	#undef NDEBUG
-	#define NDEBUG
-	#undef RELEASE
-	#define RELEASE
-static constexpr bool debug = false;
-  #else
-	#undef DEBUG
-	#define DEBUG 1
-static constexpr bool debug	 = true;
-  #endif
-
-
   #include "auto_config.h" // platform settings
   #include "settings.h"	   // project settings
 
@@ -63,6 +46,7 @@ static constexpr bool debug	 = true;
   #include <utility>
 extern char** environ; // was required by: Mac OSX (pre 10.5 ?)
 
+  #include "cdefs.h"
   #include "standard_types.h"
 
 
@@ -92,39 +76,14 @@ static const int error = -1;
   #if defined(_WINDOWS)
 static const char dirsep = '\\';
   #else
-static const char	  dirsep = '/';
+static const char dirsep = '/';
   #endif
 
 
 /* newline separator
-	note: maybe we should support DOS a little better?
 */
 static const char nl = '\n';
 
-
-/* no_index
-	in structs and classes the last data member can be a variable length array.
-	this is handled differently by different compilers:
-	either you set the index to 0 or leave index empty.
-	note: current cpp compilers seem all to support '0' (though some complain)
-*/
-  #define no_index 0
-
-
-/* #defines:
-*/
-  #define throws	  noexcept(false)
-  #define NELEM(feld) (sizeof(feld) / sizeof((feld)[0])) // UNSIGNED !!
-
-  #ifndef __printflike
-	// argument positions start at 1
-	// attn: member functions have an invisible first 'this' argument
-	// use firstvararg=0 for va_arg
-	#define __printflike(fmtarg, firstvararg) __attribute__((__format__(printf, fmtarg, firstvararg)))
-  #endif
-
-  #define likely(x)	  __builtin_expect(!!(x), 1)
-  #define unlikely(x) __builtin_expect(!!(x), 0)
 
 /*	initialization at start
 	• during statics initialization
@@ -145,9 +104,7 @@ struct on_init
 {
 	on_init(void (*f)()) { f(); }
 };
-  #define KITTY(X, Y) X##Y
-  #define CAT(X, Y)	  KITTY(X, Y)
-  #define ON_INIT	  static on_init CAT(z, __LINE__)
+  #define ON_INIT static on_init CAT(z, __LINE__)
 
 // log filename during statics initialization
   #ifdef DEBUG
@@ -159,66 +116,17 @@ struct on_init
 
 /* ==== Code checking depending on SAFETY ====
 */
-  #ifdef RELEASE
-	#undef SAFETY
-	#define SAFETY 0
-  #else
-	#ifndef SAFETY
-	  #define SAFETY 1
-	#endif
+  #ifdef SAFETY
+	#error "macro SAFETY no longer supported"
   #endif
-  #define XSAFE	 (SAFETY >= 1)
-  #define XXSAFE (SAFETY >= 2)
 
-  #if SAFETY == 0
-	#define IFDEBUG(X)
-	#define IFNDEBUG(X) X
-	#undef debugstr
-	#define debugstr(...) ((void)0)
-	#undef assert
-	#define assert(X) ((void)0)
-  #else
+  #ifdef DEBUG
 	#define IFDEBUG(X) X
 	#define IFNDEBUG(X)
-	#undef debugstr
-	#define debugstr(...) fprintf(stderr, __VA_ARGS__)
-	#undef assert
-	#define assert(X)                                                                    \
-	  do {                                                                               \
-		if (unlikely(!(X))) abort("%s:%i: assert failed: %s\n", __FILE__, __LINE__, #X); \
-	  }                                                                                  \
-	  while (0)
-  #endif
-
-  #if SAFETY >= 1
-	#define xassert assert
   #else
-	#define xassert(X) ((void)0)
+	#define IFDEBUG(X)
+	#define IFNDEBUG(X) X
   #endif
-  #if SAFETY >= 2
-	#define xxassert assert
-  #else
-	#define xxassert(X) ((void)0)
-  #endif
-
-static constexpr const char* filenamefrompath(const char* path)
-{
-	const char* p = path;
-	while (char c = *p++)
-		if (c == '/') path = p;
-	return path;
-}
-
-// clang-format off
-//#undef assert
-//#define assert(COND)    (!debug || (COND)     ? (void)0 : abort("assert: %s:%i", filenamefrompath(__FILE__), __LINE__))
-#define assert_eq(A, B) (!debug || (A) == (B) ? (void)0 : abort("failed: %s:%i: (%li) == (%li)", filenamefrompath(__FILE__),__LINE__,long(A),long(B)))
-#define assert_ne(A, B) (!debug || (A) != (B) ? (void)0 : abort("failed: %s:%i: (%li) != (%li)", filenamefrompath(__FILE__),__LINE__,long(A),long(B)))
-#define assert_lt(A, B) (!debug || (A) <  (B) ? (void)0 : abort("failed: %s:%i: (%li) < (%li)",  filenamefrompath(__FILE__),__LINE__,long(A),long(B)))
-#define assert_le(A, B) (!debug || (A) <= (B) ? (void)0 : abort("failed: %s:%i: (%li) <= (%li)", filenamefrompath(__FILE__),__LINE__,long(A),long(B)))
-#define assert_gt(A, B) (!debug || (A) >  (B) ? (void)0 : abort("failed: %s:%i: (%li) > (%li)",  filenamefrompath(__FILE__),__LINE__,long(A),long(B)))
-#define assert_ge(A, B) (!debug || (A) >= (B) ? (void)0 : abort("failed: %s:%i: (%li) >= (%li)", filenamefrompath(__FILE__),__LINE__,long(A),long(B)))
-// clang-format on
 
 
 /* ==== Logging depending on LOGLEVEL ====
@@ -289,16 +197,6 @@ struct LogIndent
 extern void abort(cstr format, va_list) __attribute__((__noreturn__)) __printflike(1, 0);
 extern void abort(cstr format, ...) __attribute__((__noreturn__)) __printflike(1, 2);
 extern void abort(int error_number) __attribute__((__noreturn__));
-
-  #ifdef NDEBUG
-	// catchable in final code:
-	#define IERR() throw InternalError(__FILE__, __LINE__, internalerror)
-	#define TODO() throw InternalError(__FILE__, __LINE__, notyetimplemented)
-  #else
-	// fail hard if debugging: (--> set breakpoint in abort() in kio.h)
-	#define IERR() abort("%s line %i: INTERNAL ERROR", __FILE__, __LINE__)
-	#define TODO() abort("%s line %i: TODO", __FILE__, __LINE__)
-  #endif
 
 
 /*	get current wall time in seconds since epoche,
@@ -391,12 +289,6 @@ inline void revert_bytes(void* p, uint sz)
 }
 
 
-//	helper for refactoring:
-//
-enum Foo { foo };
-  #define LOL fprintf(stderr, "LOL> \"%s\" - %d\n", __FILE__, __LINE__);
-
-
 /*	other standard headers
 */
   #include "cstrings/cstrings.h"
@@ -426,48 +318,4 @@ uint   random(uint n)	{ return (uint32(n) * uint16(random())) >> 16; } // 16 bit
 */
 
 
-  #if 0
-	#if __cplusplus >= 201700
-	  #define FALLTHROUGH [[fallthrough]]
-	#elif defined(_GCC)
-// oder [[gnu::fallthrough]] in c++11 und c++14
-	  #define FALLTHROUGH __attribute__((fallthrough))
-	#elif defined(_CLANG)
-	  #define FALLTHROUGH [[clang::fallthrough]]
-	#else
-	  #define FALLTHROUGH
-	#endif
-  #endif
-
-// this is the most portable way to define a FALLTHROUGH annotation
-// only disadvantage: you must not write a ';' after it
-  #undef FALLTHROUGH
-  #define FALLTHROUGH          \
-	goto CAT(label, __LINE__); \
-	CAT(label, __LINE__) :
-
-
-// class helper:
-
-  #define NO_COPY_MOVE(classname)                    \
-	classname(const classname&)			   = delete; \
-	classname& operator=(const classname&) = delete; \
-	classname(classname&&)				   = delete; \
-	classname& operator=(classname&&)	   = delete
-
-  #define NO_COPY(classname)                         \
-	classname(const classname&)			   = delete; \
-	classname& operator=(const classname&) = delete
-
-  #define NO_MOVE(classname)                    \
-	classname(classname&&)			  = delete; \
-	classname& operator=(classname&&) = delete
-
-  #define DEFAULT_COPY(classname)                     \
-	classname(const classname&)			   = default; \
-	classname& operator=(const classname&) = default
-
-  #define DEFAULT_MOVE(classname)                \
-	classname(classname&&)			  = default; \
-	classname& operator=(classname&&) = default
 #endif

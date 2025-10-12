@@ -44,19 +44,23 @@ class RCObject
 	friend class NVPtr;
 
 protected:
+	union
+	{
 #ifndef NO_THREADS
-	mutable std::atomic<uint> cnt {0};
+		mutable std::atomic<uint> cnt {0};
 #else
-	mutable uint cnt {0};
+		mutable uint cnt {0};
 #endif
-#if _MAX_ALIGNMENT > _sizeof_int
-    int _padding;
-#endif
-    
-    void retain () noexcept {++cnt;}
-    void release() noexcept {if (--cnt == 0) delete this;}
-    
-    void retain() const volatile noexcept { const_cast<RCObject*>(this)->retain(); }
+		char _padding[native_alignment];
+	};
+
+	void retain() noexcept { ++cnt; }
+	void release() noexcept
+	{
+		if (--cnt == 0) delete this;
+	}
+
+	void retain() const volatile noexcept { const_cast<RCObject*>(this)->retain(); }
 	void release() const volatile noexcept { const_cast<RCObject*>(this)->release(); }
 
 public:

@@ -78,11 +78,11 @@
 #ifdef __LITTLE_ENDIAN__
   #define BYTEORDER 1234
 #endif
-#if _ALIGNMENT_REQUIRED
-  #define NOALLIGN 0
-#else
-  #define NOALLIGN 1
-#endif
+//#if _ALIGNMENT_REQUIRED
+#define NOALLIGN 0
+//#else
+//  #define NOALLIGN 1
+//#endif
 
 
 #define HBITS	  17 /* 50% occupancy */

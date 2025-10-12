@@ -37,24 +37,24 @@ public:
 
 	PLock()
 	{
-		IFDEBUG(int e =) pthread_mutex_init(&mutex, nullptr);
+		int e = pthread_mutex_init(&mutex, nullptr);
 		assert(!e);
 	}
 	PLock(Attr);
 	~PLock()
 	{
-		IFDEBUG(int e =) pthread_mutex_destroy(&mutex);
+		int e = pthread_mutex_destroy(&mutex);
 		assert(!e);
 	}
 
 	void lock() volatile noexcept
 	{
-		IFDEBUG(int e =) pthread_mutex_lock(const_cast<pthread_mutex_t*>(&mutex));
+		int e = pthread_mutex_lock(const_cast<pthread_mutex_t*>(&mutex));
 		assert(!e);
 	}
 	void unlock() volatile noexcept
 	{
-		IFDEBUG(int e =) pthread_mutex_unlock(const_cast<pthread_mutex_t*>(&mutex));
+		int e = pthread_mutex_unlock(const_cast<pthread_mutex_t*>(&mutex));
 		assert(!e);
 	}
 	bool trylock() volatile noexcept
