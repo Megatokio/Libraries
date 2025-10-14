@@ -46,6 +46,7 @@ SOURCES += \
 	Libraries/cstrings/tempmem.cpp \
 	Libraries/cstrings/tempmem.test.cpp \
 	Libraries/unix/n-compress.cpp \
+	Libraries/unix/log_to_file.cpp \
 	\
 	Libraries/Templates/Array.test.cpp \
 	Libraries/Templates/StrArray.test.cpp \

@@ -4,8 +4,7 @@
 
 
 #undef NDEBUG
-#define SAFETY	 2
-#define LOGLEVEL 1
+#define loglevel 1
 #include "Templates/Array.h"
 #include "Templates/RCPtr.h"
 #include "main.h"
@@ -783,7 +782,7 @@ public:
 
 void test_rc_performance(uint& num_tests, uint& num_errors)
 {
-	logline("\ncompiler = %s", _COMPILER);
+	logline("\ncompiler = %s", _compiler_str);
 
 #ifdef _POSIX_THREAD_CPUTIME
   #define CLOCK CLOCK_THREAD_CPUTIME_ID

@@ -4,8 +4,6 @@
 
 
 #include "main.h"
-#include "Templates/RCObject.h"
-#include "Templates/RCPtr.h"
 #include <iostream>
 
 
@@ -29,7 +27,7 @@ int main(int, const char**)
 	test_z80_major_opcode(num_tests, num_errors);
 	test_z80_clock_cycles(num_tests, num_errors);
 
-	std::cout << "\n" << num_tests << " tests run, " << num_errors << " errors.\n";
+	std::cerr << "\n" << num_tests << " tests run, " << num_errors << " errors.\n";
 
 	return 0;
 }

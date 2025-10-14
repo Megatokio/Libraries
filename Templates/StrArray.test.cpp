@@ -4,8 +4,7 @@
 
 
 #undef NDEBUG
-#define SAFETY	 2
-#define LOGLEVEL 1
+#define loglevel 1
 #include "Templates/StrArray.h"
 #include "main.h"
 #include "unix/FD.h"

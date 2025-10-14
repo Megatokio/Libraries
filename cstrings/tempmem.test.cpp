@@ -3,8 +3,7 @@
 // https://opensource.org/licenses/BSD-2-Clause
 
 #undef NDEBUG
-#define SAFETY	 2
-#define LOGLEVEL 1
+#define loglevel 1
 #include "tempmem.h"
 #include "hash/sdbm_hash.h"
 #include "main.h"
@@ -56,9 +55,9 @@ void* do_test_tempmem(void*)
 	TRY TempMemPool z;
 	(void)tempstr(0);
 	(void)tempstr(8);
-	assert(size_t(tempstr(79)) % _MAX_ALIGNMENT != 0); // not required but expected
-	assert(size_t(tempstr(79)) % _MAX_ALIGNMENT != 0); // not required but expected
-	assert(size_t(tempmem(80)) % _MAX_ALIGNMENT == 0); // required
+	assert(size_t(tempstr(79)) % native_alignment != 0); // not required but expected
+	assert(size_t(tempstr(79)) % native_alignment != 0); // not required but expected
+	assert(size_t(tempmem(80)) % native_alignment == 0); // required
 	(void)tempstr(12345);
 	z.purge();
 	(void)tempstr(8);
@@ -97,7 +96,7 @@ void* do_test_tempmem(void*)
 		str	 a = tempmempool.allocStr(n);
 		str	 b = tempmempool.allocMem(n);
 		assert(a[n] == 0);
-		assert(size_t(b) % _MAX_ALIGNMENT == 0);
+		assert(size_t(b) % native_alignment == 0);
 	}
 	END
 
@@ -112,9 +111,9 @@ void* do_test_tempmem(void*)
 		str	 c = xtempstr(n);
 		str	 d = xtempmem(n);
 		assert(a[n] == 0);
-		assert(size_t(b) % _MAX_ALIGNMENT == 0);
+		assert(size_t(b) % native_alignment == 0);
 		assert(c[n] == 0);
-		assert(size_t(d) % _MAX_ALIGNMENT == 0);
+		assert(size_t(d) % native_alignment == 0);
 	}
 	END
 

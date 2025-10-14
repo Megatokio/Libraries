@@ -4,8 +4,7 @@
 
 
 #undef NDEBUG
-#define SAFETY	 2
-#define LOGLEVEL 1
+#define loglevel 1
 #include "kio/kio.h"
 #include "main.h"
 #include "z80_goodies.h"
