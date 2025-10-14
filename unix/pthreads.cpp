@@ -75,7 +75,7 @@ PLock::PLock(Attr a)
 {
 	init();
 	assert(a < NELEM(mutex_attr));
-	IFDEBUG(int e =) pthread_mutex_init(&mutex, mutex_attr + a);
+	int e = pthread_mutex_init(&mutex, mutex_attr + a);
 	assert(!e);
 }
 

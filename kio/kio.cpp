@@ -132,15 +132,6 @@ struct timeval now(int) noexcept // return timeval  ((deprecated))
 */
 void waitDelay(double delay) noexcept // seconds
 {
-  #if 0
-	// usleep():
-	// 4.3BSD, POSIX.1-2001.
-	// POSIX.1-2001 declares this function obsolete; use nanosleep(2) instead.
-	// POSIX.1-2008 removes the specification of usleep().
-
-	usleep(uint32(delay * 1e6));
-  #endif
-
 	// nanosleep():
 	// POSIX.1-2001
 
@@ -230,91 +221,4 @@ void waitUntil(double time) // seconds since epoche
 	static const system_clock::time_point epoche = system_clock::from_time_t(0);
 	std::this_thread::sleep_until(epoche + nanoseconds(int64(time * 1e9)));
 }
-#endif
-
-
-#ifndef LOGFILE
-// ****************************************************
-//				Logging to stderr
-// ****************************************************
-
-void logline(cstr format, va_list va) { vfprintf(stderr, catstr(format, "\n"), va); }
-
-void log(cstr format, va_list va) { vfprintf(stderr, format, va); }
-
-void logNl() { fprintf(stderr, "\n"); }
-
-void logline(cstr format, ...)
-{
-	va_list va;
-	va_start(va, format);
-	logline(format, va);
-	va_end(va);
-}
-
-void log(cstr format, ...)
-{
-	va_list va;
-	va_start(va, format);
-	log(format, va);
-	va_end(va);
-}
-
-static uint indent; // message indentation		TODO
-
-// log line and add indentation for the following lines
-// the indentation will be undone by the d'tor
-// For use with macro LogIn(...)
-//
-LogIndent::LogIndent(cstr format, ...)
-{
-	va_list va;
-	va_start(va, format);
-	logline(format, va);
-	indent += 2;
-	va_end(va);
-}
-
-LogIndent::~LogIndent() { indent -= 2; }
-
-
-// ****************************************************
-//	print error in case of emergeny:
-//	- in an atexit() registered function
-// ****************************************************
-
-  #define ABORTED 2
-
-void abort(cstr fmt, va_list va) // __attribute__((__noreturn__));
-{
-	if (lastchar(fmt) != '\n') fmt = catstr(fmt, "\n");
-	vfprintf(stderr, fmt, va);
-	fprintf(stderr, "aborted.\n");
-	exit(ABORTED);
-}
-
-void abort(cstr fmt, ...) // __attribute__((__noreturn__));
-{
-	va_list va;
-	va_start(va, fmt);
-	abort(fmt, va);
-	//va_end(va);
-}
-
-void abort(int error) // __attribute__((__noreturn__));
-{
-	abort("%s", strerror(error));
-}
-
-namespace kio
-{
-void panic(cstr fmt, ...) // __attribute__((__noreturn__));
-{
-	va_list va;
-	va_start(va, fmt);
-	abort(fmt, va);
-	//va_end(va);
-}
-} // namespace kio
-
 #endif

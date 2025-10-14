@@ -120,83 +120,16 @@ struct on_init
 	#error "macro SAFETY no longer supported"
   #endif
 
-  #ifdef DEBUG
-	#define IFDEBUG(X) X
-	#define IFNDEBUG(X)
-  #else
-	#define IFDEBUG(X)
-	#define IFNDEBUG(X) X
-  #endif
-
-
-/* ==== Logging depending on LOGLEVEL ====
-*/
-  #ifdef RELEASE
-	#undef LOGLEVEL
-	#define LOGLEVEL 0
-  #else
-	#ifndef LOGLEVEL
-	  #define LOGLEVEL 0
-	#endif
-  #endif
-  #define XLOG	(LOGLEVEL >= 1)
-  #define XXLOG (LOGLEVEL >= 2)
-
-  #if LOGLEVEL >= 1
-	#define xlog	  log
-	#define xlogline  logline
-	#define xlogNl	  logNl
-	#define xdebugstr debugstr
-	#define xlogIn	  logIn
-  #else
-	#define xlog(...)	   ((void)0)
-	#define xlogline(...)  ((void)0)
-	#define xlogNl(...)	   ((void)0)
-	#define xdebugstr(...) ((void)0)
-	#define xlogIn(...)	   ((void)0)
-  #endif
-
-  #if LOGLEVEL >= 2
-	#define xxlog	   log
-	#define xxlogline  logline
-	#define xxlogNl	   logNl
-	#define xxdebugstr debugstr
-	#define xxlogIn	   logIn
-  #else
-	#define xxlog(...)		((void)0)
-	#define xxlogline(...)	((void)0)
-	#define xxlogNl(...)	((void)0)
-	#define xxdebugstr(...) ((void)0)
-	#define xxlogIn(...)	((void)0)
-  #endif
-
-// in log.cpp or kio.cpp:
-typedef const char* cstr;
-extern void			logline(cstr, ...) __printflike(1, 2);
-extern void			logline(cstr, va_list) __printflike(1, 0);
-extern void			log(cstr, ...) __printflike(1, 2);
-extern void			log(cstr, va_list) __printflike(1, 0);
-extern void			logNl();
-
-// indent logging for the lifetime of a function:
-struct LogIndent
-{
-	LogIndent(cstr fmt, ...) __printflike(2, 3);
-	~LogIndent();
-};
-  #define logIn LogIndent _z_log_ident // usage:  logIn("format/message", ...)
-
 
 /* ==== functions ====
 */
 
 /*	abort application with exit(2)
 	must not be called from a function registered with atexit()!
-	defined in kio.cpp
+	defined in log_to_xxx.cpp
 */
-extern void abort(cstr format, va_list) __attribute__((__noreturn__)) __printflike(1, 0);
-extern void abort(cstr format, ...) __attribute__((__noreturn__)) __printflike(1, 2);
-extern void abort(int error_number) __attribute__((__noreturn__));
+extern void abort(cstr format, va_list) __noreturn __printflike(1, 0);
+extern void abort(cstr format, ...) __noreturn __printflike(1, 2);
 
 
 /*	get current wall time in seconds since epoche,
@@ -295,9 +228,7 @@ inline void revert_bytes(void* p, uint sz)
   #include "errors.h"
   #include "exceptions.h"
   #include "peekpoke.h"
-  #ifdef LOGFILE
-	#include "unix/log.h"
-  #endif
+  #include "unix/log.h"
 
 
 /*	check size of off_t is 64 bit:
