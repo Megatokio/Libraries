@@ -168,6 +168,7 @@ inline str	tostr(unsigned long n) noexcept { return usingstr("%lu", n); }
 inline str	tostr(long long n) noexcept { return usingstr("%lli", n); }
 inline str	tostr(unsigned long long n) noexcept { return usingstr("%llu", n); }
 inline cstr tostr(cstr s) noexcept { return s ? quotedstr(s) : "nullptr"; }
+extern str	tostr(const tm& d) noexcept;
 
 extern str binstr(uint32 n, cstr b0 = "00000000", cstr b1 = "11111111") noexcept;
 extern str binstr(uint64 n, cstr b0 = "00000000", cstr b1 = "11111111") noexcept;

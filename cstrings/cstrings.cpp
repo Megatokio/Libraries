@@ -916,12 +916,18 @@ time_t dateval(cstr datestr) noexcept
 					   //return timegm(&d);	// UTC
 }
 
+str tostr(const tm& d) noexcept
+{
+	return usingstr(
+		"%04u-%02u-%02u %02u:%02u:%02u", //
+		d.tm_year + 1900, d.tm_mon + 1, d.tm_mday, d.tm_hour, d.tm_min, d.tm_sec);
+}
+
 str datetimestr(time_t secs) noexcept
 {
 	tm d;
 	localtime_r(&secs, &d);
-	return usingstr(
-		"%04u-%02u-%02u %02u:%02u:%02u", d.tm_year + 1900, d.tm_mon + 1, d.tm_mday, d.tm_hour, d.tm_min, d.tm_sec);
+	return tostr(d);
 }
 
 str datestr(time_t secs) noexcept
