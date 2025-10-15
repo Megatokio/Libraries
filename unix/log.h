@@ -26,8 +26,6 @@ extern void openLogfile(
 /*
 	Logging depending on 'loglevel':
 	`loglevel` must be #defined before any #include.
-	note: if you want to switch loglevel at runtime
-		  #undef 'loglevel' after all #includes and define a variable 'loglevel' instead.
 */
 
 #if defined RELEASE
@@ -57,28 +55,31 @@ extern void logNl();
 // indent logging for the lifetime of a function:
 struct LogIndent
 {
-	bool		f;
 	static void indent(int);
-	LogIndent(bool f, cstr fmt, ...) __printflike(3, 4) : f(f)
+	LogIndent(cstr fmt, ...) __printflike(2, 3)
 	{
-		if (f)
-		{
-			va_list va;
-			va_start(va, fmt);
-			logline(fmt, va);
-			va_end(va);
-			indent(+2);
-		}
+		va_list va;
+		va_start(va, fmt);
+		logline(fmt, va);
+		va_end(va);
+		indent(+2);
 	}
-	~LogIndent()
-	{
-		if (f) indent(-2);
-	}
+	~LogIndent() { indent(-2); }
 };
 
-#define logIn(...)	 LogIndent _log_indent(true, __VA_ARGS__)
-#define xlogIn(...)	 LogIndent _log_indent(loglevel >= 1, __VA_ARGS__)
-#define xxlogIn(...) LogIndent _log_indent(loglevel >= 2, __VA_ARGS__)
+#define logIn(...) LogIndent _log_indent(__VA_ARGS__)
+
+#if loglevel >= 1
+  #define xlogIn logIn
+#else
+  #define xlogIn(...) (1 ? void(0) : log(__VA_ARGS__)) // use the args but prune them
+#endif
+
+#if loglevel >= 2
+  #define xxlogIn logIn
+#else
+  #define xxlogIn(...) (1 ? void(0) : log(__VA_ARGS__))
+#endif
 
 
 /*
