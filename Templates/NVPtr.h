@@ -1,20 +1,46 @@
-#pragma once
 // Copyright (c) 2015 - 2025 kio@little-bat.de
 // BSD-2-Clause license
 // https://opensource.org/licenses/BSD-2-Clause
 
+#pragma once
 #include "kio/kio.h"
-#include <mutex>
+#include <memory>
+
+template<class T>
+class RCPtr;
 
 
-/*	NVPtr<T>
-	retains and locks a volatile object
-	until the NVPtr is destroyed or reassigned
-	operator->() provides access to non-volatile object
+/*	Smart Pointer for locking Volatile Objects
+	==========================================
 
-	class T must provide:
-		- void lock()
-		- void unlock()
+	This file provides:
+	NVPtr<T>   a smart pointer for locking of volatile objects.
+	nvptr<T>() a convenience function to create a NVPtr with auto type deduction prior to c++17.
+	NV<T>      a convenience function to cast away 'volatile' if you think you are allowed to do so.
+
+	The idea is to define non-const objects which are accessible from multiple threads as 'volatile'
+	because from each thread's perspective they can change state spontaneously.
+	The NVPtr locks a volatile object until the NVPtr is destroyed or reassigned.
+	operator->() provides access to non-volatile object.
+
+	Requires:
+	A class must provide the functions lock() and unlock().
+
+
+	Usage example
+	-------------
+
+	extern volatile Foo* foo;
+	void test()
+	{
+		NVPtr<Foo> p{foo};
+		p->bar();
+		p->bar2();
+	}
+	void test2()
+	{
+		nvptr(foo)->bar();
+	}
 */
 
 
@@ -35,16 +61,18 @@ T* NV(std::shared_ptr<volatile T>& o)
 {
 	return const_cast<T*>(o.get());
 }
-
+template<class T>
+T* NV(RCPtr<volatile T>& o)
+{
+	return const_cast<T*>(o.get());
+}
 
 // locking pointer:
 
 template<class T>
 class NVPtr
 {
-	typedef volatile T vT;
-
-	T* p;
+	T* p = nullptr;
 
 	void lock()
 	{
@@ -57,11 +85,11 @@ class NVPtr
 
 public:
 	NO_COPY(NVPtr);
-	NVPtr() : p(nullptr) {}
-	NVPtr(NVPtr&& q) : p(q.p) { q.p = nullptr; }
-	NVPtr(vT* p) : p(NV(p)) { lock(); }
-	NVPtr(vT& q) : p(NV(&q)) { lock(); }
-	NVPtr(vT* p, int nsec) : p(p && p->trylock(nsec) ? NV(p) : nullptr) {}
+	NVPtr() noexcept : p(nullptr) {}
+	NVPtr(NVPtr&& q) noexcept : p(q.p) { q.p = nullptr; }
+	explicit NVPtr(volatile T* p) : p(NV(p)) { lock(); }
+	//NVPtr(volatile T& q) : p(NV(q)) { lock(); }
+	NVPtr(volatile T* p, int nsec) : p(p && NV(p)->trylock(nsec) ? NV(p) : nullptr) {}
 	~NVPtr() { unlock(); }
 
 	NVPtr& operator=(NVPtr&& q)
@@ -73,7 +101,7 @@ public:
 		return *this;
 	}
 
-	NVPtr& operator=(vT* q)
+	NVPtr& operator=(volatile T* q)
 	{
 		if (p != q)
 		{
@@ -84,34 +112,39 @@ public:
 		return *this;
 	}
 
-	T* operator->() const { return p; }
-	T& operator*() const { return *p; }
-	T* ptr() const { return p; }
-	T& ref() const { return *p; }
+	T* operator->() const noexcept { return p; }
+	T& operator*() const noexcept { return *p; }
+	T* ptr() const noexcept { return p; }
+	T& ref() const noexcept { return *p; }
 
-	operator T&() const { return *p; }
-	operator T*() const { return p; }
+	operator T&() const noexcept { return *p; }
+	operator T*() const noexcept { return p; }
 
-	bool isNotNull() const { return p != nullptr; }
-	bool isNull() const { return p == nullptr; }
-
-	operator bool() const { return p; }
+	operator bool() const noexcept { return p; }
 };
 
-template<>
-inline NVPtr<std::timed_mutex>::NVPtr(volatile std::timed_mutex* p, int nsec) : p(NV(p))
-{
-	if (p && !NV(p)->try_lock_for(std::chrono::nanoseconds(nsec))) p = nullptr;
-}
+
+//	#include <mutex>
+//	template<>
+//	inline NVPtr<std::timed_mutex>::NVPtr(volatile std::timed_mutex* p, int nsec) : p(NV(p))
+//	{
+//		if (p && !NV(p)->try_lock_for(std::chrono::nanoseconds(nsec))) p = nullptr;
+//	}
 
 
 // convenience:
-// (auto deduced type)
+// (auto deducted type)
 
 template<class T>
 NVPtr<T> nvptr(volatile T* o)
 {
 	return NVPtr<T>(o);
+}
+
+template<class T>
+NVPtr<T> nvptr(const RCPtr<volatile T>& o)
+{
+	return NVPtr<T>(o.get());
 }
 
 template<class T>

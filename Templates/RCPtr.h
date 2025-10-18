@@ -1,51 +1,349 @@
-#pragma once
 // Copyright (c) 2015 - 2025 kio@little-bat.de
 // BSD-2-Clause license
 // https://opensource.org/licenses/BSD-2-Clause
 
-#include "Array.h"
+
+/*	Shared Pointers and Weak Smart Pointers
+	=======================================
+
+	This file provides:
+	RCPtr<T>:	shared pointer to objects using reference counting.
+	WeakPtr<T>:	non-locking pointer to objects managed by RCPtrs for observers.
+
+	Requires:
+	For use with RCPtrs a class must provide a data member, typically provided by macro RCDATA.
+
+	Options:
+	#define NO_THREADS: use a not thread-safe implementation for the smart pointers.
+	#define NO_WEAKPTR: macro RCDATA has by default no support for WeakPtrs.
+
+	Advantages of RCPtr over std::shared_ptr:
+	- supports my old stuff
+	- no 2nd heap allocation
+	- slicker syntax
+	- configurable, e.g. no WeakPtrs
+	- pure pointer to managed object can be stored in a RCPtr again (helps with complicated casting)
+
+	Disadvantages:
+	- less well tested
+	- needs a data member in the class
+	  -> cannot be used directly for existing classes: needs a wrapper class with RCDATA
+	  -> not directly usable with arrays (i never needed this, arrays almost always need unique_ptrs)
+	- WeakPtrs: destruction and deallocation of objects can be split in 2 operations
+	  -> memory is not freed until the last WeakPtr goes away
+	  -> deallocation is done with wrong type -> fails for heaps which use sized alloc/dealloc (rare)
+	  -> fails for custom allocators for classes
+
+
+	Mixed info:
+
+	As with all pointers, the inner workings are thread-safe, not the access to the smart pointer itself.
+	If multiple threads can access and modify a smart pointer at the same time, then this must be locked.
+
+	Use of RCPtr and WeakPtr is lock-free (non-blocking).
+	The only locking operation is the conversion of a WeakPtr into an RCPtr.
+
+	Support for RCPtr to a class is achieved by adding macro RCDATA to the class definition:
+
+	- macro RCDATA is RCDATA_WITHWEAK or RCDATA_NOWEAK depending on whether NO_WEAKPTR is #defined.
+	- macro RCDATA_WITHWEAK
+	- macro RCDATA_NOWEAK
+	These macros also define a member function 'refcnt()' which returns the hard count.
+
+
+	Usage example
+	-------------
+
+	class Foo
+	{
+		RCDATA
+		int a,b,c; // my stuff
+	};
+
+	OR:
+
+	class Foo : public RCObject
+	{
+		int a,b,c; // my stuff
+	};
+
+	RCPtr<Foo> foo = new Foo();
+	WeakPtr<Foo> foo2{foo};
+
+	void test()
+	{
+		RCPtr<Foo> p{foo2};
+		if (p) p->bar();
+		else foo2 = nullptr;
+	}
+
+
+	Locking of objects and mutex (spinlock) in WeakPtr
+	--------------------------------------------------
+
+	the WeakPtr locks the memory by incrementing _rcdata.wc ("weak count").
+	the RCPtr additionally locks the object by incrementing _rcdata.hc ("hard count").
+	normally both counters must be atomic.
+	if the RCPtr decrements _rcdata.hc to zero it must destroy the object.
+	if the RCPtr or WeakPtr decrements _rcdata.wc to zero it must free the memory.
+
+	The only locking operation:
+
+	In constructor RCPtr(WeakPtr) the hard count hc must be increased, but _only_ if it is non-zero.
+	We can also blindly increase hc and undo it if ++hc == 1.
+	In the first case we have a race condition with the possible destruction of the last RCPtr on another thread,
+	In the second case there is a race condition with a second thread performing RCPtr(WeakPtr) at the same time.
+	If we put a mutex around the second operation, then the mutex is only needed here. fine!
+	But in order to avoid unneeded mutex lock/unlock, we test for hc!=0 beforehand anyway.
+
+	With both tests the total chances for failure (without lock) is miniscule.
+	If all RCPtr(WeakPtr) conversions for a class happen only on the same thread,
+	  e.g. for observers running on a 'gui thread', then this cannot happen at all.
+	If all RCPtr destructions and all RCPtr(WeakPtr) conversions for a class happen
+	  only on the same _two_ threads then this cannot happen too.
+	Then you could use RCDATA_WEAK_NOLOCK in your class definition. But you shouldn't. You'll forget about it.
+*/
+
+
+#pragma once
+#include "kio/cdefs.h"
 #include <type_traits>
 #include <utility>
 
-/*	Volatile Objects, Reference Counter and Locking Pointer:
+using uint = unsigned int;
 
-	RCPtr:
-	pointer to objects which implement reference counting with retain() and release().
+#ifndef NO_THREADS
+  #include <atomic>
+  #include <thread>
+using rc_uint32_t = std::atomic<uint32_t>;
+using rc_uint16_t = std::atomic<uint16_t>;
+using rc_bool_t	  = std::atomic<bool>;
+#else
+using rc_uint32_t = uint32_t;
+using rc_uint16_t = uint16_t;
+using rc_bool_t	  = bool;
+#endif
 
-	RCObject:
-	a simple base class for Objects is in RCObject.h
+struct RCDataNoWeak
+{
+	union
+	{
+		rc_uint32_t hc {0}; // hard (locking) refs
+		rc_uint32_t wc;		// total == hard refs
+	};
+	static rc_bool_t lock; // n.ex.
 
-	class T must provide:
-		retain() const
-		release() const
-	if T is volatile:
-		retain() volatile const
-		release() volatile const
-	optional:
-		refcnt()
-		operator[]
-		operator == != > >= < <=
-		print(FD&, uint indent) const			// formatted output for debugger, logfile etc.
-		serialize(FD&) const throws	 or
-		serialize(FD&, void*) const throws
-		deserialize(FD&) throws  or
-		deserialize(FD&, void*) throws
-		static T* newFromFile(FD&, void*) throws;	// factory method to deserialize polymorthic objects
+	RCDataNoWeak() noexcept = default;
+	RCDataNoWeak(const RCDataNoWeak&) noexcept {}
+	RCDataNoWeak(RCDataNoWeak&&) noexcept {}
+	RCDataNoWeak& operator=(const RCDataNoWeak&) noexcept { return *this; }
+	RCDataNoWeak& operator=(RCDataNoWeak&&) noexcept { return *this; }
+};
 
-	RCArray:
-	template Array<T> can be used with Array<RCPtr<T>>.
-	A template RCArray<T> is defined for convenience.
+struct RCDataWeakNoLock
+{
+	rc_uint32_t		 wc {0}; // total = hard + weak refs
+	rc_uint32_t		 hc {0}; // hard (locking) refs
+	static rc_bool_t lock;	 // n.ex.
 
-	NVPtr:
-	In multi-threaded applications RCPtr may refer to a mutable object.
-	then dereferencing the RCPtr returns a mutable object.
-	retain() and release() must be defined volatile and probably use locking in this case.
+	RCDataWeakNoLock() noexcept = default;
+	RCDataWeakNoLock(const RCDataWeakNoLock&) noexcept {}
+	RCDataWeakNoLock(RCDataWeakNoLock&&) noexcept {}
+	RCDataWeakNoLock& operator=(const RCDataWeakNoLock&) noexcept { return *this; }
+	RCDataWeakNoLock& operator=(RCDataWeakNoLock&&) noexcept { return *this; }
+};
 
-	A RCPtr cannot be deleted (reassigned, go out of scope) while a NVPtr exists which points to the same object.
-	This results in a dead lock. The NVPtr must be deleted (reassigned, go out of scope) before.
+struct RCDataWeakWithLock
+{
+	rc_uint32_t wc {0};	  // total = hard + weak refs
+	rc_uint16_t hc {0};	  // hard (locking) refs
+	rc_bool_t	lock {0}; // lock for hc while upgrading WeakPtr
+	uint8_t		padding {0};
+
+	RCDataWeakWithLock() noexcept = default;
+	RCDataWeakWithLock(const RCDataWeakWithLock&) noexcept {}
+	RCDataWeakWithLock(RCDataWeakWithLock&&) noexcept {}
+	RCDataWeakWithLock& operator=(const RCDataWeakWithLock&) noexcept { return *this; }
+	RCDataWeakWithLock& operator=(RCDataWeakWithLock&&) noexcept { return *this; }
+};
+
+// clang-format off
+#define RCDATA_NOWEAK						\
+  mutable RCDataNoWeak _rcdata;				\
+  static constexpr bool _has_wc	  = false;	\
+  static constexpr bool _has_lock = false;	\
+  uint refcnt() volatile const noexcept {return _rcdata.hc;} \
+  template<typename> friend class RCPtr;
+#define RCDATA_WEAK_NOLOCK					\
+  mutable RCDataWeakNoLock _rcdata;			\
+  static constexpr bool _has_wc	  = true;	\
+  static constexpr bool _has_lock = false;	\
+  uint refcnt() volatile const noexcept {return _rcdata.hc;} \
+  template<typename> friend class WeakPtr;	\
+  template<typename> friend class RCPtr;
+#define RCDATA_WEAK_WITHLOCK				\
+  mutable RCDataWeakWithLock _rcdata;		\
+  static constexpr bool _has_wc	  = true;	\
+  static constexpr bool _has_lock = true;	\
+  uint refcnt() volatile const noexcept {return _rcdata.hc;} \
+  template<typename> friend class WeakPtr;	\
+  template<typename> friend class RCPtr;
+// clang-format on
+
+
+#ifdef NO_THREADS
+  #define RCDATA_WITHWEAK RCDATA_WEAK_NOLOCK
+#else
+  #define RCDATA_WITHWEAK RCDATA_WEAK_WITHLOCK
+#endif
+
+#ifdef NO_WEAKPTR
+  #define RCDATA RCDATA_NOWEAK
+#else
+  #define RCDATA RCDATA_WITHWEAK
+#endif
+
+
+#ifdef NO_THREADS
+extern void rc_lock_spinlock(volatile rc_bool_t& lock) noexcept;   // n.ex.
+extern void rc_unlock_spinlock(volatile rc_bool_t& lock) noexcept; // n.ex.
+#else
+
+inline void rc_lock_spinlock(volatile rc_bool_t& lock) noexcept
+{
+	for (int i = 0; lock.exchange(true, std::memory_order_acquire); i++)
+	{
+		// we didn't get the lock:
+		// wait until we see that it's free.
+		// this happens only very rarely.
+		// if we block too long then yield to other thread:
+		while (lock.load(std::memory_order_relaxed))
+		{
+			if (i > 20) std::this_thread::yield();
+		}
+	}
+}
+
+inline void rc_unlock_spinlock(volatile rc_bool_t& lock) noexcept
+{
+	lock.store(false, std::memory_order_release); //
+}
+#endif
+
+
+template<typename T>
+class RCPtr;
+
+/*	__________________________________________________________________________________
+	template class WeakPtr stores a weak reference to a object managed by RCPtr.
+	WeakPtr can only be created from RCPtr or other WeakPtr, not from a pure pointer.
+	The stored pointer cannot be accessed directly.
+	To access the stored pointer a RCPtr must be created from the WeakPtr.
 */
+template<typename T>
+class WeakPtr
+{
+	template<typename T2>
+	friend class RCPtr;
 
-template<class T>
+	T* p {nullptr};
+
+	static void retain(T* p) noexcept
+	{
+		if (p) ++p->_rcdata.wc;
+	}
+	static void release(T* p) noexcept
+	{
+		if (p && --p->_rcdata.wc == 0) delete reinterpret_cast<const volatile char*>(p);
+	}
+
+public:
+	uint refcnt() const noexcept { return p ? uint(p->_rcdata.hc) : 0; }   // hard count
+	uint totalcnt() const noexcept { return p ? uint(p->_rcdata.wc) : 0; } // total = hard + weak count
+
+	WeakPtr() noexcept : p(nullptr) {}
+	WeakPtr(const WeakPtr& q) noexcept : p(q.p) { retain(p); }
+	WeakPtr(WeakPtr&& q) noexcept : p(q.p) { q.p = nullptr; }
+	WeakPtr(const RCPtr<T>& q) noexcept : p(q) { retain(p); }
+	~WeakPtr() noexcept { release(p); }
+
+	WeakPtr& operator=(const RCPtr<T>& q) noexcept
+	{
+		retain(q);
+		release(p);
+		p = q;
+		return *this;
+	}
+
+	WeakPtr& operator=(const WeakPtr& q) noexcept { return operator=(q.p); }
+	WeakPtr& operator=(WeakPtr&& q) noexcept
+	{
+		std::swap(p, q.p);
+		return *this;
+	}
+	WeakPtr& operator=(std::nullptr_t) noexcept
+	{
+		release(p);
+		p = nullptr;
+		return *this;
+	}
+
+#define subclass_only typename std::enable_if<std::is_base_of<T, T2>::value, int>::type = 1
+#ifdef _GCC
+	template<typename T2, subclass_only>
+	friend class ::WeakPtr;
+#else
+	template<typename T2>
+	friend class ::WeakPtr;
+#endif
+
+	template<typename T2, subclass_only>
+	WeakPtr(const WeakPtr<T2>& q) noexcept : p(q.p)
+	{
+		retain(p);
+	}
+
+	template<typename T2, subclass_only>
+	WeakPtr(WeakPtr<T2>&& q) noexcept : p(q.p)
+	{
+		q.p = nullptr;
+	}
+
+	template<typename T2, subclass_only>
+	WeakPtr& operator=(const WeakPtr<T2>& q) noexcept
+	{
+		return operator=(q.p);
+	}
+
+	template<typename T2, subclass_only>
+	WeakPtr& operator=(WeakPtr<T2>&& q) noexcept
+	{
+		release(p);
+		p	= q.p;
+		q.p = nullptr;
+		return *this;
+	}
+#undef subclass_only
+
+	// see https://stackoverflow.com/questions/11562/how-to-overload-stdswap
+	friend void swap(WeakPtr<T>& a, WeakPtr<T>& b) noexcept { std::swap(a.p, b.p); }
+
+	// No direct access to the stored object!
+	T* operator->() const  = delete;
+	T& operator*() const   = delete;
+	   operator T&() const = delete;
+	   operator T*() const = delete;
+
+	// test for non-nullptr:
+	// 'true' result does not guarantee that the object is still valid!
+	operator bool() const noexcept { return p != nullptr; }
+};
+
+
+/*	____________________________________________________________________________
+	template class RCPtr is a smart pointer to objects using reference counting.
+*/
+template<typename T>
 class RCPtr
 {
 	template<class TT>
@@ -53,44 +351,63 @@ class RCPtr
 	template<class T1, class T2>
 	friend class RCHashMap;
 
-protected:
-	T* p;
+	T* p {nullptr};
 
 private:
-	void retain() const noexcept
+	static void retain(T* p) noexcept
 	{
-		if (p) p->retain();
+		if (p) // sequence wc, hc:
+		{
+			if (T::_has_wc) ++p->_rcdata.wc;
+			++p->_rcdata.hc;
+		}
 	}
-	void release() const noexcept
+	static void release(T* p) noexcept
 	{
-		if (p) p->release();
+		if (p)
+		{
+			if (T::_has_wc) // sequence hc, tc:
+			{
+				if (--p->_rcdata.hc == 0) p->~T();
+				if (--p->_rcdata.wc == 0) delete reinterpret_cast<const volatile char*>(p);
+			}
+			else
+			{
+				if (--p->_rcdata.hc == 0) delete p;
+			}
+		}
 	}
 
 public:
-	RCPtr() noexcept : p(nullptr) {}
-	RCPtr(T* p) noexcept : p(p) { retain(); }
-	explicit RCPtr(const RCPtr& q) noexcept : p(q.p) { retain(); }
-	RCPtr(RCPtr& q) noexcept : p(q.p) { retain(); }
+	uint refcnt() const noexcept { return p ? uint(p->_rcdata.hc) : 0; }   // hard count
+	uint totalcnt() const noexcept { return p ? uint(p->_rcdata.wc) : 0; } // total = hard + weak count
+
+	RCPtr(std::nullptr_t = nullptr) noexcept {}
+	RCPtr(T* p) noexcept : p(p) { retain(p); }
+	RCPtr(const RCPtr& q) noexcept : p(q.p) { retain(p); }
 	RCPtr(RCPtr&& q) noexcept : p(q.p) { q.p = nullptr; }
-	~RCPtr() noexcept { release(); }
+	~RCPtr() noexcept { release(p); }
 
 	RCPtr& operator=(RCPtr&& q) noexcept
 	{
 		std::swap(p, q.p);
 		return *this;
 	}
-	RCPtr& operator=(const RCPtr& q) noexcept
-	{
-		q.retain();
-		release();
-		p = q.p;
-		return *this;
-	}
 	RCPtr& operator=(T* q) noexcept
 	{
-		if (q) q->retain();
-		release();
+		retain(q);
+		release(p);
 		p = q;
+		return *this;
+	}
+	RCPtr& operator=(const RCPtr& q) noexcept
+	{
+		return operator=(q.p); //
+	}
+	RCPtr& operator=(std::nullptr_t) noexcept
+	{
+		release(p);
+		p = nullptr;
 		return *this;
 	}
 
@@ -102,84 +419,110 @@ public:
 	template<typename T2>
 	friend class ::RCPtr;
 #endif
+
+	// convert a WeakPtr to RCPtr:
 	template<typename T2, subclass_only>
-	RCPtr& operator=(RCPtr<T2>&& q) noexcept
+	RCPtr(WeakPtr<T2>& q) noexcept : p(nullptr)
 	{
-		q.retain();
-		release();
-		p = q.ptr();
-		return *this;
+		if (T* qp = q.p) // not null
+		{
+			if (qp->_rcdata.hc > 0) // has hard locks
+			{
+				if (T::_has_lock) rc_lock_spinlock(qp->_rcdata.lock);
+
+				if (++qp->_rcdata.hc > 1) // got it
+				{
+					++qp->_rcdata.wc;
+					p = qp;
+				}
+				else // just destroyed
+				{
+					// --qp->_rcdata.hc;
+					qp->_rcdata.hc = 0;
+				}
+
+				if (T::_has_lock) rc_unlock_spinlock(qp->_rcdata.lock);
+			}
+			else q = nullptr; // clear the WeakPtr so that it no longer locks the memory
+		}
 	}
+
+	template<typename T2, subclass_only>
+	RCPtr(const RCPtr<T2>& q) noexcept : p(q.p)
+	{
+		retain(p);
+	}
+	template<typename T2, subclass_only>
+	RCPtr(RCPtr<T2>&& q) noexcept : p(q.p)
+	{
+		q.p = nullptr;
+	}
+
 	template<typename T2, subclass_only>
 	RCPtr& operator=(const RCPtr<T2>& q) noexcept
 	{
-		q.retain();
-		release();
-		p = q.ptr();
+		return operator=(q.p);
+	}
+	template<typename T2, subclass_only>
+	RCPtr& operator=(RCPtr<T2>&& q) noexcept
+	{
+		release(p);
+		p	= q.p;
+		q.p = nullptr;
 		return *this;
 	}
-	template<typename T2, subclass_only>
-	RCPtr(RCPtr<T2>& q) noexcept : p(q.ptr())
-	{
-		retain();
-	}
-	template<typename T2, subclass_only>
-	RCPtr(RCPtr<T2>&& q) noexcept : p(q.ptr())
-	{
-		retain();
-	}
 #undef subclass_only
-
-	// factory method
-	// not needed because RCPtr is final and can't be subclassed. (but the RCObject can.)
-	//static RCPtr newFromFile (FD& fd, void* data=nullptr)	throws { return std::move(RCPtr(fd.read_uint8()?T::newFromFile(fd,data):nullptr)); }
 
 	// see https://stackoverflow.com/questions/11562/how-to-overload-stdswap
 	friend void swap(RCPtr<T>& a, RCPtr<T>& b) noexcept { std::swap(a.p, b.p); }
 
 	T* operator->() const noexcept { return p; }
-	T& operator*() const noexcept { return *p; }
+	   operator T*() const noexcept { return p; }
 	T* ptr() const noexcept { return p; }
+	T* get() const noexcept { return p; } // for compatibility with std::shared_ptr
 	T& ref() const noexcept
 	{
 		assert(p != nullptr);
 		return *p;
 	}
-
 	operator T&() const noexcept
 	{
 		assert(p != nullptr);
 		return *p;
 	}
-	operator T*() const noexcept { return p; }
-
-	uint refcnt() const noexcept { return p ? p->refcnt() : 0; }
 
 	// prevent erroneous use of operator[] with pointer:
-	T& operator[](uint32) const = delete;
+	T& operator[](int) const = delete;
 
-	// for convenience, these are also declared volatile:
-	// the result is unreliable and must be checked again after locking.
-	bool isNotNull() const volatile noexcept { return p != nullptr; }
-	bool isNull() const volatile noexcept { return p == nullptr; }
-	bool is(const T* b) const volatile noexcept { return p == b; }
-	bool isnot(const T* b) const volatile noexcept { return p != b; }
-		 operator bool() const volatile noexcept { return p != nullptr; }
-
-	void print(FD&, cstr indent) const throws;
-	void serialize(FD&, void* data = nullptr) const throws;
-	void deserialize(FD&, void* data = nullptr) throws;
+	// test for non-nullptr
+	operator bool() const volatile noexcept { return p != nullptr; }
 };
 
-#if 0
-  #include "RCObject.h"
-  #include "template_helpers.h"
-static_assert(kio::has_oper_star<RCPtr<RCObject>>::value,"");
-static_assert(kio::has_oper_star<const RCPtr<const RCObject>>::value,"");
-#endif
+
+// ___________________________________________________________
+// convenience:
+// (auto deducted type)
+
+template<class T>
+RCPtr<T> rcptr(T* o)
+{
+	return RCPtr<T>(o);
+}
+
+template<class T>
+RCPtr<T> rcptr(const RCPtr<T>& o)
+{
+	return o;
+}
+
+template<class T>
+RCPtr<T> rcptr(WeakPtr<T>& o)
+{
+	return RCPtr<T>(o);
+}
 
 
-// _____________________________________________________________________________________________________________
+// ___________________________________________________________
 // relational operators:
 // NOTE: it's C++ standard to compare the pointers.
 //       a nullptr is less than any other pointer.
@@ -214,196 +557,3 @@ bool operator<=(const RCPtr<T>& a, const RCPtr<T>& b) noexcept
 {
 	return a.ptr() <= b.ptr();
 }
-
-#if 0
-// prevent auto propagation from T* to RCPtr<T>:
-// seemingly auto propagation in the other direction this is already done by 'operator T* ()' which is fine :-)
-
-template<class T> bool operator== (RCPtr<T> const& a, T const* b) noexcept { return a.ptr() == b; }
-template<class T> bool operator!= (RCPtr<T> const& a, T const* b) noexcept { return a.ptr() != b; }
-template<class T> bool operator>  (RCPtr<T> const& a, T const* b) noexcept { return a.ptr() >  b; }
-template<class T> bool operator<  (RCPtr<T> const& a, T const* b) noexcept { return a.ptr() <  b; }
-template<class T> bool operator>= (RCPtr<T> const& a, T const* b) noexcept { return a.ptr() >= b; }
-template<class T> bool operator<= (RCPtr<T> const& a, T const* b) noexcept { return a.ptr() <= b; }
-
-template<class T> bool operator== (T const* a, RCPtr<T> const& b) noexcept { return a == b.ptr(); }
-template<class T> bool operator!= (T const* a, RCPtr<T> const& b) noexcept { return a != b.ptr(); }
-template<class T> bool operator>  (T const* a, RCPtr<T> const& b) noexcept { return a >  b.ptr(); }
-template<class T> bool operator<  (T const* a, RCPtr<T> const& b) noexcept { return a <  b.ptr(); }
-template<class T> bool operator>= (T const* a, RCPtr<T> const& b) noexcept { return a >= b.ptr(); }
-template<class T> bool operator<= (T const* a, RCPtr<T> const& b) noexcept { return a <= b.ptr(); }
-#endif
-
-// _____________________________________________________________________________________________________________
-// it seems impossible to specialize a class template's member function for a group of types with common traits.
-// therefore functionality is extracted into a global function which can templated and overloaded as needed.
-// https://jguegant.github.io/blogs/tech/sfinae-introduction.html
-
-template<typename T>
-cstr tostr(const RCPtr<T>& p)
-{
-	// return 1-line description of object for debugging and logging:
-	return p ? tostr(*p) : "nullptr";
-}
-
-// ____ print() ____
-
-template<class T>
-inline typename std::enable_if<kio::has_print<T>::value, void>::type
-print(FD& fd, const RCPtr<T>& p, cstr indent) throws
-{
-	// used if T has member function T::print(FD&,indent)
-
-	if (p) p->print(fd, indent);
-	else fd.write_fmt("%snullptr\n", indent);
-}
-
-template<class T>
-inline typename std::enable_if<!kio::has_print<T>::value, void>::type
-print(FD& fd, const RCPtr<T>& p, cstr indent) throws
-{
-	// used if T has no member function T::print(FD&,indent)
-
-	if (p) fd.write_fmt("%s%s\n", indent, tostr(p));
-	else fd.write_fmt("%snullptr\n", indent);
-}
-
-template<class T>
-void RCPtr<T>::print(FD& fd, cstr indent) const throws
-{
-	// print description of object for debugging and logging
-	// uses one of the above inline print() functions
-
-	::print(fd, *this, indent);
-}
-
-// ____ serialize() ____
-
-template<typename T>
-typename std::enable_if<kio::has_serialize<T>::value && !kio::has_serialize_w_data<T, void*>::value, void>::type
-/*void*/
-serialize(FD& fd, const RCPtr<T>& p, void*) throws
-{
-	// used if type T has member function T::serialize(FD&)
-
-	fd.write_uint8(p != nullptr);
-	if (p) p->serialize(fd);
-}
-
-template<typename T>
-typename std::enable_if<kio::has_serialize_w_data<T, void*>::value, void>::type
-/*void*/
-serialize(FD& fd, const RCPtr<T>& p, void* data) throws
-{
-	// used if type T has member function T::serialize(FD&,void*)
-
-	fd.write_uint8(p != nullptr);
-	if (p) p->serialize(fd, data);
-}
-
-template<typename T>
-void RCPtr<T>::serialize(FD& fd, void* data) const throws
-{
-	// this template will find the above serialize(FD&,RCPtr<T>&, void*)
-	// for type T which implement T::serialize(FD&) and
-	// for type T which implement T::serialize(FD&,void*)
-
-	::serialize(fd, *this, data);
-}
-
-// ____ deserialize() ____
-
-template<typename T>
-typename std::enable_if<kio::has_deserialize<T>::value && !kio::has_deserialize_w_data<T, void*>::value, void>::type
-/*void*/
-deserialize(FD& fd, RCPtr<T>& p, void*) throws
-{
-	// used if type T has member function T::deserialize(FD&)
-
-	// actually use factory method of T which may return T or subclass
-	p = fd.read_uint8() ? T::newFromFile(fd) : nullptr;
-}
-
-template<typename T>
-typename std::enable_if<kio::has_deserialize_w_data<T, void*>::value, void>::type
-/*void*/
-deserialize(FD& fd, RCPtr<T>& p, void* data) throws
-{
-	// used if type T has member function T::deserialize(FD&,void*)
-
-	// actually use factory method of T which may return T or subclass
-	p = fd.read_uint8() ? T::newFromFile(fd, data) : nullptr;
-}
-
-template<typename T>
-void RCPtr<T>::deserialize(FD& fd, void* data) throws
-{
-	// this template will find the above deserialize(FD&,RCPtr<T>&, void*)
-	// for type T which implement T::deserialize(FD&) and
-	// for type T which implement T::deserialize(FD&,void*)
-
-	::deserialize(fd, *this, data);
-}
-
-
-// _____________________________________________________________________________________________________________
-
-// convenience subclasses for Array and HashMap:
-template<typename T>
-class Array;
-template<class T>
-class RCArray : public Array<RCPtr<T>>
-{
-protected:
-	using Array<RCPtr<T>>::cnt;
-	using Array<RCPtr<T>>::data;
-
-public:
-	explicit RCArray() throws {}
-	explicit RCArray(uint cnt, uint max = 0) throws : Array<RCPtr<T>>(cnt, max) {}
-
-	uint indexof(const T* item) const noexcept // find first occurance or return ~0u
-	{										   // compares object addresses (pointers)
-		for (uint i = 0; i < cnt; i++)
-		{
-			if (data[i].p == item) return i;
-		}
-		return ~0u;
-	}
-
-	bool contains(const T* item) const noexcept { return indexof(item) != ~0u; }
-	void removeitem(const T* item, bool fast = 0) noexcept
-	{
-		uint i = indexof(item);
-		if (i != ~0u) remove(i, fast);
-	}
-
-	//	uint indexof  (const RCPtr<T>& item) const noexcept			{ return indexof(item.p); }
-	//	bool contains (const RCPtr<T>& item) const	noexcept		{ return contains(item.p); }
-	//	void removeitem (const RCPtr<T>& item, bool fast=0) noexcept { removeitem(item.p, fast); }
-
-	void remove(const T* item, bool fast = 0) noexcept { removeitem(item, fast); }
-	void remove(uint idx, bool fast = 0) noexcept { this->removeat(idx, fast); }
-
-	using Array<RCPtr<T>>::append;
-	RCPtr<T>& append(T* q) throws { return RCArray<T>::append(RCPtr<T>(q)); }
-
-	using Array<RCPtr<T>>::operator<<;
-	RCArray&			   operator<<(T* q) throws
-	{
-		append(q);
-		return *this;
-	}
-};
-
-
-// TODO: HashMap.h must be included first
-template<class KEY, class ITEM>
-class HashMap;
-template<class KEY, class T>
-class RCHashMap : public HashMap<KEY, RCPtr<T>>
-{
-public:
-	// default: for up to 1024 items without resizing
-	explicit RCHashMap(uint max = 1 << 10) throws : HashMap<KEY, RCPtr<T>>(max) {}
-};
