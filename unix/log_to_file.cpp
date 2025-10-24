@@ -264,7 +264,7 @@ public:
 	double when;		// timestamp of last message printed
 	uint   composition; // index in msg[]
 	uint   repetitions; // counter for unlogged repeating messages
-	char   msg[256];	// for msg composition & repetition
+	char   msg[400];	// for msg composition & repetition
 
 	void write2log(cstr msg) { ::write2log(thread_id, when, indent, msg); }
 	void print_repetitions();
@@ -364,11 +364,25 @@ void LogFile::vaadd(cstr format, va_list va)
 	lock_guard {mutex};
 
 	if (repetitions) print_repetitions();
-	int num_added = vsnprintf(msg + composition, NELEM(msg) - composition, format, va);
-	assert(num_added >= 0);
-	if (num_added < 0) num_added = snprintf(msg + composition, NELEM(msg) - composition, "[[printf format error]]");
-	composition += uint(num_added);
-	if (composition >= NELEM(msg)) composition = NELEM(msg);
+
+	uint maxlen = NELEM(msg) - composition;
+	int	 n		= vsnprintf(msg + composition, maxlen, format, va);
+	assert(n >= 0);
+	if (n < 0) n = snprintf(msg + composition, maxlen, "[[printf format error]]");
+	uint num_added = min(uint(n), maxlen);
+
+	// break message before it get's too long:
+	while (ptr p = ptr(memchr(msg + composition, '\n', num_added)))
+	{
+		*p++ = 0; // overwrites the nl
+		when = now();
+		write2log(msg);
+		num_added	= uint(msg + composition + num_added - p);
+		composition = 0;
+		memmove(msg, p, num_added);
+	}
+
+	composition += num_added;
 }
 
 void LogFile::valog(double now, cstr format, va_list va)
@@ -496,12 +510,13 @@ static void write2log(uint thread_id, double when, int indent, cstr msg)
 		int d = dt.tm_mday;
 
 		if (timestamp_with_msec)
-			sprintf(timestamp, fmt11, y, m, d, dt.tm_hour, dt.tm_min, dt.tm_sec, int((when - sec) * 1000));
+			sprintf(timestamp, fmt11, y, m, d, dt.tm_hour, dt.tm_min, dt.tm_sec, int((when - double(sec)) * 1000));
 		else sprintf(timestamp, fmt10, y, m, d, dt.tm_hour, dt.tm_min, dt.tm_sec);
 	}
 	else
 	{
-		if (timestamp_with_msec) sprintf(timestamp, fmt01, dt.tm_hour, dt.tm_min, dt.tm_sec, int((when - sec) * 1000));
+		if (timestamp_with_msec)
+			sprintf(timestamp, fmt01, dt.tm_hour, dt.tm_min, dt.tm_sec, int((when - double(sec)) * 1000));
 		else sprintf(timestamp, fmt00, dt.tm_hour, dt.tm_min, dt.tm_sec);
 	}
 
@@ -671,7 +686,7 @@ static void open_logfile()
 			snprintf(
 				filepath, NELEM(filepath), "%s%s-%04i-%02i-%02i.log", logdir, appl_name, //
 				dt.tm_year + 1900, dt.tm_mon + 1, dt.tm_mday);
-			logrotate_when = when + seconds_per_day;
+			logrotate_when = double(when) + seconds_per_day;
 			break;
 
 		case MONTHLY:
@@ -681,7 +696,7 @@ static void open_logfile()
 				dt.tm_year + 1900, dt.tm_mon + 1);
 			dt.tm_mon += 1;
 			dt.tm_mday	   = 1;
-			logrotate_when = timegm(&dt);
+			logrotate_when = double(timegm(&dt));
 			break;
 
 		case WEEKLY:
@@ -704,7 +719,7 @@ static void open_logfile()
 			snprintf(
 				filepath, NELEM(filepath), "%s%s-%04i-week-%02i.log", logdir, appl_name, //
 				dt.tm_year + 1900, 1 + (dt.tm_yday + 3) / 7);
-			logrotate_when = when + 7 * seconds_per_day;
+			logrotate_when = double(when) + 7 * seconds_per_day;
 			break;
 		}
 		}
