@@ -2,14 +2,8 @@
 // BSD-2-Clause license
 // https://opensource.org/licenses/BSD-2-Clause
 
-#undef NDEBUG
-#define loglevel 1
-#include "Templates/Array.h"
-#include "cstrings/cstrings.h"
-#include "kio/kio.h"
-#include "kio/util/defines.h"
-#include "main.h"
-#include "unix/FD.h"
+
+#include "doctest/doctest/doctest.h"
 #include "z80_goodies.h"
 #include "z80_opcodes.h"
 
@@ -21,7 +15,9 @@ struct TestSet
 };
 
 
-static TestSet asm8080_tests[] = {
+// clang-format off
+static TestSet asm8080_tests[] =
+{
 	// tests for i8080
 	// asm8080 syntax
 
@@ -109,8 +105,11 @@ static TestSet asm8080_tests[] = {
 	{CALL_P , "cp  NN"},  {OR_N , "ori N"}, {EI,   "ei"},
 	{CALL_M , "cm  NN"},  {CP_N , "cpi N"},
 };
+// clang-format on
 
-static TestSet z80_tests[] = {
+// clang-format off
+static TestSet z80_tests[] =
+{
 	// tests for i8080, Z80 and Z180
 
 	{NOP, "nop"},
@@ -364,48 +363,32 @@ static TestSet z80_tests[] = {
 	{OTIMR, "otimr"},
 	{OTDMR, "otdmr"},
 };
+// clang-format on
 
 
-#undef END
-#define END                                                                                                            \
-  }                                                                                                                    \
-  catch (std::exception & e)                                                                                           \
-  {                                                                                                                    \
-	num_errors++;                                                                                                      \
-	logline("%s: %s", test->instruction, e.what());                                                                    \
-  }
-
-
-static void test_disass_asm8080(uint& num_tests, uint& num_errors)
+TEST_CASE("z80_major_opcode")
 {
-	logIn("test major_opcode -- asm8080 syntax");
+	SUBCASE("") { logline("●●● %s:", __FILE__); }
 
-	TestSet* test;
-	TRY for (uint i = 0; i < NELEM(asm8080_tests);)
+	SUBCASE("asm8080 syntax")
 	{
-		test = &asm8080_tests[i++];
-		assert(test->major_opcode == major_opcode_8080(test->instruction));
+		TestSet* test;
+		for (uint i = 0; i < NELEM(asm8080_tests);)
+		{
+			test = &asm8080_tests[i++];
+			CHECK_NOTHROW((void)major_opcode_8080(test->instruction));
+			CHECK_EQ(test->major_opcode, major_opcode_8080(test->instruction));
+		}
 	}
-	END
-}
 
-static void test_disass_z80(uint& num_tests, uint& num_errors)
-{
-	logIn("test major_opcode -- Z80 syntax");
-
-	TestSet* test;
-	TRY for (uint i = 0; i < NELEM(z80_tests);)
+	SUBCASE("Z80 syntax")
 	{
-		test = &z80_tests[i++];
-		assert(test->major_opcode == major_opcode(test->instruction));
+		TestSet* test;
+		for (uint i = 0; i < NELEM(z80_tests);)
+		{
+			test = &z80_tests[i++];
+			CHECK_NOTHROW((void)major_opcode(test->instruction));
+			CHECK_EQ(test->major_opcode, major_opcode(test->instruction));
+		}
 	}
-	END
-}
-
-void test_z80_major_opcode(uint& num_tests, uint& num_errors)
-{
-	logIn("test z80_major_opcode");
-
-	test_disass_asm8080(num_tests, num_errors);
-	test_disass_z80(num_tests, num_errors);
 }

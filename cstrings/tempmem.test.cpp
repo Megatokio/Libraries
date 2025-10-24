@@ -2,13 +2,10 @@
 // BSD-2-Clause license
 // https://opensource.org/licenses/BSD-2-Clause
 
-#undef NDEBUG
-#define loglevel 1
 #include "tempmem.h"
+#include "doctest/doctest/doctest.h"
 #include "hash/sdbm_hash.h"
-#include "main.h"
-#include "unix/FD.h"
-#include <pthread.h>
+#include <thread>
 
 
 // 2019-11: use own random number generator because stdlib random() is BLOCKING when called from multiple threads!
@@ -47,33 +44,27 @@ static void alloc_some_bytes(uint n)
 	for (uint i = 0; i < n; i++) (void)tempstr(random(999));
 }
 
-static volatile uint num_tests;
-static volatile uint num_errors;
 
-void* do_test_tempmem(void*)
+void test1()
 {
-	TRY TempMemPool z;
+	TempMemPool z;
 	(void)tempstr(0);
 	(void)tempstr(8);
-	assert(size_t(tempstr(79)) % native_alignment != 0); // not required but expected
-	assert(size_t(tempstr(79)) % native_alignment != 0); // not required but expected
-	assert(size_t(tempmem(80)) % native_alignment == 0); // required
+	CHECK(size_t(tempstr(79)) % native_alignment != 0); // not required but expected
+	CHECK(size_t(tempstr(79)) % native_alignment != 0); // not required but expected
+	CHECK(size_t(tempmem(80)) % native_alignment == 0); // required
 	(void)tempstr(12345);
 	z.purge();
 	(void)tempstr(8);
-	END
+}
 
-		TempMemPool* outerpool = TempMemPool::getPool();
-	TempMemPool		 tempmempool;
-	TRY				 assert(TempMemPool::getPool() == &tempmempool);
-	assert(TempMemPool::getXPool() == outerpool);
-	END
+static constexpr int N = 2000;
 
-		static const int N = 2000;
-
-	TRY ptr list1[N];
-	ptr		list2[N];
-	uint	size[N];
+void test3(TempMemPool& tempmempool)
+{
+	ptr	 list1[N];
+	ptr	 list2[N];
+	uint size[N];
 	for (uint i = 0; i < N; i++)
 	{
 		uint n	 = min(random(0x1fff), random(0x1fff));
@@ -85,42 +76,45 @@ void* do_test_tempmem(void*)
 	}
 	for (uint i = 0; i < N; i++)
 	{
-		assert(memcmp(list1[i], list2[i], size[i]) == 0);
+		CHECK(memcmp(list1[i], list2[i], size[i]) == 0);
 		delete[] list2[i];
 	}
-	END
+}
 
-		TRY for (uint i = 0; i < N; i++)
+void test4(TempMemPool& tempmempool)
+{
+	for (uint i = 0; i < N; i++)
 	{
 		uint n = min(random(0x1fff), random(0x1fff));
 		str	 a = tempmempool.allocStr(n);
 		str	 b = tempmempool.allocMem(n);
-		assert(a[n] == 0);
-		assert(size_t(b) % native_alignment == 0);
+		CHECK(a[n] == 0);
+		CHECK(size_t(b) % native_alignment == 0);
 	}
-	END
+}
 
-		TRY tempmempool.purge();
-	END
-
-		TRY for (uint i = 0; i < N; i++)
+void test6()
+{
+	for (uint i = 0; i < N; i++)
 	{
 		uint n = min(random(0x1fff), random(0x1fff));
 		str	 a = tempstr(n);
 		str	 b = tempmem(n);
 		str	 c = xtempstr(n);
 		str	 d = xtempmem(n);
-		assert(a[n] == 0);
-		assert(size_t(b) % native_alignment == 0);
-		assert(c[n] == 0);
-		assert(size_t(d) % native_alignment == 0);
+		CHECK(a[n] == 0);
+		CHECK(size_t(b) % native_alignment == 0);
+		CHECK(c[n] == 0);
+		CHECK(size_t(d) % native_alignment == 0);
 	}
-	END
+}
 
-		TRY ptr list1[N];
-	ptr			list2[N];
-	uint		size[N];
-	uint		hash[N];
+void test7()
+{
+	ptr	 list1[N];
+	ptr	 list2[N];
+	uint size[N];
+	uint hash[N];
 	{
 		TempMemPool z;
 		for (uint i = 0; i < N; i++)
@@ -134,36 +128,95 @@ void* do_test_tempmem(void*)
 			memcpy(list2[i], list1[i], size[i]);
 		}
 		alloc_some_bytes();
-		for (uint i = 0; i < N; i++) { assert(memcmp(list1[i], list2[i], size[i]) == 0); }
+		for (uint i = 0; i < N; i++) { CHECK(memcmp(list1[i], list2[i], size[i]) == 0); }
 		alloc_some_bytes();
-		assert(TempMemPool::getPool() == &z);
+		CHECK(TempMemPool::getPool() == &z);
 		TempMemPool::getPool()->purge();
 		alloc_some_bytes();
 	}
 	alloc_some_bytes();
-	for (uint i = 0; i < N; i++) { assert(sdbm_hash(list2[i], size[i]) == hash[i]); }
-	END
-
-		return nullptr;
+	for (uint i = 0; i < N; i++) { CHECK(sdbm_hash(list2[i], size[i]) == hash[i]); }
 }
 
-
-void test_tempmem(uint& num_tests, uint& num_errors)
+TEST_CASE("TempMemPool")
 {
-	logIn("test TempMemPool");
+	SUBCASE("") { logline("●●● %s:", __FILE__); }
 
-	::num_tests	 = 0;
-	::num_errors = 0;
+	auto all_tests = []() //
+	{
+		test1();
 
-	double start = now();
+		TempMemPool* outerpool = TempMemPool::getPool();
+		TempMemPool	 tempmempool;
+		CHECK(TempMemPool::getPool() == &tempmempool);
+		CHECK(TempMemPool::getXPool() == outerpool);
 
-	pthread_t threads[10];
-	for (uint i = 0; i < NELEM(threads); i++) { pthread_create(&threads[i], nullptr, do_test_tempmem, nullptr); }
-	do_test_tempmem(nullptr);
-	for (uint i = NELEM(threads); i--;) { pthread_join(threads[i], nullptr); }
+		test3(tempmempool);
+		test4(tempmempool);
+		tempmempool.purge();
+		test6();
+		test7();
+	};
 
-	logline("tempmem test time = %f sec.", now() - start);
+	SUBCASE("single thread") { all_tests(); }
 
-	num_tests += ::num_tests;
-	num_errors += ::num_errors;
+#ifndef NO_THREADS
+	SUBCASE("multi-threaded")
+	{
+		double		start = now();
+		std::thread threads[10];
+		for (uint i = 0; i < NELEM(threads); i++) { threads[i] = std::thread(all_tests); }
+		all_tests();
+		for (uint i = 0; i < NELEM(threads); i++) { threads[i].join(); }
+		logline("tempmem: test time = %f sec.", now() - start);
+	}
+#endif
 }
+
+
+/*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+*/

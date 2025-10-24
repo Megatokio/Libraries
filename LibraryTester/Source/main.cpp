@@ -3,31 +3,15 @@
 // https://opensource.org/licenses/BSD-2-Clause
 
 
-#include "main.h"
-#include <iostream>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include "Templates/Array.h"
+#include "doctest/doctest/doctest.h"
 
 
-int main(int, const char**)
+doctest::String toString(Array<cstr> log)
 {
-	uint num_tests	= 0;
-	uint num_errors = 0;
-
-	test_kio_util(num_tests, num_errors);
-	test_tempmem(num_tests, num_errors);
-	test_cstrings(num_tests, num_errors);
-	test_relational_operators(num_tests, num_errors);
-	test_Array(num_tests, num_errors);
-	test_StrArray(num_tests, num_errors);
-	test_RCArray(num_tests, num_errors);
-	test_hashmap(num_tests, num_errors);
-	test_sort(num_tests, num_errors);
-	TestStringClass(num_tests, num_errors);
-	test_z80_disass(num_tests, num_errors);
-	test_z80_opcode_length(num_tests, num_errors);
-	test_z80_major_opcode(num_tests, num_errors);
-	test_z80_clock_cycles(num_tests, num_errors);
-
-	std::cerr << "\n" << num_tests << " tests run, " << num_errors << " errors.\n";
-
-	return 0;
+	if (log.count() == 0) return "{<empty>}";
+	cstr s = log[0];
+	for (uint i = 1; i < log.count(); i++) { s = catstr(s, ",\n", log[i]); }
+	return catstr("{\n", s, "}");
 }

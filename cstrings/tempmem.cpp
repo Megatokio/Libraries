@@ -2,6 +2,7 @@
 // BSD-2-Clause license
 // https://opensource.org/licenses/BSD-2-Clause
 
+#define loglevel 0
 #include "tempmem.h"
 #include "kio/kio.h"
 #include <thread>
@@ -78,14 +79,14 @@ static thread_local struct CurrentPoolPtr
 	TempMemPool* pool = nullptr;
 	CurrentPoolPtr() : pool(new TempMemPool(true))
 	{
-		debugstr(
-			"tempmem: thread-local ctor: thread=0x%08x, pool=0x%08x\n",
+		xlogline(
+			"tempmem: thread-local ctor: thread=0x%08x, pool=0x%08x",
 			uint32(std::hash<std::thread::id> {}(std::this_thread::get_id())), uint32(size_t(this)));
 	}
 	~CurrentPoolPtr()
 	{
-		debugstr(
-			"tempmem: thread-local dtor: thread=0x%08x, pool=0x%08x\n",
+		xlogline(
+			"tempmem: thread-local dtor: thread=0x%08x, pool=0x%08x",
 			uint32(std::hash<std::thread::id> {}(std::this_thread::get_id())), uint32(size_t(this)));
 
 		// If the thread was terminated or aborted then local TempMemPools may be still alive:

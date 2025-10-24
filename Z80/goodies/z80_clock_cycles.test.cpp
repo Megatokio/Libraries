@@ -3,16 +3,17 @@
 // https://opensource.org/licenses/BSD-2-Clause
 
 
-#undef NDEBUG
-#define loglevel 1
+//#define loglevel 1
 #include "Z80/goodies/z80_goodies.h"
 #include "Z80/goodies/z80_opcodes.h"
+#include "doctest/doctest/doctest.h"
 #include "kio/kio.h"
-#include "main.h"
 
+
+// clang-format off
 static const uint8 cc_i8080[256] = {
-#undef Z
-#define Z(A, B) A
+	#undef Z
+	#define Z(A, B) A
 	// NOP, 		LD_BC_NN,	LD_xBC_A,	INC_BC,		INC_B,		DEC_B,		LD_B_N,		RLCA,
 	// NOP**,		ADD_HL_BC,	LD_A_xBC,	DEC_BC,		INC_C,		DEC_C,		LD_C_N,		RRCA,
 	// NOP**,		LD_DE_NN,	LD_xDE_A,	INC_DE,		INC_D,		DEC_D,		LD_D_N,		RLA,
@@ -1239,322 +1240,276 @@ static const uint8 cc_z180_ED_on_branch[256] =
 		0,			0,			0,			0,			0,			0,			0,			0,
 		0,			0,			0,			0,			0,			0,			0,			0,
 };
+// clang-format on
 
 
-static void test_8080 (uint& num_tests, uint& num_errors)
+TEST_CASE("i8080_clock_cycles")
 {
-	logIn("i8080_clock_cycles");
+	SUBCASE("") { logline("●●● %s:", __FILE__); }
 
-	Byte core[20] = {0,0,0,0,0,0,0,0,0,0,1,2,3,4};
+	Byte core[20] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4};
 
-	TRY
-	for (uint op=0; op<256; op++)
+	xlogIn("i8080 opcodes");
+
+	for (uint op = 0; op < 256; op++)
 	{
-		log("%02X ",op);
+		xlog("%02X%c", op, (op + 1) & 31 ? ' ' : '\n');
 		core[10] = Byte(op);
-		assert(clock_cycles(Cpu8080,core,10) == cc_i8080[op]);
-		assert(clock_cycles_on_branch(Cpu8080,core,10) == cc_i8080_on_branch[op]);
-		assert(opcode_can_branch(Cpu8080,core,10) == ((cc_i8080[op]!=cc_i8080_on_branch[op]) || (op&0307)==JP_NZ));
+		CHECK(clock_cycles(Cpu8080, core, 10) == cc_i8080[op]);
+		CHECK(clock_cycles_on_branch(Cpu8080, core, 10) == cc_i8080_on_branch[op]);
+		CHECK(
+			opcode_can_branch(Cpu8080, core, 10) == ((cc_i8080[op] != cc_i8080_on_branch[op]) || (op & 0307) == JP_NZ));
 	}
-	END
-	logNl();
 }
 
-static void test_z80 (uint& num_tests, uint& num_errors)
+TEST_CASE("z80_clock_cycles")
 {
-	logIn("z80_clock_cycles");
+	Byte core[20] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4};
 
-	Byte core[20] = {0,0,0,0,0,0,0,0,0,0,1,2,3,4};
-
-	TRY
-	logline("simple opcodes");
-	for (uint op=0; op<256; op++)
+	SUBCASE("simple opcodes")
 	{
-		log("%02X ",op);
-		if (cc_z80[op] == 0) continue;
-		core[10] = Byte(op);
-		assert(clock_cycles(CpuZ80,core,10) == cc_z80[op]);
-		assert(clock_cycles_on_branch(CpuZ80,core,10) == cc_z80_on_branch[op]);
-		assert(clock_cycles(CpuDefault,core,10) == cc_z80[op]);
-		assert(clock_cycles_on_branch(CpuDefault,core,10) == cc_z80_on_branch[op]);
-		assert(clock_cycles(CpuZ80_ixcbr2,core,10) == cc_z80[op]);
-		assert(clock_cycles_on_branch(CpuZ80_ixcbr2,core,10) == cc_z80_on_branch[op]);
-		assert(clock_cycles(CpuZ80_ixcbxh,core,10) == cc_z80[op]);
-		assert(clock_cycles_on_branch(CpuZ80_ixcbxh,core,10) == cc_z80_on_branch[op]);
-		assert(opcode_can_branch(CpuZ80,core,10) == ((cc_z80[op]!=cc_z80_on_branch[op]) || (op&0307)==JP_NZ));
+		xlogIn("simple opcodes");
+		for (uint op = 0; op < 256; op++)
+		{
+			xlog("%02X%c", op, (op + 1) & 31 ? ' ' : '\n');
+			if (cc_z80[op] == 0) continue;
+			core[10] = Byte(op);
+			CHECK(clock_cycles(CpuZ80, core, 10) == cc_z80[op]);
+			CHECK(clock_cycles_on_branch(CpuZ80, core, 10) == cc_z80_on_branch[op]);
+			CHECK(clock_cycles(CpuDefault, core, 10) == cc_z80[op]);
+			CHECK(clock_cycles_on_branch(CpuDefault, core, 10) == cc_z80_on_branch[op]);
+			CHECK(clock_cycles(CpuZ80_ixcbr2, core, 10) == cc_z80[op]);
+			CHECK(clock_cycles_on_branch(CpuZ80_ixcbr2, core, 10) == cc_z80_on_branch[op]);
+			CHECK(clock_cycles(CpuZ80_ixcbxh, core, 10) == cc_z80[op]);
+			CHECK(clock_cycles_on_branch(CpuZ80_ixcbxh, core, 10) == cc_z80_on_branch[op]);
+			CHECK(
+				opcode_can_branch(CpuZ80, core, 10) == ((cc_z80[op] != cc_z80_on_branch[op]) || (op & 0307) == JP_NZ));
+		}
 	}
-	END
-	logNl();
 
-	TRY
-	logline("prefix CB opcodes");
-	core[10] = PFX_CB;
-	for (uint op=0; op<256; op++)
+	SUBCASE("prefix CB opcodes")
 	{
-		log("%02X ",op);
-		core[11] = Byte(op);
-		assert(clock_cycles(CpuZ80,core,10) == cc_z80_CB[op]);
-		assert(clock_cycles_on_branch(CpuZ80,core,10) == cc_z80_CB[op]);
-		assert(clock_cycles(CpuDefault,core,10) == cc_z80_CB[op]);
-		assert(clock_cycles_on_branch(CpuDefault,core,10) == cc_z80_CB[op]);
-		assert(clock_cycles(CpuZ80_ixcbr2,core,10) == cc_z80_CB[op]);
-		assert(clock_cycles_on_branch(CpuZ80_ixcbr2,core,10) == cc_z80_CB[op]);
-		assert(clock_cycles(CpuZ80_ixcbxh,core,10) == cc_z80_CB[op]);
-		assert(clock_cycles_on_branch(CpuZ80_ixcbxh,core,10) == cc_z80_CB[op]);
-		assert(opcode_can_branch(CpuZ80,core,10) == no);
+		xlogIn("prefix CB opcodes");
+		core[10] = PFX_CB;
+		for (uint op = 0; op < 256; op++)
+		{
+			xlog("%02X%c", op, (op + 1) & 31 ? ' ' : '\n');
+			core[11] = Byte(op);
+			CHECK(clock_cycles(CpuZ80, core, 10) == cc_z80_CB[op]);
+			CHECK(clock_cycles_on_branch(CpuZ80, core, 10) == cc_z80_CB[op]);
+			CHECK(clock_cycles(CpuDefault, core, 10) == cc_z80_CB[op]);
+			CHECK(clock_cycles_on_branch(CpuDefault, core, 10) == cc_z80_CB[op]);
+			CHECK(clock_cycles(CpuZ80_ixcbr2, core, 10) == cc_z80_CB[op]);
+			CHECK(clock_cycles_on_branch(CpuZ80_ixcbr2, core, 10) == cc_z80_CB[op]);
+			CHECK(clock_cycles(CpuZ80_ixcbxh, core, 10) == cc_z80_CB[op]);
+			CHECK(clock_cycles_on_branch(CpuZ80_ixcbxh, core, 10) == cc_z80_CB[op]);
+			CHECK(opcode_can_branch(CpuZ80, core, 10) == no);
+		}
 	}
-	END
-	logNl();
 
-	TRY
-	logline("prefix IX opcodes");
-	core[10] = PFX_IX;
-	for (uint op=0; op<256; op++)
+	SUBCASE("prefix IX opcodes")
 	{
-		log("%02X ",op);
-		if (op==0xcb) continue;
-		core[10] ^= PFX_IX ^ PFX_IY;
-		core[11] = Byte(op);
-		core[12]++;
-		assert(clock_cycles(CpuZ80,core,10) == cc_z80_XY[op]);
-		assert(clock_cycles_on_branch(CpuZ80,core,10) == cc_z80_XY[op]);
-		assert(clock_cycles(CpuDefault,core,10) == cc_z80_XY[op]);
-		assert(clock_cycles_on_branch(CpuDefault,core,10) == cc_z80_XY[op]);
-		assert(clock_cycles(CpuZ80_ixcbr2,core,10) == cc_z80_XY[op]);
-		assert(clock_cycles_on_branch(CpuZ80_ixcbr2,core,10) == cc_z80_XY[op]);
-		assert(clock_cycles(CpuZ80_ixcbxh,core,10) == cc_z80_XY[op]);
-		assert(clock_cycles_on_branch(CpuZ80_ixcbxh,core,10) == cc_z80_XY[op]);
-		assert(opcode_can_branch(CpuZ80,core,10) == no);
+		xlogIn("prefix IX opcodes");
+		core[10] = PFX_IX;
+		for (uint op = 0; op < 256; op++)
+		{
+			xlog("%02X%c", op, (op + 1) & 31 ? ' ' : '\n');
+			if (op == 0xcb) continue;
+			core[10] ^= PFX_IX ^ PFX_IY;
+			core[11] = Byte(op);
+			core[12]++;
+			CHECK(clock_cycles(CpuZ80, core, 10) == cc_z80_XY[op]);
+			CHECK(clock_cycles_on_branch(CpuZ80, core, 10) == cc_z80_XY[op]);
+			CHECK(clock_cycles(CpuDefault, core, 10) == cc_z80_XY[op]);
+			CHECK(clock_cycles_on_branch(CpuDefault, core, 10) == cc_z80_XY[op]);
+			CHECK(clock_cycles(CpuZ80_ixcbr2, core, 10) == cc_z80_XY[op]);
+			CHECK(clock_cycles_on_branch(CpuZ80_ixcbr2, core, 10) == cc_z80_XY[op]);
+			CHECK(clock_cycles(CpuZ80_ixcbxh, core, 10) == cc_z80_XY[op]);
+			CHECK(clock_cycles_on_branch(CpuZ80_ixcbxh, core, 10) == cc_z80_XY[op]);
+			CHECK(opcode_can_branch(CpuZ80, core, 10) == no);
+		}
 	}
-	END
-	logNl();
 
-	TRY
-	logline("prefix IXCB opcodes");
-	core[10] = PFX_IX;
-	for (uint op=0; op<256; op++)
+	SUBCASE("prefix IXCB opcodes")
 	{
-		log("%02X ",op);
-		core[10] ^= PFX_IX ^ PFX_IY;
-		core[11] = PFX_CB;
-		core[12]++;
-		core[13] = Byte(op);
-		assert(clock_cycles(CpuZ80,core,10) == cc_z80_XYCB[op]);
-		assert(clock_cycles_on_branch(CpuZ80,core,10) == cc_z80_XYCB[op]);
-		assert(clock_cycles(CpuDefault,core,10) == cc_z80_XYCB[op]);
-		assert(clock_cycles_on_branch(CpuDefault,core,10) == cc_z80_XYCB[op]);
-		assert(clock_cycles(CpuZ80_ixcbr2,core,10) == cc_z80_XYCB[op]);
-		assert(clock_cycles_on_branch(CpuZ80_ixcbr2,core,10) == cc_z80_XYCB[op]);
-		assert(clock_cycles(CpuZ80_ixcbxh,core,10) == cc_z80_XYCB[op]);
-		assert(clock_cycles_on_branch(CpuZ80_ixcbxh,core,10) == cc_z80_XYCB[op]);
-		assert(opcode_can_branch(CpuZ80,core,10) == no);
+		xlogIn("prefix IXCB opcodes");
+		core[10] = PFX_IX;
+		for (uint op = 0; op < 256; op++)
+		{
+			xlog("%02X%c", op, (op + 1) & 31 ? ' ' : '\n');
+			core[10] ^= PFX_IX ^ PFX_IY;
+			core[11] = PFX_CB;
+			core[12]++;
+			core[13] = Byte(op);
+			CHECK(clock_cycles(CpuZ80, core, 10) == cc_z80_XYCB[op]);
+			CHECK(clock_cycles_on_branch(CpuZ80, core, 10) == cc_z80_XYCB[op]);
+			CHECK(clock_cycles(CpuDefault, core, 10) == cc_z80_XYCB[op]);
+			CHECK(clock_cycles_on_branch(CpuDefault, core, 10) == cc_z80_XYCB[op]);
+			CHECK(clock_cycles(CpuZ80_ixcbr2, core, 10) == cc_z80_XYCB[op]);
+			CHECK(clock_cycles_on_branch(CpuZ80_ixcbr2, core, 10) == cc_z80_XYCB[op]);
+			CHECK(clock_cycles(CpuZ80_ixcbxh, core, 10) == cc_z80_XYCB[op]);
+			CHECK(clock_cycles_on_branch(CpuZ80_ixcbxh, core, 10) == cc_z80_XYCB[op]);
+			CHECK(opcode_can_branch(CpuZ80, core, 10) == no);
+		}
 	}
-	END
-	logNl();
 
-	TRY
-	logline("prefix ED opcodes");
-	core[10] = PFX_ED;
-	for (uint op=0; op<256; op++)
+	SUBCASE("prefix ED opcodes")
 	{
-		log("%02X ",op);
-		core[11] = Byte(op);
-		assert(clock_cycles(CpuZ80,core,10) == cc_z80_ED[op]);
-		assert(clock_cycles_on_branch(CpuZ80,core,10) == cc_z80_ED_on_branch[op]);
-		assert(clock_cycles(CpuDefault,core,10) == cc_z80_ED[op]);
-		assert(clock_cycles_on_branch(CpuDefault,core,10) == cc_z80_ED_on_branch[op]);
-		assert(clock_cycles(CpuZ80_ixcbr2,core,10) == cc_z80_ED[op]);
-		assert(clock_cycles_on_branch(CpuZ80_ixcbr2,core,10) == cc_z80_ED_on_branch[op]);
-		assert(clock_cycles(CpuZ80_ixcbxh,core,10) == cc_z80_ED[op]);
-		assert(clock_cycles_on_branch(CpuZ80_ixcbxh,core,10) == cc_z80_ED_on_branch[op]);
-		assert(opcode_can_branch(CpuZ80,core,10) == (cc_z80_ED[op]!=cc_z80_ED_on_branch[op]));
+		xlogIn("prefix ED opcodes");
+		core[10] = PFX_ED;
+		for (uint op = 0; op < 256; op++)
+		{
+			xlog("%02X%c", op, (op + 1) & 31 ? ' ' : '\n');
+			core[11] = Byte(op);
+			CHECK(clock_cycles(CpuZ80, core, 10) == cc_z80_ED[op]);
+			CHECK(clock_cycles_on_branch(CpuZ80, core, 10) == cc_z80_ED_on_branch[op]);
+			CHECK(clock_cycles(CpuDefault, core, 10) == cc_z80_ED[op]);
+			CHECK(clock_cycles_on_branch(CpuDefault, core, 10) == cc_z80_ED_on_branch[op]);
+			CHECK(clock_cycles(CpuZ80_ixcbr2, core, 10) == cc_z80_ED[op]);
+			CHECK(clock_cycles_on_branch(CpuZ80_ixcbr2, core, 10) == cc_z80_ED_on_branch[op]);
+			CHECK(clock_cycles(CpuZ80_ixcbxh, core, 10) == cc_z80_ED[op]);
+			CHECK(clock_cycles_on_branch(CpuZ80_ixcbxh, core, 10) == cc_z80_ED_on_branch[op]);
+			CHECK(opcode_can_branch(CpuZ80, core, 10) == (cc_z80_ED[op] != cc_z80_ED_on_branch[op]));
+		}
 	}
-	END
-	logNl();
 }
 
-static void test_z180 (uint& num_tests, uint& num_errors)
+TEST_CASE("z180_clock_cycles")
 {
-	logIn("z180_clock_cycles");
+	Byte core[20] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4};
 
-	Byte core[20] = {0,0,0,0,0,0,0,0,0,0,1,2,3,4};
-
-	TRY
-	logline("simple opcodes");
-	for (uint op=0; op<256; op++)
+	SUBCASE("simple opcodes")
 	{
-		log("%02X ",op);
-		if (cc_z180[op] == 0) continue;
-		core[10] = Byte(op);
-		assert(clock_cycles(CpuZ180,core,10) == cc_z180[op]);
-		assert(clock_cycles_on_branch(CpuZ180,core,10) == cc_z180_on_branch[op]);
-		assert(opcode_can_branch(CpuZ180,core,10) == (cc_z180[op]!=cc_z180_on_branch[op]));
+		xlogIn("simple opcodes");
+		for (uint op = 0; op < 256; op++)
+		{
+			xlog("%02X%c", op, (op + 1) & 31 ? ' ' : '\n');
+			if (cc_z180[op] == 0) continue;
+			core[10] = Byte(op);
+			CHECK(clock_cycles(CpuZ180, core, 10) == cc_z180[op]);
+			CHECK(clock_cycles_on_branch(CpuZ180, core, 10) == cc_z180_on_branch[op]);
+			CHECK(opcode_can_branch(CpuZ180, core, 10) == (cc_z180[op] != cc_z180_on_branch[op]));
+		}
 	}
-	END
-	logNl();
 
-	TRY
-	logline("prefix CB opcodes");
-	core[10] = PFX_CB;
-	for (uint op=0; op<256; op++)
+	SUBCASE("prefix CB opcodes")
 	{
-		log("%02X ",op);
-		core[11] = Byte(op);
-		assert(clock_cycles(CpuZ180,core,10) == cc_z180_CB[op]);
-		assert(clock_cycles_on_branch(CpuZ180,core,10) == cc_z180_CB[op]);
-		assert(opcode_can_branch(CpuZ180,core,10) == no);
+		xlogIn("prefix CB opcodes");
+		core[10] = PFX_CB;
+		for (uint op = 0; op < 256; op++)
+		{
+			xlog("%02X%c", op, (op + 1) & 31 ? ' ' : '\n');
+			core[11] = Byte(op);
+			CHECK(clock_cycles(CpuZ180, core, 10) == cc_z180_CB[op]);
+			CHECK(clock_cycles_on_branch(CpuZ180, core, 10) == cc_z180_CB[op]);
+			CHECK(opcode_can_branch(CpuZ180, core, 10) == no);
+		}
 	}
-	END
-	logNl();
 
-	TRY
-	logline("prefix IX opcodes");
-	core[10] = PFX_IX;
-	for (uint op=0; op<256; op++)
+	SUBCASE("prefix IX opcodes")
 	{
-		log("%02X ",op);
-		if (op==0xcb) continue;
-		core[10] ^= PFX_IX ^ PFX_IY;
-		core[11] = Byte(op);
-		core[12]++;
-		assert(clock_cycles(CpuZ180,core,10) == cc_z180_XY[op]);
-		assert(clock_cycles_on_branch(CpuZ180,core,10) == cc_z180_XY[op]);
-		assert(opcode_can_branch(CpuZ180,core,10) == no);
+		xlogIn("prefix IX opcodes");
+		core[10] = PFX_IX;
+		for (uint op = 0; op < 256; op++)
+		{
+			xlog("%02X%c", op, (op + 1) & 31 ? ' ' : '\n');
+			if (op == 0xcb) continue;
+			core[10] ^= PFX_IX ^ PFX_IY;
+			core[11] = Byte(op);
+			core[12]++;
+			CHECK(clock_cycles(CpuZ180, core, 10) == cc_z180_XY[op]);
+			CHECK(clock_cycles_on_branch(CpuZ180, core, 10) == cc_z180_XY[op]);
+			CHECK(opcode_can_branch(CpuZ180, core, 10) == no);
+		}
 	}
-	END
-	logNl();
 
-	TRY
-	logline("prefix IXCB opcodes");
-	core[10] = PFX_IX;
-	for (uint op=0; op<256; op++)
+	SUBCASE("prefix IXCB opcodes")
 	{
-		log("%02X ",op);
-		core[10] ^= PFX_IX ^ PFX_IY;
-		core[11] = PFX_CB;
-		core[12]++;
-		core[13] = Byte(op);
-		assert(clock_cycles(CpuZ180,core,10) == cc_z180_XYCB[op]);
-		assert(clock_cycles_on_branch(CpuZ180,core,10) == cc_z180_XYCB[op]);
-		assert(opcode_can_branch(CpuZ180,core,10) == no);
+		xlogIn("prefix IXCB opcodes");
+		core[10] = PFX_IX;
+		for (uint op = 0; op < 256; op++)
+		{
+			xlog("%02X%c", op, (op + 1) & 31 ? ' ' : '\n');
+			core[10] ^= PFX_IX ^ PFX_IY;
+			core[11] = PFX_CB;
+			core[12]++;
+			core[13] = Byte(op);
+			CHECK(clock_cycles(CpuZ180, core, 10) == cc_z180_XYCB[op]);
+			CHECK(clock_cycles_on_branch(CpuZ180, core, 10) == cc_z180_XYCB[op]);
+			CHECK(opcode_can_branch(CpuZ180, core, 10) == no);
+		}
 	}
-	END
-	logNl();
 
-	TRY
-	logline("prefix ED opcodes");
-	core[10] = PFX_ED;
-	for (uint op=0; op<256; op++)
+	SUBCASE("prefix ED opcodes")
 	{
-		log("%02X ",op);
-		core[11] = Byte(op);
-		assert(clock_cycles(CpuZ180,core,10) == cc_z180_ED[op]);
-		assert(clock_cycles_on_branch(CpuZ180,core,10) == cc_z180_ED_on_branch[op]);
-		assert(opcode_can_branch(CpuZ180,core,10) == (cc_z180_ED[op]!=cc_z180_ED_on_branch[op]));
+		xlogIn("prefix ED opcodes");
+		core[10] = PFX_ED;
+		for (uint op = 0; op < 256; op++)
+		{
+			xlog("%02X%c", op, (op + 1) & 31 ? ' ' : '\n');
+			core[11] = Byte(op);
+			CHECK(clock_cycles(CpuZ180, core, 10) == cc_z180_ED[op]);
+			CHECK(clock_cycles_on_branch(CpuZ180, core, 10) == cc_z180_ED_on_branch[op]);
+			CHECK(opcode_can_branch(CpuZ180, core, 10) == (cc_z180_ED[op] != cc_z180_ED_on_branch[op]));
+		}
 	}
-	END
-	logNl();
 }
 
-static void test_z180_deprecated (uint& num_tests, uint& num_errors)
+TEST_CASE("z180_clock_cycles ((deprecated))")
 {
-	logIn("z180_clock_cycles ((deprecated))");
+	SUBCASE("z180_opcode_can_branch")
+	{
+		CHECK(z180_opcode_can_branch(JP, 0) == no);
+		CHECK(z180_opcode_can_branch(JP_M, 0) == yes);
+		CHECK(z180_opcode_can_branch(PFX_ED, OUTI) == no);
+		CHECK(z180_opcode_can_branch(PFX_ED, OTIR) == yes);
+		CHECK(z180_opcode_can_branch(PFX_ED, OTIM) == no);
+		CHECK(z180_opcode_can_branch(PFX_ED, OTIMR) == yes);
+		CHECK(z180_opcode_can_branch(JR, 0) == no);
+		CHECK(z180_opcode_can_branch(JR_NC, 0) == yes);
+		CHECK(z180_opcode_can_branch(CALL, 0) == no);
+		CHECK(z180_opcode_can_branch(CALL_PE, 0) == yes);
+		CHECK(z180_opcode_can_branch(RET, 0) == no);
+		CHECK(z180_opcode_can_branch(RET_Z, 0) == yes);
+	}
 
-	TRY
-	assert(z180_opcode_can_branch(JP,0)==no);
-	assert(z180_opcode_can_branch(JP_M,0)==yes);
-	assert(z180_opcode_can_branch(PFX_ED,OUTI)==no);
-	assert(z180_opcode_can_branch(PFX_ED,OTIR)==yes);
-	assert(z180_opcode_can_branch(PFX_ED,OTIM)==no);
-	assert(z180_opcode_can_branch(PFX_ED,OTIMR)==yes);
-	assert(z180_opcode_can_branch(JR,0)==no);
-	assert(z180_opcode_can_branch(JR_NC,0)==yes);
-	assert(z180_opcode_can_branch(CALL,0)==no);
-	assert(z180_opcode_can_branch(CALL_PE,0)==yes);
-	assert(z180_opcode_can_branch(RET,0)==no);
-	assert(z180_opcode_can_branch(RET_Z,0)==yes);
-	END
+	SUBCASE("z180_clock_cycles")
+	{
+		CHECK(z180_clock_cycles(JP, 0, 0) == 9);
+		CHECK(z180_clock_cycles(JP_Z, 0, 0) == 6);
+		CHECK(z180_clock_cycles_on_branch(JP, 0) == 9);
 
-	TRY
-	assert(z180_clock_cycles(JP,0,0)==9);
-	assert(z180_clock_cycles(JP_Z,0,0)==6);
-	assert(z180_clock_cycles_on_branch(JP,0)==9);
+		CHECK(z180_clock_cycles(CALL, 0, 0) == 16);
+		CHECK(z180_clock_cycles(CALL_Z, 0, 0) == 6);
+		CHECK(z180_clock_cycles_on_branch(CALL_Z, 0) == 16);
 
-	assert(z180_clock_cycles(CALL,0,0)==16);
-	assert(z180_clock_cycles(CALL_Z,0,0)==6);
-	assert(z180_clock_cycles_on_branch(CALL_Z,0)==16);
+		CHECK(z180_clock_cycles(PFX_ED, LDIR, 0) == 12);
+		CHECK(z180_clock_cycles_on_branch(PFX_ED, LDIR) == 14);
 
-	assert(z180_clock_cycles(PFX_ED,LDIR,0)==12);
-	assert(z180_clock_cycles_on_branch(PFX_ED,LDIR)==14);
+		CHECK(z180_clock_cycles(RET_Z, 0, 0) == 5);
+		CHECK(z180_clock_cycles(LD_xNN_A, 0, 0) == 13);
+		CHECK(z180_clock_cycles(PFX_CB, SRL_C, 0) == 7);
+		CHECK(z180_clock_cycles(PFX_CB, SRA_xHL, 0) == 13);
+		CHECK(z180_clock_cycles(PFX_CB, BIT7_xHL, 0) == 9);
+		CHECK(z180_clock_cycles(PFX_CB, SET7_xHL, 0) == 13);
+		CHECK(z180_clock_cycles(PFX_CB, RES7_xHL, 0) == 13);
+		CHECK(z180_clock_cycles(PFX_CB, SET6_C, 0) == 6);
 
-	assert(z180_clock_cycles(RET_Z,0,0)==5);
-	assert(z180_clock_cycles(LD_xNN_A,0,0)==13);
-	assert(z180_clock_cycles(PFX_CB,SRL_C,0)==7);
-	assert(z180_clock_cycles(PFX_CB,SRA_xHL,0)==13);
-	assert(z180_clock_cycles(PFX_CB,BIT7_xHL,0)==9);
-	assert(z180_clock_cycles(PFX_CB,SET7_xHL,0)==13);
-	assert(z180_clock_cycles(PFX_CB,RES7_xHL,0)==13);
-	assert(z180_clock_cycles(PFX_CB,SET6_C,0)==6);
+		CHECK(z180_clock_cycles(PFX_ED, IN0_C_xN, 0) == 12);
+		CHECK(z180_clock_cycles(PFX_ED, TST_xHL, 0) == 10);
+		CHECK(z180_clock_cycles(PFX_ED, IN_F_xC, 0) == 9);
 
-	assert(z180_clock_cycles(PFX_ED,IN0_C_xN,0)==12);
-	assert(z180_clock_cycles(PFX_ED,TST_xHL,0)==10);
-	assert(z180_clock_cycles(PFX_ED,IN_F_xC,0)==9);
+		CHECK(z180_clock_cycles(PFX_IX, INC_xHL, 0) == 18);
+		CHECK(z180_clock_cycles(PFX_IY, LD_xHL_N, 0) == 15);
 
-	assert(z180_clock_cycles(PFX_IX,INC_xHL,0)==18);
-	assert(z180_clock_cycles(PFX_IY,LD_xHL_N,0)==15);
+		CHECK(z180_clock_cycles(PFX_IX, PFX_CB, SRL_xHL) == 19);
+		CHECK(z180_clock_cycles(PFX_IX, PFX_CB, BIT4_xHL) == 15);
+	}
 
-	assert(z180_clock_cycles(PFX_IX,PFX_CB,SRL_xHL)==19);
-	assert(z180_clock_cycles(PFX_IX,PFX_CB,BIT4_xHL)==15);
-	END
-
-	TRY
-	assert(clock_cycles(CpuZ180,PFX_ED,MLT_SP,0)==17);
-	assert(clock_cycles(CpuZ180,PFX_IX,LD_E_xHL,0)==14);
-	assert(clock_cycles(CpuZ180,PFX_IY,PFX_CB,SET4_xHL)==19);
-	END
+	SUBCASE("clock_cycles")
+	{
+		CHECK(clock_cycles(CpuZ180, PFX_ED, MLT_SP, 0) == 17);
+		CHECK(clock_cycles(CpuZ180, PFX_IX, LD_E_xHL, 0) == 14);
+		CHECK(clock_cycles(CpuZ180, PFX_IY, PFX_CB, SET4_xHL) == 19);
+	}
 }
-
-
-
-
-
-void test_z80_clock_cycles (uint& num_tests, uint& num_errors)
-{
-	logIn("test z80_clock_cycles");
-
-	test_8080(num_tests, num_errors);
-	test_z80 (num_tests, num_errors);
-	test_z180(num_tests, num_errors);
-	test_z180_deprecated(num_tests, num_errors);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

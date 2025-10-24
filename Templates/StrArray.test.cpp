@@ -3,527 +3,505 @@
 // https://opensource.org/licenses/BSD-2-Clause
 
 
-#undef NDEBUG
-#define loglevel 1
 #include "Templates/StrArray.h"
-#include "main.h"
+#include "doctest/doctest/doctest.h"
 #include "unix/FD.h"
 
 
 static bool foo_gt(str a, str b) { return a && b && *a && *b ? (*a ^ 3) > (*b ^ 3) : a && *a; }
 
-static void test1(uint& num_tests, uint& num_errors)
+TEST_CASE("StrArray")
 {
-	TRY StrArray array;
-	assert(array.count() == 0);
-	END
+	SUBCASE("") { logline("●●● %s:", __FILE__); }
 
-		TRY cstr s[] = {"abc", "def", "gh", "ijklmn"};
-	StrArray	 a(s, 4);
-	assert(eq(a[0], "abc") && eq(a[3], "ijklmn"));
-	assert(s[0] != a[0]);
-	END
+	SUBCASE("")
+	{
+		StrArray array;
+		CHECK(array.count() == 0);
+	}
 
-		TRY StrArray a;
-	assert(a.getData() == nullptr);
-	a << 1 << 2;
-	assert(a.count() == 2);
-	assert(a.getData() == &a[0]);
-	const StrArray b(a);
-	assert(b.count() == 2);
-	assert(b.getData() == &b[0]);
-	assert(a == b);
-	assert(a.getData() != b.getData());
-	END
+	SUBCASE("")
+	{
+		cstr	 s[] = {"abc", "def", "gh", "ijklmn"};
+		StrArray a(s, 4);
+		CHECK_UNARY(eq(a[0], "abc") && eq(a[3], "ijklmn"));
+		CHECK(s[0] != a[0]);
+	}
 
-		TRY StrArray a;
-	a << 42 << 7 << 99;
-	assert(eq(a.first(), "42"));
-	assert(eq(a.last(), "99"));
-	const StrArray b(a);
-	assert(eq(b.first(), "42"));
-	assert(eq(b.last(), "99"));
-	assert(&b.first() != &a.first());
-	StrArray c;
-	c << tostr(1.01f);
-	assert(eq(c.first(), tostr(1.01f)));
-	assert(&c.first() == &c.last());
-	END
+	SUBCASE("")
+	{
+		StrArray a;
+		CHECK(a.getData() == nullptr);
+		a << 1 << 2;
+		CHECK(a.count() == 2);
+		CHECK(a.getData() == &a[0]);
+		const StrArray b(a);
+		CHECK(b.count() == 2);
+		CHECK(b.getData() == &b[0]);
+		CHECK(a == b);
+		CHECK(a.getData() != b.getData());
+	}
 
-		/*TRY
+	SUBCASE("")
+	{
+		StrArray a;
+		a << 42 << 7 << 99;
+		CHECK(eq(a.first(), "42"));
+		CHECK(eq(a.last(), "99"));
+		const StrArray b(a);
+		CHECK(eq(b.first(), "42"));
+		CHECK(eq(b.last(), "99"));
+		CHECK(&b.first() != &a.first());
+		StrArray c;
+		c << tostr(1.01f);
+		CHECK(eq(c.first(), tostr(1.01f)));
+		CHECK(&c.first() == &c.last());
+	}
+
+	/*SUBCASE(""){
 		StrArray a;
 		a.first() = nullptr;
 	EXPECT(InternalError)*/
 
-		TRY StrArray a;
-	a.resize(2);
-	assert(a.count() == 2);
-	assert(a[0] == nullptr);
-	a[0] = newcopy("44");
-	assert(a[1] == nullptr);
-	a[1] = newcopy("1");
-	a.resize(10);
-	assert(a.count() == 10);
-	assert(eq(a[0], "44"));
-	assert(eq(a[1], "1"));
-	assert(a[2] == nullptr);
-	a[2] = newcopy("99");
-	assert(a[9] == nullptr);
-	a.resize(3);
-	assert(a.count() == 3);
-	assert(eq(a[0], "44"));
-	assert(eq(a[1], "1"));
-	assert(eq(a[2], "99"));
-	END
+	SUBCASE("")
+	{
+		StrArray a;
+		a.resize(2);
+		CHECK(a.count() == 2);
+		CHECK(a[0] == nullptr);
+		a[0] = newcopy("44");
+		CHECK(a[1] == nullptr);
+		a[1] = newcopy("1");
+		a.resize(10);
+		CHECK(a.count() == 10);
+		CHECK(eq(a[0], "44"));
+		CHECK(eq(a[1], "1"));
+		CHECK(a[2] == nullptr);
+		a[2] = newcopy("99");
+		CHECK(a[9] == nullptr);
+		a.resize(3);
+		CHECK(a.count() == 3);
+		CHECK(eq(a[0], "44"));
+		CHECK(eq(a[1], "1"));
+		CHECK(eq(a[2], "99"));
+	}
 
-		TRY StrArray a;
-	a << 1 << 2 << 3 << 4 << 5 << 6 << 7 << 8;
-	assert(a.copyofrange(2, 99) == StrArray() << 3 << 4 << 5 << 6 << 7 << 8);
-	assert(a.copyofrange(0, 3) == StrArray() << 1 << 2 << 3);
-	END
+	SUBCASE("")
+	{
+		StrArray a;
+		a << 1 << 2 << 3 << 4 << 5 << 6 << 7 << 8;
+		CHECK(a.copyofrange(2, 99) == StrArray() << 3 << 4 << 5 << 6 << 7 << 8);
+		CHECK(a.copyofrange(0, 3) == StrArray() << 1 << 2 << 3);
+	}
 
-		TRY StrArray a;
-	a << 1 << 2 << 3;
-	assert(StrArray() != a);
-	assert(a != StrArray() << 1 << 2 << 4);
-	assert(a != StrArray() << 1 << 2);
-	END
+	SUBCASE("")
+	{
+		StrArray a;
+		a << 1 << 2 << 3;
+		CHECK(StrArray() != a);
+		CHECK(a != StrArray() << 1 << 2 << 4);
+		CHECK(a != StrArray() << 1 << 2);
+	}
 
-		TRY StrArray a;
-	a << 1 << 2 << 3 << 4;
-	static const cstr s[] = {"5", "6", "7", "8", "9"};
-	a.insertat(2, s, 5);
-	assert(a.count() == 9);
-	assert(a == StrArray() << 1 << 2 << 5 << 6 << 7 << 8 << 9 << 3 << 4);
-	END
+	SUBCASE("")
+	{
+		StrArray a;
+		a << 1 << 2 << 3 << 4;
+		static const cstr s[] = {"5", "6", "7", "8", "9"};
+		a.insertat(2, s, 5);
+		CHECK(a.count() == 9);
+		CHECK(a == StrArray() << 1 << 2 << 5 << 6 << 7 << 8 << 9 << 3 << 4);
+	}
 
-		TRY StrArray a;
-	a << 1 << 2 << 3 << 4;
-	StrArray s;
-	s << 5 << 6 << 7 << 8 << 9;
-	a.insertat(2, s);
-	assert(a.count() == 9);
-	assert(a == StrArray() << 1 << 2 << 5 << 6 << 7 << 8 << 9 << 3 << 4);
-	END
+	SUBCASE("")
+	{
+		StrArray a;
+		a << 1 << 2 << 3 << 4;
+		StrArray s;
+		s << 5 << 6 << 7 << 8 << 9;
+		a.insertat(2, s);
+		CHECK(a.count() == 9);
+		CHECK(a == StrArray() << 1 << 2 << 5 << 6 << 7 << 8 << 9 << 3 << 4);
+	}
 
-		TRY StrArray a;
-	a << 1 << 3 << 5 << 7;
-	a.insertsorted("4");
-	assert(a == StrArray() << 1 << 3 << 4 << 5 << 7);
-	a.insertsorted("4");
-	assert(a == StrArray() << 1 << 3 << 4 << 4 << 5 << 7);
-	END
+	SUBCASE("")
+	{
+		StrArray a;
+		a << 1 << 3 << 5 << 7;
+		a.insertsorted("4");
+		CHECK(a == StrArray() << 1 << 3 << 4 << 5 << 7);
+		a.insertsorted("4");
+		CHECK(a == StrArray() << 1 << 3 << 4 << 4 << 5 << 7);
+	}
 
-		TRY cstr a[] = {"a", "bb", "Ccc", "Dddd", "EeE", nullptr};
-	Array<cstr>	 b(a, 6);
-	StrArray	 c(b);
-	assert(c == b);
-	assert(b[0] == a[0]);
-	assert(c[0] != a[0]);
-	END
+	SUBCASE("")
+	{
+		cstr		a[] = {"a", "bb", "Ccc", "Dddd", "EeE", nullptr};
+		Array<cstr> b(a, 6);
+		StrArray	c(b);
+		CHECK(c == b);
+		CHECK(b[0] == a[0]);
+		CHECK(c[0] != a[0]);
+	}
 
-		TRY cstr a[] = {"a", "bb", "Ccc", "Dddd", "EeE", nullptr};
-	Array<cstr>	 b(a, 6);
-	StrArray	 c;
-	c << "123";
-	c = b;
-	assert(c == b);
-	assert(b[0] == a[0]);
-	assert(c[0] != a[0]);
-	END
+	SUBCASE("")
+	{
+		cstr		a[] = {"a", "bb", "Ccc", "Dddd", "EeE", nullptr};
+		Array<cstr> b(a, 6);
+		StrArray	c;
+		c << "123";
+		c = b;
+		CHECK(c == b);
+		CHECK(b[0] == a[0]);
+		CHECK(c[0] != a[0]);
+	}
 
-		TRY str a[] = {dupstr("a"), dupstr("bb"), dupstr("Ccc"), dupstr(nullptr)};
-	Array<str>	b(a, 4);
-	StrArray	c;
-	c << "123";
-	c = b;
-	assert(c == b);
-	assert(b[0] == a[0]);
-	assert(c[0] != a[0]);
-	END
+	SUBCASE("")
+	{
+		str		   a[] = {dupstr("a"), dupstr("bb"), dupstr("Ccc"), dupstr(nullptr)};
+		Array<str> b(a, 4);
+		StrArray   c;
+		c << "123";
+		c = b;
+		CHECK(c == b);
+		CHECK(b[0] == a[0]);
+		CHECK(c[0] != a[0]);
+	}
 
-		TRY cstr a[] = {"Aa", "BoB", "Ccc"};
-	StrArray	 b;
-	b << 1 << 2 << 3;
-	b.append(a, 3);
-	assert(
-		b == StrArray() << 1 << 2 << 3 << "Aa"
-						<< "BoB"
-						<< "Ccc");
-	END
+	SUBCASE("")
+	{
+		cstr	 a[] = {"Aa", "BoB", "Ccc"};
+		StrArray b;
+		b << 1 << 2 << 3;
+		b.append(a, 3);
+		CHECK(b == StrArray() << 1 << 2 << 3 << "Aa" << "BoB" << "Ccc");
+	}
 
-		TRY str a[] = {dupstr("Aa"), dupstr("BoB"), dupstr("Ccc")};
-	StrArray	b;
-	b << 1 << 2 << 3;
-	b.append(a, 3);
-	assert(
-		b == StrArray() << 1 << 2 << 3 << "Aa"
-						<< "BoB"
-						<< "Ccc");
-	END
+	SUBCASE("")
+	{
+		str		 a[] = {dupstr("Aa"), dupstr("BoB"), dupstr("Ccc")};
+		StrArray b;
+		b << 1 << 2 << 3;
+		b.append(a, 3);
+		CHECK(b == StrArray() << 1 << 2 << 3 << "Aa" << "BoB" << "Ccc");
+	}
 
-		TRY StrArray a;
-	a << 1 << 2 << 3 << 4 << 5;
-	StrArray b;
-	b << 6 << 7 << 8 << 9;
-	a.insertat(2, std::move(b));
-	assert(b.count() == 0);
-	assert(a == StrArray() << 1 << 2 << 6 << 7 << 8 << 9 << 3 << 4 << 5);
-	END
+	SUBCASE("")
+	{
+		StrArray a;
+		a << 1 << 2 << 3 << 4 << 5;
+		StrArray b;
+		b << 6 << 7 << 8 << 9;
+		a.insertat(2, std::move(b));
+		CHECK(b.count() == 0);
+		CHECK(a == StrArray() << 1 << 2 << 6 << 7 << 8 << 9 << 3 << 4 << 5);
+	}
 
+	SUBCASE("default ctor")
+	{
+		StrArray array;
+		CHECK(array.count() == 0);
+	}
+
+	SUBCASE("append")
+	{
+		StrArray array;
+		array.append("3");
+		array.append("6");
+		CHECK(array.count() == 2);
+		CHECK(eq(array.first(), "3"));
+		CHECK(eq(array.last(), "6"));
+	}
+
+	SUBCASE("operator<<")
+	{
+		StrArray array;
+		array << "3" << "6";
+		array << "9" << "12";
+		CHECK_UNARY(array.count() == 4 && eq(array[2], "9") && eq(array[3], "12"));
+	}
+
+	SUBCASE("insertat, removeat")
+	{
+		StrArray array = std::move(StrArray() << "3" << "6" << "9" << "12");
+
+		array.insertat(2, "5");
+		CHECK(array == StrArray() << "3" << "6" << "5" << "9" << "12");
+		array.removeat(1);
+		CHECK(array == StrArray() << "3" << "5" << "9" << "12");
+		array.removeat(0);
+		CHECK(array == StrArray() << "5" << "9" << "12");
+		array.removeat(2);
+		CHECK(array == StrArray() << "5" << "9");
+		array.insertat(0, "6");
+		CHECK(array == StrArray() << "6" << "5" << "9");
+		array.insertat(3, "7");
+		CHECK(array == StrArray() << "6" << "5" << "9" << "7");
+	}
+
+	/*SUBCASE(""){ array[4]; EXPECT(InternalError)*/
+
+	/*SUBCASE(""){ array[uint(-1)]; EXPECT(InternalError)*/
+
+	SUBCASE("str& operator[]")
+	{
+		auto array = std::move(StrArray() << "6" << "5" << "9" << "7");
+		str	 s	   = newcopy("8");
+		std::swap(s, array[3]);
+		delete[] s;
+		CHECK(array == StrArray() << "6" << "5" << "9" << "8");
+	}
+
+	SUBCASE("ctor StrArray(StrArray)")
+	{
+		auto	 array = std::move(StrArray() << "6" << "5" << "9" << "8");
+		StrArray array2(array);
+		CHECK_UNARY(array == array2 && array2 == StrArray() << "6" << "5" << "9" << "8");
+	}
+
+	SUBCASE("ctor Array(Array&&)")
+	{
+		auto	 array = std::move(StrArray() << "6" << "5" << "9" << "8");
+		StrArray array2(std::move(array));
+		CHECK_UNARY(array.count() == 0 && array2 == StrArray() << "6" << "5" << "9" << "8");
+		array = array2;
+		CHECK_UNARY(array2 == array && array == StrArray() << "6" << "5" << "9" << "8");
+	}
+
+	SUBCASE("operator=(Array&&)")
+	{
+		StrArray array2 = std::move(StrArray() << "6" << "5" << "9" << "8");
 		StrArray array;
 
-	TRY assert(array.count() == 0);
-	END
+		array = std::move(array2);
+		CHECK_UNARY(array2.count() == 0 && array == StrArray() << "6" << "5" << "9" << "8");
+	}
 
-		TRY array.append("3");
-	array.append("6");
-	assert(array.count() == 2 && eq(array.first(), "3") && eq(array.last(), "6"));
-	END
+	SUBCASE("purge")
+	{
+		StrArray array = std::move(StrArray() << "6" << "5" << "9" << "8");
+		array.purge();
+		CHECK(array.count() == 0);
+	}
 
-			TRY array
-		<< "9"
-		<< "12";
-	assert(array.count() == 4 && eq(array[2], "9") && eq(array[3], "12"));
-	END
+	SUBCASE("revert")
+	{
+		StrArray array;
+		array.revert();
+		CHECK(array.count() == 0);
 
-		TRY array.insertat(2, "5");
-	assert(
-		array == StrArray() << "3"
-							<< "6"
-							<< "5"
-							<< "9"
-							<< "12");
-	END
+		array.append("0");
+		array.revert();
+		CHECK_UNARY(array.count() == 1 && eq(array[0], "0"));
 
-		TRY array.removeat(1);
-	assert(
-		array == StrArray() << "3"
-							<< "5"
-							<< "9"
-							<< "12");
-	END
+		array << "1" << "2" << "3" << "4" << "5" << "6" << "7";
+		array.revert();
+		CHECK(array == StrArray() << "7" << "6" << "5" << "4" << "3" << "2" << "1" << "0");
+	}
 
-		TRY array.removeat(0);
-	assert(
-		array == StrArray() << "5"
-							<< "9"
-							<< "12");
-	END
+	SUBCASE("rol ror")
+	{
+		auto array = std::move(StrArray() << "7" << "6" << "5" << "4" << "3" << "2" << "1" << "0");
+		array.rol();
+		CHECK(array == StrArray() << "6" << "5" << "4" << "3" << "2" << "1" << "0" << "7");
 
-		TRY array.removeat(2);
-	assert(
-		array == StrArray() << "5"
-							<< "9");
-	END
+		array.ror();
+		CHECK(array == StrArray() << "7" << "6" << "5" << "4" << "3" << "2" << "1" << "0");
 
-		TRY array.insertat(0, "6");
-	assert(
-		array == StrArray() << "6"
-							<< "5"
-							<< "9");
-	END
+		array.rol(1, 1);
+		CHECK(array == StrArray() << "7" << "6" << "5" << "4" << "3" << "2" << "1" << "0");
 
-		TRY array.insertat(3, "7");
-	assert(
-		array == StrArray() << "6"
-							<< "5"
-							<< "9"
-							<< "7");
-	END
+		array.rol(2, 0);
+		CHECK(array == StrArray() << 7 << 6 << 5 << 4 << 3 << 2 << 1 << 0);
 
-		/*TRY array[4]; EXPECT(InternalError)*/
+		array.ror(1, 1);
+		CHECK(array == StrArray() << 7 << 6 << 5 << 4 << 3 << 2 << 1 << 0);
 
-		/*TRY array[uint(-1)]; EXPECT(InternalError)*/
+		array.ror(2, 0);
+		CHECK(array == StrArray() << 7 << 6 << 5 << 4 << 3 << 2 << 1 << 0);
 
-		TRY str s = newcopy("8");
-	std::swap(s, array[3]);
-	delete[] s;
-	assert(
-		array == StrArray() << "6"
-							<< "5"
-							<< "9"
-							<< "8");
-	END
+		array.ror(2, 8);
+		CHECK(array == StrArray() << 7 << 6 << 0 << 5 << 4 << 3 << 2 << 1);
 
-		TRY StrArray array2(array);
-	assert(
-		array == array2 && array2 == StrArray() << "6"
-												<< "5"
-												<< "9"
-												<< "8");
-	END
+		array.rol(2, 8);
+		CHECK(array == StrArray() << 7 << 6 << 5 << 4 << 3 << 2 << 1 << 0);
 
-		StrArray array2(std::move(array));
-	TRY			 assert(
-		 array.count() == 0 && array2 == StrArray() << "6"
-													<< "5"
-													<< "9"
-													<< "8");
-	END
+		array.rol(2, 9);
+		CHECK(array == StrArray() << 7 << 6 << 4 << 3 << 2 << 1 << 0 << 5);
 
-		TRY array = array2;
-	assert(
-		array2 == array && array == StrArray() << "6"
-											   << "5"
-											   << "9"
-											   << "8");
-	END
+		array.ror(2, 9);
+		CHECK(array == StrArray() << 7 << 6 << 5 << 4 << 3 << 2 << 1 << 0);
+	}
 
-		TRY array.purge();
-	array = std::move(array2);
-	assert(
-		array2.count() == 0 && array == StrArray() << "6"
-												   << "5"
-												   << "9"
-												   << "8");
-	END
+	SUBCASE("pop drop")
+	{
+		auto array = std::move(StrArray() << 7 << 6 << 5 << 4 << 3 << 2 << 1 << 0);
 
-		TRY array.purge();
-	assert(array.count() == 0);
-	END
+		str s = array.pop();
+		CHECK_UNARY(eq(s, "0") && array == StrArray() << 7 << 6 << 5 << 4 << 3 << 2 << 1);
+		delete[] s;
 
-		TRY array.revert();
-	assert(array.count() == 0);
-	END
+		array.drop();
+		CHECK(array == StrArray() << 7 << 6 << 5 << 4 << 3 << 2);
+	}
 
-		TRY array.append("0");
-	array.revert();
-	assert(array.count() == 1 && eq(array[0], "0"));
-	END
+	SUBCASE("removerange, insertrange")
+	{
+		auto array = std::move(StrArray() << 7 << 6 << 5 << 4 << 3 << 2);
 
-			TRY array
-		<< "1"
-		<< "2"
-		<< "3"
-		<< "4"
-		<< "5"
-		<< "6"
-		<< "7";
-	array.revert();
-	assert(
-		array == StrArray() << "7"
-							<< "6"
-							<< "5"
-							<< "4"
-							<< "3"
-							<< "2"
-							<< "1"
-							<< "0");
-	END
+		array.removerange(2, 4);
+		CHECK(array == StrArray() << 7 << 6 << 3 << 2);
 
-		TRY array.rol();
-	assert(
-		array == StrArray() << "6"
-							<< "5"
-							<< "4"
-							<< "3"
-							<< "2"
-							<< "1"
-							<< "0"
-							<< "7");
-	END
+		array.insertrange(2, 4);
+		CHECK(array == StrArray() << 7 << 6 << nullptr << nullptr << 3 << 2);
 
-		TRY array.ror();
-	assert(
-		array == StrArray() << "7"
-							<< "6"
-							<< "5"
-							<< "4"
-							<< "3"
-							<< "2"
-							<< "1"
-							<< "0");
-	END
+		array.removerange(4, 99);
+		CHECK(array == StrArray() << 7 << 6 << nullptr << nullptr);
+	}
 
-		TRY array.rol(1, 1);
-	assert(
-		array == StrArray() << "7"
-							<< "6"
-							<< "5"
-							<< "4"
-							<< "3"
-							<< "2"
-							<< "1"
-							<< "0");
-	END
+	SUBCASE("")
+	{
+		auto array = std::move(StrArray() << 7 << 6 << nullptr << nullptr);
 
-		TRY array.rol(2, 0);
-	assert(array == StrArray() << 7 << 6 << 5 << 4 << 3 << 2 << 1 << 0);
-	END
+		delete[] array[2];
+		array[2] = newcopy("5");
+		delete[] array.last();
+		array.last() = newcopy("4");
+		CHECK(array == StrArray() << 7 << 6 << 5 << 4);
+	}
 
-		TRY array.ror(1, 1);
-	assert(array == StrArray() << 7 << 6 << 5 << 4 << 3 << 2 << 1 << 0);
-	END
+	SUBCASE("appen(StrArray)")
+	{
+		auto array	= std::move(StrArray() << 7 << 6 << 5 << 4);
+		auto array2 = std::move(StrArray() << 1 << 2 << 3);
+		array.append(array2);
+		CHECK_UNARY(array2.count() == 3 && array == StrArray() << 7 << 6 << 5 << 4 << 1 << 2 << 3);
+	}
 
-		TRY array.ror(2, 0);
-	assert(array == StrArray() << 7 << 6 << 5 << 4 << 3 << 2 << 1 << 0);
-	END
+	SUBCASE("shrink")
+	{
+		auto array = std::move(StrArray() << 7 << 6 << 5 << 4 << 1 << 2 << 3);
+		array.shrink(2);
+		CHECK(array == StrArray() << 7 << 6);
+	}
 
-		TRY array.ror(2, 8);
-	assert(array == StrArray() << 7 << 6 << 0 << 5 << 4 << 3 << 2 << 1);
-	END
+	SUBCASE("append(array)")
+	{
+		auto array = std::move(StrArray() << 7 << 6);
+		array.append(StrArray(array));
+		CHECK(array == StrArray() << 7 << 6 << 7 << 6);
+	}
 
-		TRY array.rol(2, 8);
-	assert(array == StrArray() << 7 << 6 << 5 << 4 << 3 << 2 << 1 << 0);
-	END
+	SUBCASE("sort rsort")
+	{
+		StrArray array;
+		array.sort();
+		CHECK(array.count() == 0);
 
-		TRY array.rol(2, 9);
-	assert(array == StrArray() << 7 << 6 << 4 << 3 << 2 << 1 << 0 << 5);
-	END
+		array << 1;
+		array.sort();
+		CHECK_UNARY(array.count() == 1 && eq(array[0], "1"));
 
-		TRY array.ror(2, 9);
-	assert(array == StrArray() << 7 << 6 << 5 << 4 << 3 << 2 << 1 << 0);
-	END
+		array << 7 << 5 << 9 << 3 << 8 << 5 << 0;
+		array.sort();
+		CHECK(array == StrArray() << 0 << 1 << 3 << 5 << 5 << 7 << 8 << 9);
 
-		TRY str s = array.pop();
-	assert(eq(s, "0") && array == StrArray() << 7 << 6 << 5 << 4 << 3 << 2 << 1);
-	delete[] s;
-	END
+		array.rsort();
+		CHECK(array == StrArray() << 9 << 8 << 7 << 5 << 5 << 3 << 1 << 0);
 
-		TRY array.drop();
-	assert(array == StrArray() << 7 << 6 << 5 << 4 << 3 << 2);
-	END
+		array.sort(7, 99);
+		CHECK(array == StrArray() << 9 << 8 << 7 << 5 << 5 << 3 << 1 << 0);
 
-		TRY array.removerange(2, 4);
-	assert(array == StrArray() << 7 << 6 << 3 << 2);
-	END
+		array.sort(4, 8);
+		CHECK(array == StrArray() << 9 << 8 << 7 << 5 << 0 << 1 << 3 << 5);
 
-		TRY array.insertrange(2, 4);
-	assert(array == StrArray() << 7 << 6 << nullptr << nullptr << 3 << 2);
-	END
+		array.sort(foo_gt);
+		CHECK(array == StrArray() << 3 << 1 << 0 << 7 << 5 << 5 << 9 << 8);
+	}
 
-		TRY array.removerange(4, 99);
-	assert(array == StrArray() << 7 << 6 << nullptr << nullptr);
-	END
+	SUBCASE("swap")
+	{
+		StrArray a(uint(0), 5);
+		a << "1" << "2" << "3";
+		StrArray b(uint(0), 6);
+		b << "4" << "5" << "6" << "8";
+		StrArray a2(a);
+		StrArray b2(b);
+		std::swap(a, b);
+		CHECK(a.count() == 4);
+		CHECK(a == b2);
+		CHECK(b == a2);
+	}
 
-		TRY delete[] array[2];
-	array[2] = newcopy("5");
-	delete[] array.last();
-	array.last() = newcopy("4");
-	assert(array == StrArray() << 7 << 6 << 5 << 4);
-	END
+	SUBCASE("serialize")
+	{
+		StrArray array = std::move(StrArray() << "11" << "22" << "33");
 
-		TRY array2 = StrArray() << 1 << 2 << 3;
-	array.append(array2);
-	assert(array2.count() == 3 && array == StrArray() << 7 << 6 << 5 << 4 << 1 << 2 << 3);
-	END
+		FD fd;
+		fd.open_tempfile();
+		array.serialize(fd);
 
-		TRY array.shrink(2);
-	assert(array == StrArray() << 7 << 6);
-	END
+		array.shrink(1);
+		fd.rewind_file();
+		array.deserialize(fd);
+		CHECK(array == StrArray() << "11" << "22" << "33");
+	}
 
-		TRY array.append(StrArray(array));
-	assert(array == StrArray() << 7 << 6 << 7 << 6);
-	END
+	SUBCASE("")
+	{
+		auto array = std::move(StrArray() << "11" << "22" << "33");
 
-		TRY array.purge();
-	array.sort();
-	assert(array.count() == 0);
-	END
+		array.appendifnew("44");
+		CHECK(array.count() == 4);
 
-			TRY array
-		<< 1;
-	array.sort();
-	assert(array.count() == 1 && eq(array[0], "1"));
-	END
+		array.appendifnew("22");
+		CHECK(array.count() == 4);
+	}
 
-			TRY array
-		<< 7 << 5 << 9 << 3 << 8 << 5 << 0;
-	array.sort();
-	assert(array == StrArray() << 0 << 1 << 3 << 5 << 5 << 7 << 8 << 9);
-	END
+	SUBCASE("remove, removeat")
+	{
+		auto array = std::move(StrArray() << "11" << "22" << "33" << "44");
+		array.remove("33");
+		CHECK(array == StrArray() << "11" << "22" << "44");
 
-		TRY array.rsort();
-	assert(array == StrArray() << 9 << 8 << 7 << 5 << 5 << 3 << 1 << 0);
-	END
-
-		TRY array.sort(7, 99);
-	assert(array == StrArray() << 9 << 8 << 7 << 5 << 5 << 3 << 1 << 0);
-	END
-
-		TRY array.sort(4, 8);
-	assert(array == StrArray() << 9 << 8 << 7 << 5 << 0 << 1 << 3 << 5);
-	END
-
-		TRY array.sort(foo_gt);
-	assert(array == StrArray() << 3 << 1 << 0 << 7 << 5 << 5 << 9 << 8);
-	END
+		array.removeat(1);
+		CHECK(array == StrArray() << "11" << "44");
+	}
 }
 
-static void test2(uint& num_tests, uint& num_errors)
-{
-	TRY StrArray a(uint(0), 5);
-	a << "1"
-	  << "2"
-	  << "3";
-	StrArray b(uint(0), 6);
-	b << "4"
-	  << "5"
-	  << "6"
-	  << "8";
-	StrArray a2(a);
-	StrArray b2(b);
-	std::swap(a, b);
-	assert(a.count() == 4);
-	assert(a == b2);
-	assert(b == a2);
-	END
 
-		StrArray array = std::move(
-			StrArray() << "11"
-					   << "22"
-					   << "33");
-	FD fd;
-
-	TRY fd.open_tempfile();
-	array.serialize(fd);
-	END
-
-		TRY array.shrink(1);
-	fd.rewind_file();
-	array.deserialize(fd);
-	assert(
-		array == StrArray() << "11"
-							<< "22"
-							<< "33");
-	END
-
-		TRY array.appendifnew("44");
-	assert(array.count() == 4);
-	END
-
-		TRY array.appendifnew("22");
-	assert(array.count() == 4);
-	END
-
-		TRY array.remove("33");
-	assert(array.count() == 3);
-	END
-
-		TRY array.removeat(1);
-	assert(
-		array == StrArray() << "11"
-							<< "44");
-	END
-}
-
-/*static void test3(uint& num_tests, uint& num_errors)
-{
-	StrArray array;
-}*/
-
-/*static void test4(uint& num_tests, uint& num_errors)
-{
-	StrArray array;
-}*/
+/*
 
 
-void test_StrArray(uint& num_tests, uint& num_errors)
-{
-	logIn("test StrArray");
-	test1(num_tests, num_errors);
-	test2(num_tests, num_errors);
-	//test3(num_tests,num_errors);
-	//test4(num_tests,num_errors);
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+*/

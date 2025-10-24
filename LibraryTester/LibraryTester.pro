@@ -5,7 +5,7 @@ QT       -= gui
 
 CONFIG += console
 CONFIG -= app_bundle
-CONFIG += c++11
+CONFIG += c++14
 CONFIG += precompiled_header
 CONFIG(release,debug|release) { DEFINES += NDEBUG RELEASE } # ATTN: curly brace must start in same line!
 CONFIG(debug,debug|release) { DEFINES += DEBUG } # ATTN: curly brace must start in same line!
@@ -22,21 +22,37 @@ INCLUDEPATH +=  \
 	Libraries	\
 
 
+#
+# --- List of test files:
+#
 SOURCES += \
+	Libraries/kio/kio.test.cpp \
 	Libraries/Templates/relational_operators.test.cpp \
-	Libraries/Z80/goodies/z80_clock_cycles.cpp \
+	Libraries/cstrings/tempmem.test.cpp \
+	Libraries/cstrings/cstrings.test.cpp \
+	Libraries/Templates/Array.test.cpp \
+	Libraries/Templates/StrArray.test.cpp \
+	Libraries/Templates/HashMap.test.cpp \
+	Libraries/Templates/Sort.test.cpp \
+	Libraries/Templates/RCArray.test.cpp \
 	Libraries/Z80/goodies/z80_clock_cycles.test.cpp \
-	Libraries/Z80/goodies/z80_disass.cpp \
 	Libraries/Z80/goodies/z80_disass.test.cpp \
 	Libraries/Z80/goodies/z80_major_opcode.test.cpp \
-	Libraries/Z80/goodies/z80_opcode_length.cpp \
 	Libraries/Z80/goodies/z80_opcode_length.test.cpp \
+	Libraries/VString/String_test_suite.cpp \
+
+
+#
+# source files to test:
+#
+SOURCES += \
 	Source/main.cpp \
+	Libraries/Z80/goodies/z80_clock_cycles.cpp \
+	Libraries/Z80/goodies/z80_disass.cpp \
+	Libraries/Z80/goodies/z80_opcode_length.cpp \
 	Libraries/kio/kio.cpp \
-	Libraries/kio/kio.test.cpp \
 	Libraries/kio/exceptions.cpp \
 	Libraries/cstrings/cstrings.cpp \
-	Libraries/cstrings/cstrings.test.cpp \
 	Libraries/cstrings/utf8.cpp \
 	Libraries/cstrings/ucs1.cpp \
 	Libraries/cstrings/ucs2.cpp \
@@ -44,26 +60,17 @@ SOURCES += \
 	Libraries/cstrings/legacy_charsets.cpp \
 	Libraries/unix/FD.cpp \
 	Libraries/cstrings/tempmem.cpp \
-	Libraries/cstrings/tempmem.test.cpp \
 	Libraries/unix/n-compress.cpp \
 	Libraries/unix/log_to_file.cpp \
-	\
-	Libraries/Templates/Array.test.cpp \
-	Libraries/Templates/StrArray.test.cpp \
-	Libraries/Templates/HashMap.test.cpp \
-	Libraries/Templates/Sort.test.cpp \
-	Libraries/Templates/RCArray.test.cpp \
-	\
-	Libraries/VString/String_test_suite.cpp \
 	Libraries/VString/String.cpp
 
 HEADERS += \
+	Libraries/doctest/doctest/doctest.h \
 	Libraries/Z80/goodies/CpuID.h \
 	Libraries/Z80/goodies/z80_goodies.h \
 	Libraries/Z80/goodies/z80_opcodes.h \
 	Libraries/kio/util/count1bits.h \
 	Libraries/kio/util/swap.h \
-	Source/main.h \
 	Source/settings.h \
 	Source/custom_errors.h \
 	Libraries/unix/FD.h \
@@ -78,7 +85,6 @@ HEADERS += \
 	Libraries/Templates/Array.h \
 	Libraries/Templates/HashMap.h \
 	Libraries/Templates/NVPtr.h \
-	Libraries/Templates/RCObject.h \
 	Libraries/Templates/RCPtr.h \
 	Libraries/Templates/sort.h \
 	Libraries/Templates/StrArray.h \

@@ -2,14 +2,9 @@
 // BSD-2-Clause license
 // https://opensource.org/licenses/BSD-2-Clause
 
-#undef NDEBUG
-#define loglevel 1
-#include "Templates/Array.h"
-#include "cstrings/cstrings.h"
-#include "kio/kio.h"
-#include "kio/util/defines.h"
-#include "main.h"
-#include "unix/FD.h"
+
+#define loglevel 0
+#include "doctest/doctest/doctest.h"
 #include "z80_goodies.h"
 #include "z80_opcodes.h"
 
@@ -21,6 +16,7 @@ struct TestSet
 };
 
 
+// clang-format off
 static TestSet common_tests[] = {
 	// tests for i8080, Z80 and Z180
 
@@ -796,7 +792,7 @@ static TestSet z80_ixcbxh_tests[] =
 {{PFX_IX,PFX_CB,3,RES6_A}, "res 6,a ;"}, {{PFX_IY,PFX_CB,3,RES6_L}, "res 6,yl"},
 {{PFX_IY,PFX_CB,3,RES7_B}, "res 7,b ;"}, {{PFX_IY,PFX_CB,3,RES7_L}, "res 7,yl"},
 };
-
+// clang-format on
 
 
 static bool same(cstr a, cstr b)
@@ -805,14 +801,17 @@ static bool same(cstr a, cstr b)
 	// some opcodes also have a comment after ';':
 	// these are only tested to exist
 
-	while (*a == *b && *a && *a!=';')
+	while (*a == *b && *a && *a != ';')
 	{
-		a++; b++;
+		a++;
+		b++;
 
 		if (is_space(*a) && is_space(*b))
 		{
-			do { a++; } while(is_space(*a));
-			do { b++; } while(is_space(*b));
+			do a++;
+			while (is_space(*a));
+			do b++;
+			while (is_space(*b));
 			continue;
 		}
 	}
@@ -820,127 +819,112 @@ static bool same(cstr a, cstr b)
 	return (*a == *b);
 }
 
-#define assert_same(A,B) if (!same(A,B)) throw InternalError(__FILE__, __LINE__, usingstr("FAILED: \"%s\" != \"%s\"",A,B))
 
-
-static void run_tests (uint& num_tests, uint& num_errors, CpuID cpu_id, TestSet* tests, uint nelem)
+static void run_tests(CpuID cpu_id, TestSet* tests, uint nelem)
 {
-	TRY
-		for (uint i=0; i < nelem; )
+	for (uint i = 0; i < nelem;)
+	{
+		TestSet& test = tests[i++];
+		xlog("%02x%02x%02x%02x ", test.code[0], test.code[1], test.code[2], test.code[3]);
+		if ((i & 15) == 0) xlogNl();
+
+		uint16 addr		   = 0;
+		cstr   disassembly = disassemble(cpu_id, test.code, addr);
+
+		CHECK_UNARY(same(test.expected, disassembly));
+		CHECK_UNARY(addr > 0 && addr <= 4);
+
+		CHECK_EQ(!!strchr(disassembly, '*'), (opcode_validity(cpu_id, test.code, 0x0000) > UNDOCUMENTED_OPCODE));
+		if (!!strchr(disassembly, '*') != (opcode_validity(cpu_id, test.code, 0x0000) > UNDOCUMENTED_OPCODE))
 		{
-			TestSet& test = tests[i++];
-			log("%02x%02x%02x%02x ", test.code[0],test.code[1],test.code[2],test.code[3]);
-			if ((i&15)==0) logNl();
-
-			uint16 addr = 0;
-			cstr disassembly = disassemble(cpu_id, test.code, addr);
-			assert_same(test.expected,disassembly);
-			assert(addr>0 && addr<=4);
-
-			//assert(!!strchr(disassembly,'*') == (opcode_legal_state(cpu_id,test.code,0x0000) > UNDOCUMENTED_OPCODE));
-			if (!!strchr(disassembly,'*') != (opcode_validity(cpu_id,test.code,0x0000) > UNDOCUMENTED_OPCODE))
-			{
-				static cstr name[]={"LEGAL","UNDOCUMENTED","DEPRECATED","ILLEGAL"};
-				log("\n\"%s\": wrong opcode legal state: he: %s ", disassembly, name[opcode_validity(cpu_id, test.code, 0)]);
-				num_errors++;
-			}
-
-			//assert(addr == opcode_length(cpu_id, test.code));
-			if (addr != opcode_length(cpu_id, test.code))
-			{
-				log("\nwrong opcode length: me: %i, he: %i ", addr,opcode_length(cpu_id, test.code));
-				num_errors++;
-			}
+			static cstr name[] = {"LEGAL", "UNDOCUMENTED", "DEPRECATED", "ILLEGAL"};
+			logline(
+				"\n\"%s\": wrong opcode legal state: he: %s", disassembly, name[opcode_validity(cpu_id, test.code, 0)]);
 		}
-	END
-	logline("##");
+
+		CHECK_EQ(addr, opcode_length(cpu_id, test.code));
+		if (addr != opcode_length(cpu_id, test.code))
+		{
+			logline("\nwrong opcode length: me: %u, he: %u ", addr, opcode_length(cpu_id, test.code));
+		}
+	}
+	xlogline("##");
 }
 
-static void test_disass_asm8080 (uint& num_tests, uint& num_errors)
+TEST_CASE("disass --asm8080")
 {
-	logIn("test disass --asm8080");
+	SUBCASE("") { logline("●●● %s:", __FILE__); }
 
-	for (uint i=0; i < NELEM(asm8080_tests); )
+	for (uint i = 0; i < NELEM(asm8080_tests);)
 	{
 		TestSet& test = asm8080_tests[i++];
-		log("%02x ", test.code[0]);
-		if ((i&31)==0) logNl();
+		xlog("%02x ", test.code[0]);
+		if ((i & 31) == 0) xlogNl();
 
-		TRY
-			uint16 addr = 0;
-			cstr disassembly = disassemble_8080(test.code, addr);
-			assert_same(test.expected,disassembly);
-			assert(addr>0 && addr<=4);
-			assert(addr==opcode_length(Cpu8080, test.code));
-			assert(!!strchr(disassembly,';') == !!opcode_validity(Cpu8080,test.code,0x0000));
-		END
+		uint16 addr		   = 0;
+		cstr   disassembly = disassemble_8080(test.code, addr);
+
+		CHECK_UNARY(same(test.expected, disassembly));
+		CHECK_UNARY(addr > 0 && addr <= 4);
+		CHECK_EQ(addr, opcode_length(Cpu8080, test.code));
+		CHECK_EQ(!!strchr(disassembly, ';'), !!opcode_validity(Cpu8080, test.code, 0x0000));
 	}
-	logline("##");
+	xlogline("##");
 }
 
-static void test_disass_z80 (uint& num_tests, uint& num_errors, CpuID cpu_id)
+static void test_disass_z80(CpuID cpu_id)
 {
-	cstr cpu_str = cpu_id==Cpu8080?"8080":cpu_id==CpuZ180?"Z180":"Z80";
-	cstr opt_str = cpu_id==CpuZ80_ixcbr2 ? " --ixcbr2" : cpu_id == CpuZ80_ixcbxh ? " --ixcbxh" : "";
-	logIn("test disass --cpu=%s%s",cpu_str,opt_str);
+	cstr cpu_str = cpu_id == Cpu8080 ? "8080" : cpu_id == CpuZ180 ? "Z180" : "Z80";
+	cstr opt_str = cpu_id == CpuZ80_ixcbr2 ? " --ixcbr2" : cpu_id == CpuZ80_ixcbxh ? " --ixcbxh" : "";
 
-	logline("%s: common tests",cpu_str);
-	run_tests(num_tests,num_errors,cpu_id,common_tests,NELEM(common_tests));
+	xlogIn("test disass --cpu=%s%s", cpu_str, opt_str);
+
+	xlogline("common_tests");
+	run_tests(cpu_id, common_tests, NELEM(common_tests));
 
 	if (cpu_id == Cpu8080)
 	{
-		logline("i8080 tests");
-		run_tests(num_tests,num_errors,cpu_id,i8080_tests,NELEM(i8080_tests));
+		xlogline("i8080_tests");
+		run_tests(cpu_id, i8080_tests, NELEM(i8080_tests));
 	}
 	else if (cpu_id == CpuZ180)
 	{
-		logline("z180 tests");
-		run_tests(num_tests,num_errors,cpu_id,z180_tests,NELEM(z180_tests));
-		logline("z180: z80/z180 tests");
-		run_tests(num_tests,num_errors,cpu_id,z80_z180_tests,NELEM(z80_z180_tests));
+		xlogline("z180_tests");
+		run_tests(cpu_id, z180_tests, NELEM(z180_tests));
+		xlogline("z80_z180_tests");
+		run_tests(cpu_id, z80_z180_tests, NELEM(z80_z180_tests));
 	}
 	else // if (cpu_id == CpuZ80)
 	{
-		logline("z80 tests");
-		run_tests(num_tests,num_errors,cpu_id,z80_tests,NELEM(z80_tests));
-		logline("z80: z80/z180 tests");
-		run_tests(num_tests,num_errors,cpu_id,z80_z180_tests,NELEM(z80_z180_tests));
+		xlogline("z80_tests");
+		run_tests(cpu_id, z80_tests, NELEM(z80_tests));
+		xlogline("z80_z180_tests");
+		run_tests(cpu_id, z80_z180_tests, NELEM(z80_z180_tests));
 
 		if (cpu_id == CpuZ80_ixcbr2)
 		{
-			logline("z80 ixcbr2 tests");
-			run_tests(num_tests,num_errors,cpu_id,z80_ixcbr2_tests,NELEM(z80_ixcbr2_tests));
+			xlogline("z80_ixcbr2_tests");
+			run_tests(cpu_id, z80_ixcbr2_tests, NELEM(z80_ixcbr2_tests));
 		}
 		else if (cpu_id == CpuZ80_ixcbxh)
 		{
-			logline("z80 ixcbxh tests");
-			run_tests(num_tests,num_errors,cpu_id,z80_ixcbxh_tests,NELEM(z80_ixcbxh_tests));
+			xlogline("z80_ixcbxh_tests");
+			run_tests(cpu_id, z80_ixcbxh_tests, NELEM(z80_ixcbxh_tests));
 		}
 		else
 		{
-			logline("z80 no-opt tests");
-			run_tests(num_tests,num_errors,cpu_id,z80_noopt_tests,NELEM(z80_noopt_tests));
+			xlogline("z80_noopt_tests");
+			run_tests(cpu_id, z80_noopt_tests, NELEM(z80_noopt_tests));
 		}
 	}
-
 }
 
 
-void test_z80_disass (uint& num_tests, uint& num_errors)
+TEST_CASE("z80_disass")
 {
-	logIn("test z80_disass");
-
-	test_disass_z80(num_tests,num_errors,CpuZ80);
-	test_disass_z80(num_tests,num_errors,CpuZ80_ixcbr2);
-	test_disass_z80(num_tests,num_errors,CpuZ80_ixcbxh);
-	test_disass_z80(num_tests,num_errors,CpuZ180);
-	test_disass_z80(num_tests,num_errors,Cpu8080);
-	test_disass_asm8080(num_tests,num_errors);
+	test_disass_z80(CpuZ80);
+	test_disass_z80(CpuZ80_ixcbr2);
+	test_disass_z80(CpuZ80_ixcbxh);
+	test_disass_z80(CpuZ180);
+	test_disass_z80(Cpu8080);
 }
-
-
-
-
-
-
-
