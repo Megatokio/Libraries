@@ -9,6 +9,13 @@
 #endif
 
 
+#ifndef NO_THREADS
+  #include <atomic>
+//std::atomic_flag rc_spinlock = ATOMIC_FLAG_INIT; // -> RCPtr.h
+std::atomic_bool rc_spinlock {false};
+#endif
+
+
 cstr errorstr(int err) noexcept
 {
 	// get error string for system or custom error number

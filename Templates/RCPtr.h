@@ -106,7 +106,7 @@
 
 
 #pragma once
-#include "kio/cdefs.h"
+#include "kio/kio.h"
 #include <type_traits>
 #include <utility>
 
@@ -115,13 +115,12 @@ using uint = unsigned int;
 #ifndef NO_THREADS
   #include <atomic>
   #include <thread>
+
 using rc_uint32_t = std::atomic<uint32_t>;
 using rc_uint16_t = std::atomic<uint16_t>;
-using rc_bool_t	  = std::atomic<bool>;
 #else
 using rc_uint32_t = uint32_t;
 using rc_uint16_t = uint16_t;
-using rc_bool_t	  = bool;
 #endif
 
 struct RCDataNoWeak
@@ -131,7 +130,6 @@ struct RCDataNoWeak
 		rc_uint32_t hc {0}; // hard (locking) refs
 		rc_uint32_t wc;		// total == hard refs
 	};
-	static rc_bool_t lock; // n.ex.
 
 	RCDataNoWeak() noexcept = default;
 	RCDataNoWeak(const RCDataNoWeak&) noexcept {}
@@ -140,62 +138,32 @@ struct RCDataNoWeak
 	RCDataNoWeak& operator=(RCDataNoWeak&&) noexcept { return *this; }
 };
 
-struct RCDataWeakNoLock
+struct RCDataWithWeak
 {
-	rc_uint32_t		 wc {0}; // total = hard + weak refs
-	rc_uint32_t		 hc {0}; // hard (locking) refs
-	static rc_bool_t lock;	 // n.ex.
+	rc_uint32_t wc {0}; // total = hard + weak refs
+	rc_uint32_t hc {0}; // hard (locking) refs
 
-	RCDataWeakNoLock() noexcept = default;
-	RCDataWeakNoLock(const RCDataWeakNoLock&) noexcept {}
-	RCDataWeakNoLock(RCDataWeakNoLock&&) noexcept {}
-	RCDataWeakNoLock& operator=(const RCDataWeakNoLock&) noexcept { return *this; }
-	RCDataWeakNoLock& operator=(RCDataWeakNoLock&&) noexcept { return *this; }
-};
-
-struct RCDataWeakWithLock
-{
-	rc_uint32_t wc {0};	  // total = hard + weak refs
-	rc_uint16_t hc {0};	  // hard (locking) refs
-	rc_bool_t	lock {0}; // lock for hc while upgrading WeakPtr
-	uint8_t		padding {0};
-
-	RCDataWeakWithLock() noexcept = default;
-	RCDataWeakWithLock(const RCDataWeakWithLock&) noexcept {}
-	RCDataWeakWithLock(RCDataWeakWithLock&&) noexcept {}
-	RCDataWeakWithLock& operator=(const RCDataWeakWithLock&) noexcept { return *this; }
-	RCDataWeakWithLock& operator=(RCDataWeakWithLock&&) noexcept { return *this; }
+	RCDataWithWeak() noexcept = default;
+	RCDataWithWeak(const RCDataWithWeak&) noexcept {}
+	RCDataWithWeak(RCDataWithWeak&&) noexcept {}
+	RCDataWithWeak& operator=(const RCDataWithWeak&) noexcept { return *this; }
+	RCDataWithWeak& operator=(RCDataWithWeak&&) noexcept { return *this; }
 };
 
 // clang-format off
 #define RCDATA_NOWEAK						\
   mutable RCDataNoWeak _rcdata;				\
-  static constexpr bool _has_wc	  = false;	\
-  static constexpr bool _has_lock = false;	\
+  static constexpr bool _has_wc = false;	\
   uint refcnt() volatile const noexcept {return _rcdata.hc;} \
   template<typename> friend class RCPtr;
-#define RCDATA_WEAK_NOLOCK					\
-  mutable RCDataWeakNoLock _rcdata;			\
-  static constexpr bool _has_wc	  = true;	\
-  static constexpr bool _has_lock = false;	\
-  uint refcnt() volatile const noexcept {return _rcdata.hc;} \
-  template<typename> friend class WeakPtr;	\
-  template<typename> friend class RCPtr;
-#define RCDATA_WEAK_WITHLOCK				\
-  mutable RCDataWeakWithLock _rcdata;		\
-  static constexpr bool _has_wc	  = true;	\
-  static constexpr bool _has_lock = true;	\
+#define RCDATA_WITHWEAK						\
+  mutable RCDataWithWeak _rcdata;			\
+  static constexpr bool _has_wc = true;		\
   uint refcnt() volatile const noexcept {return _rcdata.hc;} \
   template<typename> friend class WeakPtr;	\
   template<typename> friend class RCPtr;
 // clang-format on
 
-
-#ifdef NO_THREADS
-  #define RCDATA_WITHWEAK RCDATA_WEAK_NOLOCK
-#else
-  #define RCDATA_WITHWEAK RCDATA_WEAK_WITHLOCK
-#endif
 
 #ifdef NO_WEAKPTR
   #define RCDATA RCDATA_NOWEAK
@@ -205,28 +173,31 @@ struct RCDataWeakWithLock
 
 
 #ifdef NO_THREADS
-extern void rc_lock_spinlock(volatile rc_bool_t& lock) noexcept;   // n.ex.
-extern void rc_unlock_spinlock(volatile rc_bool_t& lock) noexcept; // n.ex.
+inline void rc_lock_spinlock() noexcept {}	 // n.ex.
+inline void rc_unlock_spinlock() noexcept {} // n.ex.
 #else
 
-inline void rc_lock_spinlock(volatile rc_bool_t& lock) noexcept
+//extern std::atomic_flag rc_spinlock;
+extern std::atomic_bool rc_spinlock;
+
+inline void rc_lock_spinlock() noexcept
 {
-	for (int i = 0; lock.exchange(true, std::memory_order_acquire); i++)
+	for (int i = 0; rc_spinlock.exchange(true, std::memory_order_acquire); i++)
 	{
 		// we didn't get the lock:
 		// wait until we see that it's free.
 		// this happens only very rarely.
 		// if we block too long then yield to other thread:
-		while (lock.load(std::memory_order_relaxed))
+		while (rc_spinlock.load(std::memory_order_relaxed))
 		{
-			if (i > 20) std::this_thread::yield();
+			if (i > 10) std::this_thread::yield();
 		}
 	}
 }
 
-inline void rc_unlock_spinlock(volatile rc_bool_t& lock) noexcept
+inline void rc_unlock_spinlock() noexcept
 {
-	lock.store(false, std::memory_order_release); //
+	rc_spinlock.store(false, std::memory_order_release); //
 }
 #endif
 
@@ -329,10 +300,10 @@ public:
 	friend void swap(WeakPtr<T>& a, WeakPtr<T>& b) noexcept { std::swap(a.p, b.p); }
 
 	// No direct access to the stored object!
-	T* operator->() const  = delete;
-	T& operator*() const   = delete;
-	   operator T&() const = delete;
-	   operator T*() const = delete;
+	T* operator->() const = delete;
+	T& operator*() const  = delete;
+	operator T&() const	  = delete;
+	operator T*() const	  = delete;
 
 	// test for non-nullptr:
 	// 'true' result does not guarantee that the object is still valid!
@@ -428,7 +399,7 @@ public:
 		{
 			if (qp->_rcdata.hc > 0) // has hard locks
 			{
-				if (T::_has_lock) rc_lock_spinlock(qp->_rcdata.lock);
+				rc_lock_spinlock();
 
 				if (++qp->_rcdata.hc > 1) // got it
 				{
@@ -441,7 +412,7 @@ public:
 					qp->_rcdata.hc = 0;
 				}
 
-				if (T::_has_lock) rc_unlock_spinlock(qp->_rcdata.lock);
+				rc_unlock_spinlock();
 			}
 			else q = nullptr; // clear the WeakPtr so that it no longer locks the memory
 		}
@@ -477,7 +448,7 @@ public:
 	friend void swap(RCPtr<T>& a, RCPtr<T>& b) noexcept { std::swap(a.p, b.p); }
 
 	T* operator->() const noexcept { return p; }
-	   operator T*() const noexcept { return p; }
+	operator T*() const noexcept { return p; }
 	T* ptr() const noexcept { return p; }
 	T* get() const noexcept { return p; } // for compatibility with std::shared_ptr
 	T& ref() const noexcept
