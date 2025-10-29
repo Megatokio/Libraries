@@ -36,7 +36,7 @@ public:
 	virtual SIZE   read(void* data, SIZE, bool partial = false);
 	virtual SIZE   write(const void* data, SIZE, bool partial = false);
 
-	virtual int	 getc(uint timeout_us);
+	virtual int	 getc(uint timeout_us); // return uchar or -1 if timeout
 	virtual char getc();
 	virtual str	 gets(uint line_ends = (1 << 0) + (1 << 10) + (1 << 13));
 	virtual void putc(char);
@@ -123,6 +123,11 @@ public:
 	{
 		write<T>(reverted<T, little_endian>(n));
 	}
+
+	// read/write length-prefixed strings:
+	// note: nullptr is restored as nullptr!
+	str	 read_nstr();
+	void write_nstr(cstr);
 };
 
 

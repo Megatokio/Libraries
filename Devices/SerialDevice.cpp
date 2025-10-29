@@ -3,12 +3,13 @@
 // https://opensource.org/licenses/BSD-2-Clause
 
 #include "SerialDevice.h"
-//#include "common/timing.h"
 #include "cstrings/tempmem.h"
 #include <memory>
 #include <stdarg.h>
 #include <string.h>
 #include <time.h>
+
+
 namespace kio
 {
 
@@ -124,6 +125,43 @@ void SerialDevice::printf(cstr fmt, ...)
 	va_end(va);
 
 	write(bp, size);
+}
+
+void SerialDevice::write_nstr(cstr s)
+{
+	if (s)
+	{
+		uint32 len = uint32(strlen(s));
+
+		if (len >= 253)
+			if (len >> 16)
+			{
+				write<uint8>(255);
+				write_LE<uint32>(len);
+			}
+			else
+			{
+				write<uint8>(254);
+				write_LE<uint16>(uint16(len));
+			}
+		else { write<uint8>(uint8(len)); }
+
+		write(s, len);
+	}
+	else write<uint8>(253); // 253 => nullptr !
+}
+
+str SerialDevice::read_nstr()
+{
+	uint32 len = read<uint8>();
+	if (len >= 253)
+	{
+		if (len == 253) return nullptr;
+		else len = len == 255 ? read_LE<uint32>() : read_LE<uint16>();
+	}
+	str s = tempstr(len);
+	read(s, len);
+	return s;
 }
 
 
