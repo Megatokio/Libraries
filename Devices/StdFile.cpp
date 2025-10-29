@@ -5,6 +5,9 @@
 #include "StdFile.h"
 #include <cstring>
 
+// -> https://man7.org/linux/man-pages/man3/stdio.3.html
+
+
 namespace kio
 {
 
@@ -50,9 +53,14 @@ StdFile::~StdFile()
 	}
 }
 
-uint32 StdFile::ioctl(IoCtl cmd, void* arg1, void* arg2)
+uint32 StdFile::ioctl(IoCtl ctl, void* arg1, void* arg2)
 {
-	return File::ioctl(cmd, arg1, arg2); //
+	switch (ctl.cmd)
+	{
+	case IoCtl::FLUSH_OUT: fflush(file); return 0;
+	case IoCtl::FLUSH_IN: fflush(file); return 0;
+	default: return File::ioctl(ctl, arg1, arg2);
+	}
 }
 
 __noreturn void StdFile::throw_error()
