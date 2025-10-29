@@ -16,6 +16,15 @@
 	When linking 2 files, their Names must be merged, which will assign new IDs to the added names.
 */
 
+namespace kio
+{
+struct Chunk
+{
+	Chunk* prev;
+	char   data[8 * 1024 - sizeof(Chunk*)];
+	explicit Chunk(Chunk* p) : prev(p) {}
+	~Chunk() { delete prev; }
+};
 
 // standard names as defined in NameID.h:
 static constexpr cstr stdnames[]
@@ -105,7 +114,7 @@ Array<NameID> Names::merge(const Names& q)
 
 #define MAGIC 0x2355
 
-void Names::serialize(FD& fd) const
+void Names::serialize(FD& fd, void*) const
 {
 	uint32 a = num_stdnames;
 	uint32 e = hashmap.count();
@@ -117,7 +126,7 @@ void Names::serialize(FD& fd) const
 	for (uint32 id = a; id < e; id++) { fd.write_nstr(get(NameID(id))); }
 }
 
-void Names::deserialize(FD& fd)
+void Names::deserialize(FD& fd, void*)
 {
 	uint32 m = fd.read_uint16();
 	uint32 a = fd.read_uint32();
@@ -130,3 +139,5 @@ void Names::deserialize(FD& fd)
 
 	for (uint32 id = a; id < e; id++) { add(fd.read_nstr()); }
 }
+
+} // namespace kio

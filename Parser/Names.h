@@ -8,21 +8,13 @@
 #include "Templates/HashMap.h"
 
 
+namespace kio
+{
+
+static constexpr char data_error[] = "data error in file";
+
 class Names
 {
-	struct Chunk
-	{
-		Chunk* prev;
-		char   data[8 * 1024 - sizeof(Chunk*)];
-		explicit Chunk(Chunk* p) : prev(p) {}
-		~Chunk() { delete prev; }
-	};
-	Chunk* pool;
-	char*  pool_ptr;
-	char*  pool_end;
-
-	HashMap<cstr, NameID> hashmap;
-
 	Names(const Names&)			   = delete;
 	Names& operator=(const Names&) = delete;
 
@@ -43,6 +35,18 @@ public:
 	Array<NameID> merge(const Names&);
 	void		  purge();
 
-	void serialize(class FD&) const;
-	void deserialize(class FD&);
+	void serialize(class SerialDevice*, void* = nullptr) const; // use Names.cpp
+	void deserialize(class SerialDevice*, void* = nullptr);
+
+	void serialize(class FD&, void* = nullptr) const; // use Names_FD.cpp
+	void deserialize(class FD&, void* = nullptr);
+
+private:
+	struct Chunk* pool	   = nullptr;
+	char*		  pool_ptr = nullptr;
+	char*		  pool_end = nullptr;
+
+	HashMap<cstr, NameID> hashmap;
 };
+
+} // namespace kio
