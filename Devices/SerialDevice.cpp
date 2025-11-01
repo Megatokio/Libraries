@@ -48,13 +48,7 @@ int SerialDevice::getc(uint timeout_us)
 
 char SerialDevice::getc()
 {
-	if (read(&last_char, 1, true) == 0)
-	{
-		timespec dur;
-		dur.tv_sec	= 0;
-		dur.tv_nsec = 50 * 1000; // 50 µs
-		while (read(&last_char, 1, true) == 0) { nanosleep(&dur, nullptr); }
-	}
+	read(&last_char, 1, false);
 	return last_char;
 }
 

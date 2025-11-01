@@ -25,7 +25,8 @@ class Directory;
 using DirectoryPtr = std::shared_ptr<Directory>;
 class File;
 using FilePtr = std::shared_ptr<File>;
-
+class SerialDevice;
+using SerialDevicePtr = std::shared_ptr<SerialDevice>;
 
 constexpr char NOT_WRITABLE[]		   = "not writable";
 constexpr char NOT_READABLE[]		   = "not readable";
