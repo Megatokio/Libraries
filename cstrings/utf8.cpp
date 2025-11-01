@@ -11,16 +11,10 @@ namespace utf8
 
 /* best effort mapping inside ascii range:
 */
-#define N3(C)         \
-  {C, 0}, {C + 1, 0}, \
-  {                   \
-	C + 2, 0          \
-  }
-#define N4(C)                     \
-  {C, 0}, {C + 1, 0}, {C + 2, 0}, \
-  {                               \
-	C + 3, 0                      \
-  }
+#define N3(C) \
+	{C, 0}, {C + 1, 0}, { C + 2, 0 }
+#define N4(C) \
+	{C, 0}, {C + 1, 0}, {C + 2, 0}, { C + 3, 0 }
 #define N7(C)  N4(C), N3(C + 4)
 #define N8(C)  N4(C), N4(C + 4)
 #define N16(C) N8(C), N8(C + 8)
@@ -215,7 +209,7 @@ char* ucs2_to_utf8(const ucs2char* q, uint qcnt, char* z) noexcept
 	f2:
 		*z++ = char(0x80 + ((c >> 6) & 0x3F));
 	f1:
-		*z++ = char(0x80 + ((c)&0x3F));
+		*z++ = char(0x80 + ((c) & 0x3F));
 	}
 	*z = 0;
 	return z;
@@ -262,7 +256,7 @@ f3:
 f2:
 	*z++ = char(0x80 + ((c >> 6) & 0x3F));
 f1:
-	*z++ = char(0x80 + ((c)&0x3F));
+	*z++ = char(0x80 + ((c) & 0x3F));
 
 	return z;
 }
@@ -772,13 +766,13 @@ str unescapedstr(cstr s0) noexcept // sets errno
 
 				uint d;
 				c = char(::dec_digit_value(c));
-				d = dec_digit_value(q);
+				d = ::dec_digit_value(*q);
 				if (d < 8)
 				{
 					q++;
 					c = char(c << 3) + char(d);
 				}
-				d = dec_digit_value(q);
+				d = ::dec_digit_value(*q);
 				if (d < 8)
 				{
 					q++;
