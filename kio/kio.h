@@ -165,29 +165,30 @@ extern void waitDelay(double seconds) noexcept; // realtime (monotonic)
 
 /*	basic maths
 */
-template<class T>
-inline T min(T a, T b)
+template<class T, class T2>
+inline constexpr T min(T a, T2 b) noexcept
 {
 	return a < b ? a : b;
 }
-template<class T>
-inline T max(T a, T b)
+
+template<class T, class T2>
+inline constexpr T max(T a, T2 b) noexcept
 {
 	return a > b ? a : b;
 }
 template<class T>
-inline int sign(T a)
+inline constexpr int sign(T a)
 {
 	return int(a > 0) - int(a < 0);
 }
 //template <class T> inline T abs ( T a )				{ return a<0 ? -a : a; }
 template<class T>
-inline T minmax(T a, T n, T e)
+inline constexpr T minmax(T a, T n, T e)
 {
 	return n <= a ? a : n >= e ? e : n;
 }
 template<class T>
-inline void limit(T a, T& n, T e)
+inline constexpr void limit(T a, T& n, T e)
 {
 	if (n < a) n = a;
 	else if (n > e) n = e;
