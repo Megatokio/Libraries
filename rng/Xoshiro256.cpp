@@ -11,12 +11,12 @@ See	<http://prng.di.unimi.it>
 */
 
 #include "Xoshiro256.h"
-#include "kio/kio.h"
 #include <math.h>
 #include <random>
-#include <stdint.h>
-#include <stdlib.h>
 
+
+namespace kio
+{
 
 static inline uint64 rotl(const uint64 x, int k) noexcept { return (x << k) | (x >> (64 - k)); }
 
@@ -172,7 +172,7 @@ uint64 Xoshiro256::random(uint64 max) noexcept
 	}
 }
 
-void Xoshiro256::skip(const uint64 bits[4]) noexcept
+void Xoshiro256::_skip(const uint64 bits[4]) noexcept
 {
 	// helper for jump() and jump_long():
 
@@ -200,7 +200,7 @@ void Xoshiro256::skip(const uint64 bits[4]) noexcept
 	s[3] = s3;
 }
 
-void Xoshiro256::skip128() noexcept
+void Xoshiro256::jump() noexcept
 {
 	// This is the short jump function for the generator. It is equivalent
 	// to 2^128 calls to next(); it can be used to generate 2^128
@@ -208,10 +208,10 @@ void Xoshiro256::skip128() noexcept
 
 	static const uint64 bits[4] = {0x180ec6d33cfd0aba, 0xd5a61266f0c9392c, 0xa9582618e03fc9aa, 0x39abdc4529b1661c};
 
-	skip(bits);
+	_skip(bits);
 }
 
-void Xoshiro256::skip192() noexcept
+void Xoshiro256::jump_long() noexcept
 {
 	// This is the long jump function for the generator. It is equivalent to
 	// 2^192 calls to next(); it can be used to generate 2^64 starting points,
@@ -220,7 +220,7 @@ void Xoshiro256::skip192() noexcept
 
 	static const uint64 bits[4] = {0x76e15d3efefdcbbf, 0xc5004e441c522fb3, 0x77710069854ee241, 0x39109bb02acbe635};
 
-	skip(bits);
+	_skip(bits);
 }
 
 Xoshiro256::Xoshiro256(const void* q) noexcept
@@ -240,3 +240,5 @@ Xoshiro256::Xoshiro256(uint32 seed) noexcept
 }
 
 Xoshiro256::Xoshiro256() noexcept : Xoshiro256(std::random_device {}()) {}
+
+} // namespace kio
