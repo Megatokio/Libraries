@@ -9,6 +9,8 @@
 //}
 
 
+// clang-format off
+
 /*	Z80: Opcodes which branch conditionally are encoded like this:
 	the time for run-through is stored in the lower 5 bits
 	the add-on time if they branch is stored in the upper 3 bits
@@ -24,8 +26,9 @@
 */
 #define Z(a, b) a + (((b - a - 1) & 7) << 5)
 
-__attribute__((unused)) static const uint8 cc_8080[256] = {
 #if 0
+static constexpr uint8 cc_8080[256] =
+{
 	// The 8080 has only 1-byte opcodes
 	// Code points marked with '**' were unused and reassigned later by the Z80
 
@@ -96,10 +99,11 @@ __attribute__((unused)) static const uint8 cc_8080[256] = {
 		Z(5,11),	4,			Z(10,10),	4,			Z(10,17),	17,			7,			11,
 		Z(5,11),	10,			Z(10,10),	4,			Z(10,17),	11,			7,			11,
 		Z(5,11),	6,			Z(10,10),	4,			Z(10,17),	17,			7,			11,
-#endif
 };
+#endif
 
-static const uint8 cc_z80[256] = {
+static constexpr uint8 cc_z80[256] =
+{
 	// 1-byte opcodes
 	// time for PFX_IX and PFX_IY are set to 4 which is the time they take if
 	// another PFX_IX, PFX_IY or PFX_ED follows.
@@ -175,10 +179,9 @@ static const uint8 cc_z80[256] = {
 		Z(5,11),	6,			Z(10,10),	4,			Z(10,17),	4,			7,			11
 };
 
-__attribute__((unused))
-static const uint8 cc_z80_CB[256] =
+#if 0
+static constexpr uint8 cc_z80_CB[256] =
 {
-	#if 0
 	// Table for CBxx opcodes:
 	// (this table is easy to compute)
 	// times are stored for the entire opcode incl. CB
@@ -252,10 +255,11 @@ static const uint8 cc_z80_CB[256] =
 		8,			8,			8,			8,			8,			8,			15,			8,
 		8,			8,			8,			8,			8,			8,			15,			8,
 		8,			8,			8,			8,			8,			8,			15,			8
-#endif
 };
+#endif
 
-static const uint8 cc_z80_ED[256] = {
+static constexpr uint8 cc_z80_ED[256] =
+{
 	// Table for EDxx opcodes:
 	// times are stored for the entire opcode incl. ED
 	// so the minimum time is 8 cycles
@@ -331,7 +335,85 @@ static const uint8 cc_z80_ED[256] = {
 		8,			8,			8,			8,			8,			8,			8,			8
 };
 
-static const uint8 cc_z80_XY[256] =
+static constexpr uint8 cc_z80n_ED[256] =
+{
+	// Z80N (ZX Spectrum Next):
+	// Table for EDxx opcodes:
+	// times are stored for the entire opcode incl. ED
+	// so the minimum time is 8 cycles
+	// illegal non-NOP opcodes are marked with **
+	// illegal NOPs are marked with their opcode
+
+	// ED00,		ED01,		ED02,		ED03,		ED04,		ED05,		ED06,		ED07,
+	// ED08,		ED09,		ED0A,		ED0B,		ED0C,		ED0D,		ED0E,		ED0F,
+	// ED10,		ED11,		ED12,		ED13,		ED14,		ED15,		ED16,		ED17,
+	// ED18,		ED19,		ED1A,		ED1B,		ED1C,		ED1D,		ED1E,		ED1F,
+	// ED20,		ED21,		ED22,		SWAPNIB,	MIRROR_A,	ED25,		ED26,		TEST_N,
+	// BSLA_DE_B,	BSRA_DE_B,	BSRL_DE_B,	BSRF_DE_B,	BRLC_DE_B,	ED2D,		ED2E,		ED2F,
+	// MUL_D_E,		ADD_HL_A,	ADD_DE_A,	ADD_BC_A,	ADD_HL_NN,	ADD_DE_NN,	ADD_BC_NN,	ED37,
+	// ED38,		ED39,		ED3A,		ED3B,		ED3C,		ED3D,		ED3E,		ED3F,
+		8,			8,			8,			8,			8,			8,			8,			8,
+		8,			8,			8,			8,			8,			8,			8,			8,
+		8,			8,			8,			8,			8,			8,			8,			8,
+		8,			8,			8,			8,			8,			8,			8,			8,
+		8,			8,			8,			8,			8,			8,			8,			11,
+		8,			8,			8,			8,			8,			8,			8,			8,
+		8,			8,			8,			8,			16,			16,			16,			8,
+		8,			8,			8,			8,			8,			8,			8,			8,
+
+	// IN_B_xC, 	OUT_xC_B,	SBC_HL_BC,	LD_xNN_BC,	NEG,		RETN,		IM_0,		LD_I_A,
+	// IN_C_xC, 	OUT_xC_C,	ADC_HL_BC,	LD_BC_xNN,	NEG**,		RETI,		IM0**,		LD_R_A,
+	// IN_D_xC, 	OUT_xC_D,	SBC_HL_DE,	LD_xNN_DE,	NEG**,		RETI**,		IM_1,		LD_A_I,
+	// IN_E_xC, 	OUT_xC_E,	ADC_HL_DE,	LD_DE_xNN,	NEG**,		RETI**,		IM_2,		LD_A_R,
+	// IN_H_xC, 	OUT_xC_H,	SBC_HL_HL,	LD_xNN_HL,	NEG**,		RETI**,		IM0**,		RRD,
+	// IN_L_xC, 	OUT_xC_L,	ADC_HL_HL,	LD_HL_xNN,	NEG**,		RETI**,		IM0**,		RLD,
+	// IN_F_xC, 	OUT_xC_0,	SBC_HL_SP,	LD_xNN_SP,	NEG**,		RETI**,		IM1**,		ED77,
+	// IN_A_xC, 	OUT_xC_A,	ADC_HL_SP,	LD_SP_xNN,	NEG**,		RETI**,		IM2**,		ED7F,
+		12,			12,			15,			20,			8,			14,			8,			9,
+		12,			12,			15,			20,			8,			14,			8,			9,
+		12,			12,			15,			20,			8,			14,			8,			9,
+		12,			12,			15,			20,			8,			14,			8,			9,
+		12,			12,			15,			20,			8,			14,			8,			18,
+		12,			12,			15,			20,			8,			14,			8,			18,
+		12,			12,			15,			20,			8,			14,			8,			8,
+		12,			12,			15,			20,			8,			14,			8,			8,
+
+	// ED80,		ED81,		ED82,		ED83,		ED84,		ED85,		ED86,		ED87,
+	// ED88,		ED89,		PUSH_NN,	ED8B,		ED8C,		ED8D,		ED8E,		ED8F,
+	// OUTINB,		NEXTREG_N_N,NEXTREG_N_A,PIXELDN,	PIXELAD,	SETAE,		ED96,		ED97,
+	// JP_xC,		ED99,		ED9A,		ED9B,		ED9C,		ED9D,		ED9E,		ED9F,
+	// LDI, 		CPI,		INI,		OUTI,		LDIX,		LDWS,		EDA6,		EDA7,
+	// LDD, 		CPD,		IND,		OUTD,		LDDX,		EDAD,		EDAE,		EDAF,
+	// LDIR,		CPIR,		INIR,		OTIR,		LDIRX,		EDB5,		EDB6,		LDPIRX,
+	// LDDR,		CPDR,		INDR,		OTDR,		LDDRX,		EDBD,		EDBE,		EDBF,
+		8,			8,			8,			8,			8,			8,			8,			8,
+		8,			8,			23,			8,			8,			8,			8,			8,
+		16,			20,			17,			8,			8,			8,			8,			8,
+		13,			8,			8,			8,			8,			8,			8,			8,
+		16,			16,			16,			16,			16,			14,			8,			8,
+		16,			16,			16,			16,			16,			8,			8,			8,
+		Z(16, 21),	Z(16, 21),	Z(16, 21),	Z(16, 21),	Z(16, 21),	8,			8,			Z(16, 21),
+		Z(16, 21),	Z(16, 21),	Z(16, 21),	Z(16, 21),	Z(16, 21),	8,			8,			8,
+
+	// EDC0,		EDC1,		EDC2,		EDC3,		EDC4,		EDC5,		EDC6,		EDC7,
+	// EDC8,		EDC9,		EDCA,		EDCB,		EDCC,		EDCD,		EDCE,		EDCF,
+	// EDD0,		EDD1,		EDD2,		EDD3,		EDD4,		EDD5,		EDD6,		EDD7,
+	// EDD8,		EDD9,		EDDA,		EDDB,		EDDC,		EDDD,		EDDE,		EDDF,
+	// EDE0,		EDE1,		EDE2,		EDE3,		EDE4,		EDE5,		EDE6,		EDE7,
+	// EDE8,		EDE9,		EDEA,		EDEB,		EDEC,		EDED,		EDEE,		EDEF,
+	// EDF0,		EDF1,		EDF2,		EDF3,		EDF4,		EDF5,		EDF6,		EDF7,
+	// EDF8,		EDF9,		EDFA,		EDFB,		EDFC,		EDFD,		EDFE,		EDFF
+		8,			8,			8,			8,			8,			8,			8,			8,
+		8,			8,			8,			8,			8,			8,			8,			8,
+		8,			8,			8,			8,			8,			8,			8,			8,
+		8,			8,			8,			8,			8,			8,			8,			8,
+		8,			8,			8,			8,			8,			8,			8,			8,
+		8,			8,			8,			8,			8,			8,			8,			8,
+		8,			8,			8,			8,			8,			8,			8,			8,
+		8,			8,			8,			8,			8,			8,			8,			8
+};
+
+static constexpr uint8 cc_z80_XY[256] =
 {
 	// Opcodes with prefix DD and FD use the IX resp. IY register instead of HL.
 	// times are given for the entire opcode incl. DD/FD
@@ -410,8 +492,9 @@ static const uint8 cc_z80_XY[256] =
 		4,			10,			4,			4,			4,			4,			4,			4,
 };
 
-__attribute__((unused)) static const uint8 cc_z80_XYCB[256] = {
 #if 0
+static constexpr uint8 cc_z80_XYCB[256] =
+{
 	// Table for opcode after DDCB / FDCB:
 	// legal ones are only those with memory access (XY+dis)
 	// all other opcodes are illegal.
@@ -489,8 +572,8 @@ __attribute__((unused)) static const uint8 cc_z80_XYCB[256] = {
 		23,			23,			23,			23,			23,			23,			23,			23,
 		23,			23,			23,			23,			23,			23,			23,			23,
 		23,			23,			23,			23,			23,			23,			23,			23,
-#endif
 };
+#endif
 
 
 /*	Z180: Opcodes which branch conditionally are encoded like this:
@@ -508,7 +591,8 @@ __attribute__((unused)) static const uint8 cc_z80_XYCB[256] = {
 #undef Z
 #define Z(a, b) a + ((b - a < 7 ? b - a : 7) << 5)
 
-static const uint8 cc_z180[256] = {
+static constexpr uint8 cc_z180[256] =
+{
 	// normal 1-byte opcodes
 	// Prefix opcodes are set to 0.
 	// The time for the entire opcode is given in their respective sub table.
@@ -583,8 +667,9 @@ static const uint8 cc_z180[256] = {
 		Z(5u,10u),	4u,			Z(6u,9u),	3u,			Z(6u,16u),	0u,			6u,			11u,
 };
 
-__attribute__((unused)) static const uint8 cc_z180_CB[256] = {
 #if 0
+static constexpr uint8 cc_z180_CB[256] =
+{
 	// Table for CBxx opcodes:
 	// (this table is easy to compute)
 	// times are for the entire opcode incl. CB
@@ -657,10 +742,11 @@ __attribute__((unused)) static const uint8 cc_z180_CB[256] = {
 		6u,			6u,			6u,			6u,			6u,			6u,			13u, 		6u,
 		6u,			6u,			6u,			6u,			6u,			6u,			13u, 		6u,
 		6u,			6u,			6u,			6u,			6u,			6u,			13u, 		6u,
-#endif
 };
+#endif
 
-static const uint8 cc_z180_ED[256] = {
+static constexpr uint8 cc_z180_ED[256] =
+{
 	// Table for EDxx opcodes:
 	// times are for the entire opcode incl. ED
 	// illegal opcodes are trapped by the Z80180
@@ -734,7 +820,8 @@ static const uint8 cc_z180_ED[256] = {
 		0,			0,			0,			0,			0,			0,			0,			0,
 };
 
-static const uint8 cc_z180_XY[256] = {
+static constexpr uint8 cc_z180_XY[256] =
+{
 	// Opcodes with prefix DD and FD use the IX resp. IY register instead of HL.
 	// Times are given for the entire opcode incl. DD/FD.
 	// Legal opcodes are only those which would use register HL if not prefixed with DD or FD.
@@ -809,8 +896,9 @@ static const uint8 cc_z180_XY[256] = {
 		0,			7u,			0,			0,			0,			0,			0,			0,
 };
 
-__attribute__((unused)) static const uint8 cc_z180_XYCB[256] = {
 #if 0
+static constexpr uint8 cc_z180_XYCB[256] =
+{
 	// Table for opcode after DDCB / FDCB:
 	// Legal ones are only those with memory access (XY+dis).
 	// All other opcodes are illegal and trapped by the Z80180.
@@ -883,8 +971,10 @@ __attribute__((unused)) static const uint8 cc_z180_XYCB[256] = {
 		0,			0,			0,			0,			0,			0,			19u, 		0,
 		0,			0,			0,			0,			0,			0,			19u, 		0,
 		0,			0,			0,			0,			0,			0,			19u, 		0,
-#endif
 };
+#endif
+
+// clang-format on
 
 
 bool opcode_can_branch(CpuID cpuid, const Byte* core, Address a) noexcept
@@ -901,8 +991,8 @@ bool opcode_can_branch(CpuID cpuid, const Byte* core, Address a) noexcept
 
 	default:
 	case CpuZ80: return (op1 == 0xED ? cc_z80_ED[peek(core, a + 1)] : cc_z80[op1]) >= 32;
-
 	case CpuZ180: return (op1 == 0xED ? cc_z180_ED[peek(core, a + 1)] : cc_z180[op1]) >= 32;
+	case CpuZ80n: return (op1 == 0xED ? cc_z80n_ED[peek(core, a + 1)] : cc_z80[op1]) >= 32;
 	}
 }
 
@@ -939,27 +1029,22 @@ uint clock_cycles(CpuID cpuid, const Byte* core, Address a) noexcept
 			// %01xx.xxxx bit test ops: 6cc, xHL: 9
 			// %1xxx.xxxx bit set ops:  6cc, xHL: 13
 
-			if ((op2 & 0370) == SLL_B) return 0; // ill.
-			if ((op2 & 7) != 6)
-				return (op2 & 0xC0) == 0x00 ? 7 : 6; // r
-			else
-				return (op2 & 0xC0) == 0x40 ? 9 : 13; // (hl)
+			if ((op2 & 0370) == SLL_B) return 0;					 // ill.
+			if ((op2 & 7) != 6) return (op2 & 0xC0) == 0x00 ? 7 : 6; // r
+			else return (op2 & 0xC0) == 0x40 ? 9 : 13;				 // (hl)
 		}
 		else // Z80:
 		{
-			if ((op2 & 7) != 6)
-				return 8; // r
-			else
-				return (op2 & 0xC0) == 0x40 ? 12 : 15; // (hl)
+			if ((op2 & 7) != 6) return 8;				// r
+			else return (op2 & 0xC0) == 0x40 ? 12 : 15; // (hl)
 		}
 
 	case 0xED:
 		if (cpuid == Cpu8080) return 17; // CALL alias
 		op2 = peek(core, a + 1);
-		if (cpuid == CpuZ180)
-			return cc_z180_ED[op2] & 31;
-		else
-			return cc_z80_ED[op2] & 31; // Z80
+		if (cpuid == CpuZ180) return cc_z180_ED[op2] & 31;
+		else if (cpuid == CpuZ80n) return cc_z80n_ED[op2] & 31;
+		else return cc_z80_ED[op2] & 31; // Z80
 
 	case 0xDD:
 	case 0xFD:
@@ -1001,10 +1086,8 @@ uint clock_cycles_on_branch(CpuID cpuid, const Byte* core, Address a) noexcept
 		if (cpuid == CpuZ180)
 		{
 			n = cc_z180[op1];
-			if (n > (7 << 5))
-				return (n & 31) + 10;
-			else
-				return (n & 31) + (n >> 5);
+			if (n > (7 << 5)) return (n & 31) + 10;
+			else return (n & 31) + (n >> 5);
 		}
 		if (cpuid == Cpu8080)
 		{
@@ -1014,10 +1097,8 @@ uint clock_cycles_on_branch(CpuID cpuid, const Byte* core, Address a) noexcept
 						   // else use Z80 table
 		}
 		n = cc_z80[op1];
-		if (n > 31)
-			return (n & 31) + (((n >> 5) + 1) & 7); // Z80
-		else
-			return n; // non-branching opcode
+		if (n > 31) return (n & 31) + (((n >> 5) + 1) & 7); // Z80
+		else return n;										// non-branching opcode
 
 	case 0xDD:
 	case 0xFD:
@@ -1031,13 +1112,12 @@ uint clock_cycles_on_branch(CpuID cpuid, const Byte* core, Address a) noexcept
 			n = cc_z180_ED[op2];
 			return (n & 31) + (n >> 5);
 		}
-		else // Z80
+		else //other Z80
 		{
 			n = cc_z80_ED[op2];
-			if (n > 31)
-				return (n & 31) + (((n >> 5) + 1) & 7);
-			else
-				return n; // non-branching opcode
+			if (cpuid == CpuZ80n) n = cc_z80n_ED[op2];
+			if (n > 31) return (n & 31) + (((n >> 5) + 1) & 7);
+			else return n; // non-branching opcode
 		}
 	}
 }

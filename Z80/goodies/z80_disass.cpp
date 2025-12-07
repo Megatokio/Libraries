@@ -8,221 +8,55 @@ namespace Z80
 #include "z80_opcodes.h"
 }
 
-typedef uchar Mnemo[3];
-typedef uchar IXCBMnemo[4];
+using Mnemo		= uchar[3];
+using IXCBMnemo = uchar[4];
 
 
 // ----	Z80 opcode definitions ------------------------------------------------------
 
+// clang-format off
+
 enum { // Instruction:
 
 	// Z80:
-	NIX,
-	NOP,
-	LD,
-	INC,
-	DEC,
-	RLCA,
-	EX,
-	ADD,
-	ADC,
-	SUB,
-	SBC,
-	AND,
-	XOR,
-	OR,
-	CP, // <-- DO NOT REORDER!
-	RLC,
-	RRC,
-	RL,
-	RR,
-	SLA,
-	SRA,
-	SLL,
-	SRL, // <-- DO NOT REORDER!
-	RRCA,
-	DJNZ,
-	RLA,
-	JR,
-	RRA,
-	DAA,
-	CPL,
-	HALT,
-	SCF,
-	CCF,
-	IN,
-	OUT,
-	NEG,
-	RETN,
-	IM,
-	RETI,
-	RRD,
-	RLD,
-	LDI,
-	CPI,
-	INI,
-	BIT,
-	RES,
-	SET,
-	OUTI,
-	LDD,
-	CPD,
-	IND,
-	OUTD,
-	LDIR,
-	CPIR,
-	INIR,
-	OTIR,
-	LDDR,
-	CPDR,
-	INDR,
-	OTDR,
-	RET,
-	POP,
-	JP,
-	CALL,
-	PUSH,
-	RST,
-	PFX,
-	EXX,
-	DI,
-	EI,
+	NIX,	NOP,	LD,		INC,	DEC,	RLCA,	EX,
+	ADD,	ADC,	SUB,	SBC,	AND,	XOR,	OR,		CP,  // <-- DO NOT REORDER!
+	RLC,	RRC,	RL,		RR,		SLA,	SRA,	SLL,	SRL, // <-- DO NOT REORDER!
+	RRCA,	DJNZ,	RLA,	JR,		RRA,	DAA,	CPL,	HALT,
+	SCF,	CCF,	IN,		OUT,	NEG,	RETN,	IM,		RETI,
+	RRD,	RLD,	LDI,	CPI,	INI,	BIT,	RES,	SET,
+	OUTI,	LDD,	CPD,	IND,	OUTD,	LDIR,	CPIR,	INIR,	OTIR,	LDDR,	CPDR,	INDR,	OTDR,
+	RET,	POP,	JP,		CALL,	PUSH,	RST,	PFX,	EXX,
+	DI,		EI,
 
 	// Z180 new opcodes:
-	IN0,
-	OUT0,
-	TST,
-	TSTIO,
-	MLT,
-	OTIM,
-	OTDM,
-	OTIMR,
-	OTDMR,
-	SLP,
-
+	IN0,	OUT0,	TST,	TSTIO,	MLT,	OTIM,	OTDM,	OTIMR,	OTDMR,	SLP,
+	
+	// Z80n new opcodes:
+	SWAPNIB,MIRROR, TEST,	SETAE,
+	BSLA,	BSRA,	BSRL,	BSRF,	BRLC,
+	MUL,	OUTINB,	NEXTREG,PIXELDN,PIXELAD, 
+	LDIX,	LDWS,	LDDX,	LDIRX,	LDPIRX, LDDRX,
+	
 	// asm8080 names: (new names, some names are already enumerated in Z80 section)
-	LXI,
-	STAX,
-	INX,
-	INR,
-	DCR,
-	MVI,
-	DAD,
-	LDAX,
-	DCX,
-	RAL,
-	RAR,
-	SHLD,
-	LHLD,
-	CMA,
-	STA,
-	STC,
-	LDA,
-	CMC,
-	RNZ,
-	JNZ,
-	JMP,
-	CNZ,
-	ADI,
-	RZ,
-	JZ,
-	CZ,
-	ACI,
-	RNC,
-	JNC,
-	CNC,
-	SUI,
-	RC,
-	JC,
-	CC,
-	SBI,
-	RPO,
-	JPO,
-	XTHL,
-	CPO,
-	ANI,
-	RPE,
-	PCHL,
-	JPE,
-	XCHG,
-	CPE,
-	XRI,
-	RP,
-	ORI,
-	RM,
-	SPHL,
-	JM,
-	CM,
-	HLT,
-	MOV,
-	SBB,
-	ANA,
-	XRA,
-	ORA,
-	CMP,
+	LXI,	STAX,	INX,	INR,	DCR,	MVI,	DAD,	LDAX,
+	DCX,	RAL,	RAR,	SHLD,	LHLD,	CMA,	STA,	STC,
+	LDA,	CMC,	RNZ,	JNZ,	JMP,	CNZ,	ADI,	RZ,
+	JZ,		CZ,		ACI,	RNC,	JNC,	CNC,	SUI,	RC,
+	JC,		CC,		SBI,	RPO,	JPO,	XTHL,	CPO,	ANI,
+	RPE,	PCHL,	JPE,	XCHG,	CPE,	XRI,	RP,		ORI,
+	RM,		SPHL,	JM,		CM,		HLT,	MOV,	SBB,	ANA,
+	XRA,	ORA,	CMP,
 
 	// Register / Argument:
-	BC,
-	DE,
-	HL,
-	SP,
-	AF,
-	AF2,
-	B,
-	C,
-	D,
-	E,
-	H,
-	L,
-	XHL,
-	A, // <-- DO NOT REORDER!
-	XBC,
-	XDE,
-	R,
-	I,
-	XC,
-	XSP,
-	PC,
-	F,
-	N0,
-	N1,
-	N2,
-	N3,
-	N4,
-	N5,
-	N6,
-	N7, // <-- DO NOT REORDER!
-	N00,
-	N08,
-	N10,
-	N18,
-	N20,
-	N28,
-	N30,
-	N38, // <-- DO NOT REORDER!
-	Z,
-	NZ,
-	NC,
-	PO,
-	PE,
-	M,
-	P,
-	PSW,
-	N,
-	NN,
-	XNN,
-	XN,
-	DIS,
-	CB,
-	ED,
-	IX,
-	IY,
-	XH,
-	XL,
-	YH,
-	YL,
-	XIX,
-	XIY, // <-- keep at end
+	BC,		DE,		HL,		SP,		AF,		AF2,
+	B,		C,		D,		E,		H,		L,		XHL,	A,	 // <-- DO NOT REORDER!
+	XBC,	XDE,	R,		I,		XC,		XSP,	PC,		F,
+	N0,		N1,		N2,		N3,		N4,		N5,		N6,		N7,  // <-- DO NOT REORDER!
+	N00,	N08,	N10,	N18,	N20,	N28,	N30,	N38, // <-- DO NOT REORDER!
+	Z,		NZ,				NC,		PO,		PE,		M,		P,
+	PSW,	N,		NN,		NNr,	XNN,	XN,		DIS,	CB,		ED,
+	IX,		IY,		XH,		XL,		YH,		YL,		XIX,	XIY, // <-- keep at end
 
 	NUM_WORD_DEFS
 };
@@ -236,7 +70,12 @@ static const char word[][9] = {
 	"rst",	"prefix", "exx",  "di",	   "ei",
 
 	"in0",	"out0",	  "tst",  "tstio", "mlt",  "otim", "otdm", "otimr",	   "otdmr",	   "slp",
-
+	
+	"swapnib",	"mirror",	"test",		"setae",
+	"bsla",		"bsra",		"bsrl",		"bsrf",		"brlc",
+	"mul",		"outinb",	"nextreg",	"pixeldn",	"pixelad",
+	"ldix",		"ldws",		"lddx",		"ldirx",	"ldpirx",	"lddrx",
+	
 	"lxi",	"stax",	  "inx",  "inr",   "dcr",  "mvi",  "dad",  "ldax",	   "dcx",	   "ral",  "rar",  "shld", "lhld",
 	"cma",	"sta",	  "stc",  "lda",   "cmc",  "rnz",  "jnz",  "jmp",	   "cnz",	   "adi",  "rz",   "jz",   "cz",
 	"aci",	"rnc",	  "jnc",  "cnc",   "sui",  "rc",   "jc",   "cc",	   "sbi",	   "rpo",  "jpo",  "xthl", "cpo",
@@ -246,13 +85,13 @@ static const char word[][9] = {
 	"bc",	"de",	  "hl",	  "sp",	   "af",   "af'",  "b",	   "c",		   "d",		   "e",	   "h",	   "l",	   "(hl)",
 	"a",	"(bc)",	  "(de)", "r",	   "i",	   "(c)",  "(sp)", "pc",	   "f",		   "0",	   "1",	   "2",	   "3",
 	"4",	"5",	  "6",	  "7",	   "0",	   "8",	   "16",   "24",	   "32",	   "40",   "48",   "56",   "z",
-	"nz",	"nc",	  "po",	  "pe",	   "m",	   "p",	   "psw",  "N",		   "NN",	   "(NN)", "(N)",  "dis",  "cb",
+	"nz",	"nc",	  "po",	  "pe",	   "m",	   "p",	   "psw",  "N",		   "NN",	   "NN",   "(NN)", "(N)",  "dis",  "cb",
 	"ed",	"ix",	  "iy",	  "xh",	   "xl",   "yh",   "yl",   "(ix+dis)", "(iy+dis)",
 };
 
 static_assert(NELEM(word) == NUM_WORD_DEFS, "");
 
-static const Mnemo i8080_cmd_00[64] = {
+static constexpr Mnemo i8080_cmd_00[64] = {
 	{NOP}, {LXI, B, NN},  {STAX, B},  {INX, B},	 {INR, B}, {DCR, B}, {MVI, B, N}, {RLC},
 	{NOP}, {DAD, B},	  {LDAX, B},  {DCX, B},	 {INR, C}, {DCR, C}, {MVI, C, N}, {RRC},
 	{NOP}, {LXI, D, NN},  {STAX, D},  {INX, D},	 {INR, D}, {DCR, D}, {MVI, D, N}, {RAL},
@@ -263,17 +102,18 @@ static const Mnemo i8080_cmd_00[64] = {
 	{NOP}, {DAD, SP},	  {LDA, NN},  {DCX, SP}, {INR, A}, {DCR, A}, {MVI, A, N}, {CMC},
 };
 
-static const Mnemo i8080_cmd_C0[64] = {
-	{RNZ},	   {POP, B},   {JNZ, NN}, {JMP, NN},   {CNZ, NN}, {PUSH, B},  {ADI, N},	 {RST, N0}, {RZ},	   {RET},
-	{JZ, NN},  {JMP, NN},  {CZ, NN},  {CALL, NN},  {ACI, N},  {RST, N1},  {RNC},	 {POP, D},	{JNC, NN}, {OUT, N},
-	{CNC, NN}, {PUSH, D},  {SUI, N},  {RST, N2},   {RC},	  {RET},	  {JC, NN},	 {IN, N},	{CC, NN},  {CALL, NN},
-	{SBI, N},  {RST, N3},  {RPO},	  {POP, H},	   {JPO, NN}, {XTHL},	  {CPO, NN}, {PUSH, H}, {ANI, N},  {RST, N4},
-	{RPE},	   {PCHL},	   {JPE, NN}, {XCHG},	   {CPE, NN}, {CALL, NN}, {XRI, N},	 {RST, N5}, {RP},	   {POP, PSW},
-	{JP, NN},  {DI},	   {CP, NN},  {PUSH, PSW}, {ORI, N},  {RST, N6},  {RM},		 {SPHL},	{JM, NN},  {EI},
-	{CM, NN},  {CALL, NN}, {CPI, N},  {RST, N7},
+static constexpr Mnemo i8080_cmd_C0[64] = {
+	{RNZ},		{POP, B},   {JNZ, NN},	{JMP, NN},	{CNZ, NN}, {PUSH, B},	{ADI, N},	{RST, N0},
+	{RZ},		{RET},		{JZ, NN},	{JMP, NN},  {CZ, NN},  {CALL, NN},	{ACI, N},	{RST, N1},
+	{RNC},		{POP, D},	{JNC, NN},	{OUT, N},	{CNC, NN}, {PUSH, D},	{SUI, N},	{RST, N2},
+	{RC},		{RET},		{JC, NN},	{IN, N},	{CC, NN},  {CALL, NN},	{SBI, N},	{RST, N3},
+	{RPO},		{POP, H},	{JPO, NN},	{XTHL},		{CPO, NN}, {PUSH, H},	{ANI, N},	{RST, N4},
+	{RPE},		{PCHL},		{JPE, NN},	{XCHG},		{CPE, NN}, {CALL, NN},	{XRI, N},	{RST, N5},
+	{RP},		{POP, PSW},	{JP, NN},	{DI},		{CP, NN},  {PUSH, PSW}, {ORI, N},	{RST, N6},
+	{RM},		{SPHL},		{JM, NN},	{EI},		{CM, NN},  {CALL, NN},	{CPI, N},	{RST, N7},
 };
 
-static const Mnemo z80_cmd_00[64] = {
+static constexpr Mnemo z80_cmd_00[64] = {
 	{NOP},		   {LD, BC, NN},  {LD, XBC, A},	 {INC, BC}, {INC, B},	{DEC, B},	{LD, B, N},	  {RLCA},
 	{EX, AF, AF2}, {ADD, HL, BC}, {LD, A, XBC},	 {DEC, BC}, {INC, C},	{DEC, C},	{LD, C, N},	  {RRCA},
 	{DJNZ, DIS},   {LD, DE, NN},  {LD, XDE, A},	 {INC, DE}, {INC, D},	{DEC, D},	{LD, D, N},	  {RLA},
@@ -284,7 +124,7 @@ static const Mnemo z80_cmd_00[64] = {
 	{JR, C, DIS},  {ADD, HL, SP}, {LD, A, XNN},	 {DEC, SP}, {INC, A},	{DEC, A},	{LD, A, N},	  {CCF},
 };
 
-static const Mnemo z80_cmd_C0[64] = {
+static constexpr Mnemo z80_cmd_C0[64] = {
 	{RET, NZ}, {POP, BC},	 {JP, NZ, NN}, {JP, NN},	  {CALL, NZ, NN}, {PUSH, BC}, {ADD, A, N}, {RST, N00},
 	{RET, Z},  {RET},		 {JP, Z, NN},  {PFX, CB},	  {CALL, Z, NN},  {CALL, NN}, {ADC, A, N}, {RST, N08},
 	{RET, NC}, {POP, DE},	 {JP, NC, NN}, {OUT, XN, A},  {CALL, NC, NN}, {PUSH, DE}, {SUB, A, N}, {RST, N10},
@@ -295,7 +135,7 @@ static const Mnemo z80_cmd_C0[64] = {
 	{RET, M},  {LD, SP, HL}, {JP, M, NN},  {EI},		  {CALL, M, NN},  {PFX, IY},  {CP, A, N},  {RST, N38},
 };
 
-static const Mnemo z80_cmd_ED40[64] = {
+static constexpr Mnemo z80_cmd_ED40[64] = {
 	{IN, B, XC}, {OUT, XC, B},	{SBC, HL, BC}, {LD, XNN, BC}, {NEG}, {RETN}, {IM, N0}, {LD, I, A},
 	{IN, C, XC}, {OUT, XC, C},	{ADC, HL, BC}, {LD, BC, XNN}, {NEG}, {RETI}, {IM, N0}, {LD, R, A},
 	{IN, D, XC}, {OUT, XC, D},	{SBC, HL, DE}, {LD, XNN, DE}, {NEG}, {RETI}, {IM, N1}, {LD, A, I},
@@ -306,7 +146,7 @@ static const Mnemo z80_cmd_ED40[64] = {
 	{IN, A, XC}, {OUT, XC, A},	{ADC, HL, SP}, {LD, SP, XNN}, {NEG}, {RETI}, {IM, N2}, {NOP},
 };
 
-static const Mnemo z180_cmd_ED[3 * 64] = {
+static constexpr Mnemo z180_cmd_ED[3 * 64] = {
 	{IN0, B, XN}, {OUT0, XN, B}, {NOP},			{NOP},		   {TST, B},   {NOP},  {NOP},	 {NOP},
 	{IN0, C, XN}, {OUT0, XN, C}, {NOP},			{NOP},		   {TST, C},   {NOP},  {NOP},	 {NOP},
 	{IN0, D, XN}, {OUT0, XN, D}, {NOP},			{NOP},		   {TST, D},   {NOP},  {NOP},	 {NOP},
@@ -334,6 +174,37 @@ static const Mnemo z180_cmd_ED[3 * 64] = {
 	{LDIR},		  {CPIR},		 {INIR},		{OTIR},		   {NOP},	   {NOP},  {NOP},	 {NOP},
 	{LDDR},		  {CPDR},		 {INDR},		{OTDR},		   {NOP},	   {NOP},  {NOP},	 {NOP},
 };
+
+static constexpr Mnemo z80n_cmd_ED[3*64] = {
+	{NOP},		{NOP},		{NOP},		{NOP},		{NOP},		{NOP},		{NOP},		{NOP},
+	{NOP},		{NOP},		{NOP},		{NOP},		{NOP},		{NOP},		{NOP},		{NOP},
+	{NOP},		{NOP},		{NOP},		{NOP},		{NOP},		{NOP},		{NOP},		{NOP},
+	{NOP},		{NOP},		{NOP},		{NOP},		{NOP},		{NOP},		{NOP},		{NOP},	
+	{NOP},		{NOP},		{NOP},		{SWAPNIB},	{MIRROR,A},	{NOP},		{NOP},		{TEST,N},						
+	{BSLA,DE,B},{BSRA,DE,B},{BSRL,DE,B},{BSRF,DE,B},{BRLC,DE,B},{NOP},		{NOP},		{NOP},		
+	{MUL,D,E},	{ADD,HL,A},	{ADD,DE,A},	{ADD,BC,A},	{ADD,HL,NN},{ADD,DE,NN},{ADD,BC,NN},{NOP},	
+	{NOP},		{NOP},		{NOP},		{NOP},		{NOP},		{NOP},		{NOP},		{NOP},
+
+	{IN, B, XC}, {OUT, XC, B},	{SBC, HL, BC}, {LD, XNN, BC}, {NEG}, {RETN}, {IM, N0}, {LD, I, A},
+	{IN, C, XC}, {OUT, XC, C},	{ADC, HL, BC}, {LD, BC, XNN}, {NEG}, {RETI}, {IM, N0}, {LD, R, A},
+	{IN, D, XC}, {OUT, XC, D},	{SBC, HL, DE}, {LD, XNN, DE}, {NEG}, {RETI}, {IM, N1}, {LD, A, I},
+	{IN, E, XC}, {OUT, XC, E},	{ADC, HL, DE}, {LD, DE, XNN}, {NEG}, {RETI}, {IM, N2}, {LD, A, R},
+	{IN, H, XC}, {OUT, XC, H},	{SBC, HL, HL}, {LD, XNN, HL}, {NEG}, {RETI}, {IM, N0}, {RRD},
+	{IN, L, XC}, {OUT, XC, L},	{ADC, HL, HL}, {LD, HL, XNN}, {NEG}, {RETI}, {IM, N0}, {RLD},
+	{IN, F, XC}, {OUT, XC, N0}, {SBC, HL, SP}, {LD, XNN, SP}, {NEG}, {RETI}, {IM, N1}, {NOP},
+	{IN, A, XC}, {OUT, XC, A},	{ADC, HL, SP}, {LD, SP, XNN}, {NEG}, {RETI}, {IM, N2}, {NOP},
+
+	{NOP},		{NOP},		{NOP},		{NOP},		{NOP},		{NOP},		{NOP},		{NOP},		
+	{NOP},		{NOP},		{PUSH,NNr},	{NOP},		{NOP},		{NOP},		{NOP},		{NOP},		
+	{OUTINB},	{NEXTREG,N,N},{NEXTREG,N,A},{PIXELDN},{PIXELAD},{SETAE},	{NOP},		{NOP},		
+	{JP,XC},	{NOP},		{NOP},		{NOP},		{NOP},		{NOP},		{NOP},		{NOP},		
+	{LDI},		{CPI},		{INI},		{OUTI},		{LDIX},		{LDWS},		{NOP},		{NOP},		
+	{LDD},		{CPD},		{IND},		{OUTD},		{LDDX},		{NOP},		{NOP},		{NOP},		
+	{LDIR},		{CPIR},		{INIR},		{OTIR},		{LDIRX},	{NOP},		{NOP},		{LDPIRX},	
+	{LDDR},		{CPDR},		{INDR},		{OTDR},		{LDDRX},	{NOP},		{NOP},		{NOP},		
+};
+
+// clang-format on
 
 
 // ============================================================================================
@@ -429,6 +300,7 @@ static const uchar* z80_mnemoCB(Byte op2, const uint8* reg = reg_cb)
 	case 1: s[0] = BIT; break;
 	case 2: s[0] = RES; break;
 	case 3: s[0] = SET; break;
+	default: break;
 	}
 	s[1] = N0 + n;
 	s[2] = reg[r];
@@ -467,6 +339,7 @@ static const uchar* z80_mnemoXYCB(CpuID cpuid, Byte pfx, Byte op4)
 	case 1: s[0] = BIT; break;
 	case 2: s[0] = RES; break;
 	case 3: s[0] = SET; break;
+	default: break;
 	}
 	s[1] = N0 + n;
 	s[2] = pfx == 0xdd ? XIX : XIY;
@@ -481,6 +354,10 @@ static const uchar* z80_mnemoED(CpuID cpuid, Byte op2)
 	if (cpuid == CpuZ180)
 	{
 		if (op2 < 0xC0) return z180_cmd_ED[op2];
+	}
+	else if (cpuid == CpuZ80n)
+	{
+		if (op2 < 0xC0) return z80n_cmd_ED[op2];
 	}
 	else // Z80
 	{
@@ -541,6 +418,7 @@ cstr opcode_mnemo(CpuID cpuid, const Byte* core, Address addr)
 
 	if (cpuid == Cpu8080) { m = i8080_mnemo(op1); }
 	else
+	{
 		switch (op1)
 		{
 		case 0xCB: m = z80_mnemoCB(peek(core, addr + 1)); break;
@@ -552,6 +430,7 @@ cstr opcode_mnemo(CpuID cpuid, const Byte* core, Address addr)
 			break;
 		default: m = z80_mnemo(op1); break;
 		}
+	}
 
 	cstr s1 = word[m[0]];
 	if (m[1] == 0) return s1;
@@ -625,13 +504,47 @@ static inline OpcodeValidity z80_illegalED(CpuID cpuid, Byte op)
 		if ((op & 0xE7) == 0x83) return LEGAL_OPCODE; // z180 block io opcodes
 		return ILLEGAL_OPCODE;						  // all others
 	}
-	else // Z80
+	else if (cpuid == CpuZ80n)
 	{
-		if (op < 0x40) return ILLEGAL_OPCODE;		  // all NOPs
-		if (op < 0x80) return state_40[op & 0x3F];	  // misc.
-		if ((op & 0344) == 0xA0) return LEGAL_OPCODE; // block opcodes
-		return ILLEGAL_OPCODE;						  // all NOPs
+		static constexpr uint8 legal[32] = {
+			0b00000000, // ED00,		ED01,		ED02,		ED03,		ED04,		ED05,		ED06,		ED07,
+			0b00000000, // ED08,		ED09,		ED0A,		ED0B,		ED0C,		ED0D,		ED0E,		ED0F,
+			0b00000000, // ED10,		ED11,		ED12,		ED13,		ED14,		ED15,		ED16,		ED17,
+			0b00000000, // ED18,		ED19,		ED1A,		ED1B,		ED1C,		ED1D,		ED1E,		ED1F,
+			0b00011001, // ED20,		ED21,		ED22,		SWAPNIB,	MIRROR_A,	ED25,		ED26,		TEST_N,
+			0b11111000, // BSLA_DE_B,	BSRA_DE_B,	BSRL_DE_B,	BSRF_DE_B,	BRLC_DE_B,	ED2D,		ED2E,		ED2F,
+			0b11111110, // MUL_D_E,		ADD_HL_A,	ADD_DE_A,	ADD_BC_A,	ADD_HL_NN,	ADD_DE_NN,	ADD_BC_NN,	ED37,
+			0b00000000, // ED38,		ED39,		ED3A,		ED3B,		ED3C,		ED3D,		ED3E,		ED3F,
+
+			0b11111111, // IN_B_xC, 	OUT_xC_B,	SBC_HL_BC,	LD_xNN_BC,	NEG,		RETN,		IM_0,		LD_I_A,
+			0b11110101, // IN_C_xC, 	OUT_xC_C,	ADC_HL_BC,	LD_BC_xNN,	NEG**,		RETI,		IM0**,		LD_R_A,
+			0b11110011, // IN_D_xC, 	OUT_xC_D,	SBC_HL_DE,	LD_xNN_DE,	NEG**,		RETI**,		IM_1,		LD_A_I,
+			0b11110011, // IN_E_xC, 	OUT_xC_E,	ADC_HL_DE,	LD_DE_xNN,	NEG**,		RETI**,		IM_2,		LD_A_R,
+			0b11110001, // IN_H_xC, 	OUT_xC_H,	SBC_HL_HL,	LD_xNN_HL,	NEG**,		RETI**,		IM0**,		RRD,
+			0b11110001, // IN_L_xC, 	OUT_xC_L,	ADC_HL_HL,	LD_HL_xNN,	NEG**,		RETI**,		IM0**,		RLD,
+			0b11110000, // IN_F_xC, 	OUT_xC_0,	SBC_HL_SP,	LD_xNN_SP,	NEG**,		RETI**,		IM1**,		ED77,
+			0b11110000, // IN_A_xC, 	OUT_xC_A,	ADC_HL_SP,	LD_SP_xNN,	NEG**,		RETI**,		IM2**,		ED7F,
+
+			0b00000000, // ED80,		ED81,		ED82,		ED83,		ED84,		ED85,		ED86,		ED87,
+			0b00100000, // ED88,		ED89,		PUSH_NN,	ED8B,		ED8C,		ED8D,		ED8E,		ED8F,
+			0b11111100, // OUTINB,		NEXTREG_N_N,NEXTREG_N_A,PIXELDN,	PIXELAD,	SETAE,		ED96,		ED97,
+			0b10000000, // JP_xC,		ED99,		ED9A,		ED9B,		ED9C,		ED9D,		ED9E,		ED9F,
+			0b11111100, // LDI, 		CPI,		INI,		OUTI,		LDIX,		LDWS,		EDA6,		EDA7,
+			0b11111000, // LDD, 		CPD,		IND,		OUTD,		LDDX,		EDAD,		EDAE,		EDAF,
+			0b11111001, // LDIR,		CPIR,		INIR,		OTIR,		LDIRX,		EDB5,		EDB6,		LDPIRX,
+			0b11111000, // LDDR,		CPDR,		INDR,		OTDR,		LDDRX,		EDBD,		EDBE,		EDBF,
+
+			0b00000000, 0, 0, 0, 0, 0, 0, 0, // all NOPs
+		};
+		if (op == Z80::OUT_xC_0) return UNDOCUMENTED_OPCODE;
+		return legal[op / 8] & (0x80 >> (op % 8)) ? LEGAL_OPCODE : ILLEGAL_OPCODE;
 	}
+
+	// Z80
+	if (op < 0x40) return ILLEGAL_OPCODE;		  // all NOPs
+	if (op < 0x80) return state_40[op & 0x3F];	  // misc.
+	if ((op & 0344) == 0xA0) return LEGAL_OPCODE; // block opcodes
+	return ILLEGAL_OPCODE;						  // all NOPs
 }
 
 static inline OpcodeValidity z80_illegalXY(CpuID cpuid, Byte op)
@@ -667,18 +580,14 @@ static inline OpcodeValidity z80_illegalXY(CpuID cpuid, Byte op)
 	{
 		if (((op & 7) == 6) != ((op & 0xF8) == 0x70)) return LEGAL_OPCODE; // either source or dest is (hl)
 		if (cpuid == CpuZ180) return ILLEGAL_OPCODE;
-		if ((op & 006) == 004) return UNDOCUMENTED_OPCODE; // LD or ARI uses H or L
-		if ((op & 0360) == 0140)
-			return UNDOCUMENTED_OPCODE; // LD uses H or L as dest
-		else
-			return ILLEGAL_OPCODE; // IX/IY prefix has no effect
+		if ((op & 006) == 004) return UNDOCUMENTED_OPCODE;	 // LD or ARI uses H or L
+		if ((op & 0360) == 0140) return UNDOCUMENTED_OPCODE; // LD uses H or L as dest
+		else return ILLEGAL_OPCODE;							 // IX/IY prefix has no effect
 	}
 
 	using namespace Z80;
-	if (op == PUSH_HL || op == POP_HL || op == JP_HL || op == LD_SP_HL || op == EX_HL_xSP)
-		return LEGAL_OPCODE;
-	else
-		return ILLEGAL_OPCODE;
+	if (op == PUSH_HL || op == POP_HL || op == JP_HL || op == LD_SP_HL || op == EX_HL_xSP) return LEGAL_OPCODE;
+	else return ILLEGAL_OPCODE;
 }
 
 static inline OpcodeValidity z80_illegalXYCB(CpuID cpuid, Byte op)
@@ -717,10 +626,8 @@ OpcodeValidity opcode_validity(CpuID cpuid, const Byte* core, Address addr)
 											  z80_illegalXYCB(cpuid, peek(core, addr + 3));
 	default:
 		if (cpuid != Cpu8080) return LEGAL_OPCODE;
-		if (op < 0xC0)
-			return (op & 0xC7) == 0 && op != 0 ? DEPRECATED_OPCODE : LEGAL_OPCODE;
-		else
-			return op == 0xD9 ? DEPRECATED_OPCODE : LEGAL_OPCODE;
+		if (op < 0xC0) return (op & 0xC7) == 0 && op != 0 ? DEPRECATED_OPCODE : LEGAL_OPCODE;
+		else return op == 0xD9 ? DEPRECATED_OPCODE : LEGAL_OPCODE;
 	}
 }
 
@@ -828,6 +735,7 @@ cstr disassemble_8080(const Byte* core, Address& addr, bool asm8080)
 	case 0xFD:
 		s = expand_word(core, addr, uchar(NN));
 		return usingstr("call %s ; $%02X: ***deprecated*** Z80: prefix $%02X", s, op, op);
+	default: break;
 	}
 
 	// legal opcode: return asm8080 or Z80 systax:
@@ -855,19 +763,15 @@ cstr disassemble(CpuID cpuid, const Byte* core, Address& addr)
 		op = NEXTBYTE;
 		m  = z80_mnemoCB(op);
 		s  = expand_mnemo(core, addr, m);
-		if (cpuid != CpuZ180 || m[0] != SLL)
-			return s;
-		else
-			return catstr(s, " ; ***illegal opcode***");
+		if (cpuid != CpuZ180 || m[0] != SLL) return s;
+		else return catstr(s, " ; ***illegal opcode***");
 
 	case 0xed:
 		op = NEXTBYTE;
 		m  = z80_mnemoED(cpuid, op);
 		s  = expand_mnemo(core, addr, m);
-		if (z80_illegalED(cpuid, op) != ILLEGAL_OPCODE)
-			return s;
-		else
-			return catstr(s, " ; ***illegal opcode***");
+		if (z80_illegalED(cpuid, op) != ILLEGAL_OPCODE) return s;
+		else return catstr(s, " ; ***illegal opcode***");
 
 	case 0xdd:
 	case 0xfd:
@@ -879,10 +783,8 @@ cstr disassemble(CpuID cpuid, const Byte* core, Address& addr)
 			m			= z80_mnemoXYCB(cpuid, op, op4);
 			s			= expand_mnemoXYCB(core, addr, m);
 			addr		= end;
-			if (z80_illegalXYCB(cpuid, op4) != ILLEGAL_OPCODE)
-				return s;
-			else
-				return catstr(s, " ; ***illegal opcode***");
+			if (z80_illegalXYCB(cpuid, op4) != ILLEGAL_OPCODE) return s;
+			else return catstr(s, " ; ***illegal opcode***");
 		}
 		m = z80_mnemoXY(op, op2);
 		s = expand_mnemo(core, addr, m);
@@ -892,8 +794,7 @@ cstr disassemble(CpuID cpuid, const Byte* core, Address& addr)
 			addr--;
 			return usingstr("db $%02X ; ***prefix no effect***", op);
 		}
-		else
-			return catstr(s, " ; ***illegal opcode***");
+		else return catstr(s, " ; ***illegal opcode***");
 	}
 }
 
@@ -991,7 +892,7 @@ static inline uint8 find(uint8 c, const uint8 list[8])
 	return 8;
 }
 
-uint8 major_opcode(cstr q) throws
+uint8 major_opcode(CpuID cpuid, cstr q) throws
 {
 	// calculate major opcode of instruction
 	// -> this is the opcode byte for opcodes without prefix
@@ -1096,13 +997,17 @@ uint8 major_opcode(cstr q) throws
 	}
 
 	// 0xED:
-	for (uint8 i = 0; i < 0xC0; i++)
+	int			 a = 0x40, n = 0x40;
+	const Mnemo* cmd_ED = z80_cmd_ED40;
+	if (cpuid == CpuZ180) a = 0, n = 0xc0, cmd_ED = z180_cmd_ED;
+	if (cpuid == CpuZ80n) a = 0, n = 0xc0, cmd_ED = z80n_cmd_ED;
+	for (int i = 0; i < n; i++)
 	{
-		const uchar* spec = z180_cmd_ED[i]; // <-- include the new Z180 opcodes!
+		const uchar* spec = cmd_ED[i];
 		if (cmd != spec[0]) continue;
 		if (arg1 != spec[1]) continue;
 		if (arg2 != spec[2]) continue;
-		return i;
+		return uint8(a + i);
 	}
 
 	// error:

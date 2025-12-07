@@ -18,7 +18,7 @@ inline uint16 peek_word(const Byte* core, Address a)
 }
 
 
-enum OpcodeValidity {
+enum OpcodeValidity : uint8 {
 	LEGAL_OPCODE,
 	UNDOCUMENTED_OPCODE, // undocumented opcodes which have a useful new effect:
 						 // z80: SLL, use of XH, XL, YH and YL, IXCBR2 or IXCBXH if option ON
@@ -45,8 +45,8 @@ extern cstr disassemble(CpuID, const Byte* core, Address&);
 extern cstr disassemble_8080(const Byte* core, Address&, bool asm8080 = yes);
 
 // Calculate the "major" opcode of an instruction mnemonic.
-extern uint8 major_opcode(cstr q) throws;	   // z80 syntax: 8080, Z80, Z180
-extern uint8 major_opcode_8080(cstr q) throws; // asm8080 syntax: 8080 only
+extern uint8 major_opcode(CpuID, cstr q) throws; // z80 syntax: 8080, Z80, Z180, Z80n
+extern uint8 major_opcode_8080(cstr q) throws;	 // asm8080 syntax: 8080 only
 
 
 /***** z80_opcode_length.cpp *****/
