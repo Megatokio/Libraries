@@ -8,6 +8,8 @@
 #include "z80_goodies.h"
 #include "z80_opcodes.h"
 
+using namespace z80;
+
 
 static const uint8 i8080_len[256] = {
 	1, 3, 1, 1, 1, 1, 2, 1, //	NOP,		LD_BC_NN,	LD_xBC_A,	INC_BC,		INC_B,		DEC_B,		LD_B_N,		RLCA,

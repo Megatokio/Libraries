@@ -61,7 +61,7 @@ SOURCES += \
 	Libraries/unix/FD.cpp \
 	Libraries/cstrings/tempmem.cpp \
 	Libraries/unix/n-compress.cpp \
-	Libraries/unix/log_to_file.cpp \
+	Libraries/unix/log_to_console.cpp \
 	Libraries/VString/String.cpp
 
 HEADERS += \

@@ -7,6 +7,7 @@
 #include "z80_goodies.h"
 #include "z80_opcodes.h"
 
+using namespace z80;
 
 struct TestSet
 {
@@ -329,7 +330,12 @@ static TestSet z80_tests[] =
 	{SLL_xHL, "sll (ix+dis)"},
 	{SLL_xHL, "sll (iy+dis)"},
 	//{OUT_xC_0, "out (c),0"},
+};
+// clang-format on
 
+// clang-format off
+static TestSet z180_tests[] =
+{
 	// Z180 additional opcodes
 
 	{IN0_B_xN, "in0 b,(N)"},	{OUT0_xN_B, "out0 (N),b"},
@@ -365,8 +371,45 @@ static TestSet z80_tests[] =
 };
 // clang-format on
 
+// clang-format off
+static TestSet z80n_tests[] =
+{
+	// Z80n additional opcodes
 
-TEST_CASE("z80_major_opcode")
+	{SWAPNIB    , "swapnib"},
+	{MIRROR_A   , "mirror a"},
+	{TEST_N     , "test n"},
+	{BSLA_DE_B  , "bsla de,b"},
+	{BSRA_DE_B  , "bsra de,b"},
+	{BSRL_DE_B  , "bsrl de,b"},
+	{BSRF_DE_B  , "bsrf de,b"},
+	{BRLC_DE_B  , "brlc de,b"},
+	{MUL_D_E    , "mul d,e"},
+	{ADD_HL_A   , "add hl,a"},
+	{ADD_DE_A   , "add de,a"},
+	{ADD_BC_A   , "add bc,a"},
+	{ADD_HL_NN  , "add hl,nn"},
+	{ADD_DE_NN  , "add de,nn"},
+	{ADD_BC_NN  , "add bc,nn"},
+	{PUSH_NN    , "push nn"},
+	{OUTINB     , "outinb"},
+	{NEXTREG_N_N, "nextreg n,n"},
+	{NEXTREG_N_A, "nextreg n,a"},
+	{PIXELDN    , "pixeldn"},
+	{PIXELAD    , "pixelad"},
+	{SETAE      , "setae"},
+	{JP_xC      , "jp (c)"},
+	{LDIX       , "ldix"},
+	{LDWS       , "ldws"},
+	{LDDX       , "lddx"},
+	{LDIRX      , "ldirx"},
+	{LDPIRX     , "ldpirx"},
+	{LDDRX      , "lddrx"},
+};
+// clang-format on
+
+
+TEST_CASE("major_opcode")
 {
 	SUBCASE("") { logline("●●● %s:", __FILE__); }
 
@@ -376,8 +419,10 @@ TEST_CASE("z80_major_opcode")
 		for (uint i = 0; i < NELEM(asm8080_tests);)
 		{
 			test = &asm8080_tests[i++];
-			CHECK_NOTHROW((void)major_opcode_8080(test->instruction));
-			CHECK_EQ(test->major_opcode, major_opcode_8080(test->instruction));
+			CHECK_NOTHROW((void)major_opcode(Cpu8080, test->instruction, true));
+			CHECK_EQ(test->major_opcode, major_opcode(Cpu8080, test->instruction, true));
+			CHECK_NOTHROW((void)major_opcode(CpuZ80, test->instruction, true));
+			CHECK_EQ(test->major_opcode, major_opcode(CpuZ80, test->instruction, true));
 		}
 	}
 
@@ -387,8 +432,72 @@ TEST_CASE("z80_major_opcode")
 		for (uint i = 0; i < NELEM(z80_tests);)
 		{
 			test = &z80_tests[i++];
-			CHECK_NOTHROW((void)major_opcode(test->instruction));
-			CHECK_EQ(test->major_opcode, major_opcode(test->instruction));
+			CHECK_NOTHROW((void)major_opcode(CpuZ80, test->instruction));
+			CHECK_EQ(test->major_opcode, major_opcode(CpuZ80, test->instruction));
+			CHECK_NOTHROW((void)major_opcode(CpuZ180, test->instruction));
+			CHECK_EQ(test->major_opcode, major_opcode(CpuZ180, test->instruction));
+			CHECK_NOTHROW((void)major_opcode(CpuZ80_ixcbxh, test->instruction));
+			CHECK_EQ(test->major_opcode, major_opcode(CpuZ80_ixcbxh, test->instruction));
+			CHECK_NOTHROW((void)major_opcode(CpuZ80_ixcbr2, test->instruction));
+			CHECK_EQ(test->major_opcode, major_opcode(CpuZ80_ixcbr2, test->instruction));
+			CHECK_NOTHROW((void)major_opcode(CpuZ80n, test->instruction));
+			CHECK_EQ(test->major_opcode, major_opcode(CpuZ80n, test->instruction));
+		}
+	}
+
+	SUBCASE("Z180 additional opcodes")
+	{
+		TestSet* test;
+		for (uint i = 0; i < NELEM(z180_tests);)
+		{
+			test = &z180_tests[i++];
+			CHECK_NOTHROW((void)major_opcode(CpuZ180, test->instruction));
+			CHECK_EQ(test->major_opcode, major_opcode(CpuZ180, test->instruction));
+		}
+	}
+
+	SUBCASE("Z80n additional opcodes")
+	{
+		TestSet* test;
+		for (uint i = 0; i < NELEM(z80n_tests);)
+		{
+			test = &z80n_tests[i++];
+			CHECK_NOTHROW((void)major_opcode(CpuZ80n, test->instruction));
+			CHECK_EQ(test->major_opcode, major_opcode(CpuZ80n, test->instruction));
 		}
 	}
 }
+
+
+/*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+*/
