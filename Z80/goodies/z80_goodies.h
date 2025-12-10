@@ -5,126 +5,131 @@
 #pragma once
 #include "CpuID.h"
 #include "kio/kio.h"
+#include <functional>
 
+
+namespace z80
+{
 
 typedef uint8  Byte;
 typedef uint16 Address;
 
-inline uint8  peek(const Byte* core, Address a) { return core[a]; }
-inline uint16 peek_word(const Byte* core, Address a)
-{
-	uint16 w = core[a++];
-	return w + 256 * core[a];
-}
+using FnPeek = std::function<Byte(Address)>;
 
 
-enum OpcodeValidity : uint8 {
-	LEGAL_OPCODE,
-	UNDOCUMENTED_OPCODE, // undocumented opcodes which have a useful new effect:
-						 // z80: SLL, use of XH, XL, YH and YL, IXCBR2 or IXCBXH if option ON
-
-	DEPRECATED_OPCODE, // opcode aliases and undocumented opcodes which have no useful new effect:
-					   // 8080: opcode aliases reused by z80; z80: 0xED aliases for RETI, IM_x
-
-	ILLEGAL_OPCODE // unhandled ops, undocumented nops, ops with uncertain effect:
-				   // z180: all; z80: 0xED nops, IX/IY with no effect, IXCBR2 or IXCBXH if option OFF
-};
-
-
-/***** disass.cpp *****/
-
-// get information about the legal state of an opcode:
-extern OpcodeValidity opcode_validity(CpuID, const Byte* core, Address);
-
-// disassemble 8080, Z80 or Z180 opcode using Z80 syntax:
-// the address is incremented to skip the disassembled opcode
-extern cstr disassemble(CpuID, const Byte* core, Address&);
-
-// disassemble 8080 opcode using 8080 or Z80 syntax:
-// the address is incremented to skip the disassembled opcode
-extern cstr disassemble_8080(const Byte* core, Address&, bool asm8080 = yes);
-
-// Calculate the "major" opcode of an instruction mnemonic.
-extern uint8 major_opcode(CpuID, cstr q) throws; // z80 syntax: 8080, Z80, Z180, Z80n
-extern uint8 major_opcode_8080(cstr q) throws;	 // asm8080 syntax: 8080 only
-
-
-/***** z80_opcode_length.cpp *****/
+// disassemble opcode using Z80 or asm8080 syntax:
+// the address is incremented to skip the opcode
+extern cstr disassemble(CpuID, FnPeek, Address&, bool asm8080 = false);
+inline cstr disassemble(CpuID, const Byte* core, Address&, bool asm8080 = false) noexcept;
 
 // Calculate length of opcode
-extern uint opcode_length(CpuID, const Byte* core, Address = 0) noexcept;
-
-
-/***** z80_clock_cycles.cpp *****/
+extern uint opcode_length(CpuID, FnPeek, Address);
+inline uint opcode_length(CpuID, const Byte* core, Address = 0) noexcept;
 
 // Test whether this is a conditionally branching opcode (jp cc, ret cc, ldir, etc.)
-extern bool opcode_can_branch(CpuID, const Byte* core, Address = 0) noexcept;
+extern bool opcode_can_branch(CpuID, FnPeek, Address);
+inline bool opcode_can_branch(CpuID, const Byte* core, Address = 0) noexcept;
 
 // Calculate the execution time in clock cycles for an opcode
-extern uint clock_cycles(CpuID, const Byte* core, Address = 0) noexcept;
+extern uint clock_cycles(CpuID, FnPeek, Address);
+inline uint clock_cycles(CpuID, const Byte* core, Address = 0) noexcept;
 
 // Calculate the execution time if the opcode branches
-extern uint clock_cycles_on_branch(CpuID, const Byte* core, Address = 0) noexcept;
+extern uint clock_cycles_on_branch(CpuID, FnPeek, Address);
+inline uint clock_cycles_on_branch(CpuID, const Byte* core, Address = 0) noexcept;
 
 
-__attribute__((deprecated)) // use function with Core* and Address
-extern bool
-opcode_can_branch(CpuID, uint8 op1, uint8 op2) noexcept; // op2 only used if op1==0xED
-__attribute__((deprecated))								 // use function with Core* and Address
-extern uint
-clock_cycles(CpuID, uint8 op1, uint8 op2, uint8 op4) noexcept; // dito, op4 only for IXCB/IYCB
-__attribute__((deprecated))									   // use function with Core* and Address
-extern uint
-clock_cycles_on_branch(CpuID, uint8 op1, uint8 op2) noexcept; // op2 only used if op1==0xED
+// utils:
+extern bool opcode_is_legal(CpuID, const Byte*, Address = 0) noexcept;
+inline cstr opcode_mnemo(CpuID, const Byte*, Address = 0, bool asm8080 = false) noexcept;
+extern Byte major_opcode(CpuID, cstr q, bool asm8080 = false) throws;
 
-__attribute__((deprecated)) // use function with Core* and Address
-extern bool
-z80_opcode_can_branch(uint8 op1, uint8 op2) noexcept; // op2 only used if op1==0xED
-__attribute__((deprecated))							  // use function with Core* and Address
-extern uint
-z80_clock_cycles(uint8 op1, uint8 op2, uint8 op4) noexcept; // dito, op4 only for IXCB/IYCB
-__attribute__((deprecated))									// use function with Core* and Address
-extern uint
-z80_clock_cycles_on_branch(uint8 op1, uint8 op2) noexcept; // op2 only used if op1==0xED
 
-__attribute__((deprecated)) // use function with Core* and Address
-extern bool
-z180_opcode_can_branch(uint8 op1, uint8 op2) noexcept; // op2 only used if op1==0xED
-__attribute__((deprecated))							   // use function with Core* and Address
-extern uint
-z180_clock_cycles(uint8 op1, uint8 op2, uint8 op4) noexcept; // dito, op4 only for IXCB/IYCB
-__attribute__((deprecated))									 // use function with Core* and Address
-extern uint
-z180_clock_cycles_on_branch(uint8 op1, uint8 op2) noexcept; // op2 only used if op1==0xED
+// simple interface:
+inline uint opcode_length(CpuID, Byte op1, Byte op2) noexcept;			// op2 only used if op1==0xED
+inline bool opcode_can_branch(CpuID, Byte op1, Byte op2) noexcept;		// op2 only used if op1==0xED
+inline uint clock_cycles_on_branch(CpuID, Byte op1, Byte op2) noexcept; // op2 only used if op1==0xED
+inline uint clock_cycles(CpuID, Byte op1, Byte op2, Byte op4) noexcept; // dito, op4 only for IXCB/IYCB
 
-__attribute__((deprecated)) // use function with Core* and Address
-extern bool
-i8080_opcode_can_branch(uint8 op) noexcept;
-__attribute__((deprecated)) // use function with Core* and Address
-extern uint
-i8080_clock_cycles(uint8 op) noexcept;
-__attribute__((deprecated)) // use function with Core* and Address
-extern uint
-i8080_clock_cycles_on_branch(uint8 op) noexcept;
 
-enum __attribute__((deprecated)) // use enum above
+// _____________________________________________
+// implementations:
+
+inline cstr disassemble(CpuID cpuid, const Byte* core, Address& a, bool asm8080) noexcept
 {
-	LegalOpcode,
-	IllegalOpcode,
-	WeirdOpcode
-};
-
-__attribute__((deprecated)) // use opcode_validity()
-inline int
-opcode_legal_state(CpuID id, const Byte* core, Address addr)
+	return disassemble(cpuid, [core](Address a) { return core[a]; }, a, asm8080);
+}
+inline uint opcode_length(CpuID cpuid, const Byte* core, Address a) noexcept
 {
-	return opcode_validity(id, core, addr);
+	return opcode_length(cpuid, [core](Address a) { return core[a]; }, a);
+}
+inline bool opcode_can_branch(CpuID cpuid, const Byte* core, Address a) noexcept
+{
+	return opcode_can_branch(cpuid, [core](Address a) { return core[a]; }, a);
+}
+inline uint clock_cycles(CpuID cpuid, const Byte* core, Address a) noexcept
+{
+	return clock_cycles(cpuid, [core](Address a) { return core[a]; }, a);
+}
+inline uint clock_cycles_on_branch(CpuID cpuid, const Byte* core, Address a) noexcept
+{
+	return clock_cycles_on_branch(cpuid, [core](Address a) { return core[a]; }, a);
+}
+inline uint opcode_length(CpuID cpuid, Byte op1, Byte op2) noexcept
+{
+	Byte core[] = {op1, op2};
+	return opcode_length(cpuid, [core](Address a) { return core[a]; }, 0);
+}
+inline bool opcode_can_branch(CpuID cpuid, Byte op1, Byte op2) noexcept
+{
+	Byte core[] = {op1, op2};
+	return opcode_can_branch(cpuid, [core](Address a) { return core[a]; }, 0);
+}
+inline uint clock_cycles_on_branch(CpuID cpuid, Byte op1, Byte op2) noexcept
+{
+	Byte core[] = {op1, op2};
+	return clock_cycles_on_branch(cpuid, [core](Address a) { return core[a]; }, 0);
+}
+inline uint clock_cycles(CpuID cpuid, Byte op1, Byte op2, Byte op4) noexcept
+{
+	Byte core[] = {op1, op2, 0, op4};
+	return clock_cycles(cpuid, [core](Address a) { return core[a]; }, 0);
 }
 
-__attribute__((deprecated)) // use real disassemble()
-extern cstr
-opcode_mnemo(CpuID, const Byte* core, Address addr);
 
-__attribute__((deprecated)) // use major_opcode()
-extern uint8
-z80_major_opcode(cstr q) throws;
+} // namespace z80
+
+
+/*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+*/

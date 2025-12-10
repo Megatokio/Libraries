@@ -8,6 +8,8 @@
 #include "z80_opcodes.h"
 //}
 
+namespace z80
+{
 
 // clang-format off
 
@@ -977,26 +979,26 @@ static constexpr uint8 cc_z180_XYCB[256] =
 // clang-format on
 
 
-bool opcode_can_branch(CpuID cpuid, const Byte* core, Address a) noexcept
+bool opcode_can_branch(CpuID cpuid, FnPeek peek, Address a)
 {
 	// test whether this opcode can branch:
 	// (jr cc, jp cc, ret cc, call cc, djnz, ldir, inir, …)
 	// op2 is only used for ED opcodes
 
-	uint8 op1 = peek(core, a);
+	uint8 op1 = peek(a);
 
 	switch (cpuid)
 	{
 	case Cpu8080: return op1 >= 0xC0 && cc_z80[op1] >= 32;
 
 	default:
-	case CpuZ80: return (op1 == 0xED ? cc_z80_ED[peek(core, a + 1)] : cc_z80[op1]) >= 32;
-	case CpuZ180: return (op1 == 0xED ? cc_z180_ED[peek(core, a + 1)] : cc_z180[op1]) >= 32;
-	case CpuZ80n: return (op1 == 0xED ? cc_z80n_ED[peek(core, a + 1)] : cc_z80[op1]) >= 32;
+	case CpuZ80: return (op1 == 0xED ? cc_z80_ED[peek(a + 1)] : cc_z80[op1]) >= 32;
+	case CpuZ180: return (op1 == 0xED ? cc_z180_ED[peek(a + 1)] : cc_z180[op1]) >= 32;
+	case CpuZ80n: return (op1 == 0xED ? cc_z80n_ED[peek(a + 1)] : cc_z80[op1]) >= 32;
 	}
 }
 
-uint clock_cycles(CpuID cpuid, const Byte* core, Address a) noexcept
+uint clock_cycles(CpuID cpuid, FnPeek peek, Address a)
 {
 	// get execution time for opcode:
 	// if opcode can branch, then this is the time when it does not branch
@@ -1004,7 +1006,7 @@ uint clock_cycles(CpuID cpuid, const Byte* core, Address a) noexcept
 	// op4 is only used for IXCB or IYCB opcodes
 	// Clock cycles returned for illegal opcodes are meaningless.
 
-	uint8 op1 = peek(core, a);
+	uint8 op1 = peek(a);
 	uint8 op2, op4;
 
 	switch (op1)
@@ -1022,7 +1024,7 @@ uint clock_cycles(CpuID cpuid, const Byte* core, Address a) noexcept
 
 	case 0xCB:
 		if (cpuid == Cpu8080) return 10; // JP alias
-		op2 = peek(core, a + 1);
+		op2 = peek(a + 1);
 		if (cpuid == CpuZ180)
 		{
 			// %00xx.xxxx shift ops:    7cc, xHL: 13
@@ -1041,7 +1043,7 @@ uint clock_cycles(CpuID cpuid, const Byte* core, Address a) noexcept
 
 	case 0xED:
 		if (cpuid == Cpu8080) return 17; // CALL alias
-		op2 = peek(core, a + 1);
+		op2 = peek(a + 1);
 		if (cpuid == CpuZ180) return cc_z180_ED[op2] & 31;
 		else if (cpuid == CpuZ80n) return cc_z80n_ED[op2] & 31;
 		else return cc_z80_ED[op2] & 31; // Z80
@@ -1049,12 +1051,12 @@ uint clock_cycles(CpuID cpuid, const Byte* core, Address a) noexcept
 	case 0xDD:
 	case 0xFD:
 		if (cpuid == Cpu8080) return 17; // CALL alias
-		op2 = peek(core, a + 1);
+		op2 = peek(a + 1);
 		if (cpuid == CpuZ180)
 		{
 			if (op2 != 0xCB) return cc_z180_XY[op2];
 
-			op4 = peek(core, a + 3);
+			op4 = peek(a + 3);
 			if ((op4 & 0370) == SLL_B) return 0; // ill.
 			if ((op4 & 7) != 6) return 0;		 // ill.
 			return (op4 & 0xC0) == 0x40 ? 15 : 19;
@@ -1062,13 +1064,13 @@ uint clock_cycles(CpuID cpuid, const Byte* core, Address a) noexcept
 		else // Z80
 		{
 			if (op2 != 0xCB) return cc_z80_XY[op2];
-			op4 = peek(core, a + 3);
+			op4 = peek(a + 3);
 			return (op4 & 0xC0) == 0x40 ? 20 : 23; // TODO: --ixcbxh probably cc=17!
 		}
 	}
 }
 
-uint clock_cycles_on_branch(CpuID cpuid, const Byte* core, Address a) noexcept
+uint clock_cycles_on_branch(CpuID cpuid, FnPeek peek, Address a)
 {
 	// get execution time for branching opcode:
 	// returns the time when the opcode branches.
@@ -1076,7 +1078,7 @@ uint clock_cycles_on_branch(CpuID cpuid, const Byte* core, Address a) noexcept
 	// calling this for non-branching opcodes may return wrong value.
 	// (mostly correct time, but not for IX, IY or CB opcodes)
 
-	uint8 op1 = peek(core, a);
+	uint8 op1 = peek(a);
 	uint8 op2;
 	uint  n;
 
@@ -1102,11 +1104,11 @@ uint clock_cycles_on_branch(CpuID cpuid, const Byte* core, Address a) noexcept
 
 	case 0xDD:
 	case 0xFD:
-	case 0xCB: return clock_cycles(cpuid, core, a); // usage error: CB, IX and IY opcodes are all non-branching
+	case 0xCB: return clock_cycles(cpuid, peek, a); // usage error: CB, IX and IY opcodes are all non-branching
 
 	case 0xED:
 		if (cpuid == Cpu8080) return 17; // CALL alias
-		op2 = peek(core, a + 1);
+		op2 = peek(a + 1);
 		if (cpuid == CpuZ180)
 		{
 			n = cc_z180_ED[op2];
@@ -1123,88 +1125,38 @@ uint clock_cycles_on_branch(CpuID cpuid, const Byte* core, Address a) noexcept
 }
 
 
-// deprecated:
-bool i8080_opcode_can_branch(uint8 op) noexcept
-{
-	Byte core[4] = {op};
-	return opcode_can_branch(Cpu8080, core);
-}
-
-// deprecated:
-bool z80_opcode_can_branch(uint8 op1, uint8 op2) noexcept
-{
-	Byte core[4] = {op1, op2};
-	return opcode_can_branch(CpuZ80, core);
-}
-
-// deprecated:
-bool z180_opcode_can_branch(uint8 op1, uint8 op2) noexcept
-{
-	Byte core[4] = {op1, op2};
-	return opcode_can_branch(CpuZ180, core);
-}
-
-// deprecated:
-bool opcode_can_branch(CpuID cpuid, uint8 op1, uint8 op2) noexcept
-{
-	Byte core[4] = {op1, op2};
-	return opcode_can_branch(cpuid, core);
-}
+} // namespace z80
 
 
-// deprecated:
-uint i8080_clock_cycles(uint8 op) noexcept
-{
-	Byte core[4] = {op};
-	return clock_cycles(Cpu8080, core);
-}
-
-// deprecated:
-uint z80_clock_cycles(uint8 op1, uint8 op2, uint8 op4) noexcept
-{
-	Byte core[4] = {op1, op2, 0, op4};
-	return clock_cycles(CpuZ80, core);
-}
-
-// deprecated:
-uint z180_clock_cycles(uint8 op1, uint8 op2, uint8 op4) noexcept
-{
-	Byte core[4] = {op1, op2, 0, op4};
-	return clock_cycles(CpuZ180, core);
-}
-
-// deprecated:
-uint clock_cycles(CpuID cpuid, uint8 op1, uint8 op2, uint8 op4) noexcept
-{
-	Byte core[4] = {op1, op2, 33, op4};
-	return clock_cycles(cpuid, core);
-}
+/*
 
 
-// deprecated:
-uint i8080_clock_cycles_on_branch(uint8 op) noexcept
-{
-	Byte core[4] = {op};
-	return clock_cycles_on_branch(Cpu8080, core);
-}
 
-// deprecated:
-uint z80_clock_cycles_on_branch(uint8 op1, uint8 op2) noexcept
-{
-	Byte core[4] = {op1, op2};
-	return clock_cycles_on_branch(CpuZ80, core);
-}
 
-// deprecated:
-uint z180_clock_cycles_on_branch(uint8 op1, uint8 op2) noexcept
-{
-	Byte core[4] = {op1, op2};
-	return clock_cycles_on_branch(CpuZ180, core);
-}
 
-// deprecated:
-uint clock_cycles_on_branch(CpuID cpuid, uint8 op1, uint8 op2) noexcept
-{
-	Byte core[4] = {op1, op2};
-	return clock_cycles_on_branch(cpuid, core);
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+*/

@@ -4,6 +4,9 @@
 
 #pragma once
 
+namespace z80
+{
+
 enum CpuID {
 	CpuDefault,	   // Z80, not actively selected
 	CpuZ80,		   // Z80 without IXCB illegal opcodes
@@ -13,3 +16,5 @@ enum CpuID {
 	CpuZ80n,	   // Z80next cpu (ZX Spectrum next)
 	Cpu8080,	   // i8080 cpu
 };
+
+}

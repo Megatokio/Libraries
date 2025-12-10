@@ -11,6 +11,9 @@
 */
 
 
+namespace z80
+{
+
 /* bit masks for z80 flag register:
 */
 #define S_FLAG 0x80
@@ -23,7 +26,6 @@
 
 
 // clang-format off
-
 enum Codes
 {
 	NOP,		LD_BC_NN,	LD_xBC_A,	INC_BC,		INC_B,		DEC_B,		LD_B_N,		RLCA,
@@ -63,7 +65,6 @@ enum Codes
 	RET_M,		LD_SP_HL,	JP_M,		EI,			CALL_M,		PFX_IY,		CP_N,		RST38
 };
 
-
 enum CodesCB {
 	RLC_B,	RLC_C,	RLC_D,	RLC_E,	RLC_H,	RLC_L,	RLC_xHL,	RLC_A,
 	RRC_B,	RRC_C,	RRC_D,	RRC_E,	RRC_H,	RRC_L,	RRC_xHL,	RRC_A,
@@ -101,7 +102,6 @@ enum CodesCB {
 	SET6_B,	SET6_C,	SET6_D,	SET6_E,	SET6_H,	SET6_L,	SET6_xHL,	SET6_A,
 	SET7_B,	SET7_C,	SET7_D,	SET7_E,	SET7_H,	SET7_L,	SET7_xHL,	SET7_A
 };
-
 
 enum CodesED {
 	ED00,	ED01,	ED02,	ED03,	ED04,	ED05,	ED06,	ED07,
@@ -141,9 +141,6 @@ enum CodesED {
 	EDF8,	EDF9,	EDFA,	EDFB,	EDFC,	EDFD,	EDFE,	EDFF,
 
 	// Z80180 names:
-	//	 IN0_r_xN, OUT0_r_xN, TST_r
-	//	 MLT_rr, TST_N, TSTIO, SLP
-	//	 OTIM, OTDM, OTIMR, OTDMR
 
 	IN0_B_xN = ED00, 	OUT0_xN_B = ED01, TST_B = ED04,
 	IN0_C_xN = ED08, 	OUT0_xN_C = ED09, TST_C = ED0C,
@@ -201,6 +198,9 @@ enum CodesED {
 };
 
 // clang-format on
+
+
+} // namespace z80
 
 /*
 

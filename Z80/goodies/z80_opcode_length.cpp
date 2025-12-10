@@ -6,6 +6,9 @@
 #include "kio/kio.h"
 #include "z80_goodies.h"
 
+namespace z80
+{
+
 // clang-format off
 
 static const uchar len0[64] = // opcodes 0x00 - 0x3F
@@ -34,7 +37,7 @@ static const uchar len3[64] = // opcodes 0xC0 - 0xFF: prefixes are 0
 
 // clang-format on
 
-uint opcode_length(CpuID cpuid, const Byte* core, Address a) noexcept
+uint opcode_length(CpuID cpuid, FnPeek peek, Address a)
 {
 	// Calculate length [bytes] of instruction
 	// op2 is only used if op1 is a prefix instruction
@@ -46,7 +49,7 @@ uint opcode_length(CpuID cpuid, const Byte* core, Address a) noexcept
 	// prefix IX/IY opcodes as for z80;       illegal opcodes not using HL as for z80.
 	// prefix IXCB/IYCB opcodes as for z80;   illegal SLL and opcodes not using HL as for z80.
 
-	uint8 op = peek(core, a);
+	uint8 op = peek(a);
 
 	if (op < 0x40) // 0x00 - 0x3F:	from table
 	{
@@ -63,7 +66,7 @@ uint opcode_length(CpuID cpuid, const Byte* core, Address a) noexcept
 
 	if (op == 0xcb) return 2; // prefix 0xCB
 
-	uint8 op2 = peek(core, a + 1);
+	uint8 op2 = peek(a + 1);
 
 	if (op == 0xed) // prefix 0xED
 	{
@@ -120,6 +123,10 @@ uint opcode_length(CpuID cpuid, const Byte* core, Address a) noexcept
 	// to the value 0 from the table anyway. So no special handling for them needed.
 	return 1 + len3[op2 & 0x3F];
 }
+
+
+} // namespace z80
+
 
 /*
 
