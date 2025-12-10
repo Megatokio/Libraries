@@ -162,7 +162,7 @@ public:
 	TPL T	   read()
 	{
 		T n;
-		read_bytes(_ptr(&n), sizeof(T));
+		read_bytes(ptr(&n), sizeof(T));
 		return n;
 	}
 	int8   read_int8() { return read<int8>(); }
@@ -180,17 +180,17 @@ public:
 	TPL uint32 write_data(const T* p, uint32 cnt) { return write_bytes(p, cnt * sizeof(T)); } // returns bytes written
 	TPL uint32 write_data(const T* p); //	{ return write_bytes(p,sizeof(T)); }		// returns bytes written
 
-	TPL uint32 write(const T& n) { return write_bytes(_cptr(&n), sizeof(T)); } // ref wg. auto propagate
-	uint32	   write_int8(int8 n) { return write_bytes(_cptr(&n), sizeof(n)); }
-	uint32	   write_uint8(uint8 n) { return write_bytes(_cptr(&n), sizeof(n)); }
-	uint32	   write_char(char n) { return write_bytes(_cptr(&n), sizeof(n)); }
-	uint32	   write_uchar(uchar n) { return write_bytes(_cptr(&n), sizeof(n)); }
-	uint32	   write_int16(int16 n) { return write_bytes(_cptr(&n), sizeof(n)); }
-	uint32	   write_uint16(uint16 n) { return write_bytes(_cptr(&n), sizeof(n)); }
-	uint32	   write_int32(int32 n) { return write_bytes(_cptr(&n), sizeof(n)); }
-	uint32	   write_uint32(uint32 n) { return write_bytes(_cptr(&n), sizeof(n)); }
-	uint32	   write_int64(int64 n) { return write_bytes(_cptr(&n), sizeof(n)); }
-	uint32	   write_uint64(uint64 n) { return write_bytes(_cptr(&n), sizeof(n)); }
+	TPL uint32 write(const T& n) { return write_bytes(cptr(&n), sizeof(T)); } // ref wg. auto propagate
+	uint32	   write_int8(int8 n) { return write_bytes(cptr(&n), sizeof(n)); }
+	uint32	   write_uint8(uint8 n) { return write_bytes(cptr(&n), sizeof(n)); }
+	uint32	   write_char(char n) { return write_bytes(cptr(&n), sizeof(n)); }
+	uint32	   write_uchar(uchar n) { return write_bytes(cptr(&n), sizeof(n)); }
+	uint32	   write_int16(int16 n) { return write_bytes(cptr(&n), sizeof(n)); }
+	uint32	   write_uint16(uint16 n) { return write_bytes(cptr(&n), sizeof(n)); }
+	uint32	   write_int32(int32 n) { return write_bytes(cptr(&n), sizeof(n)); }
+	uint32	   write_uint32(uint32 n) { return write_bytes(cptr(&n), sizeof(n)); }
+	uint32	   write_int64(int64 n) { return write_bytes(cptr(&n), sizeof(n)); }
+	uint32	   write_uint64(uint64 n) { return write_bytes(cptr(&n), sizeof(n)); }
 	uint32	   write_nl() { return write_uint8('\n'); }
 
 

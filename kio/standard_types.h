@@ -94,11 +94,3 @@ typedef const char* cptr;
 
 typedef uchar*		 uptr;
 typedef const uchar* cuptr;
-
-
-// cast shortenders:
-
-#define _ptr(N)	 reinterpret_cast<ptr>(N)
-#define _cptr(N) reinterpret_cast<cptr>(N)
-#define _str(N)	 reinterpret_cast<str>(N)
-#define _cstr(N) reinterpret_cast<cstr>(N)
