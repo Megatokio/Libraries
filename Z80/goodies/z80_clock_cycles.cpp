@@ -3,10 +3,8 @@
 // https://opensource.org/licenses/BSD-2-Clause
 
 #include "kio/kio.h"
-#include "z80_goodies.h"
-//namespace Z80{
+#include "z80_DisAss.h"
 #include "z80_opcodes.h"
-//}
 
 namespace z80
 {
@@ -979,7 +977,7 @@ static constexpr uint8 cc_z180_XYCB[256] =
 // clang-format on
 
 
-bool opcode_can_branch(CpuID cpuid, FnPeek peek, Address a)
+bool DisAss::opcodeCanBranch(Address a) const
 {
 	// test whether this opcode can branch:
 	// (jr cc, jp cc, ret cc, call cc, djnz, ldir, inir, …)
@@ -998,7 +996,7 @@ bool opcode_can_branch(CpuID cpuid, FnPeek peek, Address a)
 	}
 }
 
-uint clock_cycles(CpuID cpuid, FnPeek peek, Address a)
+int DisAss::clockCycles(Address a) const
 {
 	// get execution time for opcode:
 	// if opcode can branch, then this is the time when it does not branch
@@ -1070,7 +1068,7 @@ uint clock_cycles(CpuID cpuid, FnPeek peek, Address a)
 	}
 }
 
-uint clock_cycles_on_branch(CpuID cpuid, FnPeek peek, Address a)
+int DisAss::clockCyclesOnBranch(Address a) const
 {
 	// get execution time for branching opcode:
 	// returns the time when the opcode branches.
@@ -1104,7 +1102,7 @@ uint clock_cycles_on_branch(CpuID cpuid, FnPeek peek, Address a)
 
 	case 0xDD:
 	case 0xFD:
-	case 0xCB: return clock_cycles(cpuid, peek, a); // usage error: CB, IX and IY opcodes are all non-branching
+	case 0xCB: return clockCycles(a); // usage error: CB, IX and IY opcodes are all non-branching
 
 	case 0xED:
 		if (cpuid == Cpu8080) return 17; // CALL alias

@@ -4,8 +4,8 @@
 
 
 #define loglevel 0
+#include "z80_DisAss.h"
 #include "doctest/doctest/doctest.h"
-#include "z80_goodies.h"
 #include "z80_opcodes.h"
 
 using namespace z80;
@@ -827,9 +827,14 @@ static void run_tests(CpuID cpu_id, TestSet* tests, uint nelem)
 		xlog("%02x%02x%02x%02x ", test.code[0], test.code[1], test.code[2], test.code[3]);
 		if ((i & 15) == 0) xlogNl();
 
-		uint16 addr		   = 0;
-		cstr   disassembly = disassemble(cpu_id, test.code, addr);
+		int	 addr		 = 0;
+		cstr disassembly = disassemble(cpu_id, test.code, addr);
+		CHECK_UNARY(same(test.expected, disassembly));
 
+		disassembly = DisAss(cpu_id, test.code).disassemble(addr);
+		CHECK_UNARY(same(test.expected, disassembly));
+
+		disassembly = DisAss(cpu_id, test.code).disassemble(addr, addr);
 		CHECK_UNARY(addr > 0 && addr <= 4);
 		CHECK_UNARY(same(test.expected, disassembly));
 
@@ -850,11 +855,17 @@ TEST_CASE("disass --asm8080")
 		xlog("%02x ", test.code[0]);
 		if ((i & 31) == 0) xlogNl();
 
-		uint16 addr		   = 0;
-		cstr   disassembly = disassemble(Cpu8080, test.code, addr, true);
-
+		int	 addr		 = 0;
+		cstr disassembly = disassemble(Cpu8080, test.code, addr, true);
 		CHECK_UNARY(same(test.expected, disassembly));
+
+		disassembly = DisAss(Cpu8080, test.code).disassemble(addr, true);
+		CHECK_UNARY(same(test.expected, disassembly));
+
+		disassembly = DisAss(Cpu8080, test.code).disassemble(addr, addr, true);
 		CHECK_UNARY(addr > 0 && addr <= 4);
+		CHECK_UNARY(same(test.expected, disassembly));
+
 		CHECK_EQ(addr, opcode_length(Cpu8080, test.code));
 	}
 	xlogline("##");

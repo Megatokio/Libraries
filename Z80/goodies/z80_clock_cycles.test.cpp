@@ -4,7 +4,7 @@
 
 
 //#define loglevel 1
-#include "Z80/goodies/z80_goodies.h"
+#include "Z80/goodies/z80_DisAss.h"
 #include "Z80/goodies/z80_opcodes.h"
 #include "doctest/doctest/doctest.h"
 #include "kio/kio.h"

@@ -2,7 +2,7 @@
 // BSD-2-Clause license
 // https://opensource.org/licenses/BSD-2-Clause
 
-#include "z80_goodies.h"
+#include "z80_DisAss.h"
 //#include "z80_opcodes.h"
 
 
@@ -518,6 +518,30 @@ static constexpr uint8 z180_legalIX[32] = {
 	0b01000000, // RET_M,		LD_SP_HL,	JP_M,		EI,			CALL_M,		PFX_IY,		CP_N,		RST38
 };
 
+static constexpr uint8 z80_len00[64] = // opcodes 0x00 - 0x3F
+{
+	1, 3, 1, 1, 1, 1, 2, 1, //	NOP,		LD_BC_NN,	LD_xBC_A,	INC_BC,		INC_B,		DEC_B,		LD_B_N,		RLCA,
+	1, 1, 1, 1,	1, 1, 2, 1, //	EX_AF_AF,	ADD_HL_BC,	LD_A_xBC,	DEC_BC,		INC_C,		DEC_C,		LD_C_N,		RRCA,
+	2, 3, 1, 1,	1, 1, 2, 1, //	DJNZ,		LD_DE_NN,	LD_xDE_A,	INC_DE,		INC_D,		DEC_D,		LD_D_N,		RLA,
+	2, 1, 1, 1,	1, 1, 2, 1, //	JR, 		ADD_HL_DE,	LD_A_xDE,	DEC_DE,		INC_E,		DEC_E,		LD_E_N,		RRA,
+	2, 3, 3, 1,	1, 1, 2, 1, //	JR_NZ,		LD_HL_NN,	LD_xNN_HL,	INC_HL,		INC_H,		DEC_H,		LD_H_N,		DAA,
+	2, 1, 3, 1,	1, 1, 2, 1, //	JR_Z,		ADD_HL_HL,	LD_HL_xNN,	DEC_HL,		INC_L,		DEC_L,		LD_L_N,		CPL,
+	2, 3, 3, 1,	1, 1, 2, 1, //	JR_NC,		LD_SP_NN,	LD_xNN_A,	INC_SP,		INC_xHL,	DEC_xHL,	LD_xHL_N,	SCF,
+	2, 1, 3, 1,	1, 1, 2, 1, //	JR_C,		ADD_HL_SP,	LD_A_xNN,	DEC_SP,		INC_A,		DEC_A,		LD_A_N,		CCF,
+};
+
+static constexpr uint8 z80_lenC0[64] = // opcodes 0xC0 - 0xFF: prefixes are 0
+{
+	1, 1, 3, 3, 3, 1, 2, 1, //	RET_NZ,		POP_BC,		JP_NZ,		JP,			CALL_NZ,	PUSH_BC,	ADD_N,		RST00,
+	1, 1, 3, 0, 3, 3, 2, 1, //	RET_Z,		RET,		JP_Z,		PFX_CB,		CALL_Z,		CALL,		ADC_N,		RST08,
+	1, 1, 3, 2, 3, 1, 2, 1, //	RET_NC,		POP_DE,		JP_NC,		OUTA,		CALL_NC,	PUSH_DE,	SUB_N,		RST10,
+	1, 1, 3, 2,	3, 0, 2, 1, //	RET_C,		EXX,		JP_C,		INA,		CALL_C,		PFX_IX,		SBC_N,		RST18,
+	1, 1, 3, 1,	3, 1, 2, 1, //	RET_PO,		POP_HL,		JP_PO,		EX_HL_xSP,	CALL_PO,	PUSH_HL,	AND_N,		RST20,
+	1, 1, 3, 1,	3, 0, 2, 1, //	RET_PE,		JP_HL,		JP_PE,		EX_DE_HL,	CALL_PE,	PFX_ED,		XOR_N,		RST28,
+	1, 1, 3, 1,	3, 1, 2, 1, //	RET_P,		POP_AF,		JP_P,		DI,			CALL_P,		PUSH_AF,	OR_N,		RST30,
+	1, 1, 3, 1,	3, 0, 2, 1, //	RET_M,		LD_SP_HL,	JP_M,		EI,			CALL_M,		PFX_IY,		CP_N,		RST38
+};
+
 
 //	==========================================================================================================
 //	=	
@@ -525,61 +549,78 @@ static constexpr uint8 z180_legalIX[32] = {
 //	=
 //	==========================================================================================================
 
+// clang-format on
 
-static const Meno& asm8080_meno(Byte op) { return (*asm8080_cmd[op>>5])[op&31]; }
-static const Meno& i8080_meno(Byte op)   { return (*i8080_cmd[op>>5])[op&31]; }
-static const Meno& z80_meno(Byte op)     { return (*z80_cmd[op>>5])[op&31]; }
-static const Meno& z80_meno_alt(Byte op) { return (*z80_cmd_alt[op>>5])[op&31]; }
+
+static const Meno& asm8080_meno(Byte op) { return (*asm8080_cmd[op >> 5])[op & 31]; }
+static const Meno& i8080_meno(Byte op) { return (*i8080_cmd[op >> 5])[op & 31]; }
+static const Meno& z80_meno(Byte op) { return (*z80_cmd[op >> 5])[op & 31]; }
+static const Meno& z80_meno_alt(Byte op) { return (*z80_cmd_alt[op >> 5])[op & 31]; }
 
 static const Meno& z80_menoED(CpuID cpuid, Byte op)
 {
-	if (cpuid == CpuZ180) return (*z180_cmd_ED[op>>5])[op&31];
-	if (cpuid == CpuZ80n) return (*z80n_cmd_ED[op>>5])[op&31];
-	else				  return (*z80_cmd_ED[op>>5])[op&31];
+	if (cpuid == CpuZ180) return (*z180_cmd_ED[op >> 5])[op & 31];
+	if (cpuid == CpuZ80n) return (*z80n_cmd_ED[op >> 5])[op & 31];
+	else return (*z80_cmd_ED[op >> 5])[op & 31];
 }
 
-static constexpr Token regs[]  = {B, C, D, E,  H,  L, XHL, A, HL};
+static constexpr Token regs[]  = {B, C, D, E, H, L, XHL, A, HL};
 static constexpr Token xregs[] = {B, C, D, E, XH, XL, XIX, A, IX};
 static constexpr Token yregs[] = {B, C, D, E, YH, YL, XIY, A, IY};
 
 static Meno z80_menoCB(Byte op, const Token* reg = regs)
 {
 	static constexpr Token cmds[] = {RLC, RRC, RL, RR, SLA, SRA, SLL, SRL};
-	static constexpr Token bits[] = {N0,N1,N2,N3,N4,N5,N6,N7};
-	uint8 r = op & 0x07;
-	uint8 n = (op >> 3) & 0x07;
+	static constexpr Token bits[] = {N0, N1, N2, N3, N4, N5, N6, N7};
+	uint8				   r	  = op & 0x07;
+	uint8				   n	  = (op >> 3) & 0x07;
 
 	switch (op >> 6)
 	{
-	default: 
-	case 0: return Meno{cmds[n],reg[r]};
-	case 1: return Meno{BIT,bits[n],reg[r]};
-	case 2: return Meno{RES,bits[n],reg[r]};
-	case 3: return Meno{SET,bits[n],reg[r]};
+	default:
+	case 0: return Meno {cmds[n], reg[r]};
+	case 1: return Meno {BIT, bits[n], reg[r]};
+	case 2: return Meno {RES, bits[n], reg[r]};
+	case 3: return Meno {SET, bits[n], reg[r]};
 	}
 }
 
 static Meno z80_menoXY(Byte op1, Byte op2)
 {
 	Meno m = z80_meno(op2);
-	if (op2 == EX_DE_HL) return m;  // 'ex hl,de' always uses HL
+	if (op2 == EX_DE_HL) return m; // 'ex hl,de' always uses HL
 
 	const Token* xyregs = op1 == PFX_IX ? xregs : yregs;
-	
-	if (m.b == HL) { m.b = xyregs[8]; if (m.c != HL) return m; }	// IX or IY
-	if (m.c == HL) { m.c = xyregs[8]; return m; }					// IX or IY 
 
-	if (m.b == XHL) { m.b = xyregs[6]; return m; } // XIX or XIY 
-	if (m.c == XHL) { m.c = xyregs[6]; return m; } // XIX or XIY
+	if (m.b == HL) // IX or IY
+	{
+		m.b = xyregs[8];
+		if (m.c != HL) return m;
+	}
+	if (m.c == HL) // IX or IY
+	{
+		m.c = xyregs[8];
+		return m;
+	}
+	if (m.b == XHL) // XIX or XIY
+	{
+		m.b = xyregs[6];
+		return m;
+	}
+	if (m.c == XHL) // XIX or XIY
+	{
+		m.c = xyregs[6];
+		return m;
+	}
 
-	if (m.b == H) m.b = xyregs[4];	// XH or YH
-	if (m.b == L) m.b = xyregs[5];	// XL or YL
-	if (m.c == H) m.c = xyregs[4];	// XH or YH
-	if (m.c == L) m.c = xyregs[5];	// XL or YL
+	if (m.b == H) m.b = xyregs[4]; // XH or YH
+	if (m.b == L) m.b = xyregs[5]; // XL or YL
+	if (m.c == H) m.c = xyregs[4]; // XH or YH
+	if (m.c == L) m.c = xyregs[5]; // XL or YL
 	return m;
 }
 
-static const Meno z80_menoXYCB(CpuID cpuid, Byte op1, Byte op4) 
+static const Meno z80_menoXYCB(CpuID cpuid, Byte op1, Byte op4)
 {
 	// return mnenonic descriptor for IXCB / IYCB instruction
 	//
@@ -588,139 +629,231 @@ static const Meno z80_menoXYCB(CpuID cpuid, Byte op1, Byte op4)
 	//		--ixbcxh:  "set 0,b" .. "set 0,xh"					 set b,c,d,e,xh,xl,(ix+i),a
 
 	const Token* xyregs = op1 == PFX_IX ? xregs : yregs;
-	Meno m = z80_menoCB(op4,xyregs);
-	uint8 r = op4 & 0x07;
+	Meno		 m		= z80_menoCB(op4, xyregs);
+	uint8		 r		= op4 & 0x07;
 
-	if (r == 6 || cpuid == CpuZ80_ixcbxh) return m;			 // legal opcode or --ixcbxh mode	
-	else if (op4 < 0x40) return Meno{m.a,xyregs[6],regs[r]}; // --ixbcr2 and all other modes (shift ops)
-	else return Meno{m.a,m.b,xyregs[6],regs[r]};			 // --ixbcr2 and all other modes (bit ops)
+	if (r == 6 || cpuid == CpuZ80_ixcbxh) return m;				// legal opcode or --ixcbxh mode
+	else if (op4 < 0x40) return Meno {m.a, xyregs[6], regs[r]}; // --ixbcr2 and all other modes (shift ops)
+	else return Meno {m.a, m.b, xyregs[6], regs[r]};			// --ixbcr2 and all other modes (bit ops)
 }
 
-static cstr tostr(uint8 idf, FnPeek peek, Address& addr)
+cstr DisAss::tostr(uint8 idf, Address& addr) const
 {
 	// expand token, reading opcode parameters via *ip++ if needed
 
 	switch (idf)
 	{
-	uint n, nn;
-	case DIS: n  = peek(addr++); nn = uint16(addr + int8(n));
-			  if (addr == 2) return usingstr("$%+i", int8(n) + 2);   // "$+123"
-			  else return usingstr("$%+i ; $%04X", int8(n) + 2, nn); // "$+123 ; $FFFF"
-	case NN:  n = peek(addr++); nn = n + 256 * peek(addr++); return usingstr("$%04X", nn);	 // "$FFFF"
-	case NNr: n = peek(addr++); nn = 256 * n + peek(addr++); return usingstr("$%04X", nn);	 // "$FFFF"
-	case XNN: n = peek(addr++); nn = n + 256 * peek(addr++); return usingstr("($%04X)", nn); // "($FFFF)"
-	case N:   return usingstr("%u", peek(addr++));			  // "255"
-	case XN:  return usingstr("($%02X)", peek(addr++));		  // "($FF)"
+		uint n, nn;
+	case DIS:
+		n = peek(addr++);
+		if (addr == 2) return usingstr("$%+i", int8(n) + 2); // "$+123"
+		nn = uint16(addr + int8(n));
+		return usingstr("$%+i ; $%04X", int8(n) + 2, nn); // "$+123 ; $FFFF"
+	case NN:
+		n  = peek(addr++);
+		nn = n + 256 * peek(addr++);
+		return usingstr("$%04X", nn); // "$FFFF"
+	case NNr:
+		n  = peek(addr++);
+		nn = 256 * n + peek(addr++);
+		return usingstr("$%04X", nn); // "$FFFF"
+	case XNN:
+		n  = peek(addr++);
+		nn = n + 256 * peek(addr++);
+		return usingstr("($%04X)", nn);						  // "($FFFF)"
+	case N: return usingstr("%u", peek(addr++));			  // "255"
+	case XN: return usingstr("($%02X)", peek(addr++));		  // "($FF)"
 	case XIX: return usingstr("(ix%+i)", int8(peek(addr++))); // "(ix+123)"
 	case XIY: return usingstr("(iy%+i)", int8(peek(addr++))); // "(iy+123)"
-	default:  return word[idf];
+	default: return word[idf];
 	}
 }
 
-cstr tostr(const Meno& m, FnPeek peek, Address& addr)
+cstr DisAss::tostr(const Meno& m, Address& addr) const
 {
 	if (m.b == NIX) return word[m.a];
-	cstr b = tostr(m.b,peek,addr);
+	cstr b = tostr(m.b, addr);
 	if (m.c == NIX) return catstr(word[m.a], " ", b);
-	cstr c = tostr(m.c,peek,addr);
-	if (m.d == NIX) return catstr(word[m.a]," ", b,",", c); 
-	return catstr(word[m.a]," ", b,",", c,",", word[m.d]); 
+	cstr c = tostr(m.c, addr);
+	if (m.d == NIX) return catstr(word[m.a], " ", b, ",", c);
+	return catstr(word[m.a], " ", b, ",", c, ",", word[m.d]);
 }
- 
-cstr disassemble(CpuID cpuid, FnPeek peek, Address& addr, bool asm8080) 
+
+cstr DisAss::disassemble(Address addr, bool asm8080) const { return disassemble(addr, addr, asm8080); }
+
+cstr DisAss::disassemble(Address addr, Address& addr_out, bool asm8080) const
 {
 	// disassemble one instruction and increment addr
 
 	Byte op = peek(addr++);
-	if (cpuid == Cpu8080) return tostr(asm8080?asm8080_meno(op):i8080_meno(op), peek, addr);
+	if (cpuid == Cpu8080) return tostr(asm8080 ? asm8080_meno(op) : i8080_meno(op), addr_out = addr);
 
 	switch (op)
 	{
-	default:	return tostr(z80_meno(op), peek, addr);
-	case 0xcb:	op = peek(addr++);
-				return tostr(z80_menoCB(op), peek, addr);
-	case 0xed:	op = peek(addr++);
-				return tostr(z80_menoED(cpuid, op), peek, addr);
-	case 0xdd:
-	case 0xfd:	Byte op2 = peek(addr++);
-				if (op2 != 0xcb) return tostr(z80_menoXY(op, op2), peek, addr);
-				Address end = addr+2;
-				Byte	op4 = peek(addr + 1);
-				cstr    s   = tostr(z80_menoXYCB(cpuid, op, op4), peek, addr);
-				addr		= end;
-				return s;
+	default: return tostr(z80_meno(op), addr_out = addr);
+	case PFX_CB: op = peek(addr++); return tostr(z80_menoCB(op), addr_out = addr);
+	case PFX_ED: op = peek(addr++); return tostr(z80_menoED(cpuid, op), addr_out = addr);
+	case PFX_IX:
+	case PFX_IY:
+		Byte op2 = peek(addr++);
+		if (op2 != PFX_CB) return tostr(z80_menoXY(op, op2), addr_out = addr);
+		addr_out = addr + 2;
+		Byte op4 = peek(addr + 1);
+		return tostr(z80_menoXYCB(cpuid, op, op4), addr);
 	}
 }
 
-
 static inline bool peek_bit(uint8 op, const uint8 legal[32]) { return legal[op >> 3] & (0x80 >> (op & 7)); }
-static inline Byte peek(const Byte* core, Address a) { return core[a]; }
 
-bool opcode_is_legal(CpuID cpuid, const Byte* core, Address a) noexcept
+bool DisAss::opcodeIsLegal(Address a) const
 {
-	Byte op = peek(core,a);
-	if(cpuid == Cpu8080) return peek_bit(op,i8080_legal);
-	switch(op)
+	Byte op = peek(a);
+	if (cpuid == Cpu8080) return peek_bit(op, i8080_legal);
+	switch (op)
 	{
 	case PFX_CB:
-		if (cpuid != CpuZ180) return true;	// all opcodes, incl. SLL are reported as "legal"
-		else return (op >> 3) != 6;			// Z180: SLL is reported as "illegal"
+		if (cpuid != CpuZ180) return true; // all opcodes, incl. SLL are reported as "legal"
+		else return (op >> 3) != 6;		   // Z180: SLL is reported as "illegal"
 	case PFX_ED:
-		if(cpuid==CpuZ80n) return peek_bit(op,z80n_legal_ED); 
-		if(cpuid==CpuZ180) return peek_bit(op,z180_legal_ED); 
-		else			   return peek_bit(op,z80_legal_ED); 
+		if (cpuid == CpuZ80n) return peek_bit(op, z80n_legal_ED);
+		if (cpuid == CpuZ180) return peek_bit(op, z180_legal_ED);
+		else return peek_bit(op, z80_legal_ED);
 	case PFX_IX:
 	case PFX_IY:
-		if(peek(core,a+1) != PFX_CB)
-			return peek_bit(op, (cpuid==CpuZ180 ? z180_legalIX : z80_legalIX));
-		op = peek(core,a+3);
-		switch(cpuid)
+		if (peek(a + 1) != PFX_CB) return peek_bit(op, (cpuid == CpuZ180 ? z180_legalIX : z80_legalIX));
+		op = peek(a + 3);
+		switch (cpuid)
 		{
-		case CpuZ180:		return (op & 7) == 6 && op != SLL_xHL;	// only opcodes using (ix+dis) are legal
-		case CpuZ80_ixcbxh: return (op & 7) >= 4 && (op & 7) <= 6;	// opcodes using xh, xl and (ix+dis)
-		case CpuZ80_ixcbr2: return true;							// whatever use there is
+		case CpuZ180: return (op & 7) == 6 && op != SLL_xHL;	   // only opcodes using (ix+dis) are legal
+		case CpuZ80_ixcbxh: return (op & 7) >= 4 && (op & 7) <= 6; // opcodes using xh, xl and (ix+dis)
+		case CpuZ80_ixcbr2: return true;						   // whatever use there is
 		default: return true;
 		}
 	default: return true;
 	}
 }
 
-cstr tostr(const Meno& m)
+int DisAss::opcodeLength(Address a) const
 {
-	return	m.b == NIX ? word[m.a] :
-			m.c == NIX ? catstr(word[m.a],"    ",word[m.b]) :
-			m.d == NIX ? catstr(word[m.a],"    ",word[m.b],",",word[m.c])  :
-						 catstr(word[m.a],"    ",word[m.b],",",word[m.c],",",word[m.d]);
+	// Calculate length [bytes] of instruction
+	// op2 is only used if op1 is a prefix instruction
+	// IX/IY before IX/IY/ED have no effect and are reported as length 1
+
+	// Z180: illegal opcodes are reported as for Z80
+	// basic opcodes are all same as for z80.
+	// prefix CB opcodes are same as for z80; illegal SLL as for z80.
+	// prefix IX/IY opcodes as for z80;       illegal opcodes not using HL as for z80.
+	// prefix IXCB/IYCB opcodes as for z80;   illegal SLL and opcodes not using HL as for z80.
+
+	uint8 op = peek(a);
+
+	if (op < 0x40) // 0x00 - 0x3F:	from table
+	{
+		if (cpuid == Cpu8080 && (op & 7) == 0) return 1; // 8080: NOP and aliases => len=1
+		else return z80_len00[op];
+	}
+	if (op < 0xC0) return 1;	   // 0x40 - 0xBF: ld r,r and arith/logic
+	uint n = z80_lenC0[op & 0x3F]; // 0xC0 .. 0xFF: from table, except prefixes
+	if (n) return n;			   // 8080: 0xD9=RET: same length as Z80:EXX
+
+	if (cpuid == Cpu8080) return 3; // 8080: Z80 prefixes are JP_NN or CALL_NN => len=3
+
+	// Z80, Z180 or Z80n:
+
+	if (op == 0xcb) return 2; // prefix 0xCB
+
+	uint8 op2 = peek(a + 1);
+
+	if (op == 0xed) // prefix 0xED
+	{
+		if (cpuid == CpuZ180)
+		{
+			// Z180: all new opcodes use prefix 0xED.
+			// They are all same length as for Z80:
+			//	 4 bytes for "ld rr,(NN)" and "ld (NN),rr)"
+			//   2 bytes for all other, whether legal or illegal NOP
+			// except those new opcodes which require an immediate byte argument:
+			//	 "out0 (N),r", "in0 r,(N)", "tst N" and "tstio N".
+
+			if (op2 < 0x40) return 2 + (((op2 & 7) < 2) && op2 != 0x31); // add +1 for IN0_r_xN / OUT0_xN_r
+			if ((op2 & 0xC7) == 0x43) return 4;							 // LD_rr_xNN / LD_xNN_rr
+			if ((op2 | 0x10) == 0x74) return 3;							 // TST_n, TSTIO_xN
+			return 2;
+		}
+
+		else if (cpuid == CpuZ80n)
+		{
+			// Z80n: all new opcodes use prefix 0xED.
+			// They are all same length as for Z80:
+			// except those new opcodes which require an immediate byte argument:
+			//	 TEST_N, ADD_HL_NN, ADD_DE_NN, ADD_BC_NN, PUSH_NN, NEXTREG_N_N, NEXTREG_N_A
+			if (op2 == 0x27) return 3;				  // TEST_N
+			if (op2 >= 0x34 && op2 <= 0x36) return 4; // ADD_HL_NN etc.
+			if (op2 == 0x8A) return 4;				  // PUSH_NN
+			if (op2 == 0x91) return 4;				  // NEXTREG_N_N
+			if (op2 == 0x92) return 3;				  // NEXTREG_N_A
+		}
+
+		// Z80: prefix 0xED: 2 bytes except "ld rr,(NN)" and "ld (NN),rr"
+		return (op2 & 0xc7) == 0x43 ? 4 : 2;
+	}
+
+	// prefix IX / IY:
+	assert(op == 0xdd || op == 0xfd);
+
+	// 0x00 - 0x3F: add +1 for dis in "inc(hl)", "dec(hl)", "ld(hl),N"
+	if (op2 < 0x40) return 1 + z80_len00[op2] + (op2 >= 0x34 && op2 <= 0x36);
+
+	// 0x40 - 0xBF: add +1 for dis in "ari a,(hl)" and "ld r,(hl)" and "ld (hl),r" except "halt"
+	if (op2 < 0xC0) return 2 + (((op2 & 0x07) == 6) != ((op2 & 0x0F8) == 0x70));
+
+	// 0xC0 - 0xFF: from table, except prefixes:
+
+	// prefix CB: 4 bytes
+	// note: options --ixcbr2 and --ixcbxh have no effect on the opcode length
+	if (op2 == 0xcb) return 4;
+
+	// note on prefix ED, IX and IY:
+	// the current IX/IY prefix has no effect and is handled like a NOP
+	// so their length is 1 byte which is what we get when we add 1 (for prefix IX/IY)
+	// to the value 0 from the table anyway. So no special handling for them needed.
+	return 1 + z80_lenC0[op2 & 0x3F];
 }
+
+
+// ===================================================================================
+// ###################################################################################
+// ===================================================================================
+
+static cstr tostr(const Meno& m)
+{
+	return m.b == NIX ? word[m.a] :
+		   m.c == NIX ? catstr(word[m.a], " ", word[m.b]) :
+		   m.d == NIX ? catstr(word[m.a], " ", word[m.b], ",", word[m.c]) :
+						catstr(word[m.a], " ", word[m.b], ",", word[m.c], ",", word[m.d]);
+}
+
+static inline Byte peek(const Byte* core, Address a) { return core[uint16(a)]; }
 
 cstr opcode_mnemo(CpuID cpuid, const Byte* core, Address a, bool asm8080) noexcept
 {
 	// return mnenonic with symbolic arguments for instructions
 	// op2 and op4 are only used if required (( op2: op1=XY/CB/ED; op4: op1,2=XY,CB ))
 
-	const uint8 op = peek(core,a);
-	if (cpuid == Cpu8080) return tostr(asm8080?asm8080_meno(op):i8080_meno(op));
+	const uint8 op = peek(core, a);
+	if (cpuid == Cpu8080) return tostr(asm8080 ? asm8080_meno(op) : i8080_meno(op));
 
 	switch (op)
 	{
-	default:   return tostr(z80_meno(op));
-	case 0xCB: return tostr(z80_menoCB(peek(core,a+1)));
-	case 0xED: return tostr(z80_menoED(cpuid, peek(core,a+1)));
-	case 0xDD: 
-	case 0xFD: if(peek(core,a+1) == 0xCB)
-					return tostr(z80_menoXYCB(cpuid, op, peek(core,a+3)));
-			   else	return tostr(z80_menoXY(op, peek(core,a+1)));
+	default: return tostr(z80_meno(op));
+	case PFX_CB: return tostr(z80_menoCB(peek(core, a + 1)));
+	case PFX_ED: return tostr(z80_menoED(cpuid, peek(core, a + 1)));
+	case PFX_IX:
+	case PFX_IY:
+		if (peek(core, a + 1) == 0xCB) return tostr(z80_menoXYCB(cpuid, op, peek(core, a + 3)));
+		else return tostr(z80_menoXY(op, peek(core, a + 1)));
 	}
 }
-
-// clang-format on
-
-
-// ===================================================================================
-// ###################################################################################
-// ===================================================================================
-//
-// Major Opcode:
 
 constexpr bool operator==(const Meno& m1, const Meno& m2) { return *intptr(&m1) == *intptr(&m2); }
 
@@ -781,7 +914,7 @@ Byte major_opcode(CpuID cpuid, cstr q, bool asm8080) throws
 	// -> the 2nd byte after CB, ED, IX and IY instructions
 	// -> or the 4th byte after IXCB or IYCB instructions.
 
-	// input: "ld a,N", "jr dis", "bit 0,(hl)", "ld (N),hl", etc.
+	// input: "ld a,N", "jr dis", "bit 0,(hl)", "ld (NN),hl", etc.
 
 	// illegals and index registers:
 	// "ld a,(ix+dis)" etc. is recognized but deprecated: better use "ld a,(hl)" etc. instead.

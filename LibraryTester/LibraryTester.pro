@@ -36,7 +36,7 @@ SOURCES += \
 	Libraries/Templates/Sort.test.cpp \
 	Libraries/Templates/RCArray.test.cpp \
 	Libraries/Z80/goodies/z80_clock_cycles.test.cpp \
-	Libraries/Z80/goodies/z80_disass.test.cpp \
+	Libraries/Z80/goodies/z80_DisAss.test.cpp \
 	Libraries/Z80/goodies/z80_major_opcode.test.cpp \
 	Libraries/Z80/goodies/z80_opcode_length.test.cpp \
 	Libraries/VString/String_test_suite.cpp \
@@ -48,8 +48,7 @@ SOURCES += \
 SOURCES += \
 	Source/main.cpp \
 	Libraries/Z80/goodies/z80_clock_cycles.cpp \
-	Libraries/Z80/goodies/z80_disass.cpp \
-	Libraries/Z80/goodies/z80_opcode_length.cpp \
+	Libraries/Z80/goodies/z80_DisAss.cpp \
 	Libraries/kio/kio.cpp \
 	Libraries/kio/exceptions.cpp \
 	Libraries/cstrings/cstrings.cpp \
@@ -67,7 +66,7 @@ SOURCES += \
 HEADERS += \
 	Libraries/doctest/doctest/doctest.h \
 	Libraries/Z80/goodies/CpuID.h \
-	Libraries/Z80/goodies/z80_goodies.h \
+	Libraries/Z80/goodies/z80_DisAss.h \
 	Libraries/Z80/goodies/z80_opcodes.h \
 	Libraries/kio/util/count1bits.h \
 	Libraries/kio/util/swap.h \

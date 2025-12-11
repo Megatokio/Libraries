@@ -5,7 +5,7 @@
 
 #include "doctest/doctest/doctest.h"
 #include "kio/kio.h"
-#include "z80_goodies.h"
+#include "z80_DisAss.h"
 #include "z80_opcodes.h"
 
 using namespace z80;
