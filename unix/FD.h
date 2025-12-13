@@ -158,7 +158,7 @@ public:
 	TPL uint32 read_data(T* p, uint32 cnt) { return read_bytes(p, cnt * sizeof(T)); }		  // returns bytes written
 	TPL uint32 read_data(T* p, uint32 cnt, int) { return read_bytes(p, cnt * sizeof(T), 1); } // does not throw on eof
 
-	TPL uint32 read(T& n) { return read_bytes(_ptr(&n), sizeof(T)); }
+	TPL uint32 read(T& n) { return read_bytes(ptr(&n), sizeof(T)); }
 	TPL T	   read()
 	{
 		T n;
