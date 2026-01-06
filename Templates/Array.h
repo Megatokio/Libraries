@@ -144,6 +144,7 @@ public:
 	bool contains(REForVALUE(T) item) const noexcept { return indexof(item) != ~0u; } // uses indexof()
 
 	// resize:
+	uint getMax() const { return max; }
 	void growmax(uint newmax) throws;
 	T&	 grow() throws
 	{

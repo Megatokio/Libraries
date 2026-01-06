@@ -63,6 +63,14 @@ public:
 		FENCE;
 		wp = i + 1;
 	}
+	void put(const T& c) noexcept
+	{
+		assert(free());
+		uint i			 = wp;
+		buffer[i & MASK] = c;
+		FENCE;
+		wp = i + 1;
+	}
 
 	uint read(T* z, uint n) noexcept
 	{
